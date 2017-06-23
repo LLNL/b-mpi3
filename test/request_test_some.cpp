@@ -20,7 +20,7 @@ int main(){
 		std::vector<mpi3::request> rs(3);
 		for(int i = 1; i != world.size(); ++i){
 			std::vector<int> buffer(100);
-			rs[i - 1] = world.ireceive_n(buffer.begin() + i, 1, i);
+			rs[i - 1] = world.ireceive(buffer.begin() + i, buffer.begin() + i + 1, i);
 		}
 		while(rem > 0){
 			std::vector<int> completed = mpi3::completed_some(rs);

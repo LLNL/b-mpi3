@@ -22,6 +22,8 @@ namespace detail{
 struct contiguous_iterator_tag : std::random_access_iterator_tag{};
 struct strided_contiguous_iterator_tag : std::random_access_iterator_tag{};
 
+template<class T> struct is_declared_contiguous : std::false_type{};
+
 template<class T> struct is_contiguous;
 
 template<
@@ -44,7 +46,7 @@ template<
 		or	std::is_pointer<ContiguousIterator>{}
 		or	std::is_constructible<typename std::iterator_traits<ContiguousIterator>::pointer, ContiguousIterator>{}
 		or	std::is_convertible<ContiguousIterator, typename std::iterator_traits<ContiguousIterator>::pointer>{}
-	//	or	is_contiguous<ContiguousIterator>{}
+		or	is_declared_contiguous<ContiguousIterator>{}
 	>
 >
 typename std::iterator_traits<ContiguousIterator>::pointer
@@ -75,8 +77,6 @@ template<class It>
 struct iterator_category : decltype(iterator_category_aux(std::declval<It>())){};
 
 }}}
-
-
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_ITERATOR
 

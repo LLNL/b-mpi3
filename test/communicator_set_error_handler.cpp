@@ -15,7 +15,9 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	double d = 5.;
 	try{
 		world.send(&d, &d + 1, 100);
-	}catch(...){}
+	}catch(...){
+		cout << "catched exception" << std::endl;
+	}
 
 	world.set_error_handler(mpi3::error_handler::fatal); // fail immediately 
 	world.send(&d, &d + 1, 100);

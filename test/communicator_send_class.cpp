@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` -lboost_serialization $0 -o $0x.x && time mpirun -np 2s $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 -Wfatal-errors -lboost_serialization $0 -o $0x.x && time mpirun -np 2s $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
@@ -94,8 +94,9 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			std::iota(buffer.begin(), buffer.end(), 0);
 			world.send(buffer.begin(), buffer.end(), 1, 123);
 		}else{
-			std::vector<double> v;
-			world.receive(std::back_inserter(v), 0, 123);
+			std::vector<double> v(10);
+		//	world.receive(std::back_inserter(v), 0, 123);
+			world.receive(v.begin(), 0, 123);
 		}
 	}
 	{

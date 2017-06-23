@@ -6,6 +6,7 @@
 
 //#include "../mpi3/communicator.hpp"
 #include "../mpi3/detail/iterator.hpp" // detail::data
+#include "../mpi3/status.hpp"
 
 #include<mpi.h>
 
@@ -18,12 +19,14 @@ namespace mpi3{
 struct request{
 	MPI_Request impl_ = MPI_REQUEST_NULL;
 	request() = default;
-	template<
-		class ContIt,
-		class value_type = typename std::iterator_traits<ContIt>::value_type,
-		class datatype = detail::datatype<value_type>
-	>
-	request(request const&) = delete;
+	request(request const& other) = delete;// : impl_(other.impl_), owner_(false){}
+//private:
+//	template<
+//		class ContIt,
+//		class value_type = typename std::iterator_traits<ContIt>::value_type,
+//		class datatype = detail::datatype<value_type>
+//	>
+public:
 	request(request&& other) : impl_(other.impl_){other.impl_ = MPI_REQUEST_NULL;}// = default;
 	request& operator=(request const&) = delete;
 	request& operator=(request&& other){
@@ -44,11 +47,14 @@ struct request{
 	void swap(request& other){std::swap(impl_, other.impl_);}
 	void cancel(){MPI_Cancel(&impl_);}
 	~request(){
-		if(not completed()) wait();
-		if(impl_ != MPI_REQUEST_NULL) MPI_Request_free(&impl_);
+		if(impl_ != MPI_REQUEST_NULL){
+		//	if(not completed()) wait();
+			MPI_Request_free(&impl_);
+		}
 	}
-	void wait() const{
+	void wait(){
 		int s = MPI_Wait(const_cast<MPI_Request*>(&impl_), MPI_STATUS_IGNORE);
+	//	assert(impl_ == MPI_REQUEST_NULL);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
 	}
 	void start(){
@@ -104,7 +110,7 @@ struct receive_request : request{
 };
 #endif
 
-template<class ContRequestIterator, class Size, class ContStatusIterator>
+template<class ContRequestIterator, class Size>
 void wait_all_n(ContRequestIterator it, Size n){
 	MPI_Waitall(n, &detail::data(it)->impl_, MPI_STATUSES_IGNORE);
 }
@@ -114,14 +120,23 @@ void wait_all(ContRequestIterator it1, ContRequestIterator it2){
 	wait_all_n(it1, std::distance(it1, it2));
 }
 
-void wait(request& r){return r.wait();}
+//auto wait(request& r){return r.wait();}
 
-template<class... Args>//, typename = decltype(std::vector<request>{std::forward<Args>(std::decltype<Args>())...})>
+//MPI_Request move_impl(request&& r){
+//	MPI_Request ret = r.impl_;
+//	r.impl_ = MPI_REQUEST_NULL;
+//	return ret;
+//}
+
+template<class... Args>
 void wait(Args&&... args){
-	std::vector<request> v{std::forward<Args>(args)...};
-	wait_all(v.begin(), v.end());
+	auto move_impl = [](request&& r)->MPI_Request{	MPI_Request ret = r.impl_;
+		r.impl_ = MPI_REQUEST_NULL;
+		return ret;
+	};
+	std::vector<MPI_Request> v{move_impl(std::move(args))...};
+	MPI_Waitall(v.size(), v.data(), MPI_STATUSES_IGNORE);
 }
-
 
 template<class ContiguousIterator, class Size>
 ContiguousIterator wait_any_n(ContiguousIterator it, Size n){
@@ -209,7 +224,10 @@ namespace mpi3 = boost::mpi3;
 int main(int argc, char* argv[]){
 	mpi3::environment env(argc, argv);
 	std::vector<int> buf(10);
-	mpi3::send_request r = env.world().send_init_n(buf.begin(), buf.size(), 0);
+
+#if 0
+//	mpi3::send_
+	mpi3::request r = env.world().send_init_n(buf.begin(), buf.size(), 0);
 
 	std::vector<int> rbuf(10);
 	if(env.world().rank() == 0){
@@ -223,9 +241,12 @@ int main(int argc, char* argv[]){
 		r.start();
 		r.wait();
 	}
+#endif
 
+#if 0
 	if(env.world().rank() == 0){
-		mpi3::receive_request r = env.world().receive_init(rbuf.begin(), rbuf.end());
+	//	mpi3::receive_
+		mpi3::request r = env.world().receive_init(rbuf.begin(), rbuf.end());
 		mpi3::request sr = env.world().isend(buf.begin(), buf.end(), 0);
 		for(int i = 0; i != env.world().size(); ++i){
 			r.start();
@@ -235,8 +256,10 @@ int main(int argc, char* argv[]){
 	}else{
 		env.world().send(buf.begin(), buf.end(), 0);
 	}
-}
+#endif
 
+	return 0;
+}
 #endif
 #endif
 

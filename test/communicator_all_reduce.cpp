@@ -19,12 +19,12 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		iota(send_buffer.begin(), send_buffer.end(), 0);
 
 		std::vector<int> recv_buffer(count, -1);
-		world.all_reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin(), mpi3::sum);
+		world.all_reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin(), std::plus<>{});
 		for(int i = 0; i != recv_buffer.size(); ++i) assert(recv_buffer[i] == i*world.size());
 	}
 	{
 		double v = world.rank();
-		double total = world.all_reduce_value(v, mpi3::sum);
+		double total = world.all_reduce_value(v, std::plus<>{});
 		assert( total == world.size()*(world.size()-1)/2 );
 	}
 	{

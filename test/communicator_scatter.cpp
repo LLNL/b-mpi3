@@ -12,24 +12,21 @@ int main(int argc, char* argv[]){
 	mpi3::environment env;
 	mpi3::communicator& world = env.world();
 
-	int const max_procs = 10;
 	int table[max_procs][max_procs];
 	int row[max_procs];
 
 	int participants = max_procs;
-	if(world.size() > max_procs) participants = world.size();
+	assert(world.size() == 8);
 
-	if(world.rank() < participants){
-		int send_count = max_procs;
-		int recv_count = max_procs;
-		if(world.rank() == 0)
-			for(int i = 0; i != participants; ++i)
-				for(int j = 0; j != participants; ++j)
-					table[i][j] = i + j;
+	if(world.rank() == 0)
+		for(int i = 0; i != participants; ++i)
+			for(int j = 0; j != participants; ++j)
+				table[i][j] = i + j;
 
-		world.scatter(&table[0][0], &table[0][0] + send_count, &row[0], 0);
-		for(int i = 0; i != max_procs; ++i) assert(row[i] == i + world.rank());
-	}
+//	world.scatter(&table[0][0], &table[0][0] + 64, &row[0], 0);
+	world.scatter_from(&row[0], &row[0] + 8, &table[0][0], 0);
+
+	for(int i = 0; i != max_procs; ++i) assert(row[i] == i + world.rank());
 
 }
 

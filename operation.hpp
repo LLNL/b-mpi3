@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_OPERATION $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_OPERATION $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_OPERATION_HPP
 #define BOOST_MPI3_OPERATION_HPP
@@ -29,6 +29,7 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 	operation& operator=(operation const&) = delete;
 	~operation() = default;
 
+#if 0
 	enum struct code : MPI_Op{
 		maximum = MPI_MAX, minimum = MPI_MIN, 
 		sum = MPI_SUM, product = MPI_PROD, 
@@ -38,7 +39,8 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 		max_value_location = MPI_MAXLOC,
 		min_value_location = MPI_MINLOC
 	};
-	operation(operation::code c) : base((MPI_Op)c){}
+#endif
+//	operation(operation::code c) : base((MPI_Op)c){}
 
 //	static operation const sum;//(operation::code::sum);
 //	static operation const product;
@@ -47,10 +49,41 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 
 };
 
-operation const sum    (operation::code::sum);
-operation const product(operation::code::product);
-operation const maximum(operation::code::maximum);
-operation const minimum(operation::code::minimum);
+//operation const sum    (operation::code::sum);
+//operation const product(operation::code::product);
+//operation const maximum(operation::code::maximum);
+//operation const minimum(operation::code::minimum);
+
+template<class T = void> struct min{
+	T const& operator()(T const& t1, T const& t2) const{return std::min(t1, t2);}
+};
+template<> struct min<void>{
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const{return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
+};
+
+template<class T = void> struct max{
+	T const& operator()(T const& t1, T const& t2) const{return std::max(t1, t2);}
+};
+template<> struct max<void>{
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const{return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+};
+
+template<class Op> struct predefined_operation;
+
+#define BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(CppoP, MpinamE, NamE) \
+template<> struct predefined_operation<CppoP>{ \
+	constexpr operator MPI_Op() const{return value;} \
+	static constexpr MPI_Op value = MpinamE; \
+}; \
+using NamE = predefined_operation<CppoP>;
+
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::plus<>, MPI_SUM, sum);
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::multiplies<>, MPI_PROD, product);
+
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(max<>, MPI_MAX, maximum);
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min<>, MPI_MIN, minimum);
+
+#undef BOOST_MPI3_DECLARE_PREDEFINED_OPERATION
 
 struct commutative_operation : operation{
 	template<class F,  typename = std::enable_if_t<not std::is_same<std::decay_t<F>, operation>{}> >
@@ -70,24 +103,39 @@ struct non_commutative_operation : operation{
 #include "alf/boost/mpi3/error_handler.hpp"
 
 void addem_int(int const* invec, int *inoutvec, int *len, int* f){
-	sfor(int i=0; i<*len; i++) inoutvec[i] += invec[i];
+	for(int i=0; i<*len; i++) inoutvec[i] += invec[i];
 }
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
-//	boost::mpi3::operation const& op = boost::mpi3::operation(&addem_int, true);
-//	boost::mpi3::operation const& op = boost::mpi3::operation::sum;
-	boost::mpi3::commutative_operation op(&addem_int);
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
+	int correct_result = world.size()*(world.size()-1)/2;
+
 	int data = world.rank();
-	int result = -1;
-	world.reduce_n(&data, 1, &result, 0, op);
-	world.broadcast_n(&result, 1, 0);
+	{
+		int result = -1;
+		world.reduce_n(&data, 1, &result, std::plus<>{}, 0);
+		if(world.root()) assert( result == correct_result ); else assert( result == -1 );
+		world.broadcast_n(&result, 1, 0);
+		assert(result == correct_result);
+	}
+	{
+		int result = -1;
+		world.all_reduce_n(&data, 1, &result, std::plus<>{});
+		assert(result == correct_result);
+	}
+	{
+		int result = world.all_reduce_value<std::plus<>>(data);
+		assert( result == correct_result );
+	}
+	{
+		int result = world.all_reduce_value(world.rank(), std::plus<>{});
+		assert( result == correct_result );
+	}
 
-	int correct_result = 0;
-	for(int i = 0; i != world.size(); ++i) correct_result += i;
-
-	assert(result == correct_result);
+	return 0;
 }
 
 #endif

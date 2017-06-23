@@ -37,7 +37,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	}
 	{
 		int r = world.rank() + 1;
-		std::vector<int> rs = world[0] += r;
+		std::vector<int> rs = (world[0] |= r);
 		if(world.rank() == 0) assert( rs[2] == 3 );
 	}
 	return 0;

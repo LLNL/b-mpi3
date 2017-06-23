@@ -13,10 +13,12 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	mpi3::type t = mpi3::type::int_[100]; // mpi3::type::int_.contiguous(100);
 	t.commit_as<std::array<int, 100>>();
-	std::array<int, 100> buffer;
+	t.commit_as<int[100]>();
+//	std::array<int, 100> buffer;
+	int buffer[100];
 
-	if(world.rank() == 0) world.send(&buffer, &buffer + 1, 1, 123);
-	else if(world.rank() == 1) world.receive(&buffer, &buffer + 1, 0, 123);
+	if(world.rank() == 0) world.send_n(&buffer, 1, 1, 123);
+	else if(world.rank() == 1) world.receive_n(&buffer, 1, 0, 123);
 
 	return 0;
 }

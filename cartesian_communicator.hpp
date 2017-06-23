@@ -5,6 +5,7 @@
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 
 #include "../mpi3/communicator.hpp"
+#include "../mpi3/process.hpp"
 
 namespace boost{
 namespace mpi3{
@@ -14,7 +15,7 @@ struct cartesian_communicator : communicator{
 	cartesian_communicator() : communicator(){}
 	public:
 	template<class Shape, class Period>
-	cartesian_communicator(communicator const& comm_old, Shape const& s, Period const& p){
+	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
 		int status = MPI_Cart_create(comm_old.impl_, s.size(), s.data(), p.data(), false, &impl_);
 		if(status != MPI_SUCCESS) throw std::runtime_error("cannot create cart comm ");
@@ -22,11 +23,11 @@ struct cartesian_communicator : communicator{
 		// there is an bug in mpich, in which the the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
-	cartesian_communicator(communicator const& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), 0)){}
+	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), 0)){}
 
-	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape) 
+	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape)){}
-	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
+	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)){}
 
 	int dimension() const{
@@ -40,10 +41,11 @@ struct cartesian_communicator : communicator{
 		return ret;
 	}
 	template<class Coord>
-	auto operator()(Coord const& coord) const{
+	auto operator()(Coord const& coord){
 		int rank = -1;
 		MPI_Cart_rank(impl_, coord.data(), &rank);
-		return operator[](rank);
+		return (*this)[rank];
+	//	return operator[](rank);
 	}
 	// int MPI_Cart_map not implemented
 	template<class RemainDim>

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++17 -Wfatal-errors $0 -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 -Wfatal-errors $0 -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
@@ -31,11 +31,11 @@ int mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
 		cout << "Task " << world.rank() << " is partner with " << message << "\n";
 	}
 
-
 	if(world.rank()==0){
 		std::vector<double> code = {1.,2.,3.,4.};
 		world.send_n(code.begin(), 4, 1);
 	}
+
 	if(world.rank()==1){
 		std::vector<double> code(4);
 		world.receive_n(code.begin(), 4, 0);

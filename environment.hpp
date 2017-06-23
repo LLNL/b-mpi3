@@ -15,9 +15,18 @@
 namespace boost{
 namespace mpi3{
 
-enum struct thread_level : decltype(MPI_THREAD_SINGLE){
-	single = MPI_THREAD_SINGLE, funneled = MPI_THREAD_FUNNELED, serialized = MPI_THREAD_SERIALIZED, multiple = MPI_THREAD_MULTIPLE
+struct thread_level{
+//	decltype(MPI_THREAD_SINGLE)
+	int impl_;
 };
+thread_level single{MPI_THREAD_SINGLE};
+thread_level funneled{MPI_THREAD_FUNNELED};
+thread_level serialized{MPI_THREAD_SERIALIZED};
+thread_level multiple{MPI_THREAD_MULTIPLE};
+
+//enum struct thread_level : decltype(MPI_THREAD_SINGLE){
+//	single = MPI_THREAD_SINGLE, funneled = MPI_THREAD_FUNNELED, serialized = MPI_THREAD_SERIALIZED, multiple = MPI_THREAD_MULTIPLE
+//}//;
 
 double wall_time(){return MPI_Wtime();}
 double wall_tick(){return MPI_Wtick();}
@@ -38,15 +47,15 @@ void  initialize(){
 }
 thread_level initialize_thread(thread_level required){
 	int provided;
-	int status = MPI_Init_thread(nullptr, nullptr, (int)required, &provided);
+	int status = MPI_Init_thread(nullptr, nullptr, required.impl_, &provided);
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot thread-initialize");
-	return (thread_level)provided;
+	return {provided};
 }
 thread_level initialize(thread_level required){return initialize_thread(required);}
 
 thread_level initialize_thread(int& argc, char**& argv, thread_level required){
 	thread_level ret;
-	int status = MPI_Init_thread(&argc, &argv, (int)required, reinterpret_cast<int*>(&ret));
+	int status = MPI_Init_thread(&argc, &argv, required.impl_, reinterpret_cast<int*>(&ret));
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot thread-initialize");
 	return ret;
 }
@@ -80,7 +89,7 @@ thread_level query_thread(){
 	int ret;
 	int status = MPI_Query_thread(&ret);
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot query thread level");
-	return (thread_level)ret;
+	return {ret};
 }
 
 struct environment_base{

@@ -55,9 +55,7 @@ namespace mpi3{
 
 template<typename T>
 void communicator::set_attribute(keyval const& kv, int idx, T const& val){
-//	assert(kv
 	int status = MPI_Comm_set_attr(impl_, kv.key_[idx], new T(val));
-//(void*)std::addressof(val));
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot set attribute");
 }
 void communicator::delete_attribute(keyval const& kv, int idx){
@@ -91,13 +89,16 @@ T const& communicator::get_attribute_as(keyval const& kv, int idx){
 
 }}
 
+
+namespace mpi3 = boost::mpi3;
 using std::cout;
+
 int main(int argc, char* argv[]){
 
-	boost::mpi3::environment env(argc, argv);
-	boost::mpi3::communicator comm = env.world();
+	mpi3::environment env(argc, argv);
+	mpi3::communicator comm = env.world();
 
-	boost::mpi3::keyval kv(3);
+	mpi3::keyval kv(3);
 	kv.set<std::string, double, int>();
 
 	comm.set_attribute(kv, 0, std::string("hola")); 
@@ -110,7 +111,7 @@ int main(int argc, char* argv[]){
 	assert(ret == "hola");
 	assert( comm.get_attribute_as<std::string>(kv, 0) == "hola" );
 
-	boost::mpi3::communicator comm2 = comm;
+	mpi3::communicator comm2 = comm;
 	assert( comm2.has_attribute(kv, 0) );
 	comm2.set_attribute(kv, 0, std::string("chau")); 
 	assert( comm2.get_attribute_as<std::string>(kv, 0) == "chau" );

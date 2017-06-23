@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` -lboost_serialization $0 -o $0x.x && time mpirun -np 2s $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 `#-Wfatal-errors` -lboost_serialization $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"

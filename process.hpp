@@ -1,5 +1,5 @@
 #ifdef COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && clang++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_PROCESS -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_PROCESS -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_PROCESS_HPP
 #define BOOST_MPI3_PROCESS_HPP
@@ -15,9 +15,15 @@ struct process{
 	int rank_;
 	template<class T>
 	optional<T> operator+=(T const& t) &&{
-		T val = comm_.reduce_value(t, mpi3::sum, rank_);
+		T val = comm_.reduce_value(t, std::plus<>{}, rank_);
 		if(rank_ != comm_.rank()) return {};
 		return optional<T>(val);
+	}
+	template<class T>
+	std::vector<T> operator|=(T const& t) &&{
+		std::vector<T> ret(comm_.size());
+		comm_.gather_value(t, ret.begin(), rank_);
+		return ret;
 	}
 	template<class T>
 	process&& operator<<(T const& t) &&{
@@ -42,7 +48,7 @@ process communicator::operator[](int rank){
 
 template<class T>
 T operator+=(communicator& comm, T const& t){
-	T val = comm.all_reduce_value(t, mpi3::sum);
+	T val = comm.all_reduce_value(t, std::plus<>{});
 	return val;
 }
 

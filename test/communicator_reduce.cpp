@@ -20,19 +20,19 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 		std::vector<int> recv_buffer;//(count, -1);
 		if(world.rank() == 0) recv_buffer.resize(count, -1);
-		world.reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin(), mpi3::sum, 0);
+		world.reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin(), std::plus<>{}, 0);
 		if(world.rank() == 0)
 			for(int i = 0; i != recv_buffer.size(); ++i) 
 				assert(recv_buffer[i] == i*world.size());
 	}
 	{
 		double v = world.rank();
-		double total = world.reduce_value(v, mpi3::sum, 0);
+		double total = world.reduce_value(v, std::plus<>{}, 0);
 		if(world.rank() == 0) assert( total == world.size()*(world.size()-1)/2 );
 		else assert( total == 0. );
 	}
 	{
-		std::experimental::optional<int> total = (world[0] += world.rank());
+		mpi3::optional<int> total = (world[0] += world.rank());
 	//	double total = world.reduce_value(world.rank(), mpi3::sum, 0);
 	//	if(total) assert( *total == (world.size()*world.size()-1)/2 );
 		if(world.rank() == 0) assert(total);

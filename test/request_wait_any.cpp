@@ -12,7 +12,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	assert( world.size() == 4);
 
 	std::vector<int> buffer(400);
-	if(world.master()){
+	if(world.root()){
 		for(int i = 0; i != world.size(); ++i) buffer[i] = i/100;
 		std::vector<mpi3::request> rs(3);
 		for(int i = 0; i != world.size() - 1; ++i){

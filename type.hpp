@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_TYPE $0x.cpp -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_TYPE $0x.cpp -o $0x.x -lboost_serialization && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -134,6 +134,7 @@ public:
 	}
 	static std::map<std::type_index, type const&> registered;
 
+#if 0
 	enum struct code : MPI_Datatype{
 		char_ = MPI_CHAR, 
 		unsigned_char = MPI_UNSIGNED_CHAR, unsigned_char_ = MPI_UNSIGNED_CHAR,
@@ -158,30 +159,27 @@ public:
 
 		lb = MPI_LB, ub = MPI_UB
 	};
-
-	static type const char_;
-
-	static type const unsigned_char_;
-	static type const unsigned_char;
-
-	static type const double_;//(MPI_DOUBLE);
-	static type const int_;//(MPI_INT);
-	static type const long_;//(MPI_LONG);
-
-	static type const float_int;
-	static type const float_int_;
+#endif
 };
 
-type const type::char_{(MPI_Datatype)boost::mpi3::type::code::char_};
-
-type const type::unsigned_char_{(MPI_Datatype)boost::mpi3::type::code::unsigned_char_};
-type const type::unsigned_char{(MPI_Datatype)boost::mpi3::type::code::unsigned_char};
-
-type const type::double_{(MPI_Datatype)boost::mpi3::type::code::double_};
-type const type::int_{(MPI_Datatype)boost::mpi3::type::code::int_};
-type const type::long_{(MPI_Datatype)boost::mpi3::type::code::long_};
-
-type const type::float_int{(MPI_Datatype)boost::mpi3::type::code::float_int};
+type const char_{MPI_CHAR};
+type const unsigned_char{MPI_UNSIGNED_CHAR}; type const& unsigned_char_ = unsigned_char;
+type const short_{MPI_SHORT};
+type const unsigned_short{MPI_UNSIGNED_SHORT}; type const& unsigned_short_ = unsigned_short;
+type const int_{MPI_INT};
+type const unsigned_int_{MPI_UNSIGNED}; type const& unsigned_int = unsigned_int_; type const& unsigned_ = unsigned_int_;
+type const long_{MPI_LONG};
+type const unsigned_long_{MPI_UNSIGNED_LONG}; type const& unsigned_long = unsigned_long_;
+type const float_{MPI_FLOAT};
+type const double_{MPI_DOUBLE};
+type const long_double_{MPI_LONG_DOUBLE}; type const& long_double = long_double_;
+type const long_long_int{MPI_LONG_DOUBLE_INT};
+type const float_int{MPI_FLOAT_INT};
+type const long_int{MPI_LONG_INT};
+type const double_int{MPI_DOUBLE_INT};
+type const short_int{MPI_SHORT_INT};
+type const int_int{MPI_2INT}; type const& _2int = int_int;
+type const long_double_int{MPI_LONG_DOUBLE_INT};
 
 std::map<std::type_index, type const&> type::registered;
 
@@ -191,17 +189,24 @@ std::map<std::type_index, type const&> type::registered;
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/communicator.hpp"
+#include "alf/boost/mpi3/process.hpp"
 #include<iostream>
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
-using std::endl;
 
 struct A{
 	double d[6];
 	long l[20];
 };
+template<class Archive>
+void serialize(Archive& ar, A& a, const unsigned int){
+	ar & boost::serialization::make_array(a.d, 6);
+	ar & boost::serialization::make_array(a.l, 20);
+}
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
 	assert(world.size() >= 2);
 	{
 		int value = -1;
@@ -226,11 +231,11 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
 		}
 	}
 	{
-		auto Atype = (
-			mpi3::type::double_[6], 
-			mpi3::type::long_[20]
-		);
-		Atype.commit_as<A>();
+	//	auto Atype = (
+	//		mpi3::double_[6], 
+	//		mpi3::long_[20]
+	//	);
+	//	Atype.commit_as<A>();
 
 		A particle;
 		particle.d[2] = 0.;
