@@ -28,7 +28,7 @@ struct window{
 
 	window(window const&) = delete; // windows cannot be duplicated, see text before section 4.5 in Using Adv. MPI
 	window(window&& other) : impl_(other.impl_){
-		other.impl_ == MPI_WIN_NULL;
+		other.impl_ = MPI_WIN_NULL;
 	}
 	window& operator=(window const&) = delete;
 	window& operator=(window&& other){
@@ -39,7 +39,7 @@ struct window{
 		return *this;
 	}
 	~window(){
-	//	if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
+		if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
 	}
 
 	void attach_n(void* base, MPI_Aint size){MPI_Win_attach(impl_, base, size);}

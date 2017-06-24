@@ -15,14 +15,13 @@ namespace mpi3{
 
 struct mutex{ //https://gist.github.com/aprell/1486197#file-mpi_mutex-c-L61
 	static int tag_counter;
-
 	using flag_t = unsigned char;
-//	int tag_;
-	int rank_; //home
-	flag_t* addr_; //wait_list?
 
 	communicator& comm_;
+	int rank_; //home
+	flag_t* addr_; //wait_list?
 	window win_;
+//	int tag_;
 
 	mutex(mutex&&) = delete;
 	mutex(mutex const&) = delete;
@@ -98,11 +97,11 @@ template<class T>
 struct atomic{
 	int rank_;
 	T* addr_;
-	communicator const& comm_;
+	communicator& comm_;
 	T counter = -999;
 	window win_;
 
-	atomic(T const& value, communicator const& comm, int rank = 0) : 
+	atomic(T const& value, communicator& comm, int rank = 0) : 
 		comm_(comm),
 		rank_(rank),
 		addr_((comm.rank() == rank)?(T*)boost::mpi3::malloc(sizeof(T)):nullptr),
