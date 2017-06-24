@@ -124,17 +124,17 @@ struct window{
 
 	template<class T>
 	void fetch_sum_value(T const& origin, T& target, int target_rank, int target_disp = 0) const{
-		MPI_Fetch_and_op(&origin, &target, detail::datatype<T>{}, target_rank, target_disp, MPI_SUM, impl_);
+		MPI_Fetch_and_op(&origin, &target, detail::basic_datatype<T>{}, target_rank, target_disp, MPI_SUM, impl_);
 	}
 	template<class T>
 	void fetch_prod_value(T const& origin, T& target, int target_rank, int target_disp = 0) const{
-		MPI_Fetch_and_op(&origin, &target, detail::datatype<T>{}, target_rank, target_disp, MPI_PROD, impl_);
+		MPI_Fetch_and_op(&origin, &target, detail::basic_datatype<T>{}, target_rank, target_disp, MPI_PROD, impl_);
 	}
 	template<class T>
 	void fetch_replace_value(T const&  origin, T& target, int target_rank, int target_disp = 0) const{
-		MPI_Fetch_and_op(&origin, &target, detail::datatype<T>{}, target_rank, target_disp, MPI_REPLACE, impl_);
+		MPI_Fetch_and_op(&origin, &target, detail::basic_datatype<T>{}, target_rank, target_disp, MPI_REPLACE, impl_);
 	}
-	template<class CI1, class CI2, class datatype = detail::datatype<std::iterator_traits<CI1>>>
+	template<class CI1, class CI2, class datatype = detail::basic_datatype<typename std::iterator_traits<CI1>::value_type> >
 	void fetch_replace(CI1 it1, CI2 it2, int target_rank, int target_disp = 0) const{
 		MPI_Fetch_and_op(std::addressof(*it1), std::addressof(*it2), datatype{}, target_rank, target_disp, MPI_REPLACE, impl_); 
 	}
@@ -144,11 +144,11 @@ struct window{
 		MPI_Put(
 			std::addressof(*it), /* void* origin_address = a + i*/ 
 			n, /*int origin_count = 1 */
-			detail::datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
+			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			target_rank, /*int target_rank = 1*/
 			target_disp, /*int target_disp = i*/
 			n, /*int target_count = 1*/
-			detail::datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
+			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			impl_
 		);
 	}
@@ -161,11 +161,11 @@ struct window{
 		MPI_Get(
 			std::addressof(*it), /* void* origin_address = b + i*/
 			n, /*int origin_count = 1 */
-			detail::datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
+			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			target_rank, /*int target_rank = 1 */
 			target_disp, /*int target_disp = size1 + i*/
 			n, /*int target_count = 1 */
-			detail::datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
+			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			impl_
 		);
 	}
@@ -219,12 +219,12 @@ shm_pointer<T> communicator::allocate_shared(MPI_Aint size) const
 #endif 
 
 template<class T>
-void communicator::deallocate_shared(pointer<T> p) const{
+void communicator::deallocate_shared(pointer<T> p){
 //	MPI_Free_mem(p.base_ptr(rank()));
 }
 
 template<class T>
-void communicator::deallocate(pointer<T>& p, MPI_Aint) const{
+void communicator::deallocate(pointer<T>& p, MPI_Aint){
 //	p.pimpl_->fence();
 //	MPI_Free_mem(p.local_ptr());
 //	MPI_Win_free(&p.pimpl_->impl_);
@@ -242,10 +242,11 @@ void communicator::deallocate(pointer<T>& p, MPI_Aint) const{
 #include "alf/boost/mpi3/ostream.hpp"
 #include<iostream>
 
-using std::cout;
-using std::endl;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+namespace mpi3 = boost::mpi3;
+using std::cout;
+
+int mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
 
 	{
 		boost::mpi3::window win(world);

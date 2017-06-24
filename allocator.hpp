@@ -17,8 +17,8 @@ struct bad_alloc : std::bad_alloc{using std::bad_alloc::bad_alloc;};
 
 void* malloc(std::size_t size){
 	void* ret;
-	int i = MPI_Alloc_mem(static_cast<MPI_Aint>(size), MPI_INFO_NULL, &ret);
-	if(i) throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
+	int s = MPI_Alloc_mem(static_cast<MPI_Aint>(size), MPI_INFO_NULL, &ret);
+	if(s != MPI_SUCCESS) throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
 	return ret;
 }
 
@@ -50,12 +50,12 @@ bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
 #include "alf/boost/mpi3/main.hpp"
 #include<vector>
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
-using std::endl;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
-	std::vector<double, boost::mpi3::allocator<double>> v(1000000);
-	
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+	std::vector<double, mpi3::allocator<double>> v(1000000);
+
 	return 0;
 }
 

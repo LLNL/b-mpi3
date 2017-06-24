@@ -124,14 +124,14 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	communicator(communicator const& other, group const& g, int tag = 0);
 
 	template<class T = char>
-	shared_window allocate_shared(MPI_Aint size, int disp_unit = sizeof(T)) const;
+	shared_window allocate_shared(MPI_Aint size, int disp_unit = sizeof(T));
 
 	pointer<void> malloc(MPI_Aint size) const;
 
 	template<class T = void>
-	void deallocate_shared(pointer<T> p) const;
+	void deallocate_shared(pointer<T> p);
 	template<class T = void>
-	void deallocate(pointer<T>& p, MPI_Aint size = 0) const;
+	void deallocate(pointer<T>& p, MPI_Aint size = 0);
 
 	void free(pointer<void>& p) const;
 

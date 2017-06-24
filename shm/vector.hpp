@@ -40,13 +40,15 @@ int rand(int lower, int upper){
 int rand(int upper = RAND_MAX){return rand(0, upper);}
 
 namespace mpi3 = boost::mpi3;
+using std::cout; 
 
-int mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	boost::mpi3::shm::vector<double> v(10, world);
+	mpi3::shm::vector<double>::allocator_type alloc(world);
+	mpi3::shm::vector<double> v(10, alloc);
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 
-	boost::mpi3::mutex m(world);
+	mpi3::mutex m(world);
 	std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
 	{
 		std::lock_guard<boost::mpi3::mutex> lock(m);
@@ -61,12 +63,10 @@ int mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
 	world.barrier();
 
 	if(world.rank() == 0){
-		for(int i = 0; i != 10; ++i){
-			std::cout << v[i] << " ";
-		}
-		std::cout << std::endl;
+		for(int i = 0; i != 10; ++i)
+			cout << v[i] << " ";
+		cout << std::endl;
 	}
-//	assert( std::all_of(v.begin(), v.end(), [&](auto&& e){return e == v[0];} );
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 }
 

@@ -21,7 +21,7 @@ struct mutex{ //https://gist.github.com/aprell/1486197#file-mpi_mutex-c-L61
 	int rank_; //home
 	flag_t* addr_; //wait_list?
 
-	communicator const& comm_;
+	communicator& comm_;
 	window win_;
 
 	mutex(mutex&&) = delete;
@@ -29,7 +29,7 @@ struct mutex{ //https://gist.github.com/aprell/1486197#file-mpi_mutex-c-L61
 	mutex& operator=(mutex const&) = delete;
 	mutex& operator=(mutex&&) = delete;
 
-	mutex(communicator const& comm, int rank = 0) : 
+	mutex(communicator& comm, int rank = 0) : 
 		comm_(comm),
 		rank_(rank), 
 		addr_((comm.rank() == rank)?(flag_t*)boost::mpi3::malloc(sizeof(flag_t)*comm.size()):nullptr),
@@ -154,21 +154,21 @@ template<> atomic<float >& atomic<float >::operator/=(float  const& d){return op
 #include<iostream>
 #include <mutex>
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
-using std::endl;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	{
 		boost::mpi3::atomic<int> counter(0, world);
 		counter += 1;
-		if(counter + 1 == world.size()) std::cout << "Process #" << world.rank() << " did the last updated" << std::endl;
+		if(counter + 1 == world.size()) cout << "Process #" << world.rank() << " did the last updated" << std::endl;
 	}
 	{
 		boost::mpi3::mutex m(world);
 		std::lock_guard<boost::mpi3::mutex> lock(m);
 
-		cout << "locked from " << world.rank() << "\n";
+		cout << "locked from " << world.rank() << '\n';
 		cout << "never interleaved " << world.rank() << '\n';
 		cout << "forever blocked " << world.rank() << '\n';
 		cout << std::endl;

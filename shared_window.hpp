@@ -36,7 +36,7 @@ struct shared_window : window{
 };
 
 template<class T>
-shared_window communicator::allocate_shared(MPI_Aint size, int disp_unit) const{
+shared_window communicator::allocate_shared(MPI_Aint size, int disp_unit){
 	void* base_ptr;
 	shared_window ret;
 	MPI_Win_allocate_shared(size, disp_unit, MPI_INFO_NULL, impl_, &base_ptr, &ret.impl_);
@@ -101,8 +101,8 @@ struct array_ptr{
 };
 
 template<class T> struct allocator{
-	boost::mpi3::communicator const& comm_;
-	allocator(boost::mpi3::communicator const& comm) : comm_(comm){}
+	boost::mpi3::communicator& comm_;
+	allocator(boost::mpi3::communicator& comm) : comm_(comm){}
 
 	array_ptr<T> allocate(std::size_t n, const void* hint = 0){
 		array_ptr<T> ret;
