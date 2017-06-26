@@ -215,7 +215,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 
-	operator bool() const{return not is_null();}
+	explicit operator bool() const{return not is_null();}
 
 	int remote_size() const{
 		int ret = -1;

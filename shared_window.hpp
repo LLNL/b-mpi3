@@ -101,8 +101,8 @@ struct array_ptr{
 };
 
 template<class T> struct allocator{
-	boost::mpi3::communicator& comm_;
-	allocator(boost::mpi3::communicator& comm) : comm_(comm){}
+	mpi3::communicator& comm_;
+	allocator(mpi3::communicator& comm) : comm_(comm){}
 
 	array_ptr<T> allocate(std::size_t n, const void* hint = 0){
 		array_ptr<T> ret;
@@ -143,9 +143,9 @@ int rand(int upper = RAND_MAX){return rand(0, upper);}
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	boost::mpi3::shm::vector<double> v(10, world);
+	mpi3::shm::vector<double> v(10, world);
 	if(world.rank() == 0){
 		for(int i = 0; i != 10; ++i){
 			std::this_thread::sleep_for(std::chrono::milliseconds(rand(100)));
@@ -153,7 +153,7 @@ int mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
 		}
 	}
 
-	boost::mpi3::mutex m(world);
+	mpi3::mutex m(world);
 	m.lock();
 	if(world.rank() == 1){
 		for(int i = 0; i != 10; ++i){
@@ -169,6 +169,7 @@ int mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
 			std::cout << v[i] << " " << std::flush;
 		}
 	}
+
 }
 
 #endif

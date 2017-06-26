@@ -23,8 +23,8 @@ using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	mpi3::shm::vector<double>::allocator_type alloc(world);
-	mpi3::shm::vector<double> v(10, alloc);
+//	mpi3::shm::vector<double>::allocator_type alloc(world);
+	mpi3::shm::vector<double> v(10, world);
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 
 	mpi3::mutex m(world);
