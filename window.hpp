@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
@@ -16,15 +16,13 @@ struct window{
 	MPI_Win impl_;
 	window() : impl_(MPI_WIN_NULL){}
 	template<class T>
-	window(T* base, MPI_Aint size, communicator const& comm){
-		MPI_Win_create(
-			(void*)base, size*sizeof(T), sizeof(T), MPI_INFO_NULL, comm.impl_, &impl_
-		);
+	window(T* base, mpi3::size_t size, communicator& comm){
+		MPI_Win_create((void*)base, size*sizeof(T), sizeof(T), MPI_INFO_NULL, comm.impl_, &impl_);
 	}
-	window(void* base, MPI_Aint size, communicator const& comm){
+	window(void* base, mpi3::size_t size, communicator& comm){
 		MPI_Win_create(base, size, 1, MPI_INFO_NULL, comm.impl_, &impl_);
 	}
-	window(communicator const& comm) : window((void*)nullptr, 0, comm){}
+	window(communicator& comm) : window((void*)nullptr, 0, comm){}
 
 	window(window const&) = delete; // windows cannot be duplicated, see text before section 4.5 in Using Adv. MPI
 	window(window&& other) : impl_(other.impl_){
@@ -43,6 +41,14 @@ struct window{
 	}
 
 	void attach_n(void* base, MPI_Aint size){MPI_Win_attach(impl_, base, size);}
+
+	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
+	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
+		using detail::data;
+		int target_count = count;
+		int s = MPI_Accumulate(data(first), count, detail::basic_datatype<V>{}, target_rank, target_disp, target_count, detail::basic_datatype<V>{}, MPI_SUM, impl_); 
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot accumulate_n");
+	}
 //	void attach(void* base, MPI_Aint size){MPI_Win_attach(impl_, base, size);}
 //	void call_errhandler(int errorcode);
 	void complete() const{MPI_Win_complete(impl_);}
@@ -50,7 +56,10 @@ struct window{
 //	void create_keyval(...);
 //	void delete_attr(...);
 	void deattach(void* base){MPI_Win_detach(impl_, base);}
-	void fence(int assert = MPI_MODE_NOCHECK) const{MPI_Win_fence(assert, impl_);}
+	void fence(int assert_mode = 0 /*MPI_MODE_NOCHECK*/){
+	//	assert( MPI_MODE_NOSUCCEED == 0);
+		MPI_Win_fence(assert_mode, impl_);
+	}
 //	void free_keyval(...);
 	void flush(int rank){MPI_Win_flush(rank, impl_);}
 	void flush_all(){MPI_Win_flush_all(impl_);}
@@ -242,19 +251,18 @@ void communicator::deallocate(pointer<T>& p, MPI_Aint){
 #include "alf/boost/mpi3/ostream.hpp"
 #include<iostream>
 
-
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
-
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	{
-		boost::mpi3::window win(world);
+		mpi3::window w(world);
 		double* darr = new double[100];
-		win.attach_n(darr, 100);
-		win.fence();
+		w.attach_n(darr, 100);
+		w.fence();
 		delete[] darr;
 	}
+	return 0;
 	#if 0
 	{
 		auto node = world.split_shared(0);

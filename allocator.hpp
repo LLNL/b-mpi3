@@ -48,6 +48,7 @@ bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
 #ifdef _TEST_BOOST_MPI3_ALLOCATOR
 
 #include "alf/boost/mpi3/main.hpp"
+#include<boost/container/flat_set.hpp>
 #include<vector>
 
 namespace mpi3 = boost::mpi3;
@@ -56,6 +57,33 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	std::vector<double, mpi3::allocator<double>> v(1000000);
 
+	{
+		boost::container::flat_set<double, std::less<double>, mpi3::allocator<double> > fs;
+		fs.insert(5.);
+		fs.insert(3.);
+		auto it = fs.begin(); 
+		assert(*it == 3.); 
+		++it; 
+		assert(*it == 5.); 
+	}
+	{
+		boost::container::flat_set<int, std::less<int>, std::allocator_traits<mpi3::allocator<double>>::rebind_alloc<int>> fs;
+		fs.insert(5);
+		fs.insert(3);
+		auto it = fs.begin(); 
+		assert(*it == 3); 
+		++it; 
+		assert(*it == 5);
+	} 
+	{
+		boost::container::flat_set<std::pair<double, double>, std::less<std::pair<double, double>>, mpi3::allocator<std::pair<double, double>>> fsp;
+		fsp.insert({1.,2.});
+		fsp.insert({3.,4.});
+		auto it = fsp.begin(); 
+		assert(*it == std::make_pair(1.,2.)); 
+		++it; 
+		assert(*it == std::make_pair(3.,4.)); 
+	}
 	return 0;
 }
 

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x -lboost_serialization && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 `#-Wall` -Wfatal-errors $0 -o $0x.x -lboost_serialization && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
@@ -10,6 +10,8 @@ mpicxx -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x -lboost_serialization && 
 #include<random>
 #include<thread> //sleep_for
 #include<mutex> //lock_guard
+
+#include<boost/container/flat_map.hpp>
 
 int rand(int lower, int upper){
 	static std::mt19937 rng(std::random_device{}());
@@ -49,6 +51,26 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	// check that only one process had exclusive access 
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 
+//	if(world.rank() == 0){
+		v.resize(2);
+//	}
+	world.barrier();
+	assert( v.size() == 2 );
+	return 0;
+	{
+		boost::container::flat_map<double, double, std::less<double>, std::allocator<std::pair<double, double>>> fm;
+		fm[4.1] = 6.;
+		assert( fm[4.1] == 6. );
+	}
+	{
+		using shm_flat_map = boost::container::flat_map<double, double, std::less<double>, mpi3::shm::allocator<std::pair<double, double>>>;
+		shm_flat_map fm(world);
+
+//		if(world.rank() == 0) fm[4.1] = 6.;
+		world.barrier();
+
+//		assert( fm[4.1] == 6. );
+	}
 	return 0;
 }
 
