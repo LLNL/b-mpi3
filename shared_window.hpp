@@ -12,14 +12,20 @@ namespace boost{
 namespace mpi3{
 
 struct shared_window : window{
-	MPI_Aint size(int rank) const{
+	shared_window(communicator& comm, mpi3::size_t n) : window{}{
+		int disp_unit = 1;
+		void* base_ptr = nullptr;
+		int s = MPI_Win_allocate_shared(n, 1, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
+	}
+	mpi3::size_t size(int rank) const{
 		MPI_Aint size;
 		int disp_unit;
 		void* baseptr;
 		MPI_Win_shared_query(impl_, rank, &size, &disp_unit, &baseptr);
 		return size;
 	}
-	MPI_Aint disp_unit(int rank) const{
+	mpi3::size_t disp_unit(int rank) const{
 		MPI_Aint size;
 		int disp_unit;
 		void* baseptr;
@@ -35,12 +41,15 @@ struct shared_window : window{
 	}
 };
 
-template<class T>
-shared_window communicator::allocate_shared(MPI_Aint size, int disp_unit){
-	void* base_ptr;
-	shared_window ret;
-	MPI_Win_allocate_shared(size, disp_unit, MPI_INFO_NULL, impl_, &base_ptr, &ret.impl_);
-	return ret;
+template<class T /* = char*/> 
+shared_window communicator::allocate_shared(
+	mpi3::size_t size, 
+	int disp_unit /* = 1*/
+){
+//	void* base_ptr;
+	return shared_window(*this, size, disp_unit);
+//	MPI_Win_allocate_shared(size, disp_unit, MPI_INFO_NULL, impl_, &base_ptr, &ret.impl_);
+//	return ret;
 }
 
 namespace intranode{
@@ -71,6 +80,8 @@ template<class T>
 struct array_ptr{
 	std::shared_ptr<shared_window> wSP_;
 	std::ptrdiff_t offset = 0;
+	array_ptr(){}
+	array_ptr(std::nullptr_t){}
 //	array_ptr(std::nullptr_t = nullptr) : offset(0){}
 	array_ptr(array_ptr const& other) = default;
 //	array_ptr(T* const& other = nullptr) : offset(0){}
@@ -79,7 +90,7 @@ struct array_ptr{
 	T& operator*() const{return *((T*)(wSP_->base(0)) + offset);}
 	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
-	explicit operator bool() const{return wSP_.get();}
+	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	operator array_ptr<void const>() const{
 		array_ptr<void const> ret;
 		ret.wSP_ = wSP_;
@@ -146,16 +157,18 @@ template<class T> struct allocator{
 }}
 
 #ifdef _TEST_BOOST_MPI3_SHARED_WINDOW
-#include<iostream>
-#include<algorithm> // generate
-#include<random>
+
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/mutex.hpp"
-#include <mutex>
-#include<thread> 
+#include "alf/boost/mpi3/mutex.hpp"
+#include "alf/boost/mpi3/shm/vector.hpp"
+
+#include<algorithm> // std::generate
 #include<chrono>
-#include "../mpi3/mutex.hpp"
-#include "../mpi3/shm/vector.hpp"
+#include<iostream>
+#include<mutex>
+#include<random>
+#include<thread> 
 
 int rand(int lower, int upper){
 	static std::random_device rd;
@@ -196,7 +209,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	world.barrier();
 
 	m.lock();
-	v.resize(3);
+//	v.resize(3);
 	if(world.rank() == 2)
 		for(int i = 0; i != 3; ++i)
 			cout << v[i] << " " << std::flush;
