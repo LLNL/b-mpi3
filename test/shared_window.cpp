@@ -11,20 +11,20 @@ using std::cout;
 
 int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 
-	int size = 100;
-	mpi3::shared_window sw(world, world.rank()==0?100*sizeof(double):0);
+	int n = 100;
+	mpi3::shared_window sw(world, world.rank()==0?n*sizeof(double):0);
 	int* arr = (int*)sw.base(0);
 //	int size = sw.size(0)/sizeof(double);
 
 	cout << "In rank " << world.rank() << " baseptr = " << arr << std::endl;
 
-	for(int i = world.rank(); i < size; i+=world.size())
+	for(int i = world.rank(); i < n; i+=world.size())
 		arr[i] = world.rank();
 
 	world.barrier();
 
 	if(world.rank() == 0){
-		for(int i = 0; i < size; i++) cout << arr[i];
+		for(int i = 0; i < n; i++) cout << arr[i];
 		cout << '\n';
 	}
 
