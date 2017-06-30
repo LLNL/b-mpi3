@@ -40,7 +40,8 @@ struct window{
 		if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
 	}
 
-	void attach_n(void* base, MPI_Aint size){MPI_Win_attach(impl_, base, size);}
+	template<class T>
+	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
 
 	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
 	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
@@ -57,7 +58,6 @@ struct window{
 //	void delete_attr(...);
 	void deattach(void* base){MPI_Win_detach(impl_, base);}
 	void fence(int assert_mode = 0 /*MPI_MODE_NOCHECK*/){
-	//	assert( MPI_MODE_NOSUCCEED == 0);
 		MPI_Win_fence(assert_mode, impl_);
 	}
 //	void free_keyval(...);
@@ -150,8 +150,9 @@ struct window{
 
 	template<class ContiguousIterator>
 	void put_n(ContiguousIterator it, std::size_t n, int target_rank, int target_disp = 0) const{
+		using detail::data;
 		MPI_Put(
-			std::addressof(*it), /* void* origin_address = a + i*/ 
+			data(it), /* void* origin_address = a + i*/ 
 			n, /*int origin_count = 1 */
 			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			target_rank, /*int target_rank = 1*/
@@ -165,10 +166,11 @@ struct window{
 	void put_value(Value const& t, int target_rank, int target_disp = 0) const{
 		put_n(&t, 1, target_rank, target_disp);
 	}
-	template<class ContiguousIterator>
-	void get_n(ContiguousIterator it, std::size_t n, int target_rank, int target_disp = 0) const{
-		MPI_Get(
-			std::addressof(*it), /* void* origin_address = b + i*/
+	template<typename ContiguousIterator, typename Size>
+	void get_n(ContiguousIterator it, Size n, int target_rank, int target_disp = 0) const{
+		using detail::data;
+		int s = MPI_Get(
+			data(it), /* void* origin_address = b + i*/
 			n, /*int origin_count = 1 */
 			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			target_rank, /*int target_rank = 1 */
@@ -177,6 +179,7 @@ struct window{
 			detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>::value, 
 			impl_
 		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get_n");
 	}
 	template<class Value>
 	void get_value(Value& t, int target_rank, int target_disp = 0) const{
@@ -188,21 +191,22 @@ template<class T> struct reference;
 
 template<class T>
 struct shm_pointer : window{
-	T* ptr_;
-//	shm_pointer(){}
+//	T* ptr_ = nullptr;
 	T* local_ptr(int rank) const{
-		MPI_Aint size;
+		mpi3::size_t size;
 		int disp_unit;
 		void* baseptr;
 		int i = MPI_Win_shared_query(window::impl_, rank, &size, &disp_unit, &baseptr);
 		return static_cast<T*>(baseptr);
 	}
-	MPI_Aint local_size(int rank) const{
-		MPI_Aint size;
-		int disp_unit;
-		void* baseptr;
-		int i = MPI_Win_shared_query(window::impl_, rank, &size, &disp_unit, &baseptr);
-		return size/disp_unit;
+	mpi3::size_t local_size(int rank) const{
+		mpi3::size_t ret = -1;
+		int disp_unit = -1;
+		void* baseptr = nullptr;
+		int s = MPI_Win_shared_query(window::impl_, rank, &ret, &disp_unit, &baseptr);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get local size");
+		assert(ret%disp_unit == 0);
+		return ret/disp_unit;
 	}
 	reference<T> operator*() const;
 };

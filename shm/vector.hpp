@@ -67,7 +67,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		cout << std::endl;
 	}
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
-	v.resize(2);
+//	v.resize(2);
 }
 
 #endif

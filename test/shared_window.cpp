@@ -14,6 +14,7 @@ int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 	int n = 100;
 	mpi3::shared_window sw(world, world.rank()==0?n*sizeof(double):0);
 	int* arr = (int*)sw.base(0);
+	assert( n == sw.size(0)/sizeof(double) );
 //	int size = sw.size(0)/sizeof(double);
 
 	cout << "In rank " << world.rank() << " baseptr = " << arr << std::endl;

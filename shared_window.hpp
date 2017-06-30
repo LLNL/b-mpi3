@@ -12,10 +12,10 @@ namespace boost{
 namespace mpi3{
 
 struct shared_window : window{
-	shared_window(communicator& comm, mpi3::size_t n) : window{}{
-		int disp_unit = 1;
+	shared_window(communicator& comm, mpi3::size_t n, int disp_unit) : window{}{
+	//	int disp_unit = sizeof(int);
 		void* base_ptr = nullptr;
-		int s = MPI_Win_allocate_shared(n, 1, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
+		int s = MPI_Win_allocate_shared(n, disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
 	mpi3::size_t size(int rank) const{
@@ -41,15 +41,12 @@ struct shared_window : window{
 	}
 };
 
-template<class T /* = char*/> 
-shared_window communicator::allocate_shared(
+template<class T /*= char*/> 
+shared_window communicator::make_shared_window(
 	mpi3::size_t size, 
-	int disp_unit /* = 1*/
+	int disp_unit /*= sizeof(T)*/
 ){
-//	void* base_ptr;
-	return shared_window(*this, size, disp_unit);
-//	MPI_Win_allocate_shared(size, disp_unit, MPI_INFO_NULL, impl_, &base_ptr, &ret.impl_);
-//	return ret;
+	return shared_window(*this, size*sizeof(T), disp_unit);
 }
 
 namespace intranode{
@@ -135,7 +132,8 @@ template<class T> struct allocator{
 		array_ptr<T> ret;
 		if(n == 0) return ret;
 		ret.wSP_ = std::make_shared<shared_window>(
-			comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
+			comm_.make_shared_window<T>(comm_.rank()==0?n:0)
+		//	comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
 		);
 		return ret;
 	}
