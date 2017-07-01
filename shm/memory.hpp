@@ -22,18 +22,34 @@ struct shared_memory_object{
 };
 
 template<class T>
-struct array_ptr;
-
-template<>
-struct array_ptr<void>{
-	using T = void;
-//	std::shared_ptr<shared_window> swSP_;
-	shared_window* swP_; // no shared, I want it to leak if not properly used
-	std::ptrdiff_t offset = 0;
+struct array_ptr{
+	using value_type = T;
+	shared_window* swP_;  // no shared, I want it to leak if not properly used
+	std::ptrdiff_t offset_ = 0;
+//	explicit operator T*(){return (T*)smo_.swP_->base(0) + offset_;}
+	array_ptr<T>& operator++(){++offset_;}
+	T& operator*() const{return *( (T*)swP_->base(0) + offset_);}
+	T& operator[](int i) const{return *( (T*)swP_->base(0) + offset_ + i);}
 	array_ptr(std::nullptr_t = nullptr){}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
 };
+
+template<>
+struct array_ptr<void>{
+//	std::shared_ptr<shared_window> swSP_;
+	shared_window* swP_; // no shared, I want it to leak if not properly used
+	std::ptrdiff_t offset_ = 0;
+	array_ptr(std::nullptr_t = nullptr){}
+	array_ptr(array_ptr const& other) = default;
+	template<class Other>
+	array_ptr(array_ptr<Other> other) : swP_(other.swP_), offset_(other.offset_){}
+	template<class Other>
+	explicit operator array_ptr<Other>() const{array_ptr<Other> ret; ret.swP_ = swP_; ret.offset_ = offset_; return ret;}
+	array_ptr& operator=(array_ptr const& other) = default;
+};
+
+template<class T> struct allocator;
 
 struct managed_shared_memory{
 	communicator& comm_;
@@ -45,7 +61,26 @@ struct managed_shared_memory{
 		return ret;
 	}
 	void deallocate(array_ptr<void> ptr){delete ptr.swP_;}
+	template<class T>
+	allocator<T> get_allocator();
 };
+
+template<class T>
+struct allocator{
+	managed_shared_memory& msm_;
+	allocator(managed_shared_memory& msm) : msm_(msm){}
+	array_ptr<T> allocate(mpi3::size_t n){
+		return static_cast<array_ptr<T>>(msm_.allocate(n*sizeof(T)));
+	}
+	void deallocate(array_ptr<T> ptr){
+		msm_.deallocate(ptr);//static_cast<array_ptr<void>>(ptr));
+	}
+};
+
+template<class T>
+allocator<T> managed_shared_memory::get_allocator(){
+	return allocator<T>(*this);
+}
 
 struct mapped_region{
 	shared_memory_object& smo_;
@@ -61,9 +96,6 @@ struct mapped_region{
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/mutex.hpp"
-
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 
 namespace mpi3 = boost::mpi3;
 using std::cout; 
@@ -92,6 +124,14 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		ptr = mpi3mshm.allocate(200);
 		mpi3mshm.deallocate(ptr);
 
+		{
+			mpi3::shm::allocator<int> a = mpi3mshm.get_allocator<int>();
+			mpi3::shm::array_ptr<int> ptr = a.allocate(10);
+			if(world.rank() == 0) std::fill_n(ptr, 10, 5);
+			world.barrier();
+			if(world.rank() == 1) for(int i = 0; i != 10; ++i) assert(ptr[i] == 5);
+			a.deallocate(ptr);
+		}
 		{
 			std::allocator<int> a;
 			int* ptr = a.allocate(100);
