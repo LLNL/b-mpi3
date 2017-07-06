@@ -1,18 +1,18 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_VECTOR $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -fpermissive -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_VECTOR $0x.cpp -o $0x.x && time mpirun -np 10 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHM_VECTOR_HPP
 #define BOOST_MPI3_SHM_VECTOR_HPP
 
-#include "../../mpi3/shared_window.hpp"
+#include "../../mpi3/shm/memory.hpp"
 #include<boost/container/vector.hpp>
 
 namespace boost{
 namespace mpi3{
 namespace shm{
 
-template<class T>
-using allocator = boost::mpi3::intranode::allocator<T>;
+//template<class T>
+//using allocator = boost::mpi3::intranode::allocator<T>;
 
 template<class T>
 using vector = boost::container::vector<T, boost::mpi3::shm::allocator<T>>;
@@ -44,8 +44,35 @@ using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	mpi3::shm::vector<double> v(10, world);
+	mpi3::shm::managed_shared_memory mpi3mshm(world);
+
+	using elem = double;
+
+	mpi3::shm::vector<elem> v(10, mpi3mshm.get_allocator<elem>());
+	assert(not v.empty() and v.front() == 0 and std::equal(std::next(v.begin()), v.end(), v.begin()) );
+
+	mpi3::mutex m(world);
+	std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
+	{
+		std::lock_guard<mpi3::mutex> lock(m); // m.lock();
+		for(int i = 0; i != 10; ++i){
+			v[i] = world.rank();
+			std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
+		} //	m.unlock();
+	}
+	world.barrier();
+
+	if(world.rank() == 0){
+		for(int i = 0; i != 10; ++i)
+			cout << v[i] << " ";
+		cout << std::endl;
+	}
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
+
+	v.resize(15);
+
+	return 0;
+#if 0
 
 	mpi3::mutex m(world);
 	std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
@@ -68,6 +95,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	}
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 //	v.resize(2);
+#endif
+
 }
 
 #endif
