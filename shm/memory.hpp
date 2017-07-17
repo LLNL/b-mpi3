@@ -15,6 +15,9 @@ struct shared_memory_object{
 	communicator& comm_;
 	std::unique_ptr<mpi3::shared_window> swUP_;
 	shared_memory_object(communicator& c) : comm_(c){}
+	shared_memory_object(communicator& c, mpi3::size_t n) : comm_(c){
+		truncate(n);
+	}
 	shared_memory_object(shared_memory_object const&) = delete;
 	void truncate(mpi3::size_t n){
 		swUP_ = std::make_unique<mpi3::shared_window>(comm_.make_shared_window<char>(comm_.rank()==0?n:0));
@@ -61,37 +64,57 @@ struct array_ptr{
 	std::ptrdiff_t offset_ = 0;
 //	explicit operator T*(){return (T*)smo_.swP_->base(0) + offset_;}
 //	array_ptr<double>(double* const){}
-	array_ptr(nullptr_t){}
-	array_ptr(int){}
+//	array_ptr(nullptr_t){}
+//	array_ptr(void*){}
+//	array_ptr(T* p){} // this is necessary to allow the code triggered by boost.container::resize, should be harmless in that context
 	array_ptr(){}
 	array_ptr& operator++(){++offset_; return *this;}
+	array_ptr& operator--(){--offset_; return *this;}
 	array_ptr& operator+=(mpi3::size_t n){offset_+=n; return *this;}
+	array_ptr& operator-=(mpi3::size_t n){offset_-=n; return *this;}
 	friend array_ptr operator+(array_ptr p, mpi3::size_t n){return p+=n;}
+	friend array_ptr operator-(array_ptr p, mpi3::size_t n){return p-=n;}
 	mpi3::size_t operator-(array_ptr const& other) const{
-		assert(swP_ == other.swP_);
+//		assert(swP_ == other.swP_);
 		return offset_ - other.offset_;
 	}
 	T* operator->() const{
-		if(not swP_) return nullptr;
-		auto ret = (T*)(swP_->base(0)) + offset_;
-		return ret;
+		return swP_?((T*)(swP_->base(0)) + offset_):nullptr;
+		if(swP_ == nullptr){
+			if(offset_ == 0) return nullptr;
+			else return offset_;
+		}
+	//	if(not swP_) return nullptr;
+	//	return (T*)(swP_->base(0)) + offset_;
 	}
 	reference operator*() const{return *( (T*)swP_->base(0) + offset_);}
 	reference operator[](mpi3::size_t i) const{return *( (T*)swP_->base(0) + offset_ + i);}
-	operator array_ptr<double const>() const{array_ptr<double const> ret; ret.swP_ = swP_; return ret;}
+	operator array_ptr<T const>() const{array_ptr<T const> ret; ret.swP_ = swP_; return ret;}
 	operator T*() const{
-		if(not swP_) return nullptr;
-		return ( (T*)swP_->base(0) + offset_);
+		return swP_?((T*)swP_->base(0) + offset_):nullptr;
+	//	if(not swP_) return nullptr;
+	//	return ( (T*)swP_->base(0) + offset_);
 	}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
-	array_ptr& operator=(nullptr_t){swP_=nullptr; offset_ = 0; return *this;}
+/*	array_ptr& operator=(T const* p){
+		if(not p){
+			swP_ = nullptr; offset_ = 0;
+		}else{
+			if(swP_) offset_ = p - (T*)swP_->base(0);
+			else assert(0);
+		}  
+		return *this;
+	}*/
+//	array_ptr& operator=(T const* p){
+//		assert(0);
+//	}
+
+//	array_ptr& operator=(nullptr_t){swP_=nullptr; offset_ = 0; return *this;}
 	operator bool() const{return swP_;}
-	bool operator==(array_ptr const& other) const{return offset_ == other.offset_ and swP_ == other.swP_;}
-	bool operator!=(array_ptr const& other) const{return (*this)==other;}
+	bool operator==(array_ptr const& other) const{return offset_==other.offset_ and swP_==other.swP_;}
+	bool operator!=(array_ptr const& other) const{return not ((*this)==other);}
 };
-
-
 
 template<>
 struct array_ptr<void>{
@@ -121,7 +144,6 @@ struct array_ptr<void const>{
 	array_ptr& operator=(array_ptr const& other) = default;
 };
 
-
 template<class T> struct allocator;
 
 struct managed_shared_memory{
@@ -133,9 +155,13 @@ struct managed_shared_memory{
 	//	ret.swSP_ = std::make_shared<shared_window>(comm_.make_shared_window<char>(comm_.rank()==0?n:0));
 		return ret;
 	}
-	void deallocate(array_ptr<void> ptr){delete ptr.swP_;}
+	void deallocate(array_ptr<void> ptr){
+		if(not ptr.swP_) return;
+		delete ptr.swP_;
+	}
 	template<class T>
 	allocator<T> get_allocator();
+	
 };
 
 template<class T>
@@ -156,13 +182,16 @@ struct allocator{
 //		msm_.deallocate(ptr);//static_cast<array_ptr<void>>(ptr));
 //	}
 	array_ptr<T> allocate(mpi3::size_t n){
-	//	std::cout << "allocate" << std::endl;
-		return static_cast<array_ptr<T>>(msm_.allocate(n*sizeof(T)));
+		std::cout << "allocate-> " << n << std::endl;
+		auto ret = msm_.allocate(n*sizeof(T));
+		std::cout << "<-allocate " << n << std::endl;
+		return static_cast<array_ptr<T>>(ret);
+	//	return static_cast<array_ptr<T>>(msm_.allocate(n*sizeof(T)));
 	}
 	void deallocate(array_ptr<T> ptr, mpi3::size_t = 0){
-	//	std::cout << "deallocate->" << std::endl;
+		std::cout << "deallocate->" << std::endl;
 		msm_.deallocate(ptr);//static_cast<array_ptr<void>>(ptr));
-	//	std::cout << "<-deallocate" << std::endl;
+		std::cout << "<-deallocate" << std::endl;
 	}
 };
 
@@ -177,6 +206,10 @@ struct mapped_region{
 	mapped_region(mapped_region const&) = delete;
 	void* get_address(){return smo_.swUP_->base(0);}
 	mpi3::size_t get_size(){return smo_.swUP_->size(0);}
+//	mpi3::size_t get_free_memory() const;
+//	void zero_free_memory() const;
+//	bool all_memory_deallocated();
+//	bool check_sanity();
 };
 
 }}}

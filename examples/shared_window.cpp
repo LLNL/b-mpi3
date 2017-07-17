@@ -3,7 +3,6 @@ mpicxx -O3 -std=c++14 -Wfatal-errors -Wall $0 -o $0x.x && time mpirun -np 10 $0x
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
 #include "alf/boost/mpi3/shared_window.hpp"
 
 namespace mpi3 = boost::mpi3;

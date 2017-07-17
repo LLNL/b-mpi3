@@ -40,7 +40,6 @@
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/is_bitwise_serializable.hpp>
-#include <boost/serialization/array.hpp>
 
 #include <boost/mpl/placeholders.hpp>
 
@@ -55,7 +54,6 @@
 #include "../../mpi3/serialization_hack/basic_iserializer.cpp"
 #include "../../mpi3/serialization_hack/basic_oserializer.cpp"
 #endif
-
 
 #include<numeric> // std::accumulate
 #include<cassert>

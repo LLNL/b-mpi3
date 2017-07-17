@@ -100,16 +100,13 @@ struct window{
 		MPI_Win_lock(MPI_LOCK_SHARED, rank, assert, impl_);
 	}
 	void lock_all(int assert = MPI_MODE_NOCHECK){MPI_Win_lock_all(assert, impl_);}
-
 	void post(group const& g, int assert = MPI_MODE_NOCHECK) const{MPI_Win_post(g.impl_, assert, impl_);}
 //	void set_attr(...)
 //	void set_errhandler(...)
 //	void set_info(...)
 //	void set_name(...)
 //	void shared_query(...) delegated to child class
-	void start(group const& g, int assert = MPI_MODE_NOCHECK){
-		MPI_Win_start(g.impl_, assert, impl_);
-	}
+	void start(group const& g, int assert = MPI_MODE_NOCHECK){MPI_Win_start(g.impl_, assert, impl_);}
 	void sync(){MPI_Win_sync(impl_);}
 //	void test(...)
 	void unlock(int rank) const{MPI_Win_unlock(rank, impl_);}

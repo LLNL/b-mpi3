@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHARED_WINDOW_HPP
 #define BOOST_MPI3_SHARED_WINDOW_HPP
@@ -18,27 +18,15 @@ struct shared_window : window{
 		int s = MPI_Win_allocate_shared(n, disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
-	mpi3::size_t size(int rank) const{
-		MPI_Aint size;
-		int disp_unit;
-		void* baseptr;
-		MPI_Win_shared_query(impl_, rank, &size, &disp_unit, &baseptr);
-		return size;
+	using query_t = std::tuple<mpi3::size_t, int, void*>;
+	query_t query(int rank) const{
+		query_t ret;
+		MPI_Win_shared_query(impl_, rank, &std::get<0>(ret), &std::get<1>(ret), &std::get<2>(ret));
+		return ret;
 	}
-	mpi3::size_t disp_unit(int rank) const{
-		MPI_Aint size;
-		int disp_unit;
-		void* baseptr;
-		MPI_Win_shared_query(impl_, rank, &size, &disp_unit, &baseptr);
-		return size;
-	}
-	void* base(int rank) const{
-		MPI_Aint size;
-		int disp_unit;
-		void* baseptr;
-		MPI_Win_shared_query(impl_, rank, &size, &disp_unit, &baseptr);
-		return baseptr;
-	}
+	mpi3::size_t size(int rank) const{return std::get<0>(query(rank));}
+	int disp_unit(int rank) const{return std::get<1>(query(rank));}
+	void* base(int rank) const{return std::get<2>(query(rank));}
 };
 
 template<class T /*= char*/> 
@@ -158,13 +146,12 @@ template<class T> struct allocator{
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/mutex.hpp"
-#include "alf/boost/mpi3/mutex.hpp"
 #include "alf/boost/mpi3/shm/vector.hpp"
 
 #include<algorithm> // std::generate
 #include<chrono>
 #include<iostream>
-#include<mutex>
+#include<mutex> // lock_guard
 #include<random>
 #include<thread> 
 
@@ -181,6 +168,8 @@ using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
+
+#if 0
 	mpi3::shm::vector<double> v(10, world);
 	if(world.rank() == 0){
 		for(int i = 0; i != 10; ++i){
@@ -213,7 +202,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			cout << v[i] << " " << std::flush;
 
 	m.unlock();
-
+#endif
 }
 
 #endif

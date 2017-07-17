@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -Wall `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && time mpirun -np 16 $0x.x $@ && rm -f $0x.x; exit
+time mpicxx -std=c++14 -Wall `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/shm/vector.hpp"
@@ -30,15 +30,20 @@ int mpi3::main(int, char*[], mpi3::communicator& world){
 
 	using elem = double;
 
+	cout << "about to construct" << std::endl;
 	mpi3::shm::vector<elem> v(10, mpi3mshm.get_allocator<elem>());
-
+	assert(v.data());
+	v.resize(55);
+	cout << v.data() << std::endl;
+	assert(v.data());
 	assert(not v.empty() and v.front() == 0 and std::equal(std::next(v.begin()), v.end(), v.begin()) );
+	return 0;
 
 	mpi3::mutex m(world);
 	std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
 	{
 		std::lock_guard<mpi3::mutex> lock(m); // m.lock();
-		for(int i = 0; i != 10; ++i){
+		for(int i = 0; i != v.size(); ++i){
 			v[i] = world.rank();
 			std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
 		} //	m.unlock();
@@ -46,12 +51,36 @@ int mpi3::main(int, char*[], mpi3::communicator& world){
 	world.barrier();
 
 	if(world.rank() == 0){
-		for(int i = 0; i != 10; ++i)
-			cout << v[i] << " ";
+		for(int i = 0; i != v.size(); ++i) cout << v[i] << " ";
 		cout << std::endl;
 	}
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
+	cout << "about to resize" << std::endl;
+	assert(v.data());
+	v.resize(20);
+	assert(v.data());
+	cout << "after resize" << std::endl;
+	world.barrier();
+	assert(v.size()==20);
+	cout << "before assign" << std::endl;
+	std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
+	{
+		std::lock_guard<mpi3::mutex> lock(m);
+		for(int i = 0; i != v.size(); ++i){
+			v[i] = world.rank();
+			std::this_thread::sleep_for(std::chrono::milliseconds(rand(10)));
+		}
+	}
+	cout << "after assign" << std::endl;
+	world.barrier();
+	cout << "after barrier" << std::endl;
 
+	if(world.rank() == 0){
+	//	for(int i = 0; i != v.size(); ++i) cout << v[i] << " ";
+		cout << std::endl;
+	}
+//	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
+	cout << "end" << std::endl;
 	return 0;
 }
 
