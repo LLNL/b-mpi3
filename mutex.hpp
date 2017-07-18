@@ -105,9 +105,10 @@ struct atomic{
 		comm_(comm),
 		rank_(rank),
 		addr_((comm.rank() == rank)?(T*)boost::mpi3::malloc(sizeof(T)):nullptr),
-		win_(addr_, addr_?1:0, comm_)
+		win_(addr_, addr_?sizeof(T):0, comm_)
 	{
-		if(addr_) *addr_ = value;
+		new (addr_) T(value);
+//		if(addr_) *addr_ = value;
 	}
 	atomic& operator+=(T const& t){
 		win_.lock_exclusive(rank_);
@@ -159,13 +160,13 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	{
-		boost::mpi3::atomic<int> counter(0, world);
+		mpi3::atomic<int> counter(0, world);
 		counter += 1;
 		if(counter + 1 == world.size()) cout << "Process #" << world.rank() << " did the last updated" << std::endl;
 	}
 	{
-		boost::mpi3::mutex m(world);
-		std::lock_guard<boost::mpi3::mutex> lock(m);
+		mpi3::mutex m(world);
+		std::lock_guard<mpi3::mutex> lock(m);
 
 		cout << "locked from " << world.rank() << '\n';
 		cout << "never interleaved " << world.rank() << '\n';

@@ -4,8 +4,10 @@
 #ifndef BOOST_MPI3_SHM_MEMORY_HPP
 #define BOOST_MPI3_SHM_MEMORY_HPP
 
+#include <boost/pool/simple_segregated_storage.hpp>
 #include "../../mpi3/shared_window.hpp"
 #include<memory>
+
 
 namespace boost{
 namespace mpi3{
@@ -148,7 +150,17 @@ template<class T> struct allocator;
 
 struct managed_shared_memory{
 	communicator& comm_;
-	managed_shared_memory(communicator& comm) : comm_(comm){}
+	shared_window sw_;
+	boost::simple_segregated_storage<std::size_t> storage_;
+	managed_shared_memory(communicator& comm, mpi3::size_t n) : 
+		comm_(comm), 
+		sw_(comm.make_shared_window<char>(comm.rank()?0:n))
+	{
+	//	if(comm_.rank()==0) 
+		storage_.add_block(sw_.base(0), sw_.size(0), n);
+	}
+	void* malloc(){return storage_.malloc();}
+#if 0
 	array_ptr<void> allocate(mpi3::size_t n){
 		array_ptr<void> ret;
 		ret.swP_ = new shared_window(comm_.make_shared_window<char>(comm_.rank()==0?n:0)); //(comm_.rank()==0?n:0);
@@ -161,6 +173,13 @@ struct managed_shared_memory{
 	}
 	template<class T>
 	allocator<T> get_allocator();
+#endif
+//	template<class T, class... Args>
+//	T* construct(Args&&... args){
+//		if(comm_.rank()==0){
+//			T* p = storage_.construct<T>(std::forward<Args>(args)...);
+//		}
+//	}
 	
 };
 
@@ -259,6 +278,13 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			int* ptr = a.allocate(100);
 			a.deallocate(ptr, 100);
 		}
+	}
+
+	world.barrier();
+
+	{
+		mpi3::shm::managed_shared_memory mpi3mshm(world);
+		std::atomic<int>& atomic = *mpi3mshm.construct<std::atomic<int>>(0);
 	}
 
 	return 0;

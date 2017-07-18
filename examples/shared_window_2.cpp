@@ -3,6 +3,7 @@ mpicxx -O3 -std=c++14 -Wfatal-errors -Wall $0 -o $0x.x && time mpirun -np 4 $0x.
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
+#include "alf/boost/mpi3/mutex.hpp"
 #include "alf/boost/mpi3/shared_window.hpp"
 
 namespace mpi3 = boost::mpi3;
@@ -22,6 +23,7 @@ int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 	std::vector<int> b_disp(node.size());
 	std::vector<int*> buf(node.size());
 
+//	mpi3::mutex m(node);
 	if(node.rank() != 0){
 		for(int i = 0; i != node.size(); ++i){
 			b_size[i] = win.size(i);

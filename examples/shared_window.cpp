@@ -12,13 +12,13 @@ int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 	int rank = world.rank();
 	int size = world.size();
 
-	mpi3::shared_window sw = world.make_shared_window<int>(world.rank()==0?size:0);
+	mpi3::shared_window sw = world.make_shared_window<int>(world.rank()?0:size);
 	int* shared = (int*)sw.base(0);
 
 	if(rank==0){
-		sw.lock_exclusive(0);
+	//	sw.lock_exclusive(0);
 		for(int i = 0; i < size; i++) shared[i] = -1;
-		sw.unlock(0);
+	//	sw.unlock(0);
 	}
 
 	world.barrier();
@@ -42,6 +42,8 @@ int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 	for(int i = 0; i != size; ++i) cout << local[i] << ' '; 
 	cout << std::endl;
 	sw.unlock(0);
+
+	world.barrier();
 
 	return 0;
 }
