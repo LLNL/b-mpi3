@@ -4,14 +4,15 @@
 #ifndef BOOST_MPI3_SHARED_WINDOW_HPP
 #define BOOST_MPI3_SHARED_WINDOW_HPP
 
+//#include "../mpi3/communicator.hpp"
 #include "../mpi3/window.hpp"
-#include "../mpi3/communicator.hpp"
-#include<memory>
+//#include<memory>
 
 namespace boost{
 namespace mpi3{
 
 struct shared_window : window{
+	using window::window;
 	shared_window(communicator& comm, mpi3::size_t n, int disp_unit) : window{}{
 	//	int disp_unit = sizeof(int);
 		void* base_ptr = nullptr;

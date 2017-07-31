@@ -127,6 +127,13 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 //	template<class T = char>
 //	shared_window allocate_shared(MPI_Aint size, int disp_unit = sizeof(T));
+
+	template<class T>
+	window make_window(mpi3::size_t n); // Win_allocate
+	template<class T>
+	window make_window(T* base, mpi3::size_t n);
+	window make_window();
+
 	template<class T = char>
 	shared_window make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
 

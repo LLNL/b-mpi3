@@ -20,14 +20,11 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	node.barrier();
 	for(int j = 0; j != N; ++j) ++i;
 	node.barrier();
-	if(node.rank() == 0){
-		int snapshot = i;
-		assert( snapshot == node.size()*N );
-		cout << "snapshot " << snapshot << " size " << node.size()*N << std::endl;
-	}
-//	node.barrier();
+	int snapshot = i;
+	if(node.rank() == 0) assert(snapshot == node.size()*N);
 	msm.destroy<std::atomic<int>>(i);
 	node.barrier();
+
 	return 0;
 }
 

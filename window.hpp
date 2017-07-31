@@ -40,9 +40,6 @@ struct window{
 		if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
 	}
 
-	template<class T>
-	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
-
 	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
 	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
 		using detail::data;
@@ -56,32 +53,35 @@ struct window{
 //	void create_errhandler(...);
 //	void create_keyval(...);
 //	void delete_attr(...);
-	void deattach(void* base){MPI_Win_detach(impl_, base);}
 	void fence(int assert_mode = 0 /*MPI_MODE_NOCHECK*/){
 		MPI_Win_fence(assert_mode, impl_);
 	}
 //	void free_keyval(...);
 	void flush(int rank){MPI_Win_flush(rank, impl_);}
+	void flush(){return flush_all();}
 	void flush_all(){MPI_Win_flush_all(impl_);}
 	void flush_local(int rank){MPI_Win_flush_local(rank, impl_);}
 	void flush_local_all(){MPI_Win_flush_local_all(impl_);}
 
 	void* base() const{
 		void* base; int flag;
-		int i = MPI_Win_get_attr(impl_, MPI_WIN_BASE, &base, &flag);
-		assert(i==0); assert(flag);
+		int s = MPI_Win_get_attr(impl_, MPI_WIN_BASE, &base, &flag);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get base");
+		assert(flag);
 		return base;
 	}
-	MPI_Aint const& size() const{
+	mpi3::size_t const& size() const{
 		MPI_Aint* size_p; int flag;
-		int i = MPI_Win_get_attr(impl_, MPI_WIN_SIZE, &size_p, &flag);
-		assert(i==0); assert(flag);
+		int s = MPI_Win_get_attr(impl_, MPI_WIN_SIZE, &size_p, &flag);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get base");
+		assert(flag);
 		return *size_p;
 	}
 	int const& disp_unit() const{
 		int* disp_unit_p; int flag;
-		int i = MPI_Win_get_attr(impl_, MPI_WIN_DISP_UNIT, &disp_unit_p, &flag);
-		assert(i==0); assert(flag);
+		int s = MPI_Win_get_attr(impl_, MPI_WIN_DISP_UNIT, &disp_unit_p, &flag);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get base");
+		assert(flag);
 		return *disp_unit_p;
 	}
 
@@ -184,6 +184,14 @@ struct window{
 	}
 };
 
+template<class T>
+window communicator::make_window(T* t, mpi3::size_t n){
+	return window(t, n, *this);
+}
+window communicator::make_window(){
+	return make_window((char*)nullptr, 0);
+}
+
 template<class T> struct reference;
 
 template<class T>
@@ -242,6 +250,15 @@ void communicator::deallocate(pointer<T>& p, MPI_Aint){
 //	p.pimpl_ == nullptr;
 }
 
+template<class T>
+window communicator::make_window(mpi3::size_t size){
+	mpi3::info inf;
+	void* ptr;
+	window ret;
+	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
+	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
+	return ret;
+}
 
 }}
 

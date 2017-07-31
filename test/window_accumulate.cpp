@@ -22,16 +22,16 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			for(int j = 0; j != NCOLS; ++j)
 				A[i][j] = i*NCOLS + j;
 
-		mpi3::window w(world);
-		w.fence();
+		mpi3::window w = world.make_window();
+		w.fence(); // note the two fences here
 		w.accumulate_n( (double*)A, NROWS*NCOLS, 1 );
 		w.fence();
 	}else{
 		for(int i = 0; i != NROWS; ++i)
 			for(int j = 0; j != NCOLS; ++j)
 				A[i][j] = i*NCOLS + j;
-		mpi3::window w( (double*)A, NROWS*NCOLS, world);
-		w.fence();
+		mpi3::window w = world.make_window( (double*)A, NROWS*NCOLS );
+		w.fence(); // note the two fences here
 		w.fence();
 		for(int i = 0; i != NROWS; ++i){
 			for(int j = 0; j != NCOLS; ++j){

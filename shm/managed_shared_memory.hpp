@@ -32,16 +32,36 @@ struct managed_shared_memory{
 		comm_(comm), 
 		sw_(comm.make_shared_window<char>(comm.rank()?0:n))
 	{
-		storage_.add_block(sw_.base(0), sw_.size(0), n);
+		if(comm_.rank() == 0) storage_.add_block(sw_.base(0), sw_.size(0), n);
 	}
 	template<class T>
 	T* malloc(){
-		return (T*)storage_.malloc_n(1, sizeof(T));
+		std::intptr_t diff;
+		win_.lock_exclusive(0);
+//		win_.put_n(&lock, 1, rank_, comm_.rank());
+//		win_.get_n(wait_list.data(), comm_.size(), rank_);
+		if(comm_.rank() == 0){
+			auto loc = (T*)storage_.malloc_n(1, sizeof(T));(T*)storage_.malloc_n(1, sizeof(T));
+			diff = loc - sw_.base(0);
+		}
+		sw_.put_value(diff, 
+		
+		win_.unlock(0);
+		return 
 	}
 	template<class T>
 	T* malloc_n(mpi3::size_t n){
-		return (T*)storage_.malloc_n(1, n*sizeof(T));
+		sw_.lock_all();//exclusive(0);
+		sw_.sync();
+		auto ret = (T*)storage_.malloc_n(1, n*sizeof(T));
+		sw_.unlock_all();
 	}
+	void* allocate(mpi3::size_t n){
+		return storage_.malloc_n(1, n);
+	}
+	template<class T>
+	void deallocate(T* ptr){storage_.free_n(ptr, 1, sizeof(T));}
+
 	template<class T>
 	void free_n(T* ptr, mpi3::size_t n){
 		storage_.free_n(ptr, 1, n*sizeof(T));
@@ -51,8 +71,9 @@ struct managed_shared_memory{
 		sw_.lock_all();//exclusive(0);
 		sw_.sync();
 		T* p = malloc<T>();
+		assert(p);
 		if(comm_.rank() == 0) new(p) T(std::forward<Args>(args)...);
-		std::this_thread::sleep_for(std::chrono::seconds(rand(10)));
+	//	std::this_thread::sleep_for(std::chrono::seconds(rand(10)));
 	//	sw_.unlock(0);
 		sw_.unlock_all();
 		return p;
@@ -96,10 +117,20 @@ template<class T> struct allocator{
 	}
 };
 
+namespace container{
+
+using string = boost::container::basic_string<char, std::char_traits<char>, mpi3::shm::allocator<char>>;
+
+template<class T>
+using vector = boost::container::vector<T, mpi3::shm::allocator<T>>;
+
+}
 
 }}}
 
 #ifdef _TEST_BOOST_MPI3_SHM_MANAGED_SHARED_MEMORY
+
+#include <boost/type_index.hpp>
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/mutex.hpp"
@@ -114,51 +145,32 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	mpi3::communicator node = world.split_shared(0);
+	mpi3::shm::managed_shared_memory msm(node, 20000); // share 10000 bytes
 
-	int N = 10;
-	mpi3::shm::managed_shared_memory msm(node, 100000);
-
-	node.barrier();
-	{ // using atomics
-		std::atomic<int>& i = *msm.construct<std::atomic<int>>(0);
-		node.barrier();
-		for(int j = 0; j != N; ++j) ++i; // std::this_thread::sleep_for(std::chrono::seconds(rand(10)));
-		node.barrier();
-		if(node.rank() == 0){
-			int snapshot = i;
-			assert( snapshot == node.size()*N );
-			cout << "snapshot " << snapshot << " size " << node.size()*N << std::endl;
-		}
-		node.barrier();
-		msm.destroy_ptr<std::atomic<int>>(&i);
-	}
-	node.barrier();
-	{ // not using atomics
-		int& i = *msm.construct<int>(0);
-		node.barrier();
-		for(int j = 0; j != N; ++j) ++i; // std::this_thread::sleep_for(std::chrono::seconds(rand(10)));
-		node.barrier();
-		if(node.rank() == 0){
-			int snapshot = i;
-			cout << "snapshot " << snapshot << " size " << node.size()*N << std::endl;
-			assert( snapshot <= node.size()*N ); // not using atomics (or mutexes) can lead to incorrect sums
-		}
-		node.barrier();
-		msm.destroy_ptr<int>(&i);
-	}
-	node.barrier();
 	{
-		mpi3::shm::allocator<char> ca(msm);
-		using String = boost::container::basic_string<char, std::char_traits<char>, mpi3::shm::allocator<char>>; 
-		String& s = *msm.construct<String>("Hello!", ca);
-		if(node.rank() == 1) assert( s[1] == 'e' );
 		node.barrier();
-		s[node.rank()] = 'a' + node.rank();
+		double& d1 = *msm.construct<double>(5.1);
+	//	double& d2 = *msm.construct<double>(7.8);
 		node.barrier();
-		if(node.rank()==0) cout << s << std::endl;
+		assert( d1 == 5.1 );
+	//	assert( d2 == 7.8 );
 		node.barrier();
-		msm.destroy_ptr<String>(&s);
 	}
+	mpi3::shm::allocator<char> ca(msm);
+	auto& s = *msm.construct<mpi3::shm::container::string>("Hello!", ca);
+//	if(node.rank() == 1) assert( s[1] == 'e' );
+	node.barrier();
+	return 0;
+	s[node.rank()] = 'a' + node.rank();
+	node.barrier();
+	if(node.rank()==0){
+		cout << s << std::endl;
+		cout << boost::typeindex::type_id_runtime(s.data()).pretty_name() << std::endl;
+	}
+	node.barrier();
+	msm.destroy<mpi3::shm::container::string>(s);
+
+	return 0;
 	node.barrier();
 	{
 		mpi3::shm::allocator<double> da(msm);
