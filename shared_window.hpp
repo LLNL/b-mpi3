@@ -1,19 +1,18 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHARED_WINDOW_HPP
 #define BOOST_MPI3_SHARED_WINDOW_HPP
 
-//#include "../mpi3/communicator.hpp"
+#include "../mpi3/shared_communicator.hpp"
 #include "../mpi3/window.hpp"
-//#include<memory>
 
 namespace boost{
 namespace mpi3{
 
 struct shared_window : window{
 	using window::window;
-	shared_window(communicator& comm, mpi3::size_t n, int disp_unit) : window{}{
+	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit) : window{}{
 	//	int disp_unit = sizeof(int);
 		void* base_ptr = nullptr;
 		int s = MPI_Win_allocate_shared(n, disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
@@ -25,13 +24,15 @@ struct shared_window : window{
 		MPI_Win_shared_query(impl_, rank, &std::get<0>(ret), &std::get<1>(ret), &std::get<2>(ret));
 		return ret;
 	}
-	mpi3::size_t size(int rank) const{return std::get<0>(query(rank));}
-	int disp_unit(int rank) const{return std::get<1>(query(rank));}
-	void* base(int rank) const{return std::get<2>(query(rank));}
+	template<class T = char>
+	mpi3::size_t size(int rank = 0) const{return std::get<0>(query(rank))/sizeof(T);}
+	int disp_unit(int rank = 0) const{return std::get<1>(query(rank));}
+	template<class T = void>
+	T* base(int rank = 0) const{return static_cast<T*>(std::get<2>(query(rank)));}
 };
 
 template<class T /*= char*/> 
-shared_window communicator::make_shared_window(
+shared_window shared_communicator::make_shared_window(
 	mpi3::size_t size, 
 	int disp_unit /*= sizeof(T)*/
 ){
@@ -112,8 +113,8 @@ template<class T> struct allocator{
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
-	mpi3::communicator& comm_;
-	allocator(mpi3::communicator& comm) : comm_(comm){}
+	mpi3::shared_communicator& comm_;
+	allocator(mpi3::shared_communicator& comm) : comm_(comm){}
 	template<class U>
 	allocator(allocator<U> const& other) : comm_(other.comm_){}
 
@@ -146,64 +147,35 @@ template<class T> struct allocator{
 #ifdef _TEST_BOOST_MPI3_SHARED_WINDOW
 
 #include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/mutex.hpp"
-#include "alf/boost/mpi3/shm/vector.hpp"
-
-#include<algorithm> // std::generate
-#include<chrono>
-#include<iostream>
-#include<mutex> // lock_guard
-#include<random>
-#include<thread> 
-
-int rand(int lower, int upper){
-	static std::random_device rd;
-	static std::mt19937 rng(rd());
-	static std::uniform_int_distribution<int> uni(lower, upper); 
-	return uni(rng);
-}
-int rand(int upper = RAND_MAX){return rand(0, upper);}
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-
-#if 0
-	mpi3::shm::vector<double> v(10, world);
-	if(world.rank() == 0){
-		for(int i = 0; i != 10; ++i){
-			std::this_thread::sleep_for(std::chrono::milliseconds(rand(100)));
-			v[i] = (i+1)*10;
-		}
+	mpi3::shared_communicator node = world.split_shared();
+	mpi3::shared_window win = node.make_shared_window<int>(node.rank()?0:1);
+	assert(win.base() != nullptr and win.size<int>() == 1);
+	win.lock_all();
+	if(node.rank()==0){
+		*win.base<int>() = 42;
+		win.sync();
 	}
-
-	mpi3::mutex m(world);
-	m.lock();
-	if(world.rank() == 1)
-		for(int i = 0; i != 10; ++i){
-			v[i] = -(i+1)*10;
-			std::this_thread::sleep_for(std::chrono::milliseconds(rand(1000)));
-		}
-	m.unlock();
-
-	world.barrier();
-	if(world.rank() == 2){
-		for(int i = 0; i != 10; ++i)
-			cout << v[i] << " " << std::flush;
-		cout << '\n';
+	for (int j=1; j != node.size(); ++j) {
+	    if (node.rank()==0) node.send_n((int*)nullptr, 0, j);//, 666);
+	    else if (node.rank()==j) node.receive_n((int*)nullptr, 0, 0);//, 666);
 	}
-	world.barrier();
+	if(node.rank()!=0){
+		win.sync();
+	}
+	int l = *win.base<int>();
+	win.unlock_all();
 
-	m.lock();
-//	v.resize(3);
-	if(world.rank() == 2)
-		for(int i = 0; i != 3; ++i)
-			cout << v[i] << " " << std::flush;
+	int minmax[2] = {-l,l};
+	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
+	assert( -minmax[0] == minmax[1] );
 
-	m.unlock();
-#endif
+	return 0;
 }
 
 #endif

@@ -14,10 +14,10 @@ namespace mpi3{
 namespace shm{
 
 struct shared_memory_object{
-	communicator& comm_;
+	shared_communicator& comm_;
 	std::unique_ptr<mpi3::shared_window> swUP_;
-	shared_memory_object(communicator& c) : comm_(c){}
-	shared_memory_object(communicator& c, mpi3::size_t n) : comm_(c){
+	shared_memory_object(shared_communicator& c) : comm_(c){}
+	shared_memory_object(shared_communicator& c, mpi3::size_t n) : comm_(c){
 		truncate(n);
 	}
 	shared_memory_object(shared_memory_object const&) = delete;
@@ -149,10 +149,10 @@ struct array_ptr<void const>{
 template<class T> struct allocator;
 
 struct managed_shared_memory{
-	communicator& comm_;
+	shared_communicator& comm_;
 	shared_window sw_;
 	boost::simple_segregated_storage<std::size_t> storage_;
-	managed_shared_memory(communicator& comm, mpi3::size_t n) : 
+	managed_shared_memory(shared_communicator& comm, mpi3::size_t n) : 
 		comm_(comm), 
 		sw_(comm.make_shared_window<char>(comm.rank()?0:n))
 	{

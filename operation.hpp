@@ -54,6 +54,11 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 //operation const maximum(operation::code::maximum);
 //operation const minimum(operation::code::minimum);
 
+template<class T>
+using plus = std::plus<T>;
+template<class T>
+using minus = std::minus<T>;
+
 template<class T = void> struct min{
 	T const& operator()(T const& t1, T const& t2) const{return std::min(t1, t2);}
 };

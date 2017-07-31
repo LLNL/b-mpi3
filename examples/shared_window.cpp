@@ -26,7 +26,7 @@ int mpi3::main(int argc, char *argv[], mpi3::communicator& world){
 	std::vector<int> local(size);
 
 	sw.lock_shared(0);
-    for(int i = 0; i != 10; i++) sw.get_n(&local[i], 1, 0, i);
+	for(int i = 0; i != 10; i++) sw.get_n(&local[i], 1, 0, i);
 	cout << "processor " << world.rank() << " (before) : ";
 	for(int i = 0; i != size; ++i) cout << local[i] << " "; 
 	cout << std::endl;

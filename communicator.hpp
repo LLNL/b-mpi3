@@ -71,7 +71,6 @@ namespace mpi3{
 using boost::optional;
 
 struct window;
-struct shared_window;
 struct error_handler;
 struct keyval;
 
@@ -101,6 +100,7 @@ struct ostream;
 struct package;
 
 struct graph_communicator;
+struct shared_communicator;
 
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
@@ -133,9 +133,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	template<class T>
 	window make_window(T* base, mpi3::size_t n);
 	window make_window();
-
-	template<class T = char>
-	shared_window make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
 
 	pointer<void> malloc(MPI_Aint size) const;
 
@@ -245,14 +242,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	bool empty() const{
 		return size() == 0;
 	}
-
-	communicator split_shared(int key) const{
-		communicator ret;
-		int i = MPI_Comm_split_type(impl_, MPI_COMM_TYPE_SHARED, key,  MPI_INFO_NULL, &ret.impl_);
-		if(i!=0) assert(0);
-		return ret;
-	}
-
 	communicator split(int color, int key) const{
 		communicator ret;
 		MPI_Comm_split(impl_, color, key, &ret.impl_);
@@ -260,6 +249,8 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		return ret;
 	}
 	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
+	shared_communicator split_shared(int key = 0) const;
+
 	boost::mpi3::group group() const;
 	communicator operator/(int n) const{
 		int color = rank()*n/size();
@@ -1040,7 +1031,8 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto all_reduce_n(It1 first, Size count, It2 d_first, Op op){
-		int s = MPI_Allreduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
+		using detail::data;
+		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
 	template<typename It1, typename It2, class Op>
@@ -1656,7 +1648,8 @@ public:
 		{};  
 	};
 	template<class T>
-	void load_array(boost::serialization::array<T>& t, unsigned int = 0){
+//	void load_array(boost::serialization::array<T>& t, unsigned int = 0){ // for boost pre 1.63
+	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int = 0){
 		p_.unpack_n(t.address(), t.count()); 
 	}
     template<class T>
@@ -1675,7 +1668,8 @@ public:
 	template<class T>
 	void save(const T& t, unsigned int = 0){p_ << t;}
 	template<class T>
-	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
+//	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
+	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int = 0){
 		p_.pack_n(t.address(), t.count()); 
 	}
 #if 0
@@ -1785,7 +1779,8 @@ class package_oarchive_impl : public basic_package_oprimitive, public basic_pack
 public:
 	template<class T>
 	void save(const T& t){basic_package_oprimitive::save(t);}
-	void save(boost::serialization::array<double>& t){
+//	void save(boost::serialization::array<double>& t){
+	void save(boost::serialization::array_wrapper<double>& t){
 		assert(0);
 	}
     void save(const boost::archive::version_type&){}
@@ -1840,7 +1835,8 @@ public:
 #if 1
 	// Save all supported datatypes directly
 	template<class T>
-	void save(boost::serialization::array<T> const& t, unsigned int){
+//	void save(boost::serialization::array<T> const& t, unsigned int){
+	void save(boost::serialization::array_wrapper<T> const& t, unsigned int){
 		assert(0);
 		save_override(t, boost::mpl::bool_<true>{});//std::true_type{});
 	}
@@ -1861,7 +1857,8 @@ struct package_iarchive : public package_iarchive_impl<package_iarchive>{
 struct package_oarchive : public package_oarchive_impl<package_oarchive>{
 	package_oarchive(package& p, unsigned int flags = 0) : package_oarchive_impl<package_oarchive>(p, flags){}
 	using package_oarchive_impl<package_oarchive>::operator&;
-	package_oarchive& operator & (boost::serialization::array<double>& t){
+//	package_oarchive& operator & (boost::serialization::array<double>& t){
+	package_oarchive& operator & (boost::serialization::array_wrapper<double>& t){
 		assert(0);
 		return *this;
 	}
