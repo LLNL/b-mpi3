@@ -11,20 +11,23 @@ namespace boost{
 namespace mpi3{
 
 struct dynamic_window : window{
+	protected:
+	dynamic_window() : window{}{}
+	public:
 	dynamic_window(communicator& comm){
 		int s = MPI_Win_create_dynamic(MPI_INFO_NULL, comm.impl_, &(this->impl_));
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create dynamic window");
 	}
-	template<class T>
+	template<class T = char>
 	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
 	void detach(void* base){MPI_Win_detach(impl_, base);}
-	void* bottom() const{
+/*	void* bottom() const{
 		void* base; int flag;
 		int s = MPI_Win_get_attr(impl_, MPI_BOTTOM, &base, &flag);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get base");
 		assert(flag);
 		return base;
-	}
+	}*/
 
 };
 
@@ -42,6 +45,7 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
 	mpi3::dynamic_window dw(world);
 	std::vector<int> a(1000, world.rank());
 	dw.attach_n(a.data(), a.size());
@@ -55,6 +59,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	dw.unlock(0);
 	world.barrier();
 	dw.detach(a.data());
+
 	return 0;
 }
 

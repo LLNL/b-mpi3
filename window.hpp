@@ -100,7 +100,9 @@ struct window{
 		MPI_Win_lock(MPI_LOCK_SHARED, rank, assert, impl_);
 	}
 	void lock_all(int assert = MPI_MODE_NOCHECK){MPI_Win_lock_all(assert, impl_);}
-	void post(group const& g, int assert = MPI_MODE_NOCHECK) const{MPI_Win_post(g.impl_, assert, impl_);}
+	void post(group const& g, int assert = MPI_MODE_NOCHECK) const{
+		MPI_Win_post(g.impl_, assert, impl_);
+	}
 //	void set_attr(...)
 //	void set_errhandler(...)
 //	void set_info(...)
@@ -265,61 +267,17 @@ window communicator::make_window(mpi3::size_t size){
 #ifdef _TEST_BOOST_MPI3_WINDOW
 
 #include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/allocator.hpp"
-#include "alf/boost/mpi3/ostream.hpp"
 #include<iostream>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-	{
-		mpi3::window w(world);
-		double* darr = new double[100];
-		w.attach_n(darr, 100);
-		w.fence();
-		delete[] darr;
-	}
-	return 0;
-	#if 0
-	{
-		auto node = world.split_shared(0);
-		auto p = node.allocate_shared<double>((world.rank()==0)?100:0);
 
-		for(int i = 0; i != p.local_size(world.rank()); ++i){
-			assert(world.rank() == 0);
-			p.local_ptr(world.rank())[i] = 2;
-		}
+	double* darr = new double[100];
+	mpi3::window w = world.make_window(darr, 100);
+	delete[] darr;
 
-		assert(p.local_ptr(world.rank()) == p.ptr_);
-
-		p.fence();
-
-		double sum = 0;
-		for(int i = 0; i != p.local_size(0); ++i) sum += p.local_ptr(0)[i];
-		p.fence();
-		assert(sum == 200);
-	}
-	#endif
-	world.barrier();
-	#if 0
-	{
-		auto p = world.malloc(world.rank()==0?100*sizeof(double):0);
-		if(world.rank() == 1){
-			double cinco = 5;
-			p.pimpl_->lock_exclusive(0);
-			p.pimpl_->put_n(&cinco, sizeof(double), 0, 11);
-			p.pimpl_->unlock(0);
-		}
-		p.pimpl_->fence();
-		if(world.rank() == 0){
-			cout << p.local_ptr()[11] << endl;
-			cout << p.local_size() << endl;
-			cout << p.local_disp_unit() << endl;
-		}
-		world.deallocate(p);
-	}
-	#endif
 	return 0;
 }
 

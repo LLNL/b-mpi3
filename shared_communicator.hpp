@@ -18,6 +18,8 @@ struct shared_communicator : communicator{
 	}
 	template<class T = char>
 	shared_window make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
+	template<class T = char>
+	shared_window make_shared_window();
 	template<
 		class It1, class Size, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, 			class P1 = decltype(detail::data(It1{})), 

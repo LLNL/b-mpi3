@@ -15,7 +15,7 @@ struct basic_mutex{ //https://gist.github.com/aprell/1486197#file-mpi_mutex-c-L6
 
 	communicator& comm_;
 	int rank_; //home
-	flag_t* addr_; //wait_list?
+	flag_t* addr_;
 	WindowT win_;
 
 	std::vector<flag_t> wait_list; //[comm_.size()];
@@ -55,28 +55,21 @@ struct basic_mutex{ //https://gist.github.com/aprell/1486197#file-mpi_mutex-c-L6
 		}
 	}
 	bool try_lock(){
-	//	flag_t wait_list[comm_.size()];
 		std::fill(wait_list.begin(), wait_list.end(), 0);
-	//	wait_list.assign((unsigned char)(0)); //	flag_t wait_list[comm_.size()];
 		flag_t lock = 1;
 		win_.lock_exclusive(rank_);
 		win_.put_value(lock, rank_, comm_.rank());
 		win_.get_n(wait_list.data(), comm_.size(), rank_);
 		win_.unlock(rank_);
-		for(int i = 0; i != comm_.size(); ++i){
-			if(wait_list[i] == 1 and i != comm_.rank()){
-				return false;
-			}
-		}
+		for(int i = 0; i != comm_.size(); ++i)
+			if(wait_list[i] == 1 and i != comm_.rank()) return false;
 		return true;
 	}
 	void unlock(){
 		std::fill(wait_list.begin(), wait_list.end(), 0);// wait_list.assign(unsigned char(0)); //	flag_t wait_list[comm_.size()];
-	//	flag_t wait_list[comm_.size()];
 		flag_t lock = 0;
-
 		win_.lock_exclusive(rank_);
-		win_.put_n(&lock, 1, rank_, comm_.rank());
+		win_.put_value(lock, rank_, comm_.rank());
 		win_.get_n(wait_list.data(), comm_.size(), rank_);
 		win_.unlock(rank_);
 

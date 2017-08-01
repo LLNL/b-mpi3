@@ -14,6 +14,31 @@ namespace mpi3{
 
 using mutex = detail::basic_mutex<mpi3::window>;
 
+struct recursive_mutex : mutex{
+	int* owner_;
+	int* count_;
+	window win_owner;
+	window win_count;
+	recursive_mutex(mpi3::communicator& c, int rank = 0) : mutex(c, rank),
+	owner_((comm.rank() == rank)?(int*)mpi3::malloc(sizeof(int)):nullptr),
+	count_((comm.rank() == rank)?(int*)mpi3::malloc(sizeof(int)):nullptr),
+	win_owner(win_owner, addr_?1:0, c),
+	win_count(win_count, addr_?1:0, c)
+	{
+		if(owner_) *owner_ = -1;
+		if(counter_) *counter_ = -1;
+	}
+	void lock(){
+		win_.lock_exclusive(rank_);
+		int owner;
+		win_owner.get_n(&owner, 1, rank_);
+		win_.put_value(lock, rank_, comm_.rank());
+		win_.get_n(w, comm_.size(), rank_);
+		win_.unlock(rank_);
+		mutex::lock();
+	}
+};
+
 template<class T>
 struct atomic{
 	int rank_;
@@ -88,7 +113,35 @@ template<> atomic<float >& atomic<float >::operator/=(float  const& d){return op
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
+struct test_recursive{
+	mpi3::mutex& m_;
+	test_recursive(mpi3::mutex& m) : m_(m){};
+	void call(int n){
+		if(n == 0) return;
+		m_.lock();
+		call(n - 1);
+		m_.unlock();
+		return;
+	}
+};
+
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
+	{
+		mpi3::mutex m(world);
+		{
+			std::lock_guard<mpi3::mutex> lock(m);
+			cout << "locked from " << world.rank() << '\n';
+			cout << "never interleaved " << world.rank() << '\n';
+			cout << "forever blocked " << world.rank() << '\n';
+			cout << std::endl;
+		}
+		test_recursive t(m);
+		t.call(1);
+	}
+	
+	return 0;
+
 
 	{
 		mpi3::atomic<int> counter(0, world);
@@ -114,6 +167,9 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		cout << "forever blocked " << world.rank() << '\n';
 		cout << std::endl;
 	}
+	
+	cout << "end" << std::endl;
+	return 0;
 }
 
 #endif

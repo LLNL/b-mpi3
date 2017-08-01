@@ -5,30 +5,31 @@
 #define BOOST_MPI3_SHARED_WINDOW_HPP
 
 #include "../mpi3/shared_communicator.hpp"
-#include "../mpi3/window.hpp"
+#include "../mpi3/dynamic_window.hpp"
 
 namespace boost{
 namespace mpi3{
 
 struct shared_window : window{
-	using window::window;
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit) : window{}{
-	//	int disp_unit = sizeof(int);
 		void* base_ptr = nullptr;
 		int s = MPI_Win_allocate_shared(n, disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
+	shared_window(shared_communicator& comm, int disp_unit) : shared_window(comm, 0, disp_unit){}
 	using query_t = std::tuple<mpi3::size_t, int, void*>;
-	query_t query(int rank) const{
+	query_t query(int rank = MPI_PROC_NULL) const{
 		query_t ret;
 		MPI_Win_shared_query(impl_, rank, &std::get<0>(ret), &std::get<1>(ret), &std::get<2>(ret));
 		return ret;
 	}
 	template<class T = char>
-	mpi3::size_t size(int rank = 0) const{return std::get<0>(query(rank))/sizeof(T);}
-	int disp_unit(int rank = 0) const{return std::get<1>(query(rank));}
+	mpi3::size_t size(int rank = MPI_PROC_NULL) const{return std::get<0>(query(rank))/sizeof(T);}
+	int disp_unit(int rank = MPI_PROC_NULL) const{return std::get<1>(query(rank));}
 	template<class T = void>
-	T* base(int rank = 0) const{return static_cast<T*>(std::get<2>(query(rank)));}
+	T* base(int rank = MPI_PROC_NULL) const{return static_cast<T*>(std::get<2>(query(rank)));}
+//	template<class T = char>
+//	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
 };
 
 template<class T /*= char*/> 
@@ -37,6 +38,11 @@ shared_window shared_communicator::make_shared_window(
 	int disp_unit /*= sizeof(T)*/
 ){
 	return shared_window(*this, size*sizeof(T), disp_unit);
+}
+
+template<class T /*= char*/>
+shared_window shared_communicator::make_shared_window(){
+	return shared_window(*this, sizeof(T));
 }
 
 namespace intranode{
@@ -154,26 +160,33 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	mpi3::shared_communicator node = world.split_shared();
-	mpi3::shared_window win = node.make_shared_window<int>(node.rank()?0:1);
+	{
+	mpi3::shared_window win = node.make_shared_window<int>(node.rank()==0?1:0);
+
 	assert(win.base() != nullptr and win.size<int>() == 1);
+
 	win.lock_all();
-	if(node.rank()==0){
-		*win.base<int>() = 42;
-		win.sync();
+	if(node.rank()==0) *win.base<int>(0) = 42;
+	for (int j=1; j != node.size(); ++j){
+		if(node.rank()==0) node.send_n((int*)nullptr, 0, j);//, 666);
+	    else if(node.rank()==j) node.receive_n((int*)nullptr, 0, 0);//, 666);
 	}
-	for (int j=1; j != node.size(); ++j) {
-	    if (node.rank()==0) node.send_n((int*)nullptr, 0, j);//, 666);
-	    else if (node.rank()==j) node.receive_n((int*)nullptr, 0, 0);//, 666);
-	}
-	if(node.rank()!=0){
-		win.sync();
-	}
-	int l = *win.base<int>();
+	win.sync();
+
+	int l = *win.base<int>(0);
 	win.unlock_all();
 
 	int minmax[2] = {-l,l};
 	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
 	assert( -minmax[0] == minmax[1] );
+	cout << "proc " << node.rank() << " " << l << std::endl;
+	}
+
+	world.barrier();
+
+	{
+		mpi3::shared_window win = node.make_shared_window<char>(node.rank()==0?1000:0);
+	}
 
 	return 0;
 }
