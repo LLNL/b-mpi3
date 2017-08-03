@@ -25,7 +25,7 @@ struct window{
 	window(communicator& comm) : window((void*)nullptr, 0, comm){}
 
 	window(window const&) = delete; // windows cannot be duplicated, see text before section 4.5 in Using Adv. MPI
-	window(window&& other) : impl_(other.impl_){
+	window(window&& other) : impl_(other.impl_){ //is movable if null is not a correct state?
 		other.impl_ = MPI_WIN_NULL;
 	}
 	window& operator=(window const&) = delete;
@@ -147,6 +147,12 @@ struct window{
 		MPI_Fetch_and_op(std::addressof(*it1), std::addressof(*it2), datatype{}, target_rank, target_disp, MPI_REPLACE, impl_); 
 	}
 
+	template<class ContiguousIterator>
+	void blocking_put_n(ContiguousIterator it, int count, int target_rank, int target_offset = 0){
+		lock_shared(target_rank, 0);
+		put_n(it, count, target_rank, target_offset);
+		unlock(target_rank);
+	}
 	template<class ContiguousIterator>
 	void put_n(ContiguousIterator it, std::size_t n, int target_rank, int target_disp = 0) const{
 		using detail::data;
