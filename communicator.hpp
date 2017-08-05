@@ -260,6 +260,11 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		int color = world.rank()%n;
 		return split(color);
 	}
+	communicator operator<(int n){return split(rank() < n);}
+	communicator operator<=(int n){return split(rank() <= n);}
+	communicator operator>(int n){return split(rank() > n);}
+	communicator operator>=(int n){return split(rank() >= n);}
+	communicator operator==(int n){return split(rank() == n);} // self?
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0){
