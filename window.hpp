@@ -283,7 +283,6 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	double* darr = new double[100];
 	mpi3::window w = world.make_window(darr, 100);
 	delete[] darr;
-
 	return 0;
 }
 

@@ -7,6 +7,10 @@
 #include "../mpi3/shared_communicator.hpp"
 #include "../mpi3/dynamic_window.hpp"
 
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+
 namespace boost{
 namespace mpi3{
 
@@ -30,6 +34,17 @@ struct shared_window : window{
 	T* base(int rank = MPI_PROC_NULL) const{return static_cast<T*>(std::get<2>(query(rank)));}
 //	template<class T = char>
 //	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
+};
+
+struct managed_shared_memory{
+	shared_window sw_;
+	managed_shared_memory(shared_communicator& c, int s) : sw_(c, c.rank()==0?s:0){}
+//	struct segment_manager{};
+	using segment_manager = boost::interprocess::segment_manager<char, boost::interprocess::rbtree_best_fit<boost::interprocess::mutex_family>, boost::interprocess::iset_index>;
+	segment_manager sm_;
+	managed_shared_memory::segment_manager* get_segment_manager(){
+		return &sm_;
+	}
 };
 
 template<class T /*= char*/> 
@@ -154,6 +169,10 @@ template<class T> struct allocator{
 
 #include "alf/boost/mpi3/main.hpp"
 
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
+
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
@@ -186,6 +205,21 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	{
 		mpi3::shared_window win = node.make_shared_window<char>(node.rank()==0?1000:0);
+		namespace bip = boost::interprocess;
+		
+		int initVal[] = {0, 1, 2, 3, 4, 5, 6 };
+
+		mpi3::managed_shared_memory segment(node, 65536);
+
+		using MyAllocator = bip::allocator<int, 
+			bip::segment_manager<char, bip::rbtree_best_fit<bip::mutex_family>, boost::interprocess::iset_index>
+		//	bip::managed_shared_memory::segment_manager
+		>;
+		using MyVector = bip::vector<int, MyAllocator>;
+		
+		const MyAllocator myallocator(segment.get_segment_manager());
+		MyVector* myvector = segment.construct<MyVector>(initVal, initVal + 7, myallocator);
+		segment.destroy_ptr<MyVector>(myvector);
 	}
 
 	return 0;
