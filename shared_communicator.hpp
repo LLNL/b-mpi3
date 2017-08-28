@@ -9,6 +9,7 @@
 namespace boost{
 namespace mpi3{
 
+template<class T = void>
 struct shared_window;
 
 struct shared_communicator : communicator{
@@ -17,9 +18,9 @@ struct shared_communicator : communicator{
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
 	}
 	template<class T = char>
-	shared_window make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
+	shared_window<T> make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
 	template<class T = char>
-	shared_window make_shared_window();
+	shared_window<T> make_shared_window();
 	template<
 		class It1, class Size, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, 			class P1 = decltype(detail::data(It1{})), 

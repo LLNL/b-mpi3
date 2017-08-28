@@ -143,6 +143,7 @@ class environment : environment_base{
 int main(int argc, char** argv){
 	boost::mpi3::environment env(argc, argv);
 	auto& world = env.world();
+	return 0;
 }
 #endif
 #endif

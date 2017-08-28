@@ -11,7 +11,13 @@
 namespace boost{
 namespace mpi3{
 
-struct window{
+template<class T = void>
+struct panel;
+
+//template<class T = void> struct window;
+
+template<>
+struct window<void>{
 	public:
 	MPI_Win impl_;
 	window() : impl_(MPI_WIN_NULL){}
@@ -167,12 +173,17 @@ struct window{
 			impl_
 		);
 	}
+	template<class ContiguousIterator>
+	void put(ContiguousIterator begin, ContiguousIterator end, int target_rank, int target_disp = 0) const{
+		return put_n(begin, std::distance(begin, end), target_rank, target_disp);
+	}
+	
 	template<class Value>
 	void put_value(Value const& t, int target_rank, int target_disp = 0) const{
 		put_n(&t, 1, target_rank, target_disp);
 	}
 	template<typename ContiguousIterator, typename Size>
-	void get_n(ContiguousIterator it, Size n, int target_rank, int target_disp = 0) const{
+	ContiguousIterator get_n(ContiguousIterator it, Size n, int target_rank, int target_disp = 0) const{
 		using detail::data;
 		int s = MPI_Get(
 			data(it), /* void* origin_address = b + i*/
@@ -185,25 +196,49 @@ struct window{
 			impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get_n");
+		return it + n;
+	}
+	template<typename ContiguousIterator>
+	ContiguousIterator get(ContiguousIterator it1, ContiguousIterator it2, int target_rank, int target_disp = 0) const{
+		return get_n(it1, std::distance(it1, it2), target_rank, target_disp);
 	}
 	template<class Value>
 	void get_value(Value& t, int target_rank, int target_disp = 0) const{
 		get_n(&t, 1, target_rank, target_disp);
 	}
+	panel<> operator[](int rank) const;
 };
 
 template<class T>
-window communicator::make_window(T* t, mpi3::size_t n){
-	return window(t, n, *this);
+struct window : window<void>{
+	window(){}
+	window(T* base, mpi3::size_t size, communicator& comm) : window<void>(static_cast<void*>(base), size*sizeof(T), comm){}
+	T* base() const{return window<void>::base();}
+	mpi3::size_t size() const{return window<void>::size()/sizeof(T);}
+};
+
+template<class T>
+class panel{
+	window<T>& w_;
+	int rank_;
+	panel(window<T>& w, int rank) : w_(w), rank_(rank){}
+//	friend window;
+};
+
+template<class T /*=void*/>
+window<T> communicator::make_window(T* t, mpi3::size_t n){
+	return window<T>(t, n, *this);
 }
-window communicator::make_window(){
-	return make_window((char*)nullptr, 0);
+
+template<class T /*=void*/>
+window<T> communicator::make_window(){
+	return make_window<T>((T*)nullptr, 0);
 }
 
 template<class T> struct reference;
 
 template<class T>
-struct shm_pointer : window{
+struct shm_pointer : window<>{
 //	T* ptr_ = nullptr;
 	T* local_ptr(int rank) const{
 		mpi3::size_t size;
@@ -259,10 +294,10 @@ void communicator::deallocate(pointer<T>& p, MPI_Aint){
 }
 
 template<class T>
-window communicator::make_window(mpi3::size_t size){
+window<T> communicator::make_window(mpi3::size_t size){
 	mpi3::info inf;
 	void* ptr;
-	window ret;
+	window<T> ret;
 	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
 	return ret;
@@ -275,14 +310,25 @@ window communicator::make_window(mpi3::size_t size){
 #include "alf/boost/mpi3/main.hpp"
 #include<iostream>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+namespace mpi3 = boost::mpi3; using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	double* darr = new double[100];
-	mpi3::window w = world.make_window(darr, 100);
-	delete[] darr;
+	std::vector<double> darr(world.rank()?0:100);
+	mpi3::window<double> w = world.make_window(darr.data(), darr.size());
+	w.fence();
+	if(world.rank() == 0){
+		std::vector<double> a = {5., 6.};
+		w.put(a.begin(), a.end(), 0);
+	}
+	world.barrier();
+	w.fence();
+	std::vector<double> b(2);
+	w.get(b.begin(), b.end(), 0);
+	w.fence();
+	assert( b[0] == 5.);
+	world.barrier();
+
 	return 0;
 }
 

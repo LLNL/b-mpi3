@@ -29,13 +29,15 @@ int main(int argc, char* argv[]){
 #ifdef _TEST_BOOST_MPI3_MAIN
 
 #include "../mpi3/version.hpp"
+//#include "../mpi3/main.hpp"
 #include<iostream>
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int boost::mpi3::
-main(int argc, char* argv[], boost::mpi3::communicator& world){
-	if(world.rank() == 0) cout << boost::mpi3::version() << '\n';
+int mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+	if(world.rank() == 0) cout << mpi3::version() << '\n';
+	return 0;
 }
 
 #endif

@@ -70,7 +70,9 @@ namespace mpi3{
 
 using boost::optional;
 
+template<class T = void>
 struct window;
+
 struct error_handler;
 struct keyval;
 
@@ -129,10 +131,13 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 //	shared_window allocate_shared(MPI_Aint size, int disp_unit = sizeof(T));
 
 	template<class T>
-	window make_window(mpi3::size_t n); // Win_allocate
-	template<class T>
-	window make_window(T* base, mpi3::size_t n);
-	window make_window();
+	window<T> make_window(mpi3::size_t n); // Win_allocate
+
+	template<class T = void>
+	window<T> make_window(T* base, mpi3::size_t n);
+	
+	template<class T = void>
+	window<T> make_window();
 
 	pointer<void> malloc(MPI_Aint size) const;
 
@@ -252,6 +257,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	shared_communicator split_shared(int key = 0) const;
 
 	boost::mpi3::group group() const;
+	
 	communicator operator/(int n) const{
 		int color = rank()*n/size();
 		return split(color);
@@ -260,11 +266,11 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		int color = world.rank()%n;
 		return split(color);
 	}
-	communicator operator<(int n){return split(rank() < n);}
-	communicator operator<=(int n){return split(rank() <= n);}
-	communicator operator>(int n){return split(rank() > n);}
-	communicator operator>=(int n){return split(rank() >= n);}
-	communicator operator==(int n){return split(rank() == n);} // self?
+	communicator operator<(int n) const{return split(rank() < n);}
+	communicator operator<=(int n) const{return split(rank() <= n);}
+	communicator operator>(int n) const{return split(rank() > n);}
+	communicator operator>=(int n) const{return split(rank() >= n);}
+	communicator operator==(int n) const{return split(rank() == n);} // self?
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0){
