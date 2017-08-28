@@ -20,8 +20,8 @@ Boost.MPI3 depends on the MPI library and Boost.Serialization.
 
 ## Introduction
 
-MPI is a large library for runtime parallelism where several paradigms coexist.
-It was is originaly designed as standardized and portable message-passing system to work on a wide variety of parallel computing architectures.
+MPI is a large library for run-time parallelism where several paradigms coexist.
+It was is originally designed as standardized and portable message-passing system to work on a wide variety of parallel computing architectures.
 
 The last standard, MPI-3, uses a combination of techniques to achieve parallelism, Message Passing (MP), (Remote Memory Access (RMA) and Shared Memory (SM).
 We try here to give a uniform interface and abstractions for these features by means of wrapper function calls and concepts brought familiar to C++ and the STL.
@@ -42,11 +42,11 @@ However there are obvious drawbacks from using this standard interface.
 Here we enumerate some of problems,
 
 * Function calls have many arguments (e.g. 6 or 7 arguments in average)
-* Many mandatory arguments are redundant or could easily have a default natural value ( e.g. message tags are not alway necessary).
+* Many mandatory arguments are redundant or could easily have a default natural value ( e.g. message tags are not always necessary).
 * Use of raw pointers and sizes, (e.g. `&number` and `1`)
 * Argument is type-erased by `void*`.
 * Only primitive types (e.g. `MPI_INT`) can be passed.
-* Consistency between pointer types and datatypes is responsibility of the user.
+* Consistency between pointer types and data-types is responsibility of the user.
 * Only contiguous memory blocks can be used with this interface.
 * Error codes are stored and had to be checked after each function call.
 * Use of handles (such as `MPI_COMM_WORLD`), handles do not have a well defined semantics.
@@ -57,7 +57,7 @@ MPI used to ship with a C++-style interfaces.
 It turns out that this interface was a very minimal change over the C version, and for good reasons it was dropped.
 
 The Boost.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI. 
-In this way, changes to existing code can be made incrementaly.
+In this way, changes to existing code can be made incrementally.
 Mixing the standard C interface with the Boost.MPI3 is not complicated but requires more knowledge of the library internals than the one provided in this document.
 
 ## Initialization
@@ -101,8 +101,8 @@ int main(int argc, char** argv){
 
 In the last example `world` is the global communicator that passed in this function call.
 There is no global communicator variable `world` that can be accessed directly in a nested function.
-The idea behind this is to avoid using the global communicators in nested functions of the program unless they are explicity passed in the function call.
-Communictors must be usually passed by reference to nested functions.
+The idea behind this is to avoid using the global communicators in nested functions of the program unless they are explicitly passed in the function call.
+Communicators must be usually passed by reference to nested functions.
 Even in traditional MPI it is a mistake to assume that the `COMM_WORLD` is the only available communicator.
 
 `mpi3::communicator` represent communicators with value-semantics.
@@ -119,7 +119,7 @@ mpi3::communicator hemisphere = world/2;
 mpi3::communicator interleaved = world%2;
 ```
 
-This program for example splits the global communicator in two subcommunicators one of size 2 (including process 0 and 1) and one with size 6 (including 2, 3, ... 7);
+This program for example splits the global communicator in two sub-communicators one of size 2 (including process 0 and 1) and one with size 6 (including 2, 3, ... 7);
 
 ```
 #include "mpi3/main.hpp"
@@ -137,7 +137,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 ```
 
 Communicators give also index access to individual `mpi3::processes` ranging from `0` to `comm.size()`. 
-For example, `world[0]` referres to process 0 or the global communicator.
+For example, `world[0]` referrers to process 0 or the global communicator.
 An `mpi3::process` is simply a rank inside a communicator.
 This concept doesn't exist explicit in the standard C interface, but it simplifies the syntax for message passing.
 
@@ -162,9 +162,9 @@ std::copy(origin.begin(), origin.end(), destination.begin());
 ```
 
 The caller of function copy doesn't need to worry about he type of the `origin` and `destination` containers, it can mix pointers and iterators and the function doesn't need more redundant information than the information passed. 
-The programmer is responsible for managing the memory and making sure that design is such that the algorithm can access the data referred by the passed interators.
+The programmer is responsible for managing the memory and making sure that design is such that the algorithm can access the data referred by the passed iterators.
 
-Contigous iterators (to built-in types) are particurlary efficient because they can be mapped to pointers at compile time. This in turn is translated into a MPI primitive function call.
+Contiguous iterators (to built-in types) are particularity efficient because they can be mapped to pointers at compile time. This in turn is translated into a MPI primitive function call.
 The interface for other type of iterators or contiguous iterators to non-build-in type are simulated, mainly via buffers and serialization.
 The idea behind this is that generic message passing function calls can be made to work with arbitrary data types.
 
@@ -269,7 +269,7 @@ Later all processes read from this memory.
 `put` and `get` functions take at least 3 arguments (and at most 4).
 The first two is a range of iterators, while the third is the destination/source process rank (called "target_rank"). 
 
-Relavant examples and test are located in For more examples, look into `./mpi3/tests/`, `./mpi3/examples/` and `./mpi3/exercises/`.
+Relevant examples and test are located in For more examples, look into `./mpi3/tests/`, `./mpi3/examples/` and `./mpi3/exercises/`.
 
 `mpi3::window`s may carry type information (as `mpi3::window<double>`) or not (`mpi3::window<>`)
 
@@ -324,14 +324,14 @@ For more examples, look into `./mpi3/tests/`, `./mpi3/examples/` and `./mpi3/exe
 
 # Beyond MP, RMA and SHM
 
-MPI provides a very low level abstraction to interprocess communication.
+MPI provides a very low level abstraction to inter-process communication.
 Higher level of abstractions can be constructed on top of MPI and by using the wrapper the works is simplified considerably.
 
 ## Mutex
 
 Mutexes can be implemented fairly simply on top of RMA.
 Mutexes are used similarly than in threaded code, 
-it prevents certain blocks of code to be excuted by more than one process (rank) at a time.
+it prevents certain blocks of code to be executed by more than one process (rank) at a time.
 
 ```
 #include "alf/boost/mpi3/main.hpp"
