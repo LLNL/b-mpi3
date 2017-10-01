@@ -1,22 +1,23 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_VECTOR -lboost_mpi -lboost_serialization -lboost_timer $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_VECTOR $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_VECTOR_HPP
 #define BOOST_MPI3_VECTOR_HPP
 
-#include "alf/boost/version.hpp"
-#include<mpi.h>
-#include<numeric> // std::accumulate
-#include<cassert>
-
 #include "../mpi3/allocator.hpp"
+
+#include<mpi.h>
+
 #include<vector>
 
 namespace boost{
 namespace mpi3{
 
 template<class T>
-using vector = std::vector<T, boost::mpi3::allocator<T>>;
+using vector = std::vector<T, mpi3::allocator<T>>;
+
+template<class T>
+using uvector = std::vector<T, mpi3::uallocator<T>>;
 
 }}
 
@@ -25,15 +26,19 @@ using vector = std::vector<T, boost::mpi3::allocator<T>>;
 #include "alf/boost/mpi3/main.hpp"
 
 using std::cout;
-using std::endl;
+namespace mpi3 = boost::mpi3;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	boost::mpi3::vector<double> v(1000000);
+	mpi3::vector<long long> v(100);
+	std::iota(v.begin(), v.end(), 0);
+	assert( std::accumulate(v.begin(), v.end(), 0) == (v.size()*(v.size() - 1))/2 );
+
+	mpi3::vector<std::size_t> uv(100);
+	assert( std::accumulate(uv.begin(), uv.end(), 0) == 0 );
 
 	return 0;
 }
-
 
 #endif
 #endif

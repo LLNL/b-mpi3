@@ -1,62 +1,92 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_ALLOCATOR -lboost_container $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_ALLOCATOR $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_ALLOCATOR_HPP
 #define BOOST_MPI3_ALLOCATOR_HPP
-#include "alf/boost/version.hpp"
-#include<mpi.h>
-#include<numeric> // std::accumulate
-#include<cassert>
 
-#include<boost/container/allocator.hpp>
+#include "../mpi3/address.hpp"
+
+#include<mpi.h>
+
+//#include<boost/container/allocator.hpp>
+#include<limits>
 
 namespace boost{
 namespace mpi3{
 
 struct bad_alloc : std::bad_alloc{using std::bad_alloc::bad_alloc;};
 
-void* malloc(std::size_t size){
+void* malloc(mpi3::size_t size){
 	void* ret;
-	int s = MPI_Alloc_mem(static_cast<MPI_Aint>(size), MPI_INFO_NULL, &ret);
-	if(s != MPI_SUCCESS) throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
+	int s = MPI_Alloc_mem(size, MPI_INFO_NULL, &ret);
+	if(s != MPI_SUCCESS) return nullptr;//s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
 	return ret;
 }
 
 void free(void* ptr){
-	MPI_Free_mem(ptr);
+	int s = MPI_Free_mem(ptr);
+	if(s != MPI_SUCCESS) throw std::runtime_error("cannot free");
 }
 
 template<class T>
-struct allocator : boost::container::allocator<T>{
-//	using value_type = T;
+struct allocator{
+	using size_type = mpi3::size_t;
+	using value_type = T;
+	using pointer = T*;
+
 	allocator() = default;
-	allocator(allocator const& other) = default;
 	template<class U> allocator(allocator<U> const& other){}
-	~allocator() = default;
-	T* allocate(std::size_t n){return static_cast<T*>(boost::mpi3::malloc(sizeof(T)*n));}
-	void deallocate(T* p, std::size_t n){boost::mpi3::free(p);}
+	pointer allocate(size_type n){
+		if(n <= max_size())
+			if(void* ptr = mpi3::malloc(n*sizeof(T)))
+				return static_cast<T*>(ptr);
+		throw bad_alloc();
+	}
+	void deallocate(pointer p, std::size_t n){mpi3::free(p);}
+	static size_type max_size(){return std::numeric_limits<size_type>::max();}
+};
+
+template<typename T>
+struct uallocator : allocator<T>{
+	template<class U> void construct(U*){
+		static_assert(std::is_trivially_destructible<T>{}, "uallocator cannot be used with non trivial types");
+	}
 };
 
 template< class T1, class T2 >
-bool operator==( const allocator<T1>&, const allocator<T2>& ){return true;}
+bool operator==( const allocator<T1>&, const uallocator<T2>& ){return true;}
 
 template< class T1, class T2 >
-bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
+bool operator==( const uallocator<T1>&, const allocator<T2>& ){return true;}
+
+
+//template< class T1, class T2 >
+//bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
+
+
 
 }}
 
 #ifdef _TEST_BOOST_MPI3_ALLOCATOR
 
 #include "alf/boost/mpi3/main.hpp"
-#include<boost/container/flat_set.hpp>
+
+#include<cassert>
 #include<vector>
+
+#include<boost/container/flat_set.hpp>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-	std::vector<double, mpi3::allocator<double>> v(1000000);
 
+	std::vector<double, mpi3::allocator<double>> v(1000000);
+	std::vector<double, mpi3::uallocator<double>> uv(1000000);
+	std::iota(v.begin(), v.end(), 0.);
+	assert( std::accumulate(v.begin(), v.end(), 0.) == (v.size()*(v.size() - 1))/2 );
+	return 0;
+	
 	{
 		boost::container::flat_set<double, std::less<double>, mpi3::allocator<double> > fs;
 		fs.insert(5.);

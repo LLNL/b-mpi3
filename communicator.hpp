@@ -13,6 +13,7 @@
 #include "../mpi3/communication_mode.hpp"
 #include "../mpi3/request.hpp"
 #include "../mpi3/type.hpp"
+#include "../mpi3/vector.hpp"
 
 #include "../mpi3/detail/datatype.hpp"
 
@@ -352,7 +353,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 	template<typename InputIt, typename Size, 
 		class value_type = typename std::iterator_traits<InputIt>::value_type, 
-		class datatype = detail::basic_datatype<value_type>	
+		class datatype = detail::basic_datatype<value_type>
 	>
 	auto pack_n_aux(std::random_access_iterator_tag, InputIt first, Size count, char* out, int max_size
 	){
@@ -362,7 +363,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	}
 
 	template<class InputIt, class Size, typename V = typename std::iterator_traits<InputIt>::value_type, class datatype = detail::basic_datatype<V>>
-	auto unpack_from_n(InputIt first, Size count, char const* buffer) const{
+	auto unpack_from_n(InputIt first, Size count, char const* buffer){
 		int position = 0;
 		using detail::data;
 	//	assert( count % pack_size<V>() == 0 );
@@ -370,8 +371,18 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot packaga unpack");
 		return buffer + position;
 	}
-
-
+	template<class InputIt, typename Size>
+	auto unpack_n(InputIt first, Size count, char const* buffer){
+		return unpack_from_n(first, count, buffer);
+	}
+	template<class V>
+	auto unpack_value(V& v, char const* buffer){
+		return unpack_n(&v, 1, buffer);
+	}
+	template<class V>
+	auto pack_value(V const& v, char const* buffer){
+		return pack_n(&v, 1, buffer);
+	}
 	template<class T, class datatype = detail::basic_datatype<T>> 
 	int pack_size(int n = 1) const{
 	//	auto it = boost::mpi3::type::registered.find(typeid(T));
@@ -519,11 +530,12 @@ public:
 	}
 
 	void send_packed_n(void const* begin, int n, int dest, int tag = 0){
+		std::cout << "sending packet of size " << n << std::endl;
 		MPI_Send(begin, n, MPI_PACKED, dest, tag, impl_);
 	}
 	void send_value(package const& p, int dest, int tag = 0);
 	template<class Char = char>
-	auto send_packed(Char const* begin, Char const* end, int dest, int tag = 0) const{
+	auto send_packed(Char const* begin, Char const* end, int dest, int tag = 0){
 		return send_packed_n(begin, (char*)end - (char*)begin, dest, tag);
 	}
 	auto receive_packed_n(void* begin, int n, int source = MPI_ANY_SOURCE, int tag = 0) const{
@@ -532,7 +544,7 @@ public:
 		return ret;
 	}
 	auto receive_packed(void* begin, int source = MPI_ANY_SOURCE, int tag = 0) {
-		auto n = probe(source, tag).count<>();
+		auto n = probe(source, tag).count<char>();
 		receive_packed_n(begin, n, source, tag);
 		return (void*)((char*)begin + n);
 	}
@@ -1579,7 +1591,7 @@ communicator communicator::create(struct group const& g) const{
 
 struct package{
 	communicator& comm_;
-	std::vector<char> buffer_;
+	mpi3::uvector<char> buffer_;
 	std::ptrdiff_t size() const{return buffer_.size();}
 
 	int in_;
@@ -1591,15 +1603,19 @@ struct package{
 	void clear(){buffer_.clear(); in_ = 0; out_ = 0;}
 	template<class It, class Size, typename V = typename std::iterator_traits<It>::value_type>
 	void pack_n(It first, Size count){
+		std::cout << "packing ";
+	//	for(auto f = first; f != first + count; ++f) std::cout << f << ", ";
+		std::cout << '\n';
 		int size = comm_.pack_size<V>()*count;
 		auto old_buffer_size = buffer_.size();
 		buffer_.resize(old_buffer_size + size);
 		auto curr = buffer_.data() + old_buffer_size;
-		auto end = comm_.pack_n(detail::data(first), count, curr);
+		using detail::data;
+		auto end = comm_.pack_n(data(first), count, curr);
 		assert(end == std::addressof(*buffer_.end()));
 		in_ = buffer_.size();
 	//	in_ += end - curr;
-	}
+	}	
 	template<class T>
 	package& operator<<(T const& t){
 		pack_n(std::addressof(t), 1);
@@ -1610,6 +1626,7 @@ struct package{
 		auto curr = std::addressof(buffer_[out_]);
 		using detail::data;
 		auto end = comm_.unpack_from_n(data(first), count, curr);
+		std::cout << "unpacking " << *first << "... " << count << '\n';
 		out_ += end - curr;
 	}
 	template<class T>
@@ -1622,7 +1639,7 @@ struct package{
 		return *this;
 	}
 	package& receive(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		int n = comm_.probe(source, tag).count();
+		int n = comm_.probe(source, tag).count<char>();
 		buffer_.resize(n);
 		comm_.receive_packed_n(buffer_.data(), n, source, tag);
 		return *this;
