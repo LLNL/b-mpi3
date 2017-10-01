@@ -85,7 +85,8 @@ Some compilers and some implementations of MPI-3 will eventually complain if the
 
 Here `world` is a communicator object that is a wrapper over MPI communicator handle.
 
-Changing the `main` program to this syntax in existing code can be challenging, for this reason a more traditional initialization.
+Changing the `main` program to this syntax in existing code can be challenging and too intrusive, for this reason a more traditional initialization is also possible.
+The alternative initialization is done by instantiating the `mpi3::environment` object (from with the global communicator `.world()` is extracted).
 
 ```
 #include "mpi3/environment.hpp"
