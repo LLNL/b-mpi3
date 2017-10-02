@@ -19,8 +19,8 @@ struct status{
 	//	if(impl_ != MPI_STATUS_NULL) 
 	//	MPI_Status_free(&impl_);
 	}
-	template<class T = char>
-	int count() const{
+	template<class T>// = char>
+	int count() const{ //entries received of datatype T
 		int ret = -1;
 		int s = MPI_Get_count(&impl_, detail::basic_datatype<T>{}, &ret);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot count");
