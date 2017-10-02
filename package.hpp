@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_PACKAGE $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_PACKAGE $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_PACKAGE_HPP
 #define BOOST_MPI3_PACKAGE_HPP
@@ -16,31 +16,30 @@ using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	if(world.rank() == 0){
-		char buff[1000];
+		char buf[1000];
 		int i = 12;
 		int j = 13;
-		end = world.pack_n(&i, 1, buff);
-		end = world.pack_n(&j, 1, end);
-		world.send_packed(buff, end, 1); //world.send_packed_n(buff, std::distance(buff, end), 1); //world.send_packed_n(buff, end - buff, 1);
-		world.send_packed_n(buff, 1000, 2);
+		auto end = world.pack_n(&i, 1, buf);
+		     end = world.pack_n(&j, 1, end);
+		world.send_packed(buf, end, 1); //world.send_packed_n(buff, std::distance(buff, end), 1); //world.send_packed_n(buff, end - buff, 1);
+		world.send_packed_n(buf, 1000, 2);
 	}else if(world.rank() == 1){
 		std::vector<int> v(2);
 		world.receive(v.begin(), v.end(), 0);
 		assert(v[0] == 12);
 		assert(v[1] == 13);
 	}else if(world.rank() == 2){
-		char buff[1000];
-		world.receive_packed_n(buff, 1000, 0);
+		char buf[1000];
+		world.receive_packed_n(buf, 1000, 0);
 		int i = -1;
 		int j = -1;
-		auto 
-		end = world.unpack_n(&i, 1, buff);
-		end = world.unpack_n(&j, 1, end);
+		auto end = world.unpack_n(&i, 1, buf);
+		     end = world.unpack_n(&j, 1, end);
 		assert(i == 12);
 		assert(j == 13);
 	}
 	world.barrier();
-	return 0;
+//	return 0;
 
 	if(world.rank() == 0){
 		mpi3::package p(world);
