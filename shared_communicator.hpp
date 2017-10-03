@@ -73,8 +73,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		win.sync();
 	}
 	for(int j=1; j != node.size(); ++j){
-		if (node.rank()==0) node.send_n((int*)nullptr, 0, j, 666);
-		else if (node.rank()==j) node.receive_n((int*)nullptr, 0, 0, 666);
+		if(node.rank()==0) node.send_n((int*)nullptr, 0, j, 666);
+		else if(node.rank()==j) node.receive_n((int*)nullptr, 0, 0, 666);
 	}
 	if(node.rank()!=0) win.sync();
 
