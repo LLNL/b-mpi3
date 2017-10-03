@@ -14,7 +14,16 @@ namespace boost{
 namespace mpi3{
 
 //enum class error {other = MPI_ERR_OTHER};
-enum class errors : MPI_Errhandler{fatal = MPI_ERRORS_ARE_FATAL, code = MPI_ERRORS_RETURN};
+//enum class errors : MPI_Errhandler{fatal = MPI_ERRORS_ARE_FATAL, code = MPI_ERRORS_RETURN};
+
+class fatal{
+	constexpr operator MPI_Errhandler() const{return value;}
+	static constexpr MPI_Errhandler value = MPI_ERRORS_ARE_FATAL;
+};
+class code{
+	constexpr operator MPI_Errhandler() const{return value;}
+	static constexpr MPI_Errhandler value = MPI_ERRORS_RETURN;
+};
 
 struct exception : std::runtime_error{
 	using std::runtime_error::runtime_error;
@@ -41,7 +50,8 @@ struct error_handler{
 		char estring[MPI_MAX_ERROR_STRING];
 		MPI_Error_string(*err, estring, &len);
 		std::string w(estring, estring + len);
-		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
+		throw boost::mpi3::exception("error code");
+//		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 //		throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 	}
 
@@ -70,6 +80,7 @@ error_handler communicator::get_error_handler() const{
 
 #include "alf/boost/mpi3/main.hpp"
 
+namespace mpi3 = boost::mpi3;
 using std::cout;
 
 void eh(MPI_Comm *comm, int *err, ...){
@@ -77,10 +88,10 @@ void eh(MPI_Comm *comm, int *err, ...){
     return;
 }
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	communicator comm = world;
-	boost::mpi3::error_handler newerr(eh);
+	mpi3::error_handler newerr(eh);
 	comm.set_error_handler(newerr);
 	comm.call_error_handler(MPI_ERR_OTHER);
 	newerr(comm, MPI_ERR_OTHER);
