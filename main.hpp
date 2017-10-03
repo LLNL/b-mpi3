@@ -5,6 +5,7 @@
 #define BOOST_MPI3_MAIN_HPP
 
 #include<mpi.h>
+
 #include "../mpi3/environment.hpp"
 #include "../mpi3/communicator.hpp"
 
@@ -29,7 +30,6 @@ int main(int argc, char* argv[]){
 #ifdef _TEST_BOOST_MPI3_MAIN
 
 #include "../mpi3/version.hpp"
-//#include "../mpi3/main.hpp"
 #include<iostream>
 
 namespace mpi3 = boost::mpi3;

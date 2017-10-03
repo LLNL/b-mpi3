@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHARED_COMMUNICATOR_HPP
 #define BOOST_MPI3_SHARED_COMMUNICATOR_HPP
@@ -54,7 +54,7 @@ shared_communicator communicator::split_shared(int key /*= 0*/) const{
 
 #ifdef _TEST_BOOST_MPI3_SHARED_COMMUNICATOR
 
-#include "alf/boost/mpi3/main.hpp"
+#include "alf/boost/mpi3/shared_main.hpp"
 #include "alf/boost/mpi3/operation.hpp"
 #include "alf/boost/mpi3/shared_window.hpp"
 
@@ -63,24 +63,21 @@ shared_communicator communicator::split_shared(int key /*= 0*/) const{
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-	mpi3::shared_communicator node = world.split_shared();
-	mpi3::shared_window<int> win = node.make_shared_window<int>(node.rank()?0:1);
-	assert(win.base() != nullptr and win.size<int>() == 1);
+int mpi3::main(int argc, char* argv[], mpi3::shared_communicator& node){
+	auto win = node.make_shared_window<int>(node.rank()?0:1);
+	assert(win.base() != nullptr and win.size() == 1);
 	win.lock_all();
 	if(node.rank()==0){
-		*win.base<int>() = 42;
+		*win.base() = 42;
 		win.sync();
 	}
 	for(int j=1; j != node.size(); ++j){
 		if(node.rank()==0) node.send_n((int*)nullptr, 0, j, 666);
 		else if(node.rank()==j) node.receive_n((int*)nullptr, 0, 0, 666);
 	}
-	if(node.rank()!=0) win.sync();
-
-	int l = *win.base<int>();
+	if(node.rank() != 0) win.sync();
+	int l = *win.base();
 	win.unlock_all();
-
 	int minmax[2] = {-l,l};
 	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
 	assert( -minmax[0] == minmax[1] );

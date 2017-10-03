@@ -103,7 +103,7 @@ struct ostream;
 struct package;
 
 struct graph_communicator;
-struct shared_communicator;
+struct shared_communicator; // intracommunicator
 
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
