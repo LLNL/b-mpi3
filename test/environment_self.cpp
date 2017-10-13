@@ -16,7 +16,7 @@ int main(){
 	auto& world = env.world();
 	world.barrier();
 	assert( world.size() == 4 );
-	assert( world.rank() >= 0 );
+	assert( world.rank() < 4 );
 	cout << "I am process " << world.rank() << " in communicator " << world.name() << std::endl;
 
 /* output:
