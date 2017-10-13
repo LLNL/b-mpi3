@@ -18,6 +18,9 @@ namespace mpi3{
 struct thread_level{
 //	decltype(MPI_THREAD_SINGLE)
 	int impl_;
+	bool operator==(thread_level const& other) const{
+		return impl_ == other.impl_;
+	}
 };
 thread_level single{MPI_THREAD_SINGLE};
 thread_level funneled{MPI_THREAD_FUNNELED};
