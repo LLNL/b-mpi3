@@ -9,9 +9,26 @@ namespace mpi3 = boost::mpi3;
 
 int main(){
 	mpi3::environment env;
-	auto self = env.self();
+	auto& self = env.self();
 	assert( self.size() == 1 );
 	assert( self.rank() == 0 );
 	cout << "I am process " << self.rank() << " in communicator " << self.name() << std::endl;
+	auto& world = env.world();
+	world.barrier();
+	assert( world.size() == 4 );
+	assert( world.rank() >= 0 );
+	cout << "I am process " << world.rank() << " in communicator " << world.name() << std::endl;
+
+/* output:
+I am process 0 in communicator MPI_COMM_SELF
+I am process 0 in communicator MPI_COMM_SELF
+I am process 0 in communicator MPI_COMM_SELF
+I am process 0 in communicator MPI_COMM_SELF
+I am process 3 in communicator MPI_COMM_WORLD
+I am process 0 in communicator MPI_COMM_WORLD
+I am process 1 in communicator MPI_COMM_WORLD
+I am process 2 in communicator MPI_COMM_WORLD
+*/
+
 }
 
