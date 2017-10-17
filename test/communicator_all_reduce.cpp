@@ -20,7 +20,6 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 		std::vector<int> recv_buffer(count, -1);
 		world.all_reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin());//, std::plus<>{});
-		world.all_reduce_n(
 		for(int i = 0; i != recv_buffer.size(); ++i) assert(recv_buffer[i] == i*world.size());
 	}
 	{
