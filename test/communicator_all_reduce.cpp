@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 8s $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
@@ -19,7 +19,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		iota(send_buffer.begin(), send_buffer.end(), 0);
 
 		std::vector<int> recv_buffer(count, -1);
-		world.all_reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin(), std::plus<>{});
+		world.all_reduce(send_buffer.begin(), send_buffer.end(), recv_buffer.begin());//, std::plus<>{});
+		world.all_reduce_n(
 		for(int i = 0; i != recv_buffer.size(); ++i) assert(recv_buffer[i] == i*world.size());
 	}
 	{
