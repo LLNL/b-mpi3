@@ -31,7 +31,9 @@ template<class T> struct is_contiguous;
 template<
 	class ContiguousIterator, 
 	typename = std::enable_if_t<
-			std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
+			std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::uallocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
+		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::uallocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::const_iterator>{}
+		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
 		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::const_iterator>{}
 		or
 		/**/std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
@@ -213,6 +215,8 @@ int mpi3::main(int, char*[], mpi3::environment&){
 //		assert( detail::data(v.begin()) == &v[0] );
 		cout << boost::mpi3::detail::is_contiguous<std::vector<double>::iterator>{} << '\n';
 		cout << boost::mpi3::detail::is_contiguous<std::vector<double, mpi3::allocator<double>>::iterator>{} << '\n';
+		cout << boost::mpi3::detail::is_contiguous<std::string::iterator>{} << '\n';
+		cout << boost::mpi3::detail::is_basic<std::string::iterator::value_type>{} << '\n';
 	}
 }
 #endif
