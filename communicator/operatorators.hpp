@@ -4,6 +4,7 @@
 #ifndef BOOST_MPI3_COMMUNICATOR_OPERATORS_HPP
 #define BOOST_MPI3_COMMUNICATOR_OPERATORS_HPP
 
+#include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
 namespace boost{
@@ -17,10 +18,16 @@ namespace mpi3{
 #ifdef _TEST_BOOST_MPI3_COMMUNICATOR_OPERATORS
 #include "alf/boost/mpi3/main.hpp"
 
-int boost::mpi3::main(int, char*[], communicator const& world){
+namespace mpi3 = boost::mpi3;
+using std::cout;
 
-	auto s = world/2;
-	std::cout << "I am " << world.name() << " " << world.rank() << " and I am " << s.name() << " " << s.rank() << std::endl;
+int mpi3::main(int, char*[], mpi3::communicator& world){
+	auto hemi = world/2;
+	cout 
+		<< "I am " << world.name() << " " << world.rank() 
+		<< " also I am " << hemi.name() << " " << hemi.rank() 
+		<< std::endl
+	;
 }
 
 #endif

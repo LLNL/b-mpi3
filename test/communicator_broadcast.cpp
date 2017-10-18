@@ -1,9 +1,11 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -np 2s $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 -Wall `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/communicator.hpp"
+#include "alf/boost/mpi3/process.hpp"
+#include <boost/serialization/string.hpp>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
@@ -25,9 +27,18 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			world.broadcast(buf.begin(), buf.begin() + sizes[n], 0);
 
 			for (int i=0; i<sizes[n]; i++) assert( buf[i] == 1000000 * (n * NUM_REPS + reps) + i );
-
 		}
 	}
+	
+	world.barrier();
+	
+	{
+		std::string s;
+		if(world.rank() == 0) s = "mystring";
+		world[0] & s; // world.broadcast_value(s);
+		assert( s == "mystring" );
+	}
+
 	return 0;
 }
 

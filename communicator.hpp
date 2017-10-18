@@ -548,8 +548,9 @@ public:
 		receive_packed_n(begin, n, source, tag);
 		return (void*)((char*)begin + n);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class InputIterator> //, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	void send(InputIterator It1, InputIterator It2, int dest, int tag = 0){
+		assert( dest != rank() ); // if not it will block
 		return send(standard_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
 	}
 #if 0
@@ -1004,7 +1005,6 @@ private:
 	}
 	template<class ContiguousIt, typename Size>
 	void broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root);
-
 public:
 	template<class T, class Op>
 	void reduce_value(T const& t, T& ret, Op op, int root){
@@ -1644,8 +1644,8 @@ struct package{
 		comm_.receive_packed_n(buffer_.data(), n, source, tag);
 		return *this;
 	}
-	package& broadcast(int root = 0){
-		comm_.broadcast_n(&in_, 1, root);
+	package& broadcast(int root = 0){ // see https://www.researchgate.net/publication/228737912_Dynamically-Sized_Messages_in_MPI-3
+		comm_.broadcast_value(in_, root);
 		buffer_.resize(in_);
 		comm_.broadcast_n(buffer_.data(), in_, root);
 		return *this;
@@ -1919,6 +1919,29 @@ void communicator::receive_n_randomaccess_contiguous_builtin(CommunicationMode c
 		--n;
 	}
 }
+
+template<class ContiguousIt, typename Size>
+void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root){
+	package p(*this);
+	if(rank() == root){
+		detail::package_oarchive poa(p);
+		while(count){
+			poa << *first;
+			++first;
+			--count;
+		}
+	}
+	p.broadcast(root);
+	if(rank() != root){
+		detail::package_iarchive pia(p);
+		while(count){
+			pia >> *first;
+			++first;
+			--count;
+		}
+	}
+}
+
 
 }}
 
