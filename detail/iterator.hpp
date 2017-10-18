@@ -1,8 +1,10 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && c++ -O3 -std=c++14 -D_TEST_BOOST_MPI3_DETAIL_ITERATOR $0x.cpp -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_BOOST_MPI3_DETAIL_ITERATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_DETAIL_ITERATOR_HPP
 #define BOOST_MPI3_DETAIL_ITERATOR_HPP
+
+#include "alf/boost/mpi3/allocator.hpp"
 
 #include<boost/container/vector.hpp>
 
@@ -29,10 +31,13 @@ template<class T> struct is_contiguous;
 template<
 	class ContiguousIterator, 
 	typename = std::enable_if_t<
+			std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
+		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::const_iterator>{}
+		or
 		/**/std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
 		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::const_iterator>{}
-
-		or	std::is_same<ContiguousIterator, typename std::basic_string<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
+		or
+			std::is_same<ContiguousIterator, typename std::basic_string<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
 
 		or	std::is_same<ContiguousIterator, typename boost::container::vector<typename std::iterator_traits<ContiguousIterator>::value_type>::iterator>{}
 		or	std::is_same<ContiguousIterator, typename boost::container::vector<typename std::iterator_traits<ContiguousIterator>::value_type>::const_iterator>{}
@@ -76,9 +81,13 @@ strided_contiguous_iterator_tag iterator_category_aux(It);
 template<class It>
 struct iterator_category : decltype(iterator_category_aux(std::declval<It>())){};
 
+
 }}}
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_ITERATOR
+
+#include "alf/boost/mpi3/allocator.hpp"
+#include "alf/boost/mpi3/main.hpp"
 
 #include<boost/container/static_vector.hpp>
 #include<boost/container/flat_set.hpp>
@@ -100,8 +109,10 @@ struct iterator_category : decltype(iterator_category_aux(std::declval<It>())){}
 #include<typeinfo>
 #include<numeric>
 
+namespace mpi3 = boost::mpi3;
+using std::cout;
 
-int main(int argc, char* argv[]){
+int mpi3::main(int, char*[], mpi3::environment&){
 
 	using boost::mpi3::detail::data;
 	using boost::mpi3::detail::cdata;
@@ -161,7 +172,7 @@ int main(int argc, char* argv[]){
 	{
 		boost::container::flat_map<double, int> fs = {{1., 10},{2.,20},{3.,30}}; // flat_set::iterator is the same type as static_vector::iterator
 		using boost::mpi3::detail::data;
-		std::cout << boost::typeindex::type_id_runtime(fs.begin());
+		cout << boost::typeindex::type_id_runtime(fs.begin()) << '\n';
 		assert( data(fs.begin())[1] == (std::pair<double, int>(2., 20)) );
 	}
 	{
@@ -196,6 +207,12 @@ int main(int argc, char* argv[]){
 	//	for( ; sit != end; ++sit){
 	//		std::cout << *sit << '\n';
 	//	}
+	}
+	{
+		std::vector<double, boost::mpi3::allocator<double>> v(100);
+//		assert( detail::data(v.begin()) == &v[0] );
+		cout << boost::mpi3::detail::is_contiguous<std::vector<double>::iterator>{} << '\n';
+		cout << boost::mpi3::detail::is_contiguous<std::vector<double, mpi3::allocator<double>>::iterator>{} << '\n';
 	}
 }
 #endif

@@ -63,8 +63,6 @@ bool operator==( const uallocator<T1>&, const allocator<T2>& ){return true;}
 //template< class T1, class T2 >
 //bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
 
-
-
 }}
 
 #ifdef _TEST_BOOST_MPI3_ALLOCATOR
