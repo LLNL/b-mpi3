@@ -1011,12 +1011,12 @@ private:
 	template<class ContiguousIt, typename Size>
 	void broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root);
 public:
-	template<class T, class Op>
-	void reduce_value(T const& t, T& ret, Op op, int root){
+	template<class T, class Op = std::plus<> >
+	void reduce_value(T const& t, T& ret, Op op = {}, int root = 0){
 		reduce(std::addressof(t), std::addressof(t)+1, std::addressof(ret), op, root); 
 	}
-	template<class T, class Op>
-	auto reduce_value(T const& t, Op op, int root){
+	template<class T, class Op = std::plus<> >
+	auto reduce_value(T const& t, Op op = {}, int root = 0){
 		T ret = T(0);
 		reduce_value(t, ret, op, root); // if(rank() == root) return optional<T>(ret);
 		return ret;
@@ -1043,11 +1043,11 @@ public:
 	}
 	
 	template<class T, class Op = std::plus<> >
-	void all_reduce_value(T const& t, T& ret, Op op = Op{}){
+	void all_reduce_value(T const& t, T& ret, Op op = {}){
 		all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); 
 	}
-	template<class Op, class T>
-	auto all_reduce_value(T const& t, Op op = Op{}){
+	template<class T, class Op = std::plus<> >
+	auto all_reduce_value(T const& t, Op op = {}){
 		T ret = T(0);
 		all_reduce_value(t, ret, op); // if(rank() == root) return optional<T>(ret);
 		return ret;
@@ -1059,13 +1059,13 @@ public:
 		typename = std::enable_if_t<std::is_same<V1, V2>{}>,
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto all_reduce_n(It1 first, Size count, It2 d_first, Op op = Op{}){
+	auto all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}){
 		using detail::data;
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
 	template<typename It1, typename It2, class Op = std::plus<> >
-	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = Op{}){
+	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
 
