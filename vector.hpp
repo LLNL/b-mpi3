@@ -70,8 +70,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	
 	auto test_size = 100000000; // 100MB
 	cout << "test size " << test_size << " chars \n";
-	using vector = std::vector<char, mpi3::uallocator<char>>;
-	cout << "std::vector<char, mpi3::uallocator<char>> (pinned, uninitialized)\n";
+	using vector = std::vector<char, mpi3::allocator<char>>;
+	cout << "std::vector<char, mpi3::allocator<char>> (pinned, initialized)\n";
 	{
 		cpu_timer t;
 		t.start();
@@ -100,9 +100,9 @@ std::vector<char> (no pinned, initialized)
 
 test size 100000000 chars 
 std::vector<char, mpi3::allocator<char>> (pinned, initialized)
-	allocation (+initialization if any) 89.6353 milliseconds 
-	first use 4.7771 milliseconds 
-	second use 5.05579 milliseconds 
+	allocation (+initialization if any) 0.006804 milliseconds 
+	first use 31.1551 milliseconds 
+	second use 4.82273 milliseconds 
 
 std::vector<char, mpi3::uallocator<char>> (pinned, uninitialized)
 	allocation (+initialization if any) 0.007946 milliseconds 

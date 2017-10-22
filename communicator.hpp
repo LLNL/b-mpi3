@@ -102,6 +102,11 @@ struct ostream;
 
 struct package;
 
+struct message_header{
+	int tag;
+	
+};
+
 struct graph_communicator;
 struct shared_communicator; // intracommunicator
 

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_TYPE $0x.cpp -o $0x.x -lboost_serialization && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_TYPE $0x.cpp -o $0x.x -lboost_serialization && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -92,7 +92,6 @@ public:
 		MPI_Type_size(impl_, &ret);
 		return ret;
 	}
-
 	std::string name() const{
 		char name[MPI_MAX_OBJECT_NAME];
 		int namelen;
@@ -183,6 +182,12 @@ type const long_double_int{MPI_LONG_DOUBLE_INT};
 
 std::map<std::type_index, type const&> type::registered;
 
+template<class T>
+type make_type();
+
+template<> type make_type<double>(){return mpi3::double_;}
+template<> type make_type<int>(){return mpi3::int_;}
+
 }}
 
 #ifdef _TEST_BOOST_MPI3_TYPE
@@ -199,6 +204,12 @@ struct A{
 	double d[6];
 	long l[20];
 };
+
+struct B{
+	double d[7];
+	long l[9];
+};
+
 template<class Archive>
 void serialize(Archive& ar, A& a, const unsigned int){
 	ar & boost::serialization::make_array(a.d, 6);
@@ -247,7 +258,22 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			world[0] >> particle;
 		}
 	}
-
+	{
+		auto Btype = (
+			mpi3::double_[6], 
+			mpi3::long_[20]
+		);
+		Btype.commit_as<B>();
+		B b;
+		b.d[2] = 0.;
+		if(world.rank()==0){
+			b.d[2] = 5.1;
+			world[1] << b;
+		}else{
+			assert(b.d[2]==0.);
+			world[0] >> b;
+		}
+	}
 	return 0;
 #if 0
 	{

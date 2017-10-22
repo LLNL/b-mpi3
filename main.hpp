@@ -9,14 +9,20 @@
 #include "../mpi3/environment.hpp"
 #include "../mpi3/communicator.hpp"
 
+
 namespace boost{
 namespace mpi3{
 
+#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
 // this definition forces the user to define boost::mpi3::main
 int main(int argc, char* argv[], boost::mpi3::communicator& world);
+#else
+int main(int argc, char* argv[], boost::mpi3::environment& env);
+#endif
 
 }}
 
+#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
 int main(int argc, char* argv[]){
 	boost::mpi3::environment env(argc, argv);
 	return boost::mpi3::main(argc, argv, env.world());
@@ -26,6 +32,17 @@ int main(int argc, char* argv[]){
 //	boost::mpi3::communicator::world.barrier();
 //	boost::mpi3::environment::finalize();
 }
+#else
+int main(int argc, char* argv[]){
+	boost::mpi3::environment env(argc, argv);
+	return boost::mpi3::main(argc, argv, env);
+//	boost::mpi3::environment::initialize(argc, argv);
+//	boost::mpi3::communicator::world.name("world");
+//	int ret = boost::mpi3::main(argc, argv, boost::mpi3::communicator::world);
+//	boost::mpi3::communicator::world.barrier();
+//	boost::mpi3::environment::finalize();
+}
+#endif
 
 #ifdef _TEST_BOOST_MPI3_MAIN
 

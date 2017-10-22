@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++11 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_DATATYPE -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++11 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_DATATYPE -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp $0x.x; exit
 #endif
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
@@ -57,6 +57,8 @@ BOOST_MPI3_DECLARE_DATATYPE(long_double_int, MPI_LONG_DOUBLE_INT);
 //BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t, MPI_AINT);
 //BOOST_MPI3_DECLARE_DATATYPE(std::size_t, MPI_AINT);
 BOOST_MPI3_DECLARE_DATATYPE(void*, MPI_AINT);
+
+BOOST_MPI3_DECLARE_DATATYPE(bool, MPI_INT);
 
 // LB 
 // UB
