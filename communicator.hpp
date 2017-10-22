@@ -1041,6 +1041,7 @@ public:
 		int s = MPI_Reduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
+	
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = Op{}){
 		all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); 
@@ -1107,7 +1108,10 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_n(It1 first, Size count, Op op, int root = 0){
-		return reduce_in_place_n(first, count, op, root);
+		if(rank() == root){
+			return reduce_in_place_n(first, count, op, root);
+		}
+		return reduce_n(first, 0, nullptr, op, root);
 	}
 	template<
 		class It1, class Op, 
@@ -1123,7 +1127,7 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce(It1 first, It1 last, Op op, int root = 0){
-		return reduce_in_place(first, std::distance(first, last), op, root);
+		return reduce_n(first, std::distance(first, last), op, root);
 	}
 //	template<class It1, class It2>
 //	auto ireduce(It1 first, It1 last, It2 d_first, operation const& op, int root = 0){
