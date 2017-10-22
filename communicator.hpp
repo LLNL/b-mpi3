@@ -1067,6 +1067,64 @@ public:
 	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = Op{}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
+
+
+	template<class T> static auto data_(T&& t){
+		using detail::data;
+		return data(std::forward<T>(t));
+	}
+
+	template<
+		class It1, class Size, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto all_reduce_in_place_n(It1 first, Size count, Op op){
+		int s = MPI_Allreduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot all reduce n");
+	}
+	template<
+		class It1, class Size, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto all_reduce_n(It1 first, Size count, Op op){
+		return all_reduce_in_place_n(first, count, op);
+	}
+
+	template<
+		class It1, class Size, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto reduce_in_place_n(It1 first, Size count, Op op, int root = 0){
+		int s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
+	}
+	template<
+		class It1, class Size, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto reduce_n(It1 first, Size count, Op op, int root = 0){
+		return reduce_in_place_n(first, count, op, root);
+	}
+	template<
+		class It1, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto reduce_in_place(It1 first, It1 last, Op op, int root = 0){
+		return reduce_in_place_n(first, std::distance(first, last), op, root);
+	}
+	template<
+		class It1, class Op, 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
+		class PredefinedOp = predefined_operation<Op>
+	>
+	auto reduce(It1 first, It1 last, Op op, int root = 0){
+		return reduce_in_place(first, std::distance(first, last), op, root);
+	}
 //	template<class It1, class It2>
 //	auto ireduce(It1 first, It1 last, It2 d_first, operation const& op, int root = 0){
 //		return reduce_category(reduce_mode{}, typename std::iterator_traits<It1>::iterator_category{}, first, last, d_first, op, root);

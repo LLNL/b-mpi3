@@ -27,23 +27,7 @@ struct shared_communicator : communicator{
 	shared_window<T> make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
 	template<class T = char>
 	shared_window<T> make_shared_window();
-	template<
-		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
-		class PredefinedOp = predefined_operation<Op>
-	>
-	auto all_reduce_in_place_n(It1 first, Size count, Op op){
-		int s = MPI_Allreduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
-	}
-	template<
-		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
-		class PredefinedOp = predefined_operation<Op>
-	>
-	auto all_reduce_n(It1 first, Size count, Op op){
-		return all_reduce_in_place_n(first, count, op);
-	}
+
 };
 
 shared_communicator communicator::split_shared(int key /*= 0*/) const{
@@ -79,6 +63,7 @@ int mpi3::main(int argc, char* argv[], mpi3::shared_communicator& node){
 	int l = *win.base();
 	win.unlock_all();
 	int minmax[2] = {-l,l};
+//	node.reduce_in_place_n(&minmax[0], 2, mpi3::max<>{}, 0);
 	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
 	assert( -minmax[0] == minmax[1] );
 }
