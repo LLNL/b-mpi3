@@ -1103,11 +1103,11 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
 	template<
-		class It1, class Size, class Op, 
+		class It1, class Size, class Op = std::plus<>, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto reduce_n(It1 first, Size count, Op op, int root = 0){
+	auto reduce_n(It1 first, Size count, Op op = {}, int root = 0){
 		if(rank() == root){
 			return reduce_in_place_n(first, count, op, root);
 		}
@@ -1122,13 +1122,14 @@ public:
 		return reduce_in_place_n(first, std::distance(first, last), op, root);
 	}
 	template<
-		class It1, class Op, 
+		class It1, class Op = std::plus<>, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto reduce(It1 first, It1 last, Op op, int root = 0){
+	auto reduce(It1 first, It1 last, Op op = {}, int root = 0){
 		return reduce_n(first, std::distance(first, last), op, root);
 	}
+	
 //	template<class It1, class It2>
 //	auto ireduce(It1 first, It1 last, It2 d_first, operation const& op, int root = 0){
 //		return reduce_category(reduce_mode{}, typename std::iterator_traits<It1>::iterator_category{}, first, last, d_first, op, root);
