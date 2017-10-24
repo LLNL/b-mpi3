@@ -154,15 +154,21 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 	void free(pointer<void>& p) const;
 
-	communicator subcomm(std::initializer_list<int> l) const{
+	template<class Vector, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
+	communicator subcomm(Vector const& v) const{
 		MPI_Group old_g;
 		MPI_Comm_group(impl_, &old_g);
 		MPI_Group new_g;
-		MPI_Group_incl(old_g, l.size(), &*l.begin(), &new_g);
+		MPI_Group_incl(old_g, v.size(), v.data(), &new_g);
 		communicator ret;
 		MPI_Comm_create(impl_, new_g, &ret.impl_);
 		return ret;
 	}
+	communicator subcomm(std::initializer_list<int> l) const{
+		return subcomm(std::vector<int>(l));
+	}
+
+	
 	equality compare(communicator const& other) const{
 		equality ret = boost::mpi3::unequal;
 		MPI_Comm_compare(impl_, other.impl_, reinterpret_cast<int*>(&ret));
