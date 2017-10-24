@@ -114,10 +114,13 @@ enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_S
 
 struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
-	decltype(MPI_COMM_WORLD) impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
+	using impl_t = decltype(MPI_COMM_WORLD);
+	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 	static communicator const null;
 	static communicator world;
 	static communicator self;
+
+	impl_t& operator&(){return impl_;}
 
 	template<class Graph>
 	graph_communicator make_graph(Graph const& g) const;
@@ -154,7 +157,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 	void free(pointer<void>& p) const;
 
-	template<class Vector, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
+	template<class Vector>//, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
 	communicator subcomm(Vector const& v) const{
 		MPI_Group old_g;
 		MPI_Comm_group(impl_, &old_g);
@@ -167,8 +170,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	communicator subcomm(std::initializer_list<int> l) const{
 		return subcomm(std::vector<int>(l));
 	}
-
-	
 	equality compare(communicator const& other) const{
 		equality ret = boost::mpi3::unequal;
 		MPI_Comm_compare(impl_, other.impl_, reinterpret_cast<int*>(&ret));
@@ -549,15 +550,21 @@ public:
 	auto send_packed(Char const* begin, Char const* end, int dest, int tag = 0){
 		return send_packed_n(begin, (char*)end - (char*)begin, dest, tag);
 	}
-	auto receive_packed_n(void* begin, int n, int source = MPI_ANY_SOURCE, int tag = 0) const{
+	auto receive_packed_n(void* begin, int n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const{
 		status ret;
 		MPI_Recv(begin, n, MPI_PACKED, source, tag, impl_, &ret.impl_);
 		return ret;
 	}
-	auto receive_packed(void* begin, int source = MPI_ANY_SOURCE, int tag = 0) {
-		auto n = probe(source, tag).count<char>();
-		receive_packed_n(begin, n, source, tag);
-		return (void*)((char*)begin + n);
+	auto receive_packed(void* begin, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		MPI_Status status;
+		MPI_Message msg;
+		int count = -1;
+		MPI_Mprobe(source, tag, impl_, &msg, &status);
+		MPI_Get_count(&status, MPI_PACKED, &count);
+		MPI_Mrecv(begin, count, MPI_PACKED, &msg, MPI_STATUS_IGNORE);
+	//	auto n = probe(source, tag).count<char>();
+	//	receive_packed_n(begin, n, source, tag);
+		return (void*)((char*)begin + count);
 	}
 	template<class InputIterator> //, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	void send(InputIterator It1, InputIterator It2, int dest, int tag = 0){
@@ -631,11 +638,21 @@ public:
 	}
 	template<class InputIt, class V = typename std::iterator_traits<InputIt>::value_type>
 	auto dynamic_receive(InputIt first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		auto count = probe(source, tag).count<V>();
-		return receive(first, first + count, source, tag);
+	//	auto count = probe(source, tag).count<V>();
+	//	return receive(first, first + count, source, tag);
+		MPI_Status status;
+	    MPI_Message msg;
+    	int count = -1;
+    	MPI_Mprobe(0, 0, MPI_COMM_WORLD, &msg, &status);
+    	MPI_Get_count(&status, MPI_INT, &count);
+    	int* buffer = (int*)malloc(sizeof(int) * count);
+    	MPI_Mrecv(buffer, count, MPI_INT, &msg, MPI_STATUS_IGNORE);
 	}
+
 	template<class InputIterator>
-	auto receive(InputIterator first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){return dynamic_receive(first, source, tag);} 
+	auto receive(InputIterator first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		return dynamic_receive(first, source, tag);
+	} 
 
 	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
 	auto breceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
@@ -1713,9 +1730,16 @@ struct package{
 		return *this;
 	}
 	package& receive(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		int n = comm_.probe(source, tag).count<char>();
-		buffer_.resize(n);
-		comm_.receive_packed_n(buffer_.data(), n, source, tag);
+		MPI_Status status;
+		MPI_Message msg;
+		int count = -1;
+		MPI_Mprobe(source, tag, comm_.impl_, &msg, &status);
+		MPI_Get_count(&status, MPI_PACKED, &count);
+		buffer_.resize(count);
+		MPI_Mrecv(buffer_.data(), count, MPI_PACKED, &msg, MPI_STATUS_IGNORE);
+	//	int n = comm_.probe(source, tag).count<char>();
+	//	buffer_.resize(n);
+	//	comm_.receive_packed_n(buffer_.data(), n, source, tag);
 		return *this;
 	}
 	package& broadcast(int root = 0){ // see https://www.researchgate.net/publication/228737912_Dynamically-Sized_Messages_in_MPI-3
