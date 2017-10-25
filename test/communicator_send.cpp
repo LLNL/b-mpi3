@@ -10,7 +10,6 @@ mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 2 $0x.x $
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-
 int mpi3::main(int, char*[], mpi3::communicator& world){
 
 	using type = std::complex<double>;
