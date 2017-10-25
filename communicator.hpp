@@ -643,7 +643,7 @@ public:
 		MPI_Status status;
 	    MPI_Message msg;
     	int count = -1;
-    	MPI_Mprobe(0, 0, impl_, &msg, &status);
+    	MPI_Mprobe(source, tag, impl_, &msg, &status);
     	MPI_Get_count(&status, detail::basic_datatype<V>{}, &count);
     //	int* buffer = (int*)malloc(sizeof(int) * count);
     	using detail::data;
