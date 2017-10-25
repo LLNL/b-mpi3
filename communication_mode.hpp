@@ -75,7 +75,6 @@ struct all_reduce_mode{
 	int operator()(Args&&... args) const{return MPI_Allreduce(std::forward<Args>(args)...);}
 };
 
-
 }}
 #endif
 

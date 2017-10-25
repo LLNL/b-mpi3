@@ -743,8 +743,12 @@ private:
 	}
 	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
 	void send_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
-		int s = cm.Send(detail::data(first), n, datatype{}, dest, tag, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+	//	std::cout << "Send " << n << std::endl;
+	//	if(n){ // apparently messages of 0 size are allowed
+			using detail::data;
+			int s = cm.Send(data(first), n, datatype{}, dest, tag, impl_);
+			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+	//	}
 	}
 	template<class CommunicationMode, class ContiguousIterator, class Size, class V = typename std::iterator_traits<ContiguousIterator>::value_type>
 	void send_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::false_type, ContiguousIterator first, Size n, int dest, int tag);
@@ -774,10 +778,13 @@ private:
 
 	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
 	void receive_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode bm, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
-		status stts;
-		using detail::data;
-		int s = cm.Recv(data(first), n, datatype{}, dest, tag, impl_, &stts.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+	//	std::cout << "Recv " << n << std::endl;
+	//	if(n){ apparently messages of 0 size are allowed
+			status stts;
+			using detail::data;
+			int s = cm.Recv(data(first), n, datatype{}, dest, tag, impl_, &stts.impl_);
+			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+	//	}
 	}
 
 	template<class CommunicationMode, class ContiguousIterator, class Size, class V = typename std::iterator_traits<ContiguousIterator>::value_type>

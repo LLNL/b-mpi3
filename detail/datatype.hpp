@@ -8,7 +8,6 @@
 
 #include<type_traits>
 #include<utility> // pair
-
 #include<complex>
 
 namespace boost{
@@ -22,6 +21,17 @@ using double_int = std::pair<double, int>;
 using short_int = std::pair<short, int>;
 using int_int = std::pair<int, int>;
 using long_double_int = std::pair<long double, int>;
+
+using float_float = std::pair<float, float>;
+using double_double = std::pair<double, double>;
+using long_double_long_double = std::pair<long double, long double>;
+
+
+using cxx_float_complex = std::complex<float>;
+using cxx_double_complex = std::complex<double>;
+using cxx_long_double_complex = std::complex<long double>;
+
+using cxx_bool = bool;
 
 template<class T> struct basic_datatype;
 
@@ -50,9 +60,13 @@ BOOST_MPI3_DECLARE_DATATYPE(double, MPI_DOUBLE);
 BOOST_MPI3_DECLARE_DATATYPE(long double, MPI_LONG_DOUBLE);
 BOOST_MPI3_DECLARE_DATATYPE(long long int, MPI_LONG_LONG_INT);
 
-BOOST_MPI3_DECLARE_DATATYPE(std::complex<float>, MPI_CXX_FLOAT_COMPLEX);
-BOOST_MPI3_DECLARE_DATATYPE(std::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
-BOOST_MPI3_DECLARE_DATATYPE(std::complex<long double>, MPI_CXX_DOUBLE_COMPLEX);
+BOOST_MPI3_DECLARE_DATATYPE(cxx_float_complex, MPI_CXX_FLOAT_COMPLEX);
+BOOST_MPI3_DECLARE_DATATYPE(cxx_double_complex, MPI_CXX_DOUBLE_COMPLEX);
+BOOST_MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_CXX_DOUBLE_COMPLEX);
+
+BOOST_MPI3_DECLARE_DATATYPE(float_float, MPI_CXX_FLOAT_COMPLEX);
+BOOST_MPI3_DECLARE_DATATYPE(double_double, MPI_CXX_DOUBLE_COMPLEX);
+BOOST_MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX);
 
 BOOST_MPI3_DECLARE_DATATYPE(float_int, MPI_FLOAT_INT);
 BOOST_MPI3_DECLARE_DATATYPE(long_int, MPI_LONG_INT);
