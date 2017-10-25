@@ -643,10 +643,11 @@ public:
 		MPI_Status status;
 	    MPI_Message msg;
     	int count = -1;
-    	MPI_Mprobe(0, 0, MPI_COMM_WORLD, &msg, &status);
-    	MPI_Get_count(&status, MPI_INT, &count);
-    	int* buffer = (int*)malloc(sizeof(int) * count);
-    	MPI_Mrecv(buffer, count, MPI_INT, &msg, MPI_STATUS_IGNORE);
+    	MPI_Mprobe(0, 0, impl_, &msg, &status);
+    	MPI_Get_count(&status, detail::basic_datatype<V>{}, &count);
+    //	int* buffer = (int*)malloc(sizeof(int) * count);
+    	using detail::data;
+    	MPI_Mrecv(data(first), count, detail::basic_datatype<V>{}, &msg, MPI_STATUS_IGNORE);
 	}
 
 	template<class InputIterator>
@@ -740,7 +741,6 @@ private:
 	auto receive_n_randomaccess_contiguity(CommunicationMode cm, BlockingMode bm, RandomAccessIterator first, Size n, int dest, int tag){
 		return receive_n_randomaccess_contiguous_builtin(cm, bm, detail::is_basic<typename std::iterator_traits<RandomAccessIterator>::value_type>{}, first, n, dest, tag);
 	}
-
 	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
 	void send_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
 		int s = cm.Send(detail::data(first), n, datatype{}, dest, tag, impl_);
@@ -775,7 +775,8 @@ private:
 	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
 	void receive_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode bm, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
 		status stts;
-		int s = cm.Recv(detail::data(first), n, datatype{}, dest, tag, impl_, &stts.impl_);
+		using detail::data;
+		int s = cm.Recv(data(first), n, datatype{}, dest, tag, impl_, &stts.impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
 	}
 

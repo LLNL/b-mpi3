@@ -23,6 +23,7 @@ auto communicator::send_category(CommunicationMode cm, BlockingMode bm, std::inp
 	p.send(dest, tag);
 }
 
+#if 0
 template<class ContiguousIt, typename Size>
 void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root){
 	package p(*this);
@@ -44,7 +45,7 @@ void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt
 		}
 	}
 }
-
+#endif
 
 }}
 
