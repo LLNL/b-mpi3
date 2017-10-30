@@ -17,7 +17,7 @@ namespace mpi3{
 using address = MPI_Aint;
 using size_t = MPI_Aint;
 
-address get_address(void const* location){
+inline address get_address(void const* location){
 	address ret = -1;
 	int status = MPI_Get_address(location, &ret); // MPI_Address is deprecated
 	if(status != 0) throw std::runtime_error("error taking address");
