@@ -116,9 +116,9 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
 	using impl_t = decltype(MPI_COMM_WORLD);
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
-	static communicator const null;
-	static communicator world;
-	static communicator self;
+//	static communicator null;
+//	static communicator world;
+//	static communicator self;
 
 	impl_t& operator&(){return impl_;}
 
@@ -276,7 +276,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		return split(color);
 	}
 	communicator operator%(int n) const{
-		int color = world.rank()%n;
+		int color = rank()%n;
 		return split(color);
 	}
 	communicator operator<(int n) const{return split(rank() < n);}
@@ -1485,7 +1485,7 @@ public:
 
 };
 
-std::string const& name(communicator::topology const& t){
+inline std::string const& name(communicator::topology const& t){
 	static std::map<communicator::topology, std::string> const names = {
 		{communicator::topology::undefined, "undefined"}, 
 		{communicator::topology::graph, "graph"},
@@ -1494,9 +1494,9 @@ std::string const& name(communicator::topology const& t){
 }
 
 
-communicator const communicator::null(MPI_COMM_NULL);
-communicator communicator::world(MPI_COMM_WORLD);
-communicator communicator::self(MPI_COMM_SELF);
+static communicator null{MPI_COMM_NULL};
+static communicator world{MPI_COMM_WORLD};
+static communicator self{MPI_COMM_SELF};
 
 struct strided_range{
 	int first;
@@ -1670,19 +1670,19 @@ public:
 #endif
 };
 
-communicator::communicator(communicator const& other, struct group const& g, int tag) : communicator(){
+inline communicator::communicator(communicator const& other, struct group const& g, int tag) : communicator(){
 	MPI_Comm_create_group(other.impl_, g.impl_, tag, &impl_);
 }
 
-communicator communicator::create_group(struct group const& g, int tag = 0) const{
+inline communicator communicator::create_group(struct group const& g, int tag = 0) const{
 	communicator ret;
 	MPI_Comm_create_group(impl_, g.impl_, tag, &ret.impl_);
 	return ret;
 }
 
-group communicator::group() const{return boost::mpi3::group(*this);}
+inline group communicator::group() const{return boost::mpi3::group(*this);}
 
-communicator communicator::create(struct group const& g) const{
+inline communicator communicator::create(struct group const& g) const{
 	communicator ret;
 	MPI_Comm_create(impl_, g.impl_, &ret.impl_);
 	return ret;
@@ -1760,7 +1760,7 @@ struct package{
 };
 //package communicator::make_package(int n){return package(*this, n);}
 
-void communicator::send_value(package const& p, int dest, int tag){
+inline void communicator::send_value(package const& p, int dest, int tag){
 	int s = MPI_Send(p.buffer_.data(), p.buffer_.size(), MPI_PACKED, dest, tag, impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error("cannotsend_value package");
 }

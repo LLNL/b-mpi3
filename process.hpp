@@ -60,7 +60,7 @@ process&& operator<<(process& self, T const& t){
 	return std::move(self);
 };
 
-process communicator::operator[](int rank){
+inline process communicator::operator[](int rank){
 	return {*this, rank};
 }
 
