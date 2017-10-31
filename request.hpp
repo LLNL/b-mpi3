@@ -64,7 +64,7 @@ public:
 	status test() const{return get_status();}
 };
 
-std::vector<status> test_some(std::vector<request> const& requests){
+inline std::vector<status> test_some(std::vector<request> const& requests){
 	int outcount = -1;
 	std::vector<int> ignore(requests.size());
 	std::vector<status> ret(requests.size()); 
@@ -73,7 +73,7 @@ std::vector<status> test_some(std::vector<request> const& requests){
 	return ret;
 }
 
-std::vector<int> completed_some(std::vector<request> const& requests){
+inline std::vector<int> completed_some(std::vector<request> const& requests){
 	int outcount = -1;
 	std::vector<int> ret(requests.size());
 	int s = MPI_Testsome(requests.size(), const_cast<MPI_Request*>(&(requests.data()->impl_)), &outcount, ret.data(), MPI_STATUSES_IGNORE);
