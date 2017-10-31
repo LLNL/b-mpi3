@@ -161,26 +161,26 @@ public:
 #endif
 };
 
-type const char_{MPI_CHAR};
-type const unsigned_char{MPI_UNSIGNED_CHAR}; type const& unsigned_char_ = unsigned_char;
-type const short_{MPI_SHORT};
-type const unsigned_short{MPI_UNSIGNED_SHORT}; type const& unsigned_short_ = unsigned_short;
-type const int_{MPI_INT};
-type const unsigned_int_{MPI_UNSIGNED}; type const& unsigned_int = unsigned_int_; type const& unsigned_ = unsigned_int_;
-type const long_{MPI_LONG};
-type const unsigned_long_{MPI_UNSIGNED_LONG}; type const& unsigned_long = unsigned_long_;
-type const float_{MPI_FLOAT};
-type const double_{MPI_DOUBLE};
-type const long_double_{MPI_LONG_DOUBLE}; type const& long_double = long_double_;
-type const long_long_int{MPI_LONG_DOUBLE_INT};
-type const float_int{MPI_FLOAT_INT};
-type const long_int{MPI_LONG_INT};
-type const double_int{MPI_DOUBLE_INT};
-type const short_int{MPI_SHORT_INT};
-type const int_int{MPI_2INT}; type const& _2int = int_int;
-type const long_double_int{MPI_LONG_DOUBLE_INT};
+static type const char_{MPI_CHAR};
+static type const unsigned_char{MPI_UNSIGNED_CHAR}; static type const& unsigned_char_ = unsigned_char;
+static type const short_{MPI_SHORT};
+static type const unsigned_short{MPI_UNSIGNED_SHORT}; static type const& unsigned_short_ = unsigned_short;
+static type const int_{MPI_INT};
+static type const unsigned_int_{MPI_UNSIGNED}; static type const& unsigned_int = unsigned_int_; type const& unsigned_ = unsigned_int_;
+static type const long_{MPI_LONG};
+static type const unsigned_long_{MPI_UNSIGNED_LONG}; static type const& unsigned_long = unsigned_long_;
+static type const float_{MPI_FLOAT};
+static type const double_{MPI_DOUBLE};
+static type const long_double_{MPI_LONG_DOUBLE}; static type const& long_double = long_double_;
+static type const long_long_int{MPI_LONG_DOUBLE_INT};
+static type const float_int{MPI_FLOAT_INT};
+static type const long_int{MPI_LONG_INT};
+static type const double_int{MPI_DOUBLE_INT};
+static type const short_int{MPI_SHORT_INT};
+static type const int_int{MPI_2INT}; static type const& _2int = int_int;
+static type const long_double_int{MPI_LONG_DOUBLE_INT};
 
-std::map<std::type_index, type const&> type::registered;
+//static std::map<std::type_index, type const&> type::registered;
 
 template<class T>
 type make_type();
@@ -258,7 +258,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			world[0] >> particle;
 		}
 	}
-	{
+/*	{
 		auto Btype = (
 			mpi3::double_[6], 
 			mpi3::long_[20]
@@ -273,7 +273,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			assert(b.d[2]==0.);
 			world[0] >> b;
 		}
-	}
+	}*/
 	return 0;
 #if 0
 	{
