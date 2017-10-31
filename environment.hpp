@@ -101,8 +101,8 @@ struct environment_base{
 	~environment_base(){}//std::cout << "environment finalized\n";}
 };
 
-std::string processor_name(){return detail::call<MPI_Get_processor_name>();}
-std::string get_processor_name(){return detail::call<MPI_Get_processor_name>();}
+inline std::string processor_name(){return detail::call<MPI_Get_processor_name>();}
+inline std::string get_processor_name(){return detail::call<MPI_Get_processor_name>();}
 
 class environment : environment_base{
 	public:
@@ -145,12 +145,14 @@ class environment : environment_base{
 }}
 
 #ifdef _TEST_BOOST_MPI3_ENVIRONMENT
-int main(int argc, char** argv){
-	boost::mpi3::environment env(argc, argv);
-	[[maybe_unused]] auto& world = env.world();
-	
-	    int (*); // anonymous variable?
+#include<iostream>
 
+namespace mpi3 = boost::mpi3;
+using std::cout;
+
+int main(int argc, char** argv){
+	mpi3::environment env(argc, argv);
+	[[maybe_unused]] auto& world = env.world();
 	return 0;
 }
 #endif
