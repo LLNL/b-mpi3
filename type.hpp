@@ -166,7 +166,7 @@ static type const unsigned_char{MPI_UNSIGNED_CHAR}; static type const& unsigned_
 static type const short_{MPI_SHORT};
 static type const unsigned_short{MPI_UNSIGNED_SHORT}; static type const& unsigned_short_ = unsigned_short;
 static type const int_{MPI_INT};
-static type const unsigned_int_{MPI_UNSIGNED}; static type const& unsigned_int = unsigned_int_; type const& unsigned_ = unsigned_int_;
+static type const unsigned_int_{MPI_UNSIGNED}; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;
 static type const long_{MPI_LONG};
 static type const unsigned_long_{MPI_UNSIGNED_LONG}; static type const& unsigned_long = unsigned_long_;
 static type const float_{MPI_FLOAT};
@@ -185,8 +185,8 @@ static type const long_double_int{MPI_LONG_DOUBLE_INT};
 template<class T>
 type make_type();
 
-template<> type make_type<double>(){return mpi3::double_;}
-template<> type make_type<int>(){return mpi3::int_;}
+template<> inline type make_type<double>(){return mpi3::double_;}
+template<> inline type make_type<int>(){return mpi3::int_;}
 
 }}
 
