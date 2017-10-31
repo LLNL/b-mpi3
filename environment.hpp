@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include<"$0">" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
@@ -22,10 +22,11 @@ struct thread_level{
 		return impl_ == other.impl_;
 	}
 };
-static thread_level single{MPI_THREAD_SINGLE};
-static thread_level funneled{MPI_THREAD_FUNNELED};
-static thread_level serialized{MPI_THREAD_SERIALIZED};
-static thread_level multiple{MPI_THREAD_MULTIPLE};
+
+[[maybe_unused]] static thread_level single{MPI_THREAD_SINGLE};
+[[maybe_unused]] static thread_level funneled{MPI_THREAD_FUNNELED};
+[[maybe_unused]] static thread_level serialized{MPI_THREAD_SERIALIZED};
+[[maybe_unused]] static thread_level multiple{MPI_THREAD_MULTIPLE};
 
 //enum struct thread_level : decltype(MPI_THREAD_SINGLE){
 //	single = MPI_THREAD_SINGLE, funneled = MPI_THREAD_FUNNELED, serialized = MPI_THREAD_SERIALIZED, multiple = MPI_THREAD_MULTIPLE
@@ -146,7 +147,10 @@ class environment : environment_base{
 #ifdef _TEST_BOOST_MPI3_ENVIRONMENT
 int main(int argc, char** argv){
 	boost::mpi3::environment env(argc, argv);
-	auto& world = env.world();
+	[[maybe_unused]] auto& world = env.world();
+	
+	    int (*); // anonymous variable?
+
 	return 0;
 }
 #endif

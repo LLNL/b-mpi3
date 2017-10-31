@@ -1992,7 +1992,7 @@ struct package_oarchive : public package_oarchive_impl<package_oarchive>{
 	package_oarchive(package& p, unsigned int flags = 0) : package_oarchive_impl<package_oarchive>(p, flags){}
 	using package_oarchive_impl<package_oarchive>::operator&;
 //	package_oarchive& operator & (boost::serialization::array<double>& t){
-	package_oarchive& operator & (boost::serialization::array_wrapper<double>& t){
+	package_oarchive& operator & ([[maybe_unused]] boost::serialization::array_wrapper<double>&  t){
 		assert(0);
 		return *this;
 	}

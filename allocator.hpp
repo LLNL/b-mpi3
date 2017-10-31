@@ -42,7 +42,7 @@ struct allocator{
 				return static_cast<T*>(ptr);
 		throw bad_alloc();
 	}
-	void deallocate(pointer p, std::size_t n){mpi3::free(p);}
+	void deallocate(pointer p, std::size_t){mpi3::free(p);}
 	static size_type max_size(){return std::numeric_limits<size_type>::max();}
 };
 
