@@ -500,20 +500,42 @@ public:
 		A&&... a
 	) const{
 		return send_receive_n_aux(
-			CategoryO(), CategoryI(), 
+			CategoryO{}, CategoryI{}, 
 			O, sendcount, dest,
 			I, recvcount, source, 
 			std::forward<A>(a)...
 		);
 	}
-
+	template<
+		class It,
+		class Category = typename std::iterator_traits<It>::iterator_category,
+		class... Args
+	>
+	auto send_receive_replace(It first, It last, Args&&... args){
+		return send_receive_replace_category(Category{}, first, last, std::forward<Args>(args)...);
+	}
+	template<class It>
+	auto send_receive(It first, It last, int dest, int source = MPI_ANY_SOURCE, int sendtag = 0, int recvtag = MPI_ANY_TAG){
+		return send_receive_replace(first, last, dest, source, sendtag, recvtag);
+	}
+	template<class It, class... Args>
+	auto send_receive_replace_category(std::random_access_iterator_tag const&, 
+		It first, It last, Args&&... args){
+		return send_receive_replace_n(first, std::distance(first, last), std::forward<Args>(args)...);
+	}
+	template<class It, class Size, class datatype = detail::basic_datatype<typename std::iterator_traits<It>::value_type>>
+	auto send_receive_replace_n(It first, Size size, int dest, int source = MPI_ANY_SOURCE, int sendtag = 0, int recvtag = MPI_ANY_TAG){
+		status ret;
+		int s = MPI_Sendrecv_replace(data_(first), size, datatype{}, dest, sendtag, source, recvtag, impl_, &ret.impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send_receive");
+	}
 	template<class T1, class T2>
 	auto send_receive_value(
 		T1 const& t1, int dest, 
-		T2&       t2, int source = MPI_ANY_SOURCE){
+		T2&       t2, int source = MPI_ANY_SOURCE
+	){
 		return send_receive_n(&t1, 1, dest, &t2, 1, source);
 	}
-
 	template<
 		class IOIterator, class Size, class... A, 
 		class CategoryIO = typename std::iterator_traits<IOIterator>::iterator_category,
