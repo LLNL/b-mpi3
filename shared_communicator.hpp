@@ -19,7 +19,7 @@ struct shared_communicator : communicator{
 		return data(std::forward<T>(t));
 	}
 	public:
-	shared_communicator(communicator const& comm, int key = 0){
+	inline shared_communicator(communicator const& comm, int key = 0){
 		int s = MPI_Comm_split_type(comm.impl_, MPI_COMM_TYPE_SHARED, key,  MPI_INFO_NULL, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
 	}
@@ -30,7 +30,7 @@ struct shared_communicator : communicator{
 
 };
 
-shared_communicator communicator::split_shared(int key /*= 0*/) const{
+inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 	return shared_communicator(*this, key);
 }
 
