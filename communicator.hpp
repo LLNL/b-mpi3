@@ -119,8 +119,14 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 //	static communicator null;
 //	static communicator world;
 //	static communicator self;
+	friend void swap(communicator& self, communicator& other){
+		using std::swap;
+		swap(self.impl_, other.impl_);
+	}
+	communicator& operator=(communicator oth){swap(*this, oth); return *this;}
 
-	impl_t& operator&(){return impl_;}
+ 	impl_t& operator&(){return impl_;}
+
 
 	template<class Graph>
 	graph_communicator make_graph(Graph const& g) const;
@@ -134,6 +140,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	communicator(communicator const& other) : communicator(){
 		MPI_Comm_dup(other.impl_, &impl_);
 	}
+	communicator(communicator&& other) : communicator(){swap(*this, other);}
 	communicator(communicator const& other, group const& g, int tag = 0);
 
 //	template<class T = char>
@@ -240,7 +247,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	}
 
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
-
 	explicit operator bool() const{return not is_null();}
 
 	int remote_size() const{
@@ -2083,7 +2089,10 @@ BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive
 #include "alf/boost/mpi3/version.hpp"
 
 using std::cout;
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+namespace mpi3 = boost::mpi3;
+
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
@@ -2091,7 +2100,8 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
 //	boost::mpi3::communicator newcomm = world;
 	{
 		int color = world.rank()/3;
-		communicator row_comm = world.split(color);
+		communicator row_comm;
+		row_comm = world.split(color);
 		world.barrier();
 		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
 		world.barrier();
