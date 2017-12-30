@@ -269,7 +269,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	communicator split(int color, int key) const{
 		communicator ret;
 		MPI_Comm_split(impl_, color, key, &ret.impl_);
-		ret.name(name() + std::to_string(color));// + std::to_string(key));
+		if(ret) ret.name(name() + std::to_string(color));// + std::to_string(key));
 		return ret;
 	}
 	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
@@ -285,11 +285,11 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		int color = rank()%n;
 		return split(color);
 	}
-	communicator operator<(int n) const{return split(rank() < n);}
-	communicator operator<=(int n) const{return split(rank() <= n);}
-	communicator operator>(int n) const{return split(rank() > n);}
-	communicator operator>=(int n) const{return split(rank() >= n);}
-	communicator operator==(int n) const{return split(rank() == n);} // self?
+	communicator operator<(int n) const{return split((rank() < n)?0:MPI_UNDEFINED);}
+	communicator operator<=(int n) const{return split((rank() <= n)?0:MPI_UNDEFINED);}
+	communicator operator>(int n) const{return split((rank() > n)?0:MPI_UNDEFINED);}
+	communicator operator>=(int n) const{return split((rank() >= n)?0:MPI_UNDEFINED);}
+	communicator operator==(int n) const{return split((rank() == n)?0:MPI_UNDEFINED);} // self?
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0){
