@@ -1,5 +1,6 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x; exit
+export PATH=/home/correaa/prj/alf/boost/mpi3/fake:$PATH
+mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"

@@ -114,7 +114,7 @@ enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_S
 
 struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 
-	using impl_t = decltype(MPI_COMM_WORLD);
+	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 //	static communicator null;
 //	static communicator world;
@@ -249,7 +249,7 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 	explicit operator bool() const{return not is_null();}
 
-	int remote_size() const{
+	inline int remote_size() const{
 		int ret = -1;
 		int s = MPI_Comm_remote_size(impl_, &ret);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot remote size");
@@ -571,7 +571,7 @@ public:
 
 	void send_packed_n(void const* begin, int n, int dest, int tag = 0){
 		std::cout << "sending packet of size " << n << std::endl;
-		MPI_Send(begin, n, MPI_PACKED, dest, tag, impl_);
+		MPI_Send(const_cast<void*>(begin), n, MPI_PACKED, dest, tag, impl_);
 	}
 	void send_value(package const& p, int dest, int tag = 0);
 	template<class Char = char>
@@ -1544,7 +1544,7 @@ struct group{
 //	group(group const& other, ContiguousIntIterator ranks_begin, std::size_t n){
 //		MPI_Group_incl(other.impl_, n, ranks_begin, &impl_);
 //	}
-	group(group const& other, std::vector<int> const& ranks){// : group(other, ranks.data(), ranks.size()){
+	group(group const& other, std::vector<int> ranks){// : group(other, ranks.data(), ranks.size()){
 		MPI_Group_incl(other.impl_, ranks.size(), ranks.data(), &impl_);
 	}
 	~group(){
@@ -1561,11 +1561,12 @@ struct group{
 		if(s != MPI_SUCCESS) throw std::runtime_error("rank not available");
 		return rank;
 	}
-	bool is_null() const{return MPI_GROUP_NULL == impl_;}
+//	bool is_null() const{return MPI_GROUP_NULL == impl_;}
 //	operator bool() const{return not is_null();}
 	int size() const{
-		if(is_null()) return 0;
-		int size = -1; MPI_Group_size(impl_, &size); return size;
+		int size = -1;
+		MPI_Group_size(impl_, &size); 
+		return size;
 	}
 	bool empty() const{
 		return size() == 0;

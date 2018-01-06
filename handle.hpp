@@ -68,12 +68,17 @@ struct caller{
 	}
 };
 
-template<class Self, class Impl, int(*CreateFunction)(Impl*), int(*DupFunction)(Impl, Impl*), int(*FreeFunction)(Impl*)>
+template<
+	class Self, 
+	class Impl, 
+	int(*CreateFunction)(Impl*), 
+	int(*DupFunction)(Impl, Impl*), 
+	int(*FreeFunction)(Impl*)
+>
 struct regular_handle : caller<regular_handle<Self, Impl, CreateFunction, DupFunction, FreeFunction>, Impl>{
 	using caller<regular_handle<Self, Impl, CreateFunction, DupFunction, FreeFunction>, Impl>::call;
 	using impl_t = Impl;
 	impl_t impl_;
-
 	regular_handle(){CreateFunction(&impl_);}
 	regular_handle(Self const& other){
 		int status = DupFunction(other.impl_, &impl_);
