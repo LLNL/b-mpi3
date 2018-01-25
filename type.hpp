@@ -87,7 +87,7 @@ public:
 
 	type operator[](int count) const{return contiguous(count);}
 	type operator()(int stride) const{return vector(1, 1, stride);}
-	int size() const{
+	MPI_Aint size() const{
 		int ret;
 		MPI_Type_size(impl_, &ret);
 		return ret;
