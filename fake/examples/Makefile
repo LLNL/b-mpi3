@@ -13,3 +13,6 @@ MPI_Send.x : MPI_Send.cpp
 MPI_Recv.x : MPI_Recv.cpp
 	../mpic++ -I../ MPI_Recv.cpp -o MPI_Recv.x
 
+clean:
+	rm -f *.x
+
