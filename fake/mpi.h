@@ -5,6 +5,7 @@
 #include <limits.h> // HOST_NAME_MAX
 #include <unistd.h> // gethostname
 #include <string.h> // strlen
+#include <stdlib.h> // exit
 
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
 const int MPI_MAX_INFO_KEY = 128;
@@ -242,7 +243,7 @@ enum MPI_Comm : int{
 
 static const void* MPI_IN_PLACE = reinterpret_cast<const void*>(-1);
 
-
+struct MPI_Status {
     int MPI_SOURCE;
     int MPI_TAG;
 };
@@ -252,7 +253,14 @@ static char *MPI_ARGV_NULL[] = {};
 static int MPI_ERRCODES_IGNORE[] = {};
 
 struct MPI_Message{};
-
+[[noreturn]]
+inline int MPI_Abort( // Terminates MPI execution environment
+	MPI_Comm comm, // [in] communicator of tasks to abort
+	int errorcode  // [in] error code to return to invoking environment
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
+	exit(errorcode);
+	return MPI_SUCCESS; // function never returns
+}
 inline int MPI_Allreduce( // Combines values from all processes and distributes the result back to all processes 
 	const void* sendbuf,   // starting address of send buffer (choice)
 	void* recvbuf,         // starting address of receive buffer (choice)
@@ -264,7 +272,7 @@ inline int MPI_Allreduce( // Combines values from all processes and distributes 
 {
 	assert(comm);
 	assert(sendbuf == MPI_IN_PLACE);
-  return MPI_SUCCESS;
+	return MPI_SUCCESS;
 }
 inline int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all other processes of the communicator 
 	void* buffer,          // starting address of buffer (choice)
@@ -693,12 +701,6 @@ inline int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_C
 // const on last arg should not be there
 inline int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm, const MPI_Comm *newcomm)
 {
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Abort(MPI_Comm comm, int errorcode)
-{
-    // should call exit or something here
     return MPI_SUCCESS;
 }
 
