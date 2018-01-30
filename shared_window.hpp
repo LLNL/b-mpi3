@@ -18,24 +18,31 @@ namespace mpi3{
 
 template<class T /*= void*/>
 struct shared_window : window<T>{
-	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit) 
-	: window<T>(){
+	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = sizeof(T)) : 
+		window<T>()
+	{
 		void* base_ptr = nullptr;
-		int s = MPI_Win_allocate_shared(n, disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &this->impl_);
+		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &this->impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
-	shared_window(shared_communicator& comm, int disp_unit) : shared_window(comm, 0, disp_unit){}
+	shared_window(shared_communicator& comm, int disp_unit = sizeof(T)) : 
+		shared_window(comm, 0, disp_unit)
+	{}
 	using query_t = std::tuple<mpi3::size_t, int, void*>;
 	query_t query(int rank = MPI_PROC_NULL) const{
 		query_t ret;
 		MPI_Win_shared_query(this->impl_, rank, &std::get<0>(ret), &std::get<1>(ret), &std::get<2>(ret));
 		return ret;
 	}
-	template<class TT = char>
-	mpi3::size_t size(int rank = MPI_PROC_NULL) const{return std::get<0>(query(rank))/sizeof(T);}
-	int disp_unit(int rank = MPI_PROC_NULL) const{return std::get<1>(query(rank));}
-	template<class TT = void>
-	T* base(int rank = MPI_PROC_NULL) const{return static_cast<T*>(std::get<2>(query(rank)));}
+	template<class TT = T>
+	mpi3::size_t size(int rank = 0) const{
+		return std::get<0>(query(rank))/sizeof(TT);
+	}
+	int disp_unit(int rank = 0) const{
+		return std::get<1>(query(rank));
+	}
+	template<class TT = T>
+	TT* base(int rank = 0) const{return static_cast<TT*>(std::get<2>(query(rank)));}
 //	template<class T = char>
 //	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
 };
@@ -55,15 +62,14 @@ struct managed_shared_memory{
 
 template<class T /*= char*/> 
 shared_window<T> shared_communicator::make_shared_window(
-	mpi3::size_t size, 
-	int disp_unit /*= sizeof(T)*/
+	mpi3::size_t size
 ){
-	return shared_window<T>(*this, size*sizeof(T), disp_unit);
+	return shared_window<T>(*this, size);
 }
 
 template<class T /*= char*/>
 shared_window<T> shared_communicator::make_shared_window(){
-	return shared_window<T>(*this, sizeof(T));
+	return shared_window<T>(*this);//, sizeof(T));
 }
 
 namespace intranode{
@@ -180,26 +186,14 @@ namespace mpi3 = boost::mpi3; using std::cout;
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	mpi3::shared_communicator node = world.split_shared();
-	mpi3::shared_window<int> win = node.make_shared_window<int>(node.rank()==0?1:0);
+	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
 
-	assert(win.base() != nullptr and win.size<int>() == 1);
+	assert(win.base() != nullptr);
+	assert(win.size() == node.size());
 
-	win.lock_all();
-	if(node.rank()==0) *win.base<int>(0) = 42;
-	for (int j=1; j != node.size(); ++j){
-		if(node.rank()==0) node.send_n((int*)nullptr, 0, j);//, 666);
-	    else if(node.rank()==j) node.receive_n((int*)nullptr, 0, 0);//, 666);
-	}
-	win.sync();
-
-	int l = *win.base<int>(0);
-	win.unlock_all();
-
-	int minmax[2] = {-l,l};
-	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
-	assert( -minmax[0] == minmax[1] );
-	cout << "proc " << node.rank() << " " << l << std::endl;
-
+	win.base()[node.rank()] = node.rank() + 1;
+	node.barrier();
+	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
 	return 0;
 }
 

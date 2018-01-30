@@ -24,7 +24,7 @@ struct shared_communicator : communicator{
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
 	}
 	template<class T = char>
-	shared_window<T> make_shared_window(mpi3::size_t size, int disp_unit = sizeof(T));
+	shared_window<T> make_shared_window(mpi3::size_t size);
 	template<class T = char>
 	shared_window<T> make_shared_window();
 
