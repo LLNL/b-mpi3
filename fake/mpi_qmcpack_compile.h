@@ -5,7 +5,6 @@
 #include <limits.h> // HOST_NAME_MAX
 #include <unistd.h> // gethostname
 #include <string.h> // strlen
-#include <assert.h> // assert
 
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
 const int MPI_MAX_INFO_KEY = 128;
@@ -74,12 +73,12 @@ enum : int { // error classes
 	MPI_ERR_LASTCODE      // Last error code
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm
 
-//struct MPI_Group{};
-
-enum MPI_Group{
-	MPI_GROUP_NULL = 0,
-	MPI_GROUP_EMPTY
+struct MPI_Group{
+   bool operator==(const MPI_Group&o) const { return true; }
 };
+
+const struct MPI_Group MPI_GROUP_EMPTY;
+const struct MPI_Group MPI_GROUP_NULL;
 
 // MPI Info handling.
 //  Would not be too hard to create an std::map implementation
@@ -280,10 +279,9 @@ inline int MPI_Allreduce( // Combines values from all processes and distributes 
 	MPI_Comm comm          // communicator (handle)
 ) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node117.htm#Node117
 {
-	assert(comm);
-	assert(sendbuf == MPI_IN_PLACE);
   return MPI_SUCCESS;
 }
+
 inline int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all other processes of the communicator 
 	void* buffer,          // starting address of buffer (choice)
 	int count,             // number of entries in buffer (non-negative integer)
@@ -292,7 +290,6 @@ inline int MPI_Bcast( // Broadcasts a message from the process with rank "root" 
 	MPI_Comm comm          // communicator (handle)
 ) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node101.htm
 {
-	assert(comm);
  return MPI_SUCCESS; 
 }
 
@@ -308,7 +305,7 @@ inline int MPI_Comm_size( // Determines the size of the group associated with a 
 	int *size // number of processes in the group of comm (integer)
 ){
 	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	*size = (comm != MPI_COMM_NULL);
+	*size = comm > MPI_COMM_NULL;
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
 int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI application 
@@ -336,14 +333,6 @@ int MPI_Get_count( // Gets the number of "top level" elements
 	MPI_Datatype datatype, // [out] number of received elements (integer)
 	int *count             // [in] datatype of each receive buffer element (han 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
-int MPI_Comm_rank( // Determines the rank of the calling process in the communicator
-  MPI_Comm comm, // [in] communicator (handle)
-  int *rank      // [out] rank of the calling process in the group of comm (integer)
-){
-	assert(comm);
-	*rank = 1;
-	return MPI_SUCCESS;
-}
 int MPI_Comm_set_name( // Sets the print name for a communicator 
 	MPI_Comm comm,        // [in] communicator to name (handle) 
 	const char *comm_name // [in] Name for communicator (string)
@@ -359,9 +348,8 @@ inline int MPI_Comm_dup( // Duplicates an existing communicator with all its cac
 	MPI_Comm *newcomm // copy of comm (handle)
 )
 {
-	static int counter = 1024;
-	*newcomm = MPI_Comm(++counter); 
-	return MPI_SUCCESS;
+  *newcomm = comm;
+  return MPI_SUCCESS;
 }
 inline int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
 	char *name, // A unique specifier for the actual (as opposed to virtual) node.
@@ -512,11 +500,7 @@ int MPI_Send( // Performs a blocking send
 	int dest,              // [in] rank of destination (integer) 
 	int tag,               // [in] message tag (integer) 
 	MPI_Comm comm          // [in] communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node47.htm#Node47
-	int rank = -1; MPI_Comm_rank(comm, &rank);
-	assert(rank != dest);
-	return MPI_SUCCESS;
-}
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node47.htm#Node47
 int MPI_Recv( // Blocking receive for a message
 	void *buf,             // [out] initial address of receive buffer (choice) 
 	int count,             // [in] maximum number of elements in receive buffer...
@@ -525,11 +509,7 @@ int MPI_Recv( // Blocking receive for a message
 	int tag,               // [in] message tag (integer) 
 	MPI_Comm comm,         // [in] communicator (handle) 
 	MPI_Status *status     // [out] status object (Status) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
-	int rank = -1; MPI_Comm_rank(comm, &rank);
-	assert(rank != source);
-	return MPI_SUCCESS;
-}
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
 double MPI_Wtick( // Returns the resolution of MPI_Wtime 
@@ -573,7 +553,7 @@ inline int MPI_Get_address(const void *location, MPI_Aint *address)
 
 //#include <stdlib.h>
 
-int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
+inline int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 {
     //if (baseptr) *(void **)baseptr = malloc(size);
     if (baseptr) *(void **)baseptr = 0;
@@ -710,6 +690,11 @@ inline int MPI_Topo_test(MPI_Comm comm, int *status)
     return MPI_SUCCESS;
 }
 
+inline int MPI_Comm_rank(MPI_Comm comm, int *rank)
+{
+    if (rank) *rank = 0;
+    return MPI_SUCCESS;
+}
 
 // const should not be there
 inline int MPI_Comm_disconnect(const MPI_Comm *comm)

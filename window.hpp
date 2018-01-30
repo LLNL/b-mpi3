@@ -1,12 +1,13 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
 
-#include<mpi.h>
 #include "../mpi3/communicator.hpp"
 #include "../mpi3/detail/datatype.hpp"
+
+#include<mpi.h>
 
 namespace boost{
 namespace mpi3{
@@ -42,9 +43,7 @@ struct window<void>{
 		other.impl_ = MPI_WIN_NULL;
 		return *this;
 	}
-	~window(){
-		if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
-	}
+	~window(){if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);}
 
 	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
 	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
@@ -307,7 +306,7 @@ window<T> communicator::make_window(mpi3::size_t size){
 
 #ifdef _TEST_BOOST_MPI3_WINDOW
 
-#include "alf/boost/mpi3/main.hpp"
+#include <alf/boost/mpi3/main.hpp>
 #include<iostream>
 
 namespace mpi3 = boost::mpi3; using std::cout;

@@ -4,7 +4,7 @@
 #ifndef BOOST_MPI3_DETAIL_ITERATOR_HPP
 #define BOOST_MPI3_DETAIL_ITERATOR_HPP
 
-#include "alf/boost/mpi3/allocator.hpp"
+#include "../../mpi3/allocator.hpp"
 
 #include<boost/container/vector.hpp>
 

@@ -11,8 +11,12 @@ using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
-	cout << "Hello world from processor " << mpi3::processor_name() << " rank " << world.rank() << " out of " << world.size() << " processors\n";
-
+	cout 
+		<< "Hello world from processor '" << mpi3::processor_name() 
+		<< "' rank " << world.rank() 
+		<< " out of " << world.size() << " processors\n"
+	;
+//s	assert(world.rank());
 	return 0;
 }
 

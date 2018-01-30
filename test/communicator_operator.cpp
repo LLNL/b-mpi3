@@ -41,6 +41,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	std::cout << "comm[" << comm.rank() << "] completed op" << std::endl;
 
 	if(world.rank() == 1) assert( inbuf[9] == 9. );
+	
+	
 
 	return 0;
 }

@@ -22,7 +22,6 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		<< "I am also " << third.rank() << " in " << third.name() << '\n'
 	;
 	
-	
 	return 0;
 }
 

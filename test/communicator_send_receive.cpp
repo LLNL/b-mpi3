@@ -10,15 +10,25 @@ mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 4 $0x.x $
 namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], mpi3::communicator& world){
-	std::vector<double> buffer(10);
-	iota(buffer.begin(), buffer.end(), world.rank()); 
- 
+
 	auto right = (world.rank() + 1 + world.size()) % world.size();
 	auto left  = (world.rank() - 1 + world.size()) % world.size();
+	{
+		std::vector<double> buffer(10);
+		iota(buffer.begin(), buffer.end(), world.rank()); 
 
-	assert(buffer[0] == world.rank()); 
-	world.send_receive(buffer.begin(), buffer.end(), left);
-	assert(buffer[0] == right);
+		assert(buffer[0] == world.rank()); 
+		world.send_receive(buffer.begin(), buffer.end(), left);
+		assert(buffer[0] == right);
+	}
+	{
+		std::vector<double> buffer(10);
+		iota(buffer.begin(), buffer.end(), world.rank()); 
+
+		assert(buffer[0] == world.rank()); 
+		world.send_receive_value(buffer, left);
+		assert(buffer[0] == right);
+	}
 	return 0;
 }
 

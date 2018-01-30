@@ -28,18 +28,22 @@ struct caller{
 		if(status != 0) throw std::runtime_error("error " + boost::to_string(status));
 	}
 
-	template<int(*F)(Impl, char const*, char const*)> void call(char const* c1, char const* c2){
+	template<int(*F)(Impl, char const*, char const*)> void call(
+		char const* c1, char const* c2
+	){
 		int status = F(impl(), c1, c2);
 		if(status != 0) throw std::runtime_error("error " + boost::to_string(status));
 	}
-	template<int(*F)(Impl, char const*, char const*)> void call(std::string const& s1, std::string const& s2){
+	template<int(*F)(Impl, char const*, char const*)> void call(
+		std::string const& s1, std::string const& s2
+	){
 		return call<F>(s1.c_str(), s2.c_str());
 	}
 	template<int(*F)(Impl, int*)> int call() const{
-		int ret = -1; 
+		int ret = -1;
 	//	static_call(F, impl_, &ret);
 		int status = F(impl(), &ret);
-		if(status != 0) throw std::runtime_error("error " + boost::to_string(status));
+		if(status != MPI_SUCCESS) throw std::runtime_error("error " + boost::to_string(status));
 		return ret;
 	}
 	template<int(*F)(Impl, int, char*)> std::string call(int n) const{

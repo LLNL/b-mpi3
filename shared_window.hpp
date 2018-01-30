@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHARED_WINDOW_HPP
 #define BOOST_MPI3_SHARED_WINDOW_HPP
@@ -10,6 +10,8 @@
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
+
+#include<mpi.h>
 
 namespace boost{
 namespace mpi3{
@@ -171,7 +173,7 @@ template<class T> struct allocator{
 
 #ifdef _TEST_BOOST_MPI3_SHARED_WINDOW
 
-#include "alf/boost/mpi3/main.hpp"
+#include "../mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3; using std::cout;
 

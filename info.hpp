@@ -4,7 +4,7 @@
 #ifndef BOOST_MPI3_INFO_HPP
 #define BOOST_MPI3_INFO_HPP
 
-#include "alf/boost/mpi3/handle.hpp"
+#include "../mpi3/handle.hpp"
 
 #include <tuple> // tie
 #include<iostream>

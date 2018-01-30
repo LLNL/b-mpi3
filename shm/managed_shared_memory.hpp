@@ -56,9 +56,7 @@ struct managed_shared_memory{
 		auto ret = (T*)storage_.malloc_n(1, n*sizeof(T));
 		sw_.unlock_all();
 	}
-	void* allocate(mpi3::size_t n){
-		return storage_.malloc_n(1, n);
-	}
+	void* allocate(mpi3::size_t n){return storage_.malloc_n(1, n);}
 	template<class T>
 	void deallocate(T* ptr){storage_.free_n(ptr, 1, sizeof(T));}
 
