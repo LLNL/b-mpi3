@@ -110,6 +110,7 @@ struct array_ptr{
 	T& operator*() const{return *((T*)(wSP_->base(0)) + offset);}
 	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
+//	T* get() const{return wSP_->base(0) + offset;}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	operator array_ptr<void const>() const{
 		array_ptr<void const> ret;
@@ -138,6 +139,7 @@ struct array_ptr{
 };
 
 template<class T> struct allocator{
+	template<class U> struct rebind{typedef allocator<U> other;};
 	using value_type = T;
 	using pointer = array_ptr<T>;
 	using const_pointer = array_ptr<T const>;
@@ -154,8 +156,8 @@ template<class T> struct allocator{
 	array_ptr<T> allocate(size_type n, const void* hint = 0){
 		array_ptr<T> ret;
 		if(n == 0) return ret;
-		ret.wSP_ = std::make_shared<shared_window>(
-			comm_.make_shared_window<T>(comm_.rank()==0?n:0)
+		ret.wSP_ = std::make_shared<shared_window<T>>(
+			comm_.make_shared_window<T>(comm_.root()?n:0)
 		//	comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
 		);
 		return ret;
@@ -170,6 +172,12 @@ template<class T> struct allocator{
 	bool operator!=(allocator const& other) const{
 		return not (other == *this);
 	}
+	template<class U, class... Args>
+	void construct(U* p, Args&&... args){
+		if(comm_.root()) ::new((void*)p) U(std::forward<Args>(args)...);
+	}
+	template< class U >
+	void destroy(U* p){if(comm_.root()) p->~U();}
 };
 
 }
@@ -194,6 +202,10 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	win.base()[node.rank()] = node.rank() + 1;
 	node.barrier();
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
+
+
+	
+
 	return 0;
 }
 
