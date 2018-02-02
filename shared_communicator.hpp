@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHARED_COMMUNICATOR_HPP
 #define BOOST_MPI3_SHARED_COMMUNICATOR_HPP
@@ -18,11 +18,13 @@ struct shared_communicator : communicator{
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
-	public:
 	inline shared_communicator(communicator const& comm, int key = 0){
 		int s = MPI_Comm_split_type(comm.impl_, MPI_COMM_TYPE_SHARED, key,  MPI_INFO_NULL, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
 	}
+	friend class communicator;
+public:
+	inline shared_communicator split(int key) const{return split_shared(key);}
 	template<class T = char>
 	shared_window<T> make_shared_window(mpi3::size_t size);
 	template<class T = char>
@@ -38,9 +40,9 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 
 #ifdef _TEST_BOOST_MPI3_SHARED_COMMUNICATOR
 
-#include "alf/boost/mpi3/shared_main.hpp"
-#include "alf/boost/mpi3/operation.hpp"
-#include "alf/boost/mpi3/shared_window.hpp"
+#include "../mpi3/shared_main.hpp"
+#include "../mpi3/operation.hpp"
+#include "../mpi3/shared_window.hpp"
 
 #include<iostream>
 

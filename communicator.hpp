@@ -111,6 +111,7 @@ struct shared_communicator; // intracommunicator
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
 class communicator : public detail::caller<communicator, MPI_Comm>{
+protected:
 	communicator(MPI_Comm impl = MPI_COMM_NULL) : impl_(impl){}
 public:
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;

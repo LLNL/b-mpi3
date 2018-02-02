@@ -130,9 +130,9 @@ class environment : environment_base{
 	bool is_thread_main() const{return boost::mpi3::is_thread_main();}
 	thread_level query_thread() const{return boost::mpi3::query_thread();}
 
-	communicator& null() const{return boost::mpi3::null;}
-	communicator& self() const{return boost::mpi3::self;}
-	communicator& world() const{return boost::mpi3::world;}
+//	communicator& null() const{return mpi3::communicator::null;}
+	communicator& self() const{return mpi3::communicator::self;}
+	communicator& world() const{return mpi3::communicator::world;}
 
 	std::string processor_name() const{return get_processor_name();}
 	std::string get_processor_name() const{return mpi3::get_processor_name();}
