@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_COMMUNICATOR_HPP
 #define BOOST_MPI3_COMMUNICATOR_HPP
@@ -16,15 +16,13 @@
 #include "../mpi3/vector.hpp"
 
 #include "../mpi3/detail/datatype.hpp"
-
 #include "../mpi3/detail/iterator.hpp"
 #include "../mpi3/detail/strided.hpp"
 
 #include<mpi.h>
 
-#include<boost/range/irange.hpp>
-#include<boost/optional.hpp>
-
+#include <boost/optional.hpp>
+#include <boost/range/irange.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_array.hpp>
 
@@ -112,7 +110,7 @@ struct shared_communicator; // intracommunicator
 
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
-struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
+struct communicator : detail::caller<communicator, MPI_Comm>{
 
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
@@ -123,28 +121,45 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		using std::swap;
 		swap(self.impl_, other.impl_);
 	}
-	communicator& operator=(communicator oth){swap(*this, oth); return *this;}
-
- 	impl_t& operator&(){return impl_;}
-
-
-	template<class Graph>
-	graph_communicator make_graph(Graph const& g) const;
-
-	template<class Graph>
-	int graph_rank(Graph const&) const;
-
-	communicator(decltype(MPI_COMM_WORLD) impl) : impl_(impl)/*, name{this}*/{}
-
+	communicator(MPI_Comm impl) : impl_(impl)/*, name{this}*/{}
 	communicator() : impl_(MPI_COMM_NULL)/*, name{this}*/{}
-	communicator(communicator const& other) : communicator(){
+	communicator(communicator const& other){
 		MPI_Comm_dup(other.impl_, &impl_);
 	}
-	communicator(communicator&& other) : communicator(){swap(*this, other);}
+	communicator(communicator&& other){
+		impl_ = other.impl_;
+		other.impl_ = MPI_COMM_NULL;
+	//	swap(*this, other);
+	}
 	communicator(communicator const& other, group const& g, int tag = 0);
+//	communicator& operator=(communicator other){swap(*this, other); return *this;}
+	communicator& operator=(communicator const& other){
+		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
+		MPI_Comm_dup(other.impl_, &impl_);
+		return *this;
+	}
+	communicator& operator=(communicator&& other){
+		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
+		impl_ = other.impl_;
+		other.impl_ = MPI_COMM_NULL;
+		return *this;
+	}
+	~communicator(){
+		// TODO: if(impl_ != MPI_COMM_NULL){
+		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
+			MPI_Comm_disconnect(&impl_); //	MPI_Comm_free(&impl_);
+		}
+	}
+	bool is_null() const{return MPI_COMM_NULL == impl_;}
+	explicit operator bool() const{return not is_null();}
 
-//	template<class T = char>
-//	shared_window allocate_shared(MPI_Aint size, int disp_unit = sizeof(T));
+	impl_t& operator&(){return impl_;}
+
+	template<class Graph> 
+	graph_communicator make_graph(Graph const& g) const;
+
+	template<class Graph> 
+	int graph_rank(Graph const&) const;
 
 	template<class T>
 	window<T> make_window(mpi3::size_t n); // Win_allocate
@@ -198,39 +213,39 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 	topology topo() const{return static_cast<topology>(call<MPI_Topo_test>());}
 	int rank() const{return call<MPI_Comm_rank>();}
 
-	bool root() const{return rank() == 0;}
-
-	~communicator(){
-		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
-			MPI_Comm_disconnect(&impl_); //	MPI_Comm_free(&impl_);
-		}
+	void abort(int errorcode = 0) const{
+		MPI_Abort(impl_, errorcode);
 	}
-
-	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
-
-	process operator[](int i);
-
 	communicator accept(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
+	void barrier() const{MPI_Barrier(impl_);}
 	communicator connect(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const{MPI_Barrier(impl_);}
+	bool root() const{
+		return rank() == 0;
+	}
+
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
+
 	template<typename T>
 	void set_attribute(keyval const& kv, int idx, T const& val);
+
 	void delete_attribute(keyval const& kv, int idx);
+
 	template<typename T>
 	void get_attribute(keyval const& kv, int idx, T& val);
 	template<typename T>
 	T const& get_attribute_as(keyval const& kv, int idx);
 	bool has_attribute(keyval const& kv, int idx);
+
+	process operator[](int i);
 
 	template<typename T>
 	T const& attribute_as(int TAG) const{
@@ -246,9 +261,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		if(status != MPI_SUCCESS) throw std::runtime_error("cannot call error handler");
 	}
 
-	bool is_null() const{return MPI_COMM_NULL == impl_;}
-	explicit operator bool() const{return not is_null();}
-
 	inline int remote_size() const{
 		int ret = -1;
 		int s = MPI_Comm_remote_size(impl_, &ret);
@@ -262,7 +274,6 @@ struct communicator : detail::caller<communicator, decltype(MPI_COMM_WORLD)>{
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
 		return size;
 	}
-
 	bool empty() const{
 		return size() == 0;
 	}
@@ -2085,9 +2096,11 @@ BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive
 BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive)
 
 #ifdef _TEST_BOOST_MPI3_COMMUNICATOR
+
+#include "../mpi3/main.hpp"
+#include "../mpi3/version.hpp"
+
 #include<iostream>
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/version.hpp"
 
 using std::cout;
 namespace mpi3 = boost::mpi3;
