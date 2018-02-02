@@ -50,6 +50,7 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::shared_communicator& node){
+
 	auto win = node.make_shared_window<int>(node.rank()?0:1);
 	assert(win.base() != nullptr and win.size() == 1);
 	win.lock_all();

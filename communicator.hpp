@@ -135,7 +135,7 @@ public:
 //	[[deprecated("danger")]] 
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
 //	[[deprecated("move communicators violates invariants")]]
-//	communicator(communicator&& other) = default;//{impl_ = (other.impl_ = MPI_COMM_NULL);}
+	communicator(communicator&& other) = delete;//{impl_ = (other.impl_ = MPI_COMM_NULL);}
 	communicator(communicator const& other, group const& g, int tag = 0);
 	communicator& operator=(communicator const&) = delete;
 //	communicator& operator=(communicator other){swap(*this, other); return *this;}
@@ -288,7 +288,7 @@ public:
 	communicator split(int color, int key) const{
 		communicator ret;
 		MPI_Comm_split(impl_, color, key, &ret.impl_);
-		if(ret) ret.name(name() + std::to_string(color));// + std::to_string(key));
+		if(ret) ret.name(name() + std::to_string(color));
 		return ret;
 	}
 	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
