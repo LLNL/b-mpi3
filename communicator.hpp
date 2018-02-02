@@ -110,40 +110,43 @@ struct shared_communicator; // intracommunicator
 
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
-struct communicator : detail::caller<communicator, MPI_Comm>{
-
+class communicator : public detail::caller<communicator, MPI_Comm>{
+	communicator(MPI_Comm impl = MPI_COMM_NULL) : impl_(impl){}
+public:
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 //	static communicator null;
 //	static communicator world;
 //	static communicator self;
+//static communicator null{MPI_COMM_NULL};
+//static communicator world{MPI_COMM_WORLD};
+//static communicator self{MPI_COMM_SELF};
+//	static communicator null{MPI_COMM_NULL};
+	static communicator world;
+	static communicator self;
+
 	friend void swap(communicator& self, communicator& other){
 		using std::swap;
 		swap(self.impl_, other.impl_);
 	}
-	communicator(MPI_Comm impl) : impl_(impl)/*, name{this}*/{}
-	communicator() : impl_(MPI_COMM_NULL)/*, name{this}*/{}
-	communicator(communicator const& other){
-		MPI_Comm_dup(other.impl_, &impl_);
-	}
-	communicator(communicator&& other){
-		impl_ = other.impl_;
-		other.impl_ = MPI_COMM_NULL;
-	//	swap(*this, other);
-	}
+//	[[deprecated("danger")]] 
+	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
+//	[[deprecated("move communicators violates invariants")]]
+//	communicator(communicator&& other) = default;//{impl_ = (other.impl_ = MPI_COMM_NULL);}
 	communicator(communicator const& other, group const& g, int tag = 0);
+	communicator& operator=(communicator const&) = delete;
 //	communicator& operator=(communicator other){swap(*this, other); return *this;}
-	communicator& operator=(communicator const& other){
+/*	[[deprecated("assigning communicators violates invariants")]] communicator& operator=(communicator const& other){
 		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
 		MPI_Comm_dup(other.impl_, &impl_);
 		return *this;
-	}
-	communicator& operator=(communicator&& other){
+	}*/
+/*	[[deprecated("assigning communicators violates invariants")]] communicator& operator=(communicator&& other){
 		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
 		impl_ = other.impl_;
 		other.impl_ = MPI_COMM_NULL;
 		return *this;
-	}
+	}*/
 	~communicator(){
 		// TODO: if(impl_ != MPI_COMM_NULL){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
@@ -1524,6 +1527,10 @@ public:
 
 };
 
+communicator communicator::world{MPI_COMM_WORLD};
+communicator communicator::self{MPI_COMM_SELF};
+
+
 inline std::string const& name(communicator::topology const& t){
 	static std::map<communicator::topology, std::string> const names = {
 		{communicator::topology::undefined, "undefined"}, 
@@ -1531,11 +1538,6 @@ inline std::string const& name(communicator::topology const& t){
 		{communicator::topology::cartesian, "cartesian"}};
 	return names.find(t)->second;
 }
-
-
-static communicator null{MPI_COMM_NULL};
-static communicator world{MPI_COMM_WORLD};
-static communicator self{MPI_COMM_SELF};
 
 struct strided_range{
 	int first;
@@ -2110,7 +2112,10 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
+	mpi3::communicator world2 = world;
+
 	return 0;
+#if 0
 //	boost::mpi3::communicator newcomm = world;
 	{
 		int color = world.rank()/3;
@@ -2160,6 +2165,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 			cout << world.rank() << " not in prime comm\n";
 		}
 	}
+#endif
 }
 
 #endif
