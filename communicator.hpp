@@ -110,10 +110,14 @@ struct shared_communicator; // intracommunicator
 
 enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
 
+<<<<<<< HEAD
 class communicator : public detail::caller<communicator, MPI_Comm>{
 protected:
 	communicator(MPI_Comm impl = MPI_COMM_NULL) : impl_(impl){}
 public:
+=======
+struct communicator : detail::caller<communicator, MPI_Comm>{
+
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 //	static communicator null;
@@ -126,10 +130,10 @@ public:
 	static communicator world;
 	static communicator self;
 
-	friend void swap(communicator& self, communicator& other){
-		using std::swap;
-		swap(self.impl_, other.impl_);
-	}
+//	friend void swap(communicator& self, communicator& other){
+//		using std::swap;
+//		swap(self.impl_, other.impl_);
+//	}
 //	[[deprecated("danger")]] 
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
 //	[[deprecated("move communicators violates invariants")]]
@@ -143,11 +147,35 @@ public:
 		return *this;
 	}*/
 /*	[[deprecated("assigning communicators violates invariants")]] communicator& operator=(communicator&& other){
+=======
+	communicator(MPI_Comm impl) : impl_(impl)/*, name{this}*/{}
+	communicator() : impl_(MPI_COMM_NULL)/*, name{this}*/{}
+	communicator(communicator const& other){
+		MPI_Comm_dup(other.impl_, &impl_);
+	}
+	communicator(communicator&& other){
+		impl_ = other.impl_;
+		other.impl_ = MPI_COMM_NULL;
+	//	swap(*this, other);
+	}
+	communicator(communicator const& other, group const& g, int tag = 0);
+//	communicator& operator=(communicator other){swap(*this, other); return *this;}
+	communicator& operator=(communicator const& other){
+		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
+		MPI_Comm_dup(other.impl_, &impl_);
+		return *this;
+	}
+	communicator& operator=(communicator&& other){
+>>>>>>> c987b774485e06e2b3262c3fae6fd7d6a6960812
 		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
 		impl_ = other.impl_;
 		other.impl_ = MPI_COMM_NULL;
 		return *this;
+<<<<<<< HEAD
 	}*/
+=======
+	}
+>>>>>>> c987b774485e06e2b3262c3fae6fd7d6a6960812
 	~communicator(){
 		// TODO: if(impl_ != MPI_COMM_NULL){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
