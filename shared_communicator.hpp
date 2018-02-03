@@ -13,7 +13,7 @@ template<class T = void>
 struct shared_window;
 
 struct shared_communicator : communicator{
-	private:
+private:
 	template<class T> static auto data_(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
@@ -29,7 +29,6 @@ public:
 	shared_window<T> make_shared_window(mpi3::size_t size);
 	template<class T = char>
 	shared_window<T> make_shared_window();
-
 };
 
 inline shared_communicator communicator::split_shared(int key /*= 0*/) const{

@@ -113,31 +113,53 @@ enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_S
 class communicator : public detail::caller<communicator, MPI_Comm>{
 protected:
 	communicator(MPI_Comm impl = MPI_COMM_NULL) : impl_(impl){}
-
+	communicator(communicator const& other, group const& g, int tag = 0);
+	bool is_null() const{return MPI_COMM_NULL == impl_;}
 public:
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 
-//	static communicator null;
-//	static communicator world;
-//	static communicator self;
-//static communicator null{MPI_COMM_NULL};
-//static communicator world{MPI_COMM_WORLD};
-//static communicator self{MPI_COMM_SELF};
-//	static communicator null{MPI_COMM_NULL};
 	static communicator world;
 	static communicator self;
 
-//	friend void swap(communicator& self, communicator& other){
-//		using std::swap;
-//		swap(self.impl_, other.impl_);
-//	}
-//	[[deprecated("danger")]] 
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
-//	[[deprecated("move communicators violates invariants")]]
-//	communicator(communicator&& other){const impl_ = (other.impl_ = MPI_COMM_NULL);}
-	communicator(communicator const& other, group const& g, int tag = 0);
+	communicator(communicator&& other){MPI_Comm_dup(other.impl_, &impl_);}
 	communicator& operator=(communicator const&) = delete;
+	~communicator(){
+		// TODO: if(impl_ != MPI_COMM_NULL){
+		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
+			MPI_Comm_disconnect(&impl_); //	MPI_Comm_free(&impl_);
+		}
+	}
+	explicit operator bool() const{return not is_null();}
+	impl_t& operator&(){return impl_;}
+
+	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
+	bool empty() const{return size() == 0;}
+	int size() const{
+		if(is_null()) return 0;
+		int size = -1; 
+		int s = MPI_Comm_size(impl_, &size);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
+		return size;
+	}
+	communicator split(int color, int key) const{
+		communicator ret;
+		int s = MPI_Comm_split(impl_, color, key, &ret.impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split communicator");
+		if(ret) ret.name(name() + std::to_string(color));// + std::to_string(key));
+		return ret;
+	}
+	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
+	shared_communicator split_shared(int key = 0) const;
+
+	inline int remote_size() const{
+		int ret = -1;
+		int s = MPI_Comm_remote_size(impl_, &ret);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot remote size");
+		return ret;
+	}
+
 //	communicator& operator=(communicator other){swap(*this, other); return *this;}
 /*	[[deprecated("assigning communicators violates invariants")]] communicator& operator=(communicator const& other){
 		if(impl_ != MPI_COMM_NULL) MPI_Comm_disconnect(&impl_);
@@ -152,16 +174,7 @@ public:
 	//	swap(*this, other);
 //	}
 //	communicator& operator=(communicator other){swap(*this, other); return *this;}
-	~communicator(){
-		// TODO: if(impl_ != MPI_COMM_NULL){
-		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
-			MPI_Comm_disconnect(&impl_); //	MPI_Comm_free(&impl_);
-		}
-	}
-	bool is_null() const{return MPI_COMM_NULL == impl_;}
-	explicit operator bool() const{return not is_null();}
 
-	impl_t& operator&(){return impl_;}
 
 	template<class Graph> 
 	graph_communicator make_graph(Graph const& g) const;
@@ -221,9 +234,6 @@ public:
 	topology topo() const{return static_cast<topology>(call<MPI_Topo_test>());}
 	int rank() const{return call<MPI_Comm_rank>();}
 
-	void abort(int errorcode = 0) const{
-		MPI_Abort(impl_, errorcode);
-	}
 	communicator accept(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -269,30 +279,6 @@ public:
 		if(status != MPI_SUCCESS) throw std::runtime_error("cannot call error handler");
 	}
 
-	inline int remote_size() const{
-		int ret = -1;
-		int s = MPI_Comm_remote_size(impl_, &ret);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot remote size");
-		return ret;
-	}
-	int size() const{
-		if(is_null()) return 0;
-		int size = -1; 
-		int s = MPI_Comm_size(impl_, &size);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
-		return size;
-	}
-	bool empty() const{
-		return size() == 0;
-	}
-	communicator split(int color, int key) const{
-		communicator ret;
-		MPI_Comm_split(impl_, color, key, &ret.impl_);
-		if(ret) ret.name(name() + std::to_string(color));// + std::to_string(key));
-		return ret;
-	}
-	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
-	shared_communicator split_shared(int key = 0) const;
 
 	boost::mpi3::group group() const;
 	
