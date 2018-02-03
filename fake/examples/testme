@@ -1,0 +1,2 @@
+$2mpic++ $1 -o $1.x; $2mpirun -np 1 $1.x; rm $1.x
+

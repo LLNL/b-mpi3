@@ -5,12 +5,8 @@
 #include <limits.h> // HOST_NAME_MAX
 #include <unistd.h> // gethostname
 #include <string.h> // strlen
-<<<<<<< HEAD
 #include <assert.h> // assert
-=======
 #include <stdlib.h> // exit
-#include <assert.h>
->>>>>>> ee2ad687a46fbf565ef54fa9ed382c8b0178a1ae
 
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
 const int MPI_MAX_INFO_KEY = 128;
@@ -248,24 +244,6 @@ enum MPI_Comm : int{
 
 static const void* MPI_IN_PLACE = reinterpret_cast<const void*>(-1);
 
-<<<<<<< HEAD
-enum MPI_Op{
-	MPI_MAX,
-	MPI_MIN,
-	MPI_SUM,
-	MPI_PROD,
-	MPI_MAXLOC,
-	MPI_MINLOC,
-	MPI_BAND,
-	MPI_BOR,
-	MPI_BXOR,
-	MPI_LAND,
-	MPI_LOR,
-	MPI_LXOR,
-	MPI_REPLACE,
-	MPI_NO_OP,
-};
-=======
 enum MPI_Op{ // redefined operations are supplied for MPI_REDUCE 
 	MPI_OP_NULL, // TODO: is this an operator?
 	MPI_MAX, // maximum
@@ -284,7 +262,6 @@ enum MPI_Op{ // redefined operations are supplied for MPI_REDUCE
 	MPI_NO_OP, // TODO: is this an operator?
 	MPI_OP_LASTCODE // not standard?
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
->>>>>>> ee2ad687a46fbf565ef54fa9ed382c8b0178a1ae
 
 struct MPI_Status {
     int MPI_SOURCE;
@@ -340,8 +317,8 @@ inline int MPI_Comm_size( // Determines the size of the group associated with a 
 	MPI_Comm comm, // communicator (handle)
 	int *size // number of processes in the group of comm (integer)
 ){
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	*size = (comm != MPI_COMM_NULL);
+	assert(comm); // MPI_Comm_size, 		return MPI_ERR_COMM;
+	*size = 1; //(comm != MPI_COMM_NULL);
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
 int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI application 
@@ -368,8 +345,8 @@ int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the giv
 	MPI_Comm comm, // [in] group (handle) 
 	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer) 
 ){
-	assert(comm);
-	*rank = 1;
+	assert(comm); // MPI_Comm_rank(68).: Null communicator
+	*rank = 0;
 	return MPI_SUCCESS;
 }
 int MPI_Get_count( // Gets the number of "top level" elements 
@@ -377,18 +354,16 @@ int MPI_Get_count( // Gets the number of "top level" elements
 	MPI_Datatype datatype, // [out] number of received elements (integer)
 	int *count             // [in] datatype of each receive buffer element (han 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
-int MPI_Comm_rank( // Determines the rank of the calling process in the communicator
-  MPI_Comm comm, // [in] communicator (handle)
-  int *rank      // [out] rank of the calling process in the group of comm (integer)
-){
-	assert(comm);
-	*rank = 1;
-	return MPI_SUCCESS;
-}
 int MPI_Comm_set_name( // Sets the print name for a communicator 
 	MPI_Comm comm,        // [in] communicator to name (handle) 
 	const char *comm_name // [in] Name for communicator (string)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm#Node179
+inline int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm){
+	static int counter = 1024;
+	if(group) *newcomm = MPI_Comm(++counter);
+	else *newcomm = MPI_COMM_NULL;
+	return MPI_SUCCESS;
+}
 int MPI_Comm_create_group( // must be called by all processes in group, which is a subgroup of the group of comm
 	MPI_Comm comm,    // intracommunicator (handle)
 	MPI_Group group,  // group, which is a subset of the group of comm (handle)
@@ -554,12 +529,8 @@ int MPI_Send( // Performs a blocking send
 	int tag,               // [in] message tag (integer) 
 	MPI_Comm comm          // [in] communicator (handle) 
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node47.htm#Node47
-<<<<<<< HEAD
 	int rank = -1; MPI_Comm_rank(comm, &rank);
 	assert(rank != dest);
-=======
-	assert(0);
->>>>>>> ee2ad687a46fbf565ef54fa9ed382c8b0178a1ae
 	return MPI_SUCCESS;
 }
 int MPI_Recv( // Blocking receive for a message
@@ -571,12 +542,9 @@ int MPI_Recv( // Blocking receive for a message
 	MPI_Comm comm,         // [in] communicator (handle) 
 	MPI_Status *status     // [out] status object (Status) 
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
-<<<<<<< HEAD
 	int rank = -1; MPI_Comm_rank(comm, &rank);
 	assert(rank != source);
-=======
 	assert(0);
->>>>>>> ee2ad687a46fbf565ef54fa9ed382c8b0178a1ae
 	return MPI_SUCCESS;
 }
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
@@ -735,10 +703,6 @@ inline int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
     return MPI_SUCCESS;
 }
 
-inline int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
-{
-    return MPI_SUCCESS;
-}
 
 inline int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 {
