@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_MUTEX $0x.cpp -o $0x.x -lrt && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_MUTEX $0x.cpp -o $0x.x -lrt && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHM_MUTEX_HPP
 #define BOOST_MPI3_SHM_MUTEX_HPP
@@ -36,6 +36,7 @@ class mutex{
 
 #include "../../mpi3/main.hpp"
 #include<thread> // sleep_for
+#include <mutex> // lock_guard
 
 namespace mpi3 = boost::mpi3;
 using std::cout; 
@@ -45,11 +46,12 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	
 	mpi3::shm::mutex m(node);
 	using namespace std::chrono_literals;
-	m.lock();
-	std::cout << "I am rank "; 
-	std::this_thread::sleep_for(2s);
-	std::cout << node.rank() << '\n';
-	m.unlock();
+	{
+		std::lock_guard<mpi3::shm::mutex> guard(m);
+		std::cout << "I am rank "; 
+		std::this_thread::sleep_for(2s);
+		std::cout << node.rank() << '\n';
+	}
 
 	return 0;
 }
