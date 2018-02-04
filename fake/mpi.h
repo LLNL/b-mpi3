@@ -13,7 +13,7 @@ const int MPI_MAX_INFO_KEY = 128;
 const int MPI_MAX_INFO_VAL = 128;
 const int MPI_MAX_ERROR_STRING = 128;
 
-enum : int { // error classes
+enum {//: int { // error classes
 	MPI_SUCCESS,          // No error
 	MPI_ERR_BUFFER,       // Invalid buffer pointer
 	MPI_ERR_COUNT,        // Invalid count argument
@@ -77,19 +77,20 @@ enum : int { // error classes
 
 //struct MPI_Group{};
 
-enum MPI_Group{
+typedef enum {
 	MPI_GROUP_NULL = 0,
 	MPI_GROUP_EMPTY
-};
+} MPI_Group;
 
 // MPI Info handling.
 //  Would not be too hard to create an std::map implementation
 //struct MPI_Info{};
 //const struct MPI_Info MPI_INFO_NULL;
 
-enum MPI_Info {
+typedef enum { //MPI_Info {
 	MPI_INFO_NULL
-};
+} MPI_Info ;
+//typedef struct {} MPI_Info;
 
 int MPI_Info_create(MPI_Info *info);
 
@@ -115,14 +116,14 @@ int MPI_Open_port(MPI_Info info, char *port_name);
 
 int MPI_Close_port(const char *port_name);
 
-enum : int { // level of thread support
+enum { // level of thread support
 	MPI_THREAD_SINGLE,
 	MPI_THREAD_FUNNELED,
 	MPI_THREAD_SERIALIZED,
 	MPI_THREAD_MULTIPLE
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
-typedef enum _MPI_Datatype {
+typedef enum {
 	MPI_DATATYPE_NULL = 0,
 	MPI_CHAR,
 	MPI_SHORT,
@@ -236,15 +237,15 @@ inline int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement)
 //const struct MPI_Comm MPI_COMM_SELF;
 //const struct MPI_Comm MPI_COMM_NULL;
 
-enum MPI_Comm : int{
+typedef enum {
 	MPI_COMM_NULL = 0, 
 	MPI_COMM_WORLD = 1, 
 	MPI_COMM_SELF = 2,
-};
+} MPI_Comm;
 
-static const void* MPI_IN_PLACE = reinterpret_cast<const void*>(-1);
+static const void* MPI_IN_PLACE = (const void*)(-1);
 
-enum MPI_Op{ // redefined operations are supplied for MPI_REDUCE 
+typedef enum { // redefined operations are supplied for MPI_REDUCE 
 	MPI_OP_NULL, // TODO: is this an operator?
 	MPI_MAX, // maximum
 	MPI_MIN, // minimum
@@ -261,27 +262,33 @@ enum MPI_Op{ // redefined operations are supplied for MPI_REDUCE
 //	MPI_REPLACE, // TODO: is this an operator?
 	MPI_NO_OP, // TODO: is this an operator?
 	MPI_OP_LASTCODE // not standard?
-}; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
+} MPI_Op; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
 
-struct MPI_Status {
+//  MPI Requests
+typedef enum {
+	MPI_REQUEST_NULL
+} MPI_Request;
+
+typedef struct {
     int MPI_SOURCE;
     int MPI_TAG;
-};
+} MPI_Status;
 static MPI_Status *MPI_STATUS_IGNORE = 0;
 
 static char *MPI_ARGV_NULL[] = {};
 static int MPI_ERRCODES_IGNORE[] = {};
 
-struct MPI_Message{};
-[[noreturn]]
-inline int MPI_Abort( // Terminates MPI execution environment
+typedef struct {} MPI_Message;
+//[[noreturn]]
+static inline 
+int MPI_Abort( // Terminates MPI execution environment
 	MPI_Comm comm, // [in] communicator of tasks to abort
 	int errorcode  // [in] error code to return to invoking environment
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
 	exit(errorcode);
 //	return MPI_SUCCESS; // function never returns
 }
-inline int MPI_Allreduce( // Combines values from all processes and distributes the result back to all processes 
+static inline int MPI_Allreduce( // Combines values from all processes and distributes the result back to all processes 
 	const void* sendbuf,   // starting address of send buffer (choice)
 	void* recvbuf,         // starting address of receive buffer (choice)
 	int count,             // number of elements in send buffer (non-negative)
@@ -311,9 +318,16 @@ int MPI_Comm_create( // Creates a new communicator
 	MPI_Group group,  // [in] group, which is a subset of the group of comm (handle) 
 	MPI_Comm *newcomm // [out] new communicator (handle) 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+int MPI_Comm_free( // Marks the communicator object for deallocation 
+  MPI_Comm *comm // [in] Communicator to be destroyed (handle) 
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node157.htm
+	assert(*comm != MPI_COMM_NULL);
+	return MPI_SUCCESS;
+} 
 // Determines the size of the remote group associated with an inter-communictor 
 int MPI_Comm_remote_size(MPI_Comm comm, int *size); 
-inline int MPI_Comm_size( // Determines the size of the group associated with a communicator
+static inline 
+int MPI_Comm_size( // Determines the size of the group associated with a communicator
 	MPI_Comm comm, // communicator (handle)
 	int *size // number of processes in the group of comm (integer)
 ){
@@ -331,8 +345,12 @@ int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI applicatio
 	MPI_Comm *intercomm,    // [out] intercommunicator between original group and the newly spawned group (handle) 
 	int array_of_errcodes[] // [out] one code per process (array of integer) 
 );
-// Creates new communicators based on colors and keys
-int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm);
+int MPI_Comm_split( // Creates new communicators based on colors and keys 
+	MPI_Comm comm,     // [in] communicator (handle)
+	int color,         // [in] control of subset assignment (integer)
+	int key,           // [in] control of rank assigment (integer)
+	MPI_Comm *newcomm  // [out] new communicator (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
 int MPI_Comm_get_name( // Return the print name from the communicator 
 	MPI_Comm comm,   // communicator whose name is to be returned (handle)
 	char *comm_name, // the name previously stored on the communicator, or an...
@@ -360,7 +378,7 @@ int MPI_Comm_set_name( // Sets the print name for a communicator
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm#Node179
 inline int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm){
 	static int counter = 1024;
-	if(group) *newcomm = MPI_Comm(++counter);
+	if(group) *newcomm = (MPI_Comm)++counter;
 	else *newcomm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
@@ -370,13 +388,13 @@ int MPI_Comm_create_group( // must be called by all processes in group, which is
 	int tag,          // tag (integer)
 	MPI_Comm *newcomm // new communicator (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-inline int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information 
+static inline int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information 
 	MPI_Comm comm,    // communicator (handle)
 	MPI_Comm *newcomm // copy of comm (handle)
 )
 {
 	static int counter = 1024;
-	*newcomm = MPI_Comm(++counter); 
+	*newcomm = (MPI_Comm)++counter; 
 	return MPI_SUCCESS;
 }
 inline int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
@@ -459,7 +477,7 @@ inline int MPI_Finalize( // Terminates MPI execution environment
 int MPI_Finalized( // Indicates whether MPI_Finalize has been called 
 	int *flag // [out] true if MPI was finalized (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node227.htm
-inline int MPI_Init( // Initialize the MPI execution environment 
+static inline int MPI_Init( // Initialize the MPI execution environment 
 	int *argc,   // [in] Pointer to the number of arguments 
 	char ***argv // [in] Pointer to the argument vector 
 ){return MPI_SUCCESS;} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
@@ -487,6 +505,15 @@ int MPI_Iprobe( // Nonblocking test for a message
 	int *flag,         // [out] True if a message with the specified source, tag...
 	MPI_Status *status // [out] status object (Status) 
 );
+int MPI_Irecv( // Start a nonblocking receive
+	void* buf,             // [out] initial address of receive buffer (choice) 
+	int count,             // [in] number of elements in receive buffer (non-negative integer)
+	MPI_Datatype datatype, // [in] datatype of each receive buffer element (handle)
+	int source,            // [in] rank of source or MPI_ANY_SOURCE (integer)
+	int tag,               // [in] message tag or MPI_ANY_TAG (integer)
+	MPI_Comm comm,         // [in] communicator (handle)
+	MPI_Request *request   // [out] communication request (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node63.htm#Node63
 int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
 	int *flag // true if calling thread is main thread, false otherwise (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
@@ -521,8 +548,8 @@ int MPI_Probe( // like MPI_IMPROBE except that it is a blocking call that return
 int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
 	int *provided // provided level of thread support (integer)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
-int MPI_Send( // Performs a blocking send 
-	const void *buf,             // [in] initial address of send buffer (choice) 
+inline int MPI_Send( // Performs a blocking send 
+	const void *buf,       // [in] initial address of send buffer (choice) 
 	int count,             // [in] number of elements in send buffer (nonnegat...) 
 	MPI_Datatype datatype, // [in] datatype of each send buffer element (handle) 
 	int dest,              // [in] rank of destination (integer) 
@@ -533,6 +560,20 @@ int MPI_Send( // Performs a blocking send
 	assert(rank != dest);
 	return MPI_SUCCESS;
 }
+int MPI_Sendrecv( // Sends and receives a message 
+	const void *sendbuf,   // [in] initial address of send buffer (choice) 
+	int sendcount,         // [in] number of elements in send buffer (integer) 
+	MPI_Datatype sendtype, // [in] type of elements in send buffer (handle) 
+	int dest,              // [in] rank of destination (integer) 
+	int sendtag,           // [in] send tag (integer) 
+	void *recvbuf,         // [out] initial address of receive buffer (choice) 
+	int recvcount,         // [in] number of elements in receive buffer (integer) 
+	MPI_Datatype recvtype, // [in] type of elements in receive buffer (handle) 
+	int source,            // [in] rank of source (integer) 
+	int recvtag,           // [in] receive tag (integer) 
+	MPI_Comm comm,         // [in] communicator (handle) 
+	MPI_Status *status     // [out] status object (Status). This refers to the receive operation. 
+);
 int MPI_Recv( // Blocking receive for a message
 	void *buf,             // [out] initial address of receive buffer (choice) 
 	int count,             // [in] maximum number of elements in receive buffer...
@@ -550,7 +591,7 @@ int MPI_Recv( // Blocking receive for a message
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
 double MPI_Wtick( // Returns the resolution of MPI_Wtime 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm#Node37
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
 
 
 inline int MPI_Status_set_cancelled(MPI_Status *status, int flag)
@@ -560,7 +601,7 @@ inline int MPI_Status_set_cancelled(MPI_Status *status, int flag)
 
 inline int MPI_Test_cancelled(const MPI_Status *status, int *flag)
 {
-    if (flag) *flag = true;
+    if (flag) *flag = -1; // -1 true
     return MPI_SUCCESS;
 }
 
@@ -603,21 +644,16 @@ inline int MPI_Free_mem(void *base)
     return MPI_SUCCESS;
 }
 
+//struct MPI_Request {
+//   bool operator!=(const MPI_Request &o) { return false; }
+//};
+//static struct MPI_Request MPI_REQUEST_NULL;
 
-//  MPI Requests
-
-
-struct MPI_Request {
-   bool operator!=(const MPI_Request &o) { return false; }
-};
-static struct MPI_Request MPI_REQUEST_NULL;
-
-inline int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
-{
-    if (flag) *flag = true;
-    return MPI_SUCCESS;
-}
-
+int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status);
+//{
+//    if (flag) *flag = -1; // true
+//    return MPI_SUCCESS;
+//}
 
 inline int MPI_Cancel(MPI_Request *request)
 {
@@ -710,12 +746,11 @@ inline int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     return MPI_SUCCESS;
 }
 
-inline int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
-{
-    if (flag) *flag = true;
-    return MPI_SUCCESS;
-}
-    
+int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
+//{
+//    if (flag) *flag = -1; // -1 = true
+//    return MPI_SUCCESS;
+//}
 
 inline int MPI_Topo_test(MPI_Comm comm, int *status)
 {
