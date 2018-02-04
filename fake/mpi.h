@@ -373,6 +373,14 @@ int MPI_Get_count( // Gets the number of "top level" elements
 	MPI_Datatype datatype, // [out] number of received elements (integer)
 	int *count             // [in] datatype of each receive buffer element (han 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
+int MPI_Get_version( // Return the version number of MPI 
+	int* version,   // [out] Version of MPI
+	int* subversion // [out] Suversion of MPI
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node209.htm
+	*version = 3;
+	*subversion = 1;
+	return MPI_SUCCESS;
+}
 int MPI_Comm_set_name( // Sets the print name for a communicator 
 	MPI_Comm comm,        // [in] communicator to name (handle) 
 	const char *comm_name // [in] Name for communicator (string)
