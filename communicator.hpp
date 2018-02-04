@@ -112,10 +112,11 @@ enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_S
 
 class communicator : public detail::caller<communicator, MPI_Comm>{
 protected:
-	communicator(MPI_Comm impl = MPI_COMM_NULL) : impl_(impl){}
+	communicator(MPI_Comm impl) : impl_(impl){}
 	communicator(communicator const& other, group const& g, int tag = 0);
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 public:
+	communicator() : impl_(MPI_COMM_NULL){}
 	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
 	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
 
@@ -124,7 +125,11 @@ public:
 
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
 	communicator(communicator&& other){MPI_Comm_dup(other.impl_, &impl_);}
-	communicator& operator=(communicator const&) = delete;
+	communicator& operator=(communicator const& other){
+		assert(impl_ == MPI_COMM_NULL);
+		MPI_Comm_dup(other.impl_, &impl_);
+	}
+	communicator& operator=(communicator&& other) = delete;
 	~communicator(){
 		// TODO: if(impl_ != MPI_COMM_NULL){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
@@ -2104,6 +2109,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
 	mpi3::communicator world2 = world;
+	world2 = world;
 
 	return 0;
 #if 0
