@@ -605,12 +605,14 @@ int MPI_Wait( // Waits for an MPI request to complete
 	MPI_Request *request, //  [in] request (handle) 
 	MPI_Status *status    // [out] status object (Status). May be MPI_STATUS_IGNORE. 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node64.htm
+static inline
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
     struct timespec tw;
     clock_gettime(CLOCK_MONOTONIC, &tw);
 	return 1.0*tw.tv_sec + 1e-3*tw.tv_nsec;;
 }
+static inline
 double MPI_Wtick( // Returns the resolution of MPI_Wtime 
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
 	return 1e-3;
