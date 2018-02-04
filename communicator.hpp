@@ -115,16 +115,16 @@ protected:
 	communicator(MPI_Comm impl) noexcept : impl_(impl){}
 	communicator(communicator const& other, group const& g, int tag = 0);
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
+	using impl_t = MPI_Comm;
 public:
-	communicator() noexcept : impl_(MPI_COMM_NULL){}
-	using impl_t = MPI_Comm; //std::decay_t<decltype(MPI_COMM_WORLD)>;
-	impl_t impl_ = MPI_COMM_NULL; //MPI_COMM_WORLD;
+	impl_t impl_ = MPI_COMM_NULL;
 
 	static communicator world;
 	static communicator self;
 
+	communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
-	communicator(communicator&& other) = default;
+	communicator(communicator&& other) = default; // allows RVO
 	communicator& operator=(communicator const& other){
 		assert(impl_ == MPI_COMM_NULL);
 		MPI_Comm_dup(other.impl_, &impl_);
@@ -137,9 +137,15 @@ public:
 		}
 	}
 	explicit operator bool() const{return not is_null();}
-	impl_t& operator&(){return impl_;}
+	impl_t operator&() const{return impl_;}
 
 	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
+	communicator duplicate() const{
+		communicator ret;
+		int s = MPI_Comm_dup(impl_, &ret.impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
+		return ret;
+	}
 	bool empty() const{return size() == 0;}
 	int size() const{
 		if(is_null()) return 0;
@@ -2108,8 +2114,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
-	mpi3::communicator world2{};
-	world2 = world;
+	mpi3::communicator world2 = {};
+//	world2 = world;
 
 	return 0;
 #if 0
