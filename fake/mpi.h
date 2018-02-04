@@ -7,6 +7,7 @@
 #include <string.h> // strlen
 #include <assert.h> // assert
 #include <stdlib.h> // exit
+#include <time.h> // clock_gettime
 
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
 const int MPI_MAX_INFO_KEY = 128;
@@ -388,7 +389,16 @@ int MPI_Comm_create_group( // must be called by all processes in group, which is
 	int tag,          // tag (integer)
 	MPI_Comm *newcomm // new communicator (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-static inline int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information 
+inline 
+int MPI_Comm_disconnect( // MPI_Comm_disconnect
+	MPI_Comm *comm // [in] communicator (handle)
+){
+	assert(*comm != MPI_COMM_NULL);
+	*comm = MPI_COMM_NULL;
+	return MPI_SUCCESS;
+}
+static inline 
+int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information 
 	MPI_Comm comm,    // communicator (handle)
 	MPI_Comm *newcomm // copy of comm (handle)
 )
@@ -472,8 +482,11 @@ int MPI_Error_string( // Return a string for a given error code
 	char *string,  // [out] Text that corresponds to the errorcode 
 	int *resultlen // [out] Length of string 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm#Node221
-inline int MPI_Finalize( // Terminates MPI execution environment 
-){return MPI_SUCCESS;} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
+static inline 
+int MPI_Finalize( // Terminates MPI execution environment 
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
+	return MPI_SUCCESS;
+} 
 int MPI_Finalized( // Indicates whether MPI_Finalize has been called 
 	int *flag // [out] true if MPI was finalized (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node227.htm
@@ -588,11 +601,20 @@ int MPI_Recv( // Blocking receive for a message
 	assert(0);
 	return MPI_SUCCESS;
 }
+int MPI_Wait( // Waits for an MPI request to complete 
+	MPI_Request *request, //  [in] request (handle) 
+	MPI_Status *status    // [out] status object (Status). May be MPI_STATUS_IGNORE. 
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node64.htm
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
+    struct timespec tw;
+    clock_gettime(CLOCK_MONOTONIC, &tw);
+	return 1.0*tw.tv_sec + 1e-3*tw.tv_nsec;;
+}
 double MPI_Wtick( // Returns the resolution of MPI_Wtime 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
-
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
+	return 1e-3;
+}
 
 inline int MPI_Status_set_cancelled(MPI_Status *status, int flag)
 {
@@ -666,11 +688,6 @@ inline int MPI_Request_free(MPI_Request *request)
 }
 
 inline int MPI_Start(MPI_Request *request)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Wait(MPI_Request *request, MPI_Status *status)
 {
     return MPI_SUCCESS;
 }
@@ -755,14 +772,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
 inline int MPI_Topo_test(MPI_Comm comm, int *status)
 {
     if (status) *status = MPI_UNDEFINED;
-    return MPI_SUCCESS;
-}
-
-
-// const should not be there
-inline int MPI_Comm_disconnect(const MPI_Comm *comm)
-{
-    //if (comm) *comm = MPI_COMM_NULL;
     return MPI_SUCCESS;
 }
 
