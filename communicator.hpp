@@ -2108,7 +2108,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
-	mpi3::communicator world2 = world;
+	mpi3::communicator world2;
 	world2 = world;
 
 	return 0;
