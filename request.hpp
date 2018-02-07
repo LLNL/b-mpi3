@@ -46,16 +46,17 @@ public:
 	}
 	void swap(request& other){std::swap(impl_, other.impl_);}
 	void cancel(){MPI_Cancel(&impl_);}
-	~request(){
-		if(impl_ != MPI_REQUEST_NULL){
-		//	if(not completed()) wait();
-			MPI_Request_free(&impl_);
-		}
-	}
+	bool valid() const{return impl_ != MPI_REQUEST_NULL;}
+	~request(){if(impl_ != MPI_REQUEST_NULL) wait();}
 	void wait(){
-		int s = MPI_Wait(const_cast<MPI_Request*>(&impl_), MPI_STATUS_IGNORE);
-	//	assert(impl_ == MPI_REQUEST_NULL);
+		int s = MPI_Wait(&impl_, MPI_STATUS_IGNORE);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
+	}
+	status get(){
+		status ret;
+		int s = MPI_Wait(&impl_, &ret.impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
+		return ret;
 	}
 	void start(){
 		int status = MPI_Start(&impl_);

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -g -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_COMMUNICATOR_HPP
 #define BOOST_MPI3_COMMUNICATOR_HPP
@@ -18,6 +18,8 @@
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/detail/iterator.hpp"
 #include "../mpi3/detail/strided.hpp"
+
+#include "../mpi3/exception.hpp"
 
 #include<mpi.h>
 
@@ -108,7 +110,12 @@ struct message_header{
 struct graph_communicator;
 struct shared_communicator; // intracommunicator
 
-enum equality {identical = MPI_IDENT, congruent = MPI_CONGRUENT, similar = MPI_SIMILAR, unequal = MPI_UNEQUAL};
+enum equality {
+	identical = MPI_IDENT, 
+	congruent = MPI_CONGRUENT, 
+	similar = MPI_SIMILAR, 
+	unequal = MPI_UNEQUAL
+};
 
 class communicator : public detail::caller<communicator, MPI_Comm>{
 protected:
@@ -148,7 +155,7 @@ public:
 	}
 	bool empty() const{return size() == 0;}
 	int size() const{
-		if(is_null()) return 0;
+		if(is_null()) throw mpi3::invalid_communicator("size called on null communicator");
 		int size = -1; 
 		int s = MPI_Comm_size(impl_, &size);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
@@ -230,7 +237,8 @@ public:
 		return ret;
 	}
 	bool operator==(communicator const& other) const{
-		return compare(other) == equality::identical;
+		auto eq = compare(other);
+		return (eq == equality::identical) or (eq == equality::congruent);
 	}
 	bool operator!=(communicator const& other) const{return not (*this == other);}
 	bool is_empty() const{return size() == 0;}
@@ -243,8 +251,15 @@ public:
 
 	enum class topology{undefined = MPI_UNDEFINED, graph = MPI_GRAPH, cartesian = MPI_CART};
 	topology topo() const{return static_cast<topology>(call<MPI_Topo_test>());}
-	int rank() const{return call<MPI_Comm_rank>();}
-
+	int rank() const{
+		int rank = -1;
+		if(impl_ == MPI_COMM_NULL) throw mpi3::invalid_communicator("rank on null communicator");
+	//	MPI_Comm_call_errhandler(impl_, MPI_Comm_rank(impl_, &rank));
+		int s = MPI_Comm_rank(impl_, &rank);
+		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
+		return rank;
+//		return call<MPI_Comm_rank>();
+	}
 	communicator accept(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -1424,9 +1439,17 @@ public:
 	template<class It1, class Size, class It2>
 	auto igather_n(It1 first, Size count, It2 d_first, int root = 0){return gather_n(igather_mode{}, first, count, d_first, root);}
 	template<class It1, class It2>
-	auto igather(It1 first, It1 last, It2 d_first, int root = 0){return gather(igather_mode{}, first, last, d_first, root);}
+	[[nodiscard]] auto igather(It1 first, It1 last, It2 d_first, int root = 0){
+		return igather_category(
+			typename std::iterator_traits<It1>::iterator_category{},
+			first, last, d_first, root
+		);
+	}
+	template<class It1, class It2>
+	auto igather_category(std::random_access_iterator_tag, It1 first, It1 last, It2 d_first, int root = 0){
+		return igather_n(first, std::distance(first, last), d_first, root);
+	}
 	template<class It1, class Size, class It2>
-
 	auto all_gather_n(It1 first, Size count, It2 d_first){return gather_n(all_gather_mode{}, first, count, d_first);}
 	template<class It1, class It2>
 	auto all_gather(It1 first, It1 last, It2 d_first){
@@ -1463,6 +1486,20 @@ private:
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
+	}
+	template<class It1, class Size, class It2,
+		class V1 = typename std::iterator_traits<It1>::value_type, 
+		class V2 = typename std::iterator_traits<It2>::value_type 
+	>
+	auto gather_n_dispatch(igather_mode g, std::true_type, It1 first, Size count, It2 d_first, int root = 0){
+		request r;
+		int s = g(
+			detail::data(first)  , count, detail::basic_datatype<V1>::value,
+			detail::data(d_first), count, detail::basic_datatype<V2>::value,
+			root, impl_, &r.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
+		return r;
 	}
 	template<class It1, class Size, class It2,
 		class V1 = typename std::iterator_traits<It1>::value_type, 
@@ -2114,7 +2151,25 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
-	mpi3::communicator world2 = {};
+	cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
+
+	mpi3::communicator comm;
+	assert(!comm);
+	cout << comm.rank() << '\n';
+
+	mpi3::communicator comm2 = world;
+	assert(comm2);
+	assert(comm2.size() == world.size());
+	assert(comm2 == world);
+	assert(&comm2 != &world);
+
+	mpi3::communicator comm3 = world.duplicate();
+	assert(comm3);
+	assert(comm3 == world);
+	assert(&comm3 != &world);
+	comm = comm2;
+	assert(&comm != &comm2);
+
 //	world2 = world;
 
 	return 0;
