@@ -150,16 +150,23 @@ template<class T> struct allocator{
 
 	mpi3::shared_communicator& comm_;
 	allocator(mpi3::shared_communicator& comm) : comm_(comm){}
+	allocator(allocator const& other) : comm_(other.comm_){}
 	template<class U>
 	allocator(allocator<U> const& other) : comm_(other.comm_){}
 
+//	template<class ConstVoidPtr = const void*>
 	array_ptr<T> allocate(size_type n, const void* hint = 0){
+		std::cerr << "allocating " << n << " from rank " << comm_.rank() << std::endl;
+		std::cout << std::flush;
+		assert(0);
+		comm_.barrier();
 		array_ptr<T> ret;
 		if(n == 0) return ret;
 		ret.wSP_ = std::make_shared<shared_window<T>>(
 			comm_.make_shared_window<T>(comm_.root()?n:0)
 		//	comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
 		);
+		assert(0);
 		return ret;
 	}
 	void deallocate(array_ptr<T> ptr, size_type){
@@ -174,13 +181,22 @@ template<class T> struct allocator{
 	}
 	template<class U, class... Args>
 	void construct(U* p, Args&&... args){
-	//	if(comm_.root())
+		std::cout << "construct: I am " << comm_.rank() << std::endl;
 		::new((void*)p) U(std::forward<Args>(args)...);
 	}
 	template< class U >	void destroy(U* p){
-		if(comm_.root()) p->~U();
+		std::cout << "destroy: I am " << comm_.rank() << std::endl;
+		p->~U();
 	}
 };
+
+struct is_root{
+	shared_communicator& comm_;
+	template<class Alloc>
+	is_root(Alloc& a) : comm_(a.comm_){}
+	bool root(){return comm_.root();}
+};
+
 
 }
 

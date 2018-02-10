@@ -110,15 +110,18 @@ template<class T> struct allocator{
 	}
 	template<class U, class... Args>
 	void construct(U* p, Args&&... args){
-	//	if(comm_.root())
 		::new((void*)p) U(std::forward<Args>(args)...);
 	}
 	template< class U >	void destroy(U* p){
-	//	if(comm_.root()) 
 		p->~U();
 	}
 };
-
+fdsfsd
+struct is_root{
+	shared_communicator& comm_;
+	is_root(shm::allocator a) : comm_(a.comm_){}
+	bool root(){return comm_.root();}
+};
 
 }}}
 
