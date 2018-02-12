@@ -1,11 +1,12 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -fpermissive -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_VECTOR $0x.cpp -o $0x.x && time mpirun -np 10 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpicxx -O3 -fpermissive -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHM_VECTOR $0x.cpp -o $0x.x && time mpirun -np 10 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_SHM_VECTOR_HPP
 #define BOOST_MPI3_SHM_VECTOR_HPP
 
-#include "../../mpi3/shm/memory.hpp"
-#include<boost/container/vector.hpp>
+//#include "../../mpi3/shm/memory.hpp"
+//#include<boost/container/vector.hpp>
+#include "../shared_window.hpp"
 
 namespace boost{
 namespace mpi3{
@@ -14,13 +15,33 @@ namespace shm{
 //template<class T>
 //using allocator = boost::mpi3::intranode::allocator<T>;
 
-template<class T>
-using vector = boost::container::vector<T, boost::mpi3::shm::allocator<T>>;
+//template<class T>
+//using vector = boost::container::vector<T, boost::mpi3::shm::allocator<T>>;
 
 }}}
 
 #ifdef _TEST_BOOST_MPI3_SHM_VECTOR
+#include "../../mpi3/main.hpp"
 
+namespace mpi3 = boost::mpi3; 
+using std::cout;
+
+int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+	mpi3::shared_communicator node = world.split_shared();
+	using Alloc = boost::mpi3::intranode::allocator<double>;
+
+	std::vector<double, Alloc> v(100, node);
+	node.barrier();
+	v[node.rank()] = node.rank()*10.;
+	node.barrier();
+	for(int i = 0; i != node.size(); ++i){
+		assert(v[i] == i*10.);
+	}
+	node.barrier();
+	return 0;
+}
+
+#if 0
 #include<iostream>
 #include<algorithm> // generate
 #include<random>
@@ -96,8 +117,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	assert( std::equal(std::next(v.begin()), v.end(), v.begin()) );
 //	v.resize(2);
 #endif
-
 }
+#endif
 
 #endif
 #endif
