@@ -85,6 +85,7 @@ struct array_ptr<const void>{
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
+	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
 };
 
 template<>
@@ -96,6 +97,7 @@ struct array_ptr<void>{
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
+	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
 };
 
 template<class T>
@@ -115,6 +117,7 @@ struct array_ptr{
 //	T* get() const{return wSP_->base(0) + offset;}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
+	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
 	operator array_ptr<void const>() const{
 		array_ptr<void const> ret;
 		ret.wSP_ = wSP_;
@@ -219,6 +222,10 @@ struct is_root{
 namespace mpi3 = boost::mpi3; using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
+	double* p;
+	double* b;
+	std::cout << (p < b) << std::endl;
 
 	mpi3::shared_communicator node = world.split_shared();
 	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
