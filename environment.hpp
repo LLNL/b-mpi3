@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
@@ -56,7 +56,11 @@ inline void  initialize(int& argc, char**& argv){
 //	std::set_terminate(myterminate);
 }
 inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
-	throw std::runtime_error("error code " + std::to_string(*errorcode));
+	char name[MPI_MAX_OBJECT_NAME];
+	int rlen;
+	MPI_Comm_get_name(*comm, name, &rlen);
+	std::string sname(name, name + rlen);
+	throw std::runtime_error("error code " + std::to_string(*errorcode) + "from comm " + sname);
 }
 //static MPI_Errhandler throw_error_;
 inline void initialize(){
@@ -145,13 +149,15 @@ class environment : environment_base{
 	thread_level query_thread() const{return boost::mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-	communicator& self() const{
-		static auto p = new communicator{MPI_COMM_SELF};
-		return *p;
+	communicator self() const{
+	//	static auto p = new communicator{MPI_COMM_SELF};
+	//	return *p;
+		return communicator{MPI_COMM_SELF};
 	}
-	communicator& world() const{
-		static auto p = new communicator{MPI_COMM_WORLD};
-		return *p;
+	communicator world() const{
+	//	static auto p = new communicator{MPI_COMM_WORLD};
+	//	return *p;
+		return communicator{MPI_COMM_WORLD};
 	//	return communicator{MPI_COMM_WORLD};
 	//	return mpi3::communicator::world;
 	}
@@ -174,7 +180,7 @@ using std::cout;
 
 int main(int argc, char** argv){
 	mpi3::environment env(argc, argv);
-	[[maybe_unused]] auto& world = env.world();
+	[[maybe_unused]] auto world = env.world();
 	return 0;
 }
 #endif

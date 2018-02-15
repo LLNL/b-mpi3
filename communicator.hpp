@@ -134,8 +134,8 @@ public:
 
 	communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
-	communicator(communicator&& other){ //= default; // allows RVO
-	}
+	communicator(communicator&& other) = default; // allows RVO
+//	}
 	communicator& operator=(communicator const& other){
 		assert(impl_ == MPI_COMM_NULL);
 		MPI_Comm_dup(other.impl_, &impl_);
@@ -2156,9 +2156,7 @@ class V{
 	V(mpi3::communicator&& c) : comm_(std::move(c)){}
 };
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-
-
+int mpi3::main(int argc, char* argv[], mpi3::communicator&& world){
 //	auto worldcopy1 = world;
 //	auto worldcopy2 = std::move(worldcopy1);
 //	V v(worldcopy);
