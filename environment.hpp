@@ -150,7 +150,7 @@ class environment : environment_base{
 		return *p;
 	}
 	communicator& world() const{
-		static auto p = new communicator{MPI_COMM_SELF};
+		static auto p = new communicator{MPI_COMM_WORLD};
 		return *p;
 	//	return communicator{MPI_COMM_WORLD};
 	//	return mpi3::communicator::world;
