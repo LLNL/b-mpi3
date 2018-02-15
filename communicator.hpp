@@ -131,7 +131,8 @@ public:
 
 	communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
-	communicator(communicator&& other) = default; // allows RVO
+	communicator(communicator&& other){ //= default; // allows RVO
+	}
 	communicator& operator=(communicator const& other){
 		assert(impl_ == MPI_COMM_NULL);
 		MPI_Comm_dup(other.impl_, &impl_);
@@ -1566,9 +1567,8 @@ public:
 
 };
 
-communicator communicator::world{MPI_COMM_WORLD};
-communicator communicator::self{MPI_COMM_SELF};
-
+static communicator communicator::world{MPI_COMM_WORLD};
+static communicator communicator::self{MPI_COMM_SELF};
 
 inline std::string const& name(communicator::topology const& t){
 	static std::map<communicator::topology, std::string> const names = {
@@ -2146,7 +2146,20 @@ BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive
 using std::cout;
 namespace mpi3 = boost::mpi3;
 
+class V{
+	mpi3::communicator comm_;
+	public:
+	V(mpi3::communicator const& c) : comm_(c){}
+	V(mpi3::communicator&& c) : comm_(std::move(c)){}
+};
+
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+
+
+	auto worldcopy1 = world;
+	auto worldcopy2 = std::move(worldcopy1);
+//	V v(worldcopy);
+//	V v2(std::move(v));
 
 	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
 	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
@@ -2155,7 +2168,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 	mpi3::communicator comm;
 	assert(!comm);
-	cout << comm.rank() << '\n';
+//	cout << comm.rank() << '\n';
 
 	mpi3::communicator comm2 = world;
 	assert(comm2);
