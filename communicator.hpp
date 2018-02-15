@@ -69,6 +69,8 @@
 namespace boost{
 namespace mpi3{
 
+class environment;
+
 using boost::optional;
 
 template<class T = void>
@@ -123,11 +125,12 @@ protected:
 	communicator(communicator const& other, group const& g, int tag = 0);
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 	using impl_t = MPI_Comm;
+	friend class mpi3::environment;
 public:
 	impl_t impl_ = MPI_COMM_NULL;
 
-	static communicator world;
-	static communicator self;
+//	static communicator world;
+//	static communicator self;
 
 	communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
 	communicator(communicator const& other){MPI_Comm_dup(other.impl_, &impl_);}
@@ -1567,8 +1570,8 @@ public:
 
 };
 
-static communicator communicator::world{MPI_COMM_WORLD};
-static communicator communicator::self{MPI_COMM_SELF};
+//communicator communicator::world{MPI_COMM_WORLD};
+//communicator communicator::self{MPI_COMM_SELF};
 
 inline std::string const& name(communicator::topology const& t){
 	static std::map<communicator::topology, std::string> const names = {
@@ -2156,8 +2159,8 @@ class V{
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 
-	auto worldcopy1 = world;
-	auto worldcopy2 = std::move(worldcopy1);
+//	auto worldcopy1 = world;
+//	auto worldcopy2 = std::move(worldcopy1);
 //	V v(worldcopy);
 //	V v2(std::move(v));
 

@@ -40,13 +40,32 @@ struct wall_clock{
 	static double time(){return wall_time();}
 	static double tick(){return wall_tick();}
 };
-
+inline void finalize(){
+//	MPI_Errhandler_free(&throw_error_);
+	int status = MPI_Finalize();
+	if(status != MPI_SUCCESS) throw std::runtime_error("cannot finalize");
+}
+void myterminate(){
+  std::cerr << "myterminate handler called" << '\n';
+	finalize();
+  exit(1);  // forces abnormal termination
+}
 inline void  initialize(int& argc, char**& argv){
 	int status = MPI_Init(&argc, &argv);
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot initialize");
+//	std::set_terminate(myterminate);
 }
-inline void  initialize(){
+inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
+	throw std::runtime_error("error code " + std::to_string(*errorcode));
+}
+//static MPI_Errhandler throw_error_;
+inline void initialize(){
 	int status = MPI_Init(nullptr, nullptr);
+	std::set_terminate(finalize);
+//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
+//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot initialize");
 }
 inline thread_level initialize_thread(thread_level required){
@@ -65,11 +84,6 @@ inline thread_level initialize_thread(int& argc, char**& argv, thread_level requ
 }
 inline thread_level initialize(int& argc, char**& argv, thread_level required){
 	return initialize_thread(argc, argv, required);
-}
-
-inline void  finalize(){
-	int status = MPI_Finalize();
-	if(status != MPI_SUCCESS) throw std::runtime_error("cannot finalize");
 }
 inline bool initialized(){
 	int flag = -1; 
@@ -131,8 +145,16 @@ class environment : environment_base{
 	thread_level query_thread() const{return boost::mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-	communicator& self() const{return mpi3::communicator::self;}
-	communicator& world() const{return mpi3::communicator::world;}
+	communicator& self() const{
+		static auto p = new communicator{MPI_COMM_SELF};
+		return *p;
+	}
+	communicator& world() const{
+		static auto p = new communicator{MPI_COMM_SELF};
+		return *p;
+	//	return communicator{MPI_COMM_WORLD};
+	//	return mpi3::communicator::world;
+	}
 
 	std::string processor_name() const{return get_processor_name();}
 	std::string get_processor_name() const{return mpi3::get_processor_name();}
