@@ -84,6 +84,7 @@ struct array_ptr<const void>{
 	array_ptr(std::nullptr_t = nullptr){}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
+	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 };
 
 template<>
@@ -94,6 +95,7 @@ struct array_ptr<void>{
 	array_ptr(std::nullptr_t = nullptr){}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
+	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 };
 
 template<class T>
@@ -112,6 +114,7 @@ struct array_ptr{
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
 //	T* get() const{return wSP_->base(0) + offset;}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
+	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 	operator array_ptr<void const>() const{
 		array_ptr<void const> ret;
 		ret.wSP_ = wSP_;
