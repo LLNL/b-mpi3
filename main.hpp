@@ -15,7 +15,7 @@ namespace mpi3{
 
 #ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
 // this definition forces the user to define boost::mpi3::main
-int main(int argc, char* argv[], boost::mpi3::communicator&& world);
+int main(int argc, char* argv[], boost::mpi3::communicator world);
 #else
 int main(int argc, char* argv[], boost::mpi3::environment& env);
 #endif
@@ -71,10 +71,12 @@ int main(int argc, char* argv[]){
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	if(world.rank() == 0) cout << mpi3::version() << '\n';
 	mpi3::communicator duo = world < 2;
-	cout << "my rank in comm " << duo.name() << " is " << duo.rank() << '\n';
+	if(duo){
+		cout << "my rank in comm " << duo.name() << " is " << duo.rank() << '\n';
+	}
 	return 0;
 }
 
