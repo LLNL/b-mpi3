@@ -19,7 +19,7 @@
 #include "../mpi3/detail/iterator.hpp"
 #include "../mpi3/detail/strided.hpp"
 
-#include "../mpi3/exception.hpp"
+//#include "../mpi3/exception.hpp"
 
 #include<mpi.h>
 
@@ -159,7 +159,7 @@ public:
 	}
 	bool empty() const{return size() == 0;}
 	int size() const{
-		if(is_null()) throw mpi3::invalid_communicator("size called on null communicator");
+		if(is_null()) throw std::runtime_error("size called on null communicator");
 		int size = -1; 
 		int s = MPI_Comm_size(impl_, &size);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
@@ -257,7 +257,7 @@ public:
 	topology topo() const{return static_cast<topology>(call<MPI_Topo_test>());}
 	int rank() const{
 		int rank = -1;
-		if(impl_ == MPI_COMM_NULL) throw mpi3::invalid_communicator("rank on null communicator");
+		if(impl_ == MPI_COMM_NULL) throw std::runtime_error("rank on null communicator");
 	//	MPI_Comm_call_errhandler(impl_, MPI_Comm_rank(impl_, &rank));
 		int s = MPI_Comm_rank(impl_, &rank);
 		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
@@ -529,6 +529,7 @@ public:
 		return ret;
 	}
 #endif
+#if 0
 	template<
 		class OIterator, class Size, 
 		class IIterator, class... A, 
@@ -547,6 +548,7 @@ public:
 			std::forward<A>(a)...
 		);
 	}
+#endif
 	template<
 		class It,
 		class Category = typename std::iterator_traits<It>::iterator_category,
@@ -1443,7 +1445,8 @@ public:
 	template<class It1, class Size, class It2>
 	auto igather_n(It1 first, Size count, It2 d_first, int root = 0){return gather_n(igather_mode{}, first, count, d_first, root);}
 	template<class It1, class It2>
-	[[nodiscard]] auto igather(It1 first, It1 last, It2 d_first, int root = 0){
+	//	[[nodiscard]] 
+	auto igather(It1 first, It1 last, It2 d_first, int root = 0){
 		return igather_category(
 			typename std::iterator_traits<It1>::iterator_category{},
 			first, last, d_first, root
@@ -1866,8 +1869,11 @@ public:
 		{};  
 	};
 	template<class T>
-//	void load_array(boost::serialization::array<T>& t, unsigned int = 0){ // for boost pre 1.63
+#if(BOOST_VERSION < 106300)
+	void load_array(boost::serialization::array<T>& t, unsigned int = 0){ // for boost pre 1.63
+#else
 	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int = 0){
+#endif
 		p_.unpack_n(t.address(), t.count()); 
 	}
     template<class T>
@@ -1886,8 +1892,11 @@ public:
 	template<class T>
 	void save(const T& t, unsigned int = 0){p_ << t;}
 	template<class T>
-//	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
+#if(BOOST_VERSION < 1063000)
+	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
+#else
 	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int = 0){
+#endif
 		p_.pack_n(t.address(), t.count()); 
 	}
 #if 0
@@ -1906,7 +1915,11 @@ class basic_package_iarchive : public boost::archive::detail::common_iarchive<Ar
 	typedef boost::archive::detail::common_iarchive<Archive> detail_common_iarchive;
 	template<class T>
 	void load_override(T& t, /*BOOST_PFTO*/ int = 0){
+#if(BOOST_VERSION < 106300)
+		this->detail_common_iarchive::load_override(t, 0);
+#else
 		this->detail_common_iarchive::load_override(t);//, 0);
+#endif
 	}
 	protected:
 	basic_package_iarchive(unsigned int flags) : boost::archive::detail::common_iarchive<Archive>(flags){}
@@ -1919,7 +1932,11 @@ class basic_package_oarchive : public boost::archive::detail::common_oarchive<Ar
 protected:
 	template<class T>
 	void save_override(T& t, /*BOOST_PFTO*/ int = 0){
-		this->detail_common_oarchive::save_override(t);//, 0);
+#if(BOOST_VERSION < 106300)
+	  this->detail_common_oarchive::save_override(t, 0);//, 0);
+#else
+	  this->detail_common_oarchive::save_override(t);
+#endif
 	}
 #if 0
 	void save_override(const object_id_type&, int){/* this->This()->newline(); this->detail_common_oarchive::save_override(t, 0);*/}
@@ -1997,8 +2014,11 @@ class package_oarchive_impl : public basic_package_oprimitive, public basic_pack
 public:
 	template<class T>
 	void save(const T& t){basic_package_oprimitive::save(t);}
-//	void save(boost::serialization::array<double>& t){
+#if(BOOST_VERSION < 106300)
+	void save(boost::serialization::array<double>& t){
+#else
 	void save(boost::serialization::array_wrapper<double>& t){
+#endif
 		assert(0);
 	}
     void save(const boost::archive::version_type&){}
@@ -2053,8 +2073,11 @@ public:
 #if 1
 	// Save all supported datatypes directly
 	template<class T>
-//	void save(boost::serialization::array<T> const& t, unsigned int){
+#if(BOOST_VERSION < 106300)
+	void save(boost::serialization::array<T> const& t, unsigned int){
+#else
 	void save(boost::serialization::array_wrapper<T> const& t, unsigned int){
+#endif
 		assert(0);
 		save_override(t, boost::mpl::bool_<true>{});//std::true_type{});
 	}
@@ -2075,8 +2098,11 @@ struct package_iarchive : public package_iarchive_impl<package_iarchive>{
 struct package_oarchive : public package_oarchive_impl<package_oarchive>{
 	package_oarchive(package& p, unsigned int flags = 0) : package_oarchive_impl<package_oarchive>(p, flags){}
 	using package_oarchive_impl<package_oarchive>::operator&;
-//	package_oarchive& operator & (boost::serialization::array<double>& t){
+#if(BOOST_VERSION < 106300)
+	package_oarchive& operator & (boost::serialization::array<double>& t){
+#else
 	package_oarchive& operator & ([[maybe_unused]] boost::serialization::array_wrapper<double>&  t){
+#endif
 		assert(0);
 		return *this;
 	}
