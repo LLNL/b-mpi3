@@ -45,7 +45,6 @@ struct status{
 	int tag() const{return impl_.MPI_TAG;}
 	void set_tag(int t){impl_.MPI_TAG = t;}
 //	void tag(int t){set_tag(t);}
-
 	void set_cancelled(bool flag = true){
 		int s = MPI_Status_set_cancelled(&impl_, flag);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot set cancelled");

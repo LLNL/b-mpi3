@@ -1,5 +1,9 @@
 #if COMPILATION_INSTRUCTIONS
+<<<<<<< Updated upstream
 mpic++ -O3 -std=c++14 -I${HOME}/prj/ -Wfatal-errors $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
+=======
+mpic++ -O3 -std=c++14 -I${HOME}/prj/ `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
+>>>>>>> Stashed changes
 #endif
 
 #include "alf/boost/mpi3/environment.hpp"
@@ -13,16 +17,43 @@ using std::endl;
 namespace mpi3 = boost::mpi3;
 
 int main(int argc, char* argv[]){
-	mpi3::environment env(argc, argv); // was   MPI_Init(&argc,&argv);
-	auto world = env.world();          // was auto& world = boost::mpi3::world;
+	mpi3::environment env(argc, argv);
+	auto world = env.world();
 	mpi3::shared_communicator node = world.split_shared();
 	cout<<" rank:  " <<world.rank() <<endl;
-	mpi3::intranode::allocator<double> A(node);
-	mpi3::intranode::allocator<double>::pointer data = A.allocate(8);
-	if(node.root()) data[3] = 3.4;
+
+	mpi3::intranode::allocator<double>   A1(node);
+	mpi3::intranode::allocator<float>    A2(node);
+	mpi3::intranode::allocator<int>      A3(node);
+	mpi3::intranode::allocator<unsigned> A4(node);
+	mpi3::intranode::allocator<double>   A5(node);
+	mpi3::intranode::allocator<float>    A6(node);
+	mpi3::intranode::allocator<int>      A7(node);
+	mpi3::intranode::allocator<unsigned> A8(node);
+	mpi3::intranode::allocator<double>   A9(node);
+
+	auto data1 = A1.allocate(80);
+	auto data2 = A2.allocate(80);
+	auto data3 = A3.allocate(80);
+	auto data4 = A4.allocate(80);
+	auto data5 = A5.allocate(80);
+	auto data6 = A6.allocate(80);
+	auto data7 = A7.allocate(80);
+	auto data8 = A8.allocate(80);
+	auto data9 = A9.allocate(80);
+
+	if(node.root()) data9[3] = 3.4;
 	node.barrier();
-	if(node.rank()) assert(data[3] == 3.4);
+	assert(data9[3] == 3.4);
 	node.barrier();
-	A.deallocate(data, 8);
-	return 0;                           // was MPI_Finalize();
+	A1.deallocate(data1, 80);
+	A2.deallocate(data2, 80);
+	A3.deallocate(data3, 80);
+	A4.deallocate(data4, 80);
+	A5.deallocate(data5, 80);
+	A6.deallocate(data6, 80);
+	A7.deallocate(data7, 80);
+	A8.deallocate(data8, 80);
+	A9.deallocate(data9, 80);
+
 }

@@ -2182,7 +2182,7 @@ class V{
 	V(mpi3::communicator&& c) : comm_(std::move(c)){}
 };
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator&& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 //	auto worldcopy1 = world;
 //	auto worldcopy2 = std::move(worldcopy1);
 //	V v(worldcopy);
