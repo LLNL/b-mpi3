@@ -23,10 +23,14 @@ struct thread_level{
 	}
 };
 
-[[maybe_unused]] static thread_level single{MPI_THREAD_SINGLE};
-[[maybe_unused]] static thread_level funneled{MPI_THREAD_FUNNELED};
-[[maybe_unused]] static thread_level serialized{MPI_THREAD_SERIALIZED};
-[[maybe_unused]] static thread_level multiple{MPI_THREAD_MULTIPLE};
+  //[[maybe_unused]] 
+static thread_level single{MPI_THREAD_SINGLE};
+  //[[maybe_unused]] 
+static thread_level funneled{MPI_THREAD_FUNNELED};
+  //[[maybe_unused]] 
+static thread_level serialized{MPI_THREAD_SERIALIZED};
+  //[[maybe_unused]] 
+static thread_level multiple{MPI_THREAD_MULTIPLE};
 
 //enum struct thread_level : decltype(MPI_THREAD_SINGLE){
 //	single = MPI_THREAD_SINGLE, funneled = MPI_THREAD_FUNNELED, serialized = MPI_THREAD_SERIALIZED, multiple = MPI_THREAD_MULTIPLE

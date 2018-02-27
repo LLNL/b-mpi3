@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -I${HOME}/prj/ `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -I${HOME}/prj/ -Wfatal-errors $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/environment.hpp"
