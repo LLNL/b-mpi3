@@ -1274,7 +1274,7 @@ private:
 	auto reduce_n_dispatch(all_reduce_mode rp, std::true_type, It1 first, Size count, It2 d_first, Op op, int root = 0){
 		int s = rp(
 			detail::data(first)  , 
-			detail::data(d_first), count, detail::basic_datatype<V1>::value,
+			detail::data(d_first), count, detail::basic_datatype<V1>{},
 			op.impl_, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1286,7 +1286,7 @@ private:
 	auto reduce_n_dispatch(reduce_mode rp, std::true_type, It1 first, Size count, It2 d_first, Op op, int root = 0){
 		int s = rp(
 			detail::data(first)  , 
-			detail::data(d_first), count, detail::basic_datatype<V1>::value,
+			detail::data(d_first), count, detail::basic_datatype<V1>{},
 			op.impl_,
 			root, impl_
 		);
@@ -1300,7 +1300,7 @@ private:
 		request ret;
 		int s = rp(
 			detail::data(first)  , 
-			detail::data(d_first), count, detail::basic_datatype<V1>::value,
+			detail::data(d_first), count, detail::basic_datatype<V1>{},
 			op.impl_,
 			root, impl_, &ret.impl_
 		);
@@ -1373,8 +1373,8 @@ private:
 	void scatter_n_dispatch(std::true_type, ContIt1 first, Size count, ContIt2 d_first, int root){
 		if(count % size() != 0) throw std::runtime_error("not matching size for scatter, elements count is " + std::to_string(count) + ", comm size is " + std::to_string(size()));
 		int s = MPI_Scatter(
-			detail::data(first), count/size(), detail::basic_datatype<V1>::value,
-			detail::data(d_first), count/size(), detail::basic_datatype<V2>::value,
+			detail::data(first), count/size(), detail::basic_datatype<V1>{},
+			detail::data(d_first), count/size(), detail::basic_datatype<V2>{},
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1386,8 +1386,8 @@ private:
 	void scatter_from_n_dispatch(std::true_type, ContIt2 d_first, Size count, ContIt1 first,  int root){
 		if(count % size() != 0) throw std::runtime_error("not matching size for scatter");
 		int s = MPI_Scatter(
-			detail::data(first), count, detail::basic_datatype<V1>::value,
-			detail::data(d_first), count, detail::basic_datatype<V2>::value,
+			detail::data(first), count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1488,8 +1488,8 @@ private:
 	>
 	auto gather_n_dispatch(gather_mode g, std::true_type, It1 first, Size count, It2 d_first, int root = 0){
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>::value,
-			detail::data(d_first), count, detail::basic_datatype<V2>::value,
+			detail::data(first)  , count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1501,8 +1501,8 @@ private:
 	auto gather_n_dispatch(igather_mode g, std::true_type, It1 first, Size count, It2 d_first, int root = 0){
 		request r;
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>::value,
-			detail::data(d_first), count, detail::basic_datatype<V2>::value,
+			detail::data(first)  , count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			root, impl_, &r.impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1514,8 +1514,8 @@ private:
 	>
 	auto gather_n_dispatch(all_gather_mode g, std::true_type, It1 first, Size count, It2 d_first, int root = 0){
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>::value,
-			detail::data(d_first), count, detail::basic_datatype<V2>::value,
+			detail::data(first)  , count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
@@ -1892,7 +1892,7 @@ public:
 	template<class T>
 	void save(const T& t, unsigned int = 0){p_ << t;}
 	template<class T>
-#if(BOOST_VERSION < 1063000)
+#if(BOOST_VERSION < 106300)
 	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
 #else
 	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int = 0){
