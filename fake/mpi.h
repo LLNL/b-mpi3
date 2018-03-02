@@ -125,11 +125,22 @@ enum { // level of thread support
 	MPI_THREAD_MULTIPLE
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
+typedef unsigned long long MPI_Aint;
+
+struct MPI_Datatype_impl_{
+	MPI_Aint lb;
+	MPI_Aint extent;
+};
+typedef struct MPI_Datatype_impl_* MPI_Datatype;
+
+static MPI_Datatype MPI_INT = NULL;
+static MPI_Datatype MPI_FLOAT_INT = NULL;
+
 typedef enum {
 	MPI_DATATYPE_NULL = 0,
 	MPI_CHAR,
 	MPI_SHORT,
-	MPI_INT,
+//	MPI_INT,
 	MPI_LONG,
 	MPI_LONG_LONG_INT,
 	MPI_LONG_LONG,
@@ -164,32 +175,21 @@ typedef enum {
 	MPI_CXX_FLOAT_COMPLEX,
 	MPI_CXX_DOUBLE_COMPLEX,
 	MPI_CXX_LONG_DOUBLE_COMPLEX,
-	MPI_FLOAT_INT,
+//	MPI_FLOAT_INT,
 	MPI_DOUBLE_INT,
 	MPI_LONG_INT,
 	MPI_2INT,
 	MPI_SHORT_INT,
 	MPI_LONG_DOUBLE_INT,
-} MPI_Datatype;
+} MPI_Datatype_;
 
-typedef unsigned long long MPI_Aint;
 
 inline int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     return MPI_SUCCESS;
 }
 
-inline int MPI_Type_commit(MPI_Datatype *datatype)
-{
-    return MPI_SUCCESS;
-}
-
 inline int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     return MPI_SUCCESS;
 }
@@ -218,26 +218,6 @@ inline int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 {
     return MPI_SUCCESS;
 }
-
-inline int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement)
-{
-    return MPI_SUCCESS;
-}
-
-
-//struct MPI_Comm {
-//   bool operator!=(const MPI_Comm &o) const { return false; }
-//   bool operator==(const MPI_Comm &o) const { return true; }
-//};
-
-//const struct MPI_Comm MPI_COMM_WORLD;
-//const struct MPI_Comm MPI_COMM_SELF;
-//const struct MPI_Comm MPI_COMM_NULL;
 
 enum {
 	MPI_IDENT,
@@ -579,12 +559,9 @@ int MPI_Gather( // Gathers together values from a group of processes
 	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle) 
 	int root, // [in] rank of receiving process (integer) 
 	MPI_Comm comm // [in] communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node103.htm
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(0); // TODO implementation
-	return MPI_SUCCESS;
-}
-inline int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
+);
+static inline 
+int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
 	char *name, // A unique specifier for the actual (as opposed to virtual) node.
 	int *resultlen // Length (in printable characters) of the result returned in name
 ){
@@ -676,6 +653,9 @@ int MPI_Finalize( // Terminates MPI execution environment
 	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
 	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
 
+	free(MPI_INT);
+	free(MPI_FLOAT_INT);
+
 	return MPI_SUCCESS;
 } 
 int MPI_Finalized( // Indicates whether MPI_Finalize has been called 
@@ -720,6 +700,14 @@ int MPI_Init( // Initialize the MPI execution environment
 //	MPI_COMM_SELF->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
 	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_ARE_FATAL);
 //	MPI_COMM_SELF->errhandler_ = MPI_ERRORS_ARE_FATAL;
+
+	MPI_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	MPI_INT->lb = 0;
+	MPI_INT->extent = sizeof(int);
+
+	MPI_FLOAT_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	MPI_FLOAT_INT->lb = 0;
+	MPI_FLOAT_INT->extent = sizeof(float) + sizeof(int);
 
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
@@ -832,19 +820,66 @@ int MPI_Recv( // Blocking receive for a message
 	assert(0);
 	return MPI_SUCCESS;
 }
+static inline int MPI_Type_commit( // Commits the datatype 
+	MPI_Datatype *datatype // [in] datatype (handle) 
+){
+	return MPI_SUCCESS;
+}
+static int MPI_Type_extent( // Returns the extent of a datatype, deprecated.  See MPI_Type_get_extent for the replacement.
+  MPI_Datatype datatype, // [in] datatype (handle) 
+  MPI_Aint *extent // [out] datatype extent (integer) 
+);
+static inline int MPI_Type_free( // Frees the datatype 
+	MPI_Datatype *datatype // [in] datatype that is freed (handle) 
+){
+	return MPI_SUCCESS;
+}
+static inline
+int MPI_Type_get_extent(
+	MPI_Datatype datatype, // [in] datatype to get information on (handle) 
+	MPI_Aint *lb, // [out] lower bound of datatype (integer) 
+	MPI_Aint *extent // [out] extent of datatype (integer) 
+){
+	if(!lb || !extent) return MPI_ERR_ARG;
+	if(!datatype) return MPI_ERR_TYPE;
+	*lb = datatype->lb;
+	*extent = datatype->extent;
+	return MPI_SUCCESS;
+}
 static inline
 int MPI_Type_size( // Return the number of bytes occupied by entries in the datatype 
 	MPI_Datatype datatype, // [in] datatype (handle) 
 	int *size // [out] datatype size (integer) 
 ){
 	assert(size);
-	switch(datatype){
-		MPI_INT: *size = sizeof(int); break;
-		MPI_FLOAT: *size = sizeof(float); break;
-		MPI_DOUBLE: *size = sizeof(double); break;
+	*size = datatype->extent;
+/*	switch(datatype){
+		MPI_INT      : *size = sizeof(int); break;
+		MPI_FLOAT    : *size = sizeof(float); break;
+		MPI_DOUBLE   : *size = sizeof(double); break;
 		MPI_FLOAT_INT: *size = sizeof(float) + sizeof(int); break;
 		default: assert(0);
-	}
+	}*/
+	return MPI_SUCCESS;
+}
+static inline
+int MPI_Type_ub( // Returns the upper bound of a datatype 
+	MPI_Datatype datatype, //  [in] datatype (handle) 
+	MPI_Aint *displacement
+){
+	if(!displacement) return MPI_ERR_ARG;
+	if(!datatype) return MPI_ERR_TYPE;
+	*displacement = datatype->lb + datatype->extent;
+	return MPI_SUCCESS;
+}
+static inline
+int MPI_Type_vector( // Creates a vector (strided) datatype 
+	int count, // [in] number of blocks (nonnegative integer) 
+	int blocklength, // [in] number of elements in each block (nonnegative integer) 
+	int stride, //  [in] number of elements between start of each block (integer) 
+	MPI_Datatype old_type, // [in] old datatype (handle) 
+	MPI_Datatype *newtype_p // [out] new datatype (handle) 
+){
 	return MPI_SUCCESS;
 }
 int MPI_Wait( // Waits for an MPI request to complete 
@@ -892,6 +927,32 @@ inline int MPI_Op_free(MPI_Op *op)
 
 
 //const int MPI_MAX_PROCESSOR_NAME = 128;
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+static inline 
+int MPI_Gather( // Gathers together values from a group of processes 
+	const void *sendbuf, // [in] starting address of send buffer (choice) 
+	int sendcnt, // [in] number of elements in send buffer (integer)
+	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
+	void *recvbuf, // [out] address of receive buffer (choice, significant only at root) 
+	int recvcnt, // [in] number of elements for any single receive (integer, significant only at root) 
+	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle) 
+	int root, // [in] rank of receiving process (integer) 
+	MPI_Comm comm // [in] communicator (handle) 
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node103.htm
+	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	assert(root == 0);
+	int sendsize = -1;
+	int recvsize = -1;
+#ifndef max
+    #define max(a,b) ((a) > (b) ? (a) : (b))
+#endif
+	MPI_Type_size(sendtype, &sendsize);
+	MPI_Type_size(recvtype, &recvsize);
+	memcpy((char*)recvbuf, (const char*)sendbuf, max(sendcnt*sendsize, recvcnt*recvsize));
+	return MPI_SUCCESS;
+}
 
 
 inline int MPI_Get_address(const void *location, MPI_Aint *address)
