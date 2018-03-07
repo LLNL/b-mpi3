@@ -1,11 +1,14 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_BOOST_MPI3_DETAIL_ITERATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_BOOST_MPI3_DETAIL_ITERATOR $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_DETAIL_ITERATOR_HPP
 #define BOOST_MPI3_DETAIL_ITERATOR_HPP
 
-#include "../../mpi3/allocator.hpp"
+#include "./just.hpp"
 
+//#include "../../mpi3/allocator.hpp"
+
+#include<boost/type_index.hpp>
 #include<boost/container/vector.hpp>
 
 #include<iterator>
@@ -17,79 +20,36 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
-//struct input_iterator_tag{};
-//struct forward_iterator_tag : input_iterator_tag{};
-//struct bidirectional_iterator_tag : forward_iterator_tag{};
-//struct random_access_iterator_tag : bidirectional_iterator_tag{};
-struct contiguous_iterator_tag : std::random_access_iterator_tag{};
-struct strided_contiguous_iterator_tag : std::random_access_iterator_tag{};
-
 template<class T> struct is_declared_contiguous : std::false_type{};
-
 template<class T> struct is_contiguous;
 
 template<
-	class ContiguousIterator, 
+	class ContIt, 
 	typename = std::enable_if_t<
-			std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::uallocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
-		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::uallocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::const_iterator>{}
-		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::iterator>{}
-		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, boost::mpi3::allocator<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>>::const_iterator>{}
-		or
-		/**/std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
-		or	std::is_same<ContiguousIterator, typename std::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::const_iterator>{}
-		or
-			std::is_same<ContiguousIterator, typename std::basic_string<std::decay_t<decltype(*std::declval<ContiguousIterator>())>>::iterator>{}
-
-		or	std::is_same<ContiguousIterator, typename boost::container::vector<typename std::iterator_traits<ContiguousIterator>::value_type>::iterator>{}
-		or	std::is_same<ContiguousIterator, typename boost::container::vector<typename std::iterator_traits<ContiguousIterator>::value_type>::const_iterator>{}
-
-//		or	std::is_same<ContiguousIterator, typename boost::container::container_detail::vec_iterator<typename std::iterator_traits<ContiguousIterator>::value_type*, false>>{}
-//		or	std::is_same<ContiguousIterator, typename boost::container::container_detail::vec_iterator<typename std::iterator_traits<ContiguousIterator>::value_type*, true>>{}
-
-//		or	std::is_same<ContiguousIterator, typename boost::container::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, 1>::iterator>{}
-//		or	std::is_same<ContiguousIterator, typename boost::container::vector<std::decay_t<decltype(*std::declval<ContiguousIterator>())>, 1>::const_iterator>{}
-
-		or	std::is_pointer<ContiguousIterator>{}
-		or	std::is_constructible<typename std::iterator_traits<ContiguousIterator>::pointer, ContiguousIterator>{}
-		or	std::is_convertible<ContiguousIterator, typename std::iterator_traits<ContiguousIterator>::pointer>{}
-		or	is_declared_contiguous<ContiguousIterator>{}
+		/**/std::is_convertible<ContIt, typename std::vector<std::decay_t<decltype(*std::declval<ContIt>())>>::const_iterator>{}
+		or  std::is_convertible<ContIt, typename std::basic_string<std::decay_t<decltype(*std::declval<ContIt>())>>::const_iterator>{}
+		or  std::is_convertible<ContIt, typename boost::container::vector<typename std::iterator_traits<ContIt>::value_type>::const_iterator>{}
+		or	std::is_pointer<ContIt>{}
+		or	std::is_constructible<typename std::iterator_traits<ContIt>::pointer, ContIt>{}
+		or	std::is_convertible<ContIt, typename std::iterator_traits<ContIt>::pointer>{}
+		or	is_declared_contiguous<ContIt>{}
 	>
 >
-typename std::iterator_traits<ContiguousIterator>::pointer
-data(ContiguousIterator const& it){return std::addressof(*it);}
+typename std::iterator_traits<ContIt>::pointer
+data(ContIt const& it){return std::addressof(*it);}
 
-template<class ContiguousIterator>
-auto cdata(ContiguousIterator const& it)
--> decltype(data(&static_cast<decltype(*it) const&>(*it)))
-{
+template<class ContIt>
+auto cdata(ContIt const& it)
+->decltype(data(&static_cast<decltype(*it) const&>(*it))){
 	return data(&static_cast<decltype(*it) const&>(*it));
 }
-
-template<class It, class = decltype(data(std::declval<It>()))>
-std::true_type is_contiguous_aux(It);
-std::false_type is_contiguous_aux(...);
-
-template<class T> struct is_contiguous 
-: decltype(is_contiguous_aux(std::declval<T>())){};
-
-template<class It>
-typename std::iterator_traits<It>::iterator_category iterator_category_aux(...);
-template<class It, class = decltype(detail::data(It{}))>
-contiguous_iterator_tag iterator_category_aux(It);
-template<class It, class = decltype(data(It{}.base())), class = decltype(It{}.stride())>
-strided_contiguous_iterator_tag iterator_category_aux(It);
-
-template<class It>
-struct iterator_category : decltype(iterator_category_aux(std::declval<It>())){};
-
 
 }}}
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_ITERATOR
 
-#include "alf/boost/mpi3/allocator.hpp"
-#include "alf/boost/mpi3/main.hpp"
+#include "../../mpi3/allocator.hpp"
+#include "../../mpi3/main.hpp"
 
 #include<boost/container/static_vector.hpp>
 #include<boost/container/flat_set.hpp>
@@ -107,6 +67,7 @@ struct iterator_category : decltype(iterator_category_aux(std::declval<It>())){}
 #include<boost/array.hpp>
 #include<array>
 #include<set>
+#include<queue>
 #include<iostream>
 #include<typeinfo>
 #include<numeric>
@@ -218,6 +179,7 @@ int mpi3::main(int, char*[], mpi3::environment&){
 		cout << boost::mpi3::detail::is_contiguous<std::string::iterator>{} << '\n';
 		cout << boost::mpi3::detail::is_basic<std::string::iterator::value_type>{} << '\n';
 	}
+
 }
 #endif
 #endif

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++11 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_DATATYPE -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp $0x.x; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++11 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_DATATYPE -lboost_serialization $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp $0x.x; exit
 #endif
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
@@ -15,20 +15,20 @@ namespace mpi3{
 
 namespace detail{
 
-using float_int = std::pair<float, int>;
-using long_int = std::pair<long, int>;
-using double_int = std::pair<double, int>;
-using short_int = std::pair<short, int>;
-using int_int = std::pair<int, int>;
+using float_int       = std::pair<float, int>;
+using long_int        = std::pair<long, int>;
+using double_int      = std::pair<double, int>;
+using short_int       = std::pair<short, int>;
+using int_int         = std::pair<int, int>;
 using long_double_int = std::pair<long double, int>;
 
-using float_float = std::pair<float, float>;
-using double_double = std::pair<double, double>;
+using float_float             = std::pair<float, float>;
+using double_double           = std::pair<double, double>;
 using long_double_long_double = std::pair<long double, long double>;
 
 
-using cxx_float_complex = std::complex<float>;
-using cxx_double_complex = std::complex<double>;
+using cxx_float_complex       = std::complex<float>;
+using cxx_double_complex      = std::complex<double>;
 using cxx_long_double_complex = std::complex<long double>;
 
 using cxx_bool = bool;
@@ -106,14 +106,13 @@ using std::cout;
 
 int main(int argc, char* argv[]){
 
-	auto i = MPI_THREAD_SINGLE;
-	cout << boost::typeindex::type_id_runtime(i).pretty_name() << std::endl;
+	using mpi3::detail::is_basic;
 
-	static_assert( mpi3::detail::is_basic<int>{} );
-	static_assert( mpi3::detail::is_basic<double>{} );
-	static_assert( mpi3::detail::is_basic<mpi3::detail::float_int>{} );
+	static_assert( is_basic<int>{} );
+	static_assert( is_basic<double>{} );
+	static_assert( is_basic<mpi3::detail::float_int>{} );
 
-	static_assert( not mpi3::detail::is_basic<std::string>{} );
+	static_assert( not is_basic<std::string>{} );
 
 }
 
