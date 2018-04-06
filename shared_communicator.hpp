@@ -1,8 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
-#ifndef BOOST_MPI3_SHARED_COMMUNICATOR_HPP
-#define BOOST_MPI3_SHARED_COMMUNICATOR_HPP
+#ifndef MPI3_SHARED_COMMUNICATOR_HPP
+#define MPI3_SHARED_COMMUNICATOR_HPP
 
 #include "../mpi3/communicator.hpp"
 
@@ -19,7 +19,7 @@ private:
 		return data(std::forward<T>(t));
 	}
 	inline shared_communicator(communicator const& comm, int key = 0){
-		int s = MPI_Comm_split_type(comm.impl_, MPI_COMM_TYPE_SHARED, key,  MPI_INFO_NULL, &impl_);
+		int s = MPI_Comm_split_type(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
 	}
 	friend class communicator;
@@ -37,7 +37,7 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 
 }}
 
-#ifdef _TEST_BOOST_MPI3_SHARED_COMMUNICATOR
+#ifdef _TEST_MPI3_SHARED_COMMUNICATOR
 
 #include "../mpi3/shared_main.hpp"
 #include "../mpi3/operation.hpp"
@@ -48,7 +48,7 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::shared_communicator& node){
+int mpi3::main(int argc, char* argv[], mpi3::shared_communicator node){
 
 	auto win = node.make_shared_window<int>(node.rank()?0:1);
 	assert(win.base() != nullptr and win.size() == 1);

@@ -22,7 +22,7 @@ struct shared_window : window<T>{
 		window<T>()
 	{
 		void* base_ptr = nullptr;
-		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, comm.impl_, &base_ptr, &this->impl_);
+		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
 	shared_window(shared_communicator& comm, int disp_unit = sizeof(T)) : 
@@ -221,7 +221,7 @@ struct is_root{
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 
 	double* p;
 	double* b;
@@ -236,9 +236,6 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 	win.base()[node.rank()] = node.rank() + 1;
 	node.barrier();
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
-
-
-	
 
 	return 0;
 }

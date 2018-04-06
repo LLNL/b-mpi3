@@ -27,7 +27,7 @@ struct window<void>{
 		MPI_Win_create((void*)base, size*sizeof(T), sizeof(T), MPI_INFO_NULL, comm.impl_, &impl_);
 	}
 	window(void* base, mpi3::size_t size, communicator& comm){
-		MPI_Win_create(base, size, 1, MPI_INFO_NULL, comm.impl_, &impl_);
+		MPI_Win_create(base, size, 1, MPI_INFO_NULL, &comm, &impl_);
 	}
 	window(communicator& comm) : window((void*)nullptr, 0, comm){}
 
