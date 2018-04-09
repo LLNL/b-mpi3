@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_VECTOR $0x.cpp -o $0x.x -lboost_timer && time mpirun -np 1 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_VECTOR $0x.cpp -o $0x.x -lboost_timer && time mpirun -np 1 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_VECTOR_HPP
 #define BOOST_MPI3_VECTOR_HPP
@@ -16,9 +16,13 @@ namespace mpi3{
 template<class T>
 using vector = std::vector<T, mpi3::allocator<T>>;
 
-//template<class T>
-//using uvector = std::vector<T, mpi3::uallocator<T>>;
+template<class T>
+using uvector = std::vector<T, mpi3::uallocator<T>>;
 
+//template<class T>
+//struct uvector_iterator : std::vector<T, mpi3::uallocator<T>>{};
+
+/*
 template<class T>
 struct uvector : std::vector<T, mpi3::uallocator<T>>{
 	using std::vector<T, mpi3::uallocator<T>>::vector;
@@ -35,33 +39,35 @@ struct uvector : std::vector<T, mpi3::uallocator<T>>{
 	operator std::vector<T> const&() const&{
 		return reinterpret_cast<std::vector<T> const&>(*this);
 	}
-};
+	
+};*/
 
 }}
 
 #ifdef _TEST_BOOST_MPI3_VECTOR
 
 #include <boost/timer/timer.hpp>
-#include "alf/boost/mpi3/main.hpp"
 
+#include "../mpi3/main.hpp"
+#include "../mpi3/detail/iterator.hpp"
 
 using std::cout;
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::vector<long long> v(100);
 	std::iota(v.begin(), v.end(), 0);
 	assert( std::accumulate(v.begin(), v.end(), 0) == (v.size()*(v.size() - 1))/2 );
 
 	mpi3::uvector<std::size_t> uv(100);
-	assert( std::accumulate(uv.begin(), uv.end(), 0) == 0 );
+//	assert( std::accumulate(uv.begin(), uv.end(), 0) == 0 );
 
-	std::vector<std::size_t> v2 = uv;
+	std::vector<std::size_t> v2(uv.begin(), uv.end());
 	assert(v2.size() == 100);
 	assert(uv.size() == 100);
 
-	std::vector<std::size_t> v3 = std::move(uv);
+	std::vector<std::size_t> v3(uv.begin(), uv.end()); uv.clear();
 	assert(v3.size() == 100);
 	assert(uv.size() == 0);
 

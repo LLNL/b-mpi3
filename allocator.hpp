@@ -65,6 +65,7 @@ bool operator==( const uallocator<T1>&, const allocator<T2>& ){return true;}
 template <class T>
 constexpr std::add_const_t<T>& as_const(T& t) noexcept{return t;}
 
+#if 0
 template<
 	class ContIt, class V = typename std::iterator_traits<ContIt>::value_type, 
 	typename = std::enable_if_t<
@@ -80,6 +81,7 @@ auto cdata(ContIt const& it)
 ->decltype(std::addressof(std::addressof(as_const(*data(it))))){
 	return std::addressof(std::addressof(as_const(*data(it))));
 }
+#endif
 
 }}
 

@@ -12,14 +12,13 @@
 namespace boost{
 namespace mpi3{
 
-int main(int argc, char* argv[], boost::mpi3::shared_communicator& node);
+int main(int argc, char* argv[], boost::mpi3::shared_communicator node);
 
 }}
 
 int main(int argc, char* argv[]){
 	boost::mpi3::environment env(argc, argv);
-	auto node = env.world().split_shared();
-	return boost::mpi3::main(argc, argv, node);
+	return boost::mpi3::main(argc, argv, env.world().split_shared());
 }
 
 #ifdef _TEST_BOOST_MPI3_SHARED_MAIN

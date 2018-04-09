@@ -1,9 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-<<<<<<< Updated upstream
 mpic++ -O3 -std=c++14 -I${HOME}/prj/ -Wfatal-errors $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
-=======
-mpic++ -O3 -std=c++14 -I${HOME}/prj/ `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
->>>>>>> Stashed changes
 #endif
 
 #include "alf/boost/mpi3/environment.hpp"
@@ -41,6 +37,13 @@ int main(int argc, char* argv[]){
 	auto data7 = A7.allocate(80);
 	auto data8 = A8.allocate(80);
 	auto data9 = A9.allocate(80);
+
+	using ptr = decltype(data1);
+	std::pointer_traits<ptr>::element_type dd = 5.6;
+	std::pointer_traits<ptr>::pointer pp = data1;
+	double* dppp = std::pointer_traits<ptr>::to_address(data1);
+
+	assert(dd == 5.6);
 
 	if(node.root()) data9[3] = 3.4;
 	node.barrier();

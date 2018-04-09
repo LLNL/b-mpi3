@@ -1,8 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_BOOST_MPI3_DETAIL_ITERATOR_TRAITS $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_MPI3_DETAIL_ITERATOR_TRAITS $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
-#ifndef BOOST_MPI3_DETAIL_ITERATOR_TRAITS_HPP
-#define BOOST_MPI3_DETAIL_ITERATOR_TRAITS_HPP
+#ifndef MPI3_DETAIL_ITERATOR_TRAITS_HPP
+#define MPI3_DETAIL_ITERATOR_TRAITS_HPP
 
 #include "./iterator.hpp"
 
@@ -16,7 +16,8 @@ namespace mpi3{
 namespace detail{
 
 struct unspecified{};
-struct forward_iterator_tag{using base = unspecified;};
+struct input_iterator_tag{using base = unspecified;};
+struct forward_iterator_tag : input_iterator_tag{using base = input_iterator_tag;};
 struct random_access_iterator_tag : forward_iterator_tag{
 	using base = forward_iterator_tag;
 }; 
@@ -27,6 +28,7 @@ struct strided_contiguous_iterator_tag : std::random_access_iterator_tag{};
 
 template<class T> struct std_translate;
 
+template<> struct std_translate<std::input_iterator_tag>{using type = input_iterator_tag;};
 template<> struct std_translate<std::forward_iterator_tag>{using type = forward_iterator_tag;};
 template<> struct std_translate<std::bidirectional_iterator_tag>{using type = forward_iterator_tag;};
 template<> struct std_translate<std::random_access_iterator_tag>{using type = random_access_iterator_tag;};
@@ -34,15 +36,16 @@ template<> struct std_translate<std::random_access_iterator_tag>{using type = ra
 //template<class T> struct is_declared_contiguous : std::false_type{};
 template<class T> struct is_contiguous;
 
-template<class It, class = decltype(data(std::declval<It>()))>
+template<class It, class = decltype(detail::data(std::declval<It>()))>
 std::true_type is_contiguous_aux(It);
 std::false_type is_contiguous_aux(...);
 
 template<class T> struct is_contiguous 
 : decltype(is_contiguous_aux(std::declval<T>())){};
 
+template<class T, typename = decltype(detail::data(T{}))> 
+std::true_type  has_data_aux(T  );
 std::false_type has_data_aux(...);
-template<class T, typename = decltype(detail::data(T{}))> std::true_type has_data_aux(T&&);
 
 template<class T> struct has_data : decltype(has_data_aux(std::declval<T>())){};
 
@@ -93,9 +96,10 @@ auto category_iterator(It&& it){
 
 }}}
 
-#ifdef _TEST_BOOST_MPI3_DETAIL_ITERATOR_TRAITS
+#ifdef _TEST_MPI3_DETAIL_ITERATOR_TRAITS
 
 #include "../../mpi3/main.hpp"
+#include "../../mpi3/vector.hpp"
 
 #include<deque>
 #include<list>
@@ -155,15 +159,27 @@ int mpi3::main(int, char*[], mpi3::environment&){
 	{
 		std::list<int> l = {11, 22};
 		assert( f(l.begin()) == "forward11" );
-		std::vector<int> v = {44,33};
+		std::vector<int> v = {44, 33};
 		assert( f(v.begin()) == "cont44" );
 		std::deque<int> q{55,66};// q.push(5.);//,6.};
 		assert( f(q.begin()) == "random55" );
-
 		assert( g(l.begin()) == "forward11" );
+
+		std::istringstream iss("1 2 3");
+		std::istream_iterator<int> it(iss);
+		assert( *std::addressof(*it) == 1 );
+		++it;
+		assert( *std::addressof(*it) == 2 );		
+		cout << typeid(std::iterator_traits<std::istream_iterator<int>>::iterator_category).name() << '\n';
 //		std::vector<double> v{5.,6.};// q.push(5.);//,6.};
 //		g(v.begin());
 	//	cout << mpi3::detail::has_data<decltype(v.begin())>{} << '\n';
+	}
+	{
+		mpi3::uvector<int> v = {444, 333};
+	//	assert( f(v.begin()) == "cont444" );
+		cout << *detail::data(v.begin()) << '\n';
+	//	static_assert( detail::has_data<mpi3::uvector<int>::iterator>{} );
 	}
 	return 0;
 }

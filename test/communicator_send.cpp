@@ -1,36 +1,45 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` -fmax-errors=2 $0 -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
+#include "../../mpi3/communicator.hpp"
+#include "../../mpi3/main.hpp"
 
 #include<complex>
+#include<string>
+#include<list>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator& world){
+using T = std::string;
 
-	using type = std::complex<double>;
-	int N = 10;
-	
+int mpi3::main(int, char*[], mpi3::communicator world){
+
 	assert( world.size() == 2 );
 
-	std::vector<type> buffer(N);
-	iota(buffer.begin(), buffer.end(), double{0.});
-
-	if(world.rank()==0){
-		std::vector<type> const& cbuffer = buffer;
-		world.send(cbuffer.begin(), cbuffer.end(), 1, 123);
-	}else{
-		std::vector<type> buffer2(N);
-		world.receive(buffer2.begin(), buffer2.end(), 0, 123);
-	//	world.receive(buffer2.begin());//, 0, 123);
-		assert( buffer == buffer2 );
+	{
+		std::list<int> b = {3, 4, 5};
+		switch(world.rank()){
+			case 0: world.send(cbegin(b), cend(b), 1); break;
+			case 1: {
+				std::vector<int> b2(b.size());
+				world.receive_n(begin(b2), b2.size(), 0);
+				std::equal(begin(b), end(b), begin(b2));
+			}; break;
+		}
 	}
-	cout << "finished" << std::endl;
+	{
+		std::vector<std::string> b = {"hola", "blah", "chau"};
+		switch(world.rank()){
+			case 0: world.send(cbegin(b), cend(b), 1); break;
+			case 1: {
+				std::list<T> b2(b.size());
+				world.receive(begin(b2), 0);
+				std::equal(begin(b), end(b), begin(b2));
+			}; break;
+		}
+	}
 	return 0;
-
 }
 

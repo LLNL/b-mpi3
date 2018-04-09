@@ -1,46 +1,54 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 12s $0x.x $@ && rm -f $0x.x; exit
+mpic++ -std=c++14  -O3 -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
+#include "../../mpi3/main.hpp"
+#include "../../mpi3/communicator.hpp"
+#include "../../mpi3/detail/iterator.hpp"
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-
-	int max_procs = 10;
-	int table[max_procs][max_procs];
-
-	int participants;
-
-	if(world.size() >= max_procs){
-		participants = max_procs;
-	}else{
-		world.abort(1);
-	}
-
-	if(world.rank() < participants){
-		int block_size = max_procs/participants;
-		int begin_row = world.rank()*block_size;
-		int end_row = (world.rank() + 1)*block_size;
-		int send_count = block_size*max_procs;
-		int recv_count = send_count;
-		for(int i = begin_row; i != end_row; ++i){
-			for(int j = 0; j != max_procs; ++j){
-				table[i][j] = world.rank() + 10;
-			}
-		}
-		world.all_gather(
-			&table[begin_row][0], &table[begin_row][0] + send_count, 
-			&table[0][0]
-		); // this is giving an aliasing error, even in the original example
-		for(int i = 0; i != max_procs; ++i){
-			assert( table[i][0] == table[i][max_procs - 1] );
-		}
-	}
-
+int mpi3::main(int, char*[], mpi3::communicator world){
+{
+	using T = std::tuple<double, double>;
+	std::vector<T> v_local(10, T{world.rank(), world.rank()});
+	std::vector<T> v(v_local.size()*world.size());
+	auto end = world.all_gather_n(v_local.begin(), v_local.size(), v.begin());
+	assert(end == v.end());
+	assert(( v[ 0] == T{0.,0.} ));
+	assert(( v[10] == T{1.,1.} ));
+	assert(( v[20] == T{2.,2.} ));
+}
+{
+	using T = std::pair<double, int>;
+	std::vector<T> v_local(10, T{world.rank(), world.rank()});
+	std::vector<T> v(v_local.size()*world.size());
+	auto end = world.all_gather_n(v_local.begin(), v_local.size(), v.begin());
+	assert(end == v.end());
+	assert(( v[ 0] == T{0.,0} ));
+	assert(( v[10] == T{1.,1} ));
+	assert(( v[20] == T{2.,2} ));
+}
+{
+	auto cs = world.all_gather_as<std::vector<int> >(world.rank());
+	assert(cs[0] == 0);
+	assert(cs[1] == 1);
+	assert(cs[2] == 2);
+}
+{
+	using T = double;
+	std::vector<T> v_local(world.rank() + 1, world.rank());
+	std::vector<T> v(1 + 2 + 3);
+	auto end = world.all_gatherv_n(v_local.begin(), v_local.size(), v.begin());
+	assert(end == v.end());
+	assert(( v[ 0] == 0. ));
+	assert(( v[ 1] == 1. ));
+	assert(( v[ 2] == 1. ));
+	assert(( v[ 3] == 2. ));
+	assert(( v[ 4] == 2. ));
+	assert(( v[ 5] == 2. ));
+}
 	return 0;
 }
 

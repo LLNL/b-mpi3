@@ -44,7 +44,7 @@ struct array_ptr{
 //	array_ptr(T* const& other = nullptr) : offset(0){}
 	array_ptr& operator=(array_ptr const& other) = default;
 	T& operator*() const{return *((T*)(wSP_->base(0)) + offset);}
-	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
+	T& operator[](mpi3::size_t idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
 //	T* get() const{return wSP_->base(0) + offset;}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}

@@ -65,17 +65,6 @@ inline process communicator::operator[](int rank){
 }
 
 template<class T>
-T operator+=(communicator& comm, T const& t){
-	T val = comm.all_reduce_value(t, std::plus<>{});
-	return val;
-}
-template<class T>
-communicator& operator<<(communicator& comm, T const& t){
-	comm.send_value(t);
-	return comm;
-}
-
-template<class T>
 communicator& operator>>(communicator& comm, T& t){
 	comm.receive_value(t);
 	return comm;
