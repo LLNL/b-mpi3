@@ -16,6 +16,8 @@
 
 #include<algorithm>
 
+#include<cassert>
+
 namespace boost{
 namespace mpi3{
 namespace detail{
@@ -32,7 +34,8 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
 	}	
 	basic_communicator(basic_communicator&& other) noexcept : 
-		impl_{std::exchange(other.impl_, MPI_COMM_NULL)}{}
+		impl_{std::exchange(other.impl_, MPI_COMM_NULL)}
+	{}
 	void swap(basic_communicator& other) noexcept{
 		std::swap(impl_, other.impl_);
 	}

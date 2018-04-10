@@ -185,6 +185,7 @@ public:
 	}
 	using detail::basic_communicator::basic_communicator;
 	communicator(communicator const&) = default;
+	communicator(communicator&&) = default;
 	communicator& operator=(communicator const& other){
 		communicator tmp(other);
 		swap(tmp);
