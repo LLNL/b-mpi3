@@ -139,9 +139,41 @@ protected:
 public:
 
 	using detail::basic_communicator::send;
-	using detail::basic_communicator::send_n;
+//	using detail::basic_communicator::send_n;
 	using detail::basic_communicator::send_receive_n;
 
+	template<class It, typename Size>
+	auto send_n(
+		It first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count,
+		int dest, int tag
+	){
+		int s = MPI_Send(
+			detail::data(first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			dest, tag, impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send");
+	}
+	template<class It, typename Size>
+	auto isend_n(
+		It first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count,
+		int dest, int tag
+	){
+		mpi3::request r;
+		int s = MPI_Isend(
+			detail::data(first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			dest, tag, impl_, &r.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send");
+		return r;
+	}
 	template<class It, typename Size>
 	auto send_n(
 		It first, 
@@ -153,11 +185,34 @@ public:
 		detail::package p(*this);
 		package_oarchive poa(p);
 		while(count--) poa << *first++;
-		p.send(dest, tag);
+		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
+	}
+	template<class It, typename Size>
+	auto isend_n(
+		It first, 
+			detail::forward_iterator_tag,
+			detail::value_unspecified_tag,
+		Size count, 
+		int dest, int tag
+	){
+		detail::package p(*this);
+		package_oarchive poa(p);
+		while(count--) poa << *first++;
+		return isend_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
 	template<class It, typename Size>
 	auto send_n(It first, Size count, int dest, int tag = 0){
 		return send_n(
+			first, 
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			count,
+			dest, tag
+		);
+	}
+	template<class It, typename Size>
+	auto isend_n(It first, Size count, int dest, int tag = 0){
+		return isend_n(
 			first, 
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
@@ -175,8 +230,26 @@ public:
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
+	auto isend(
+		It first, It last,
+			detail::random_access_iterator_tag, 
+			detail::value_unspecified_tag,
+		int dest, int tag
+	){
+		return isend_n(first, std::distance(first, last), dest, tag);
+	}
+	template<class It>
 	auto send(It first, It last, int dest, int tag = 0){
 		return send(
+			first, last,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			dest, tag
+		);
+	}
+	template<class It>
+	auto isend(It first, It last, int dest, int tag = 0){
+		return isend(
 			first, last,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
@@ -616,14 +689,6 @@ public:
 	}
 */
 
-
-	template<
-		class ContiguousIterator, class Size, 
-		class value_type = typename std::iterator_traits<ContiguousIterator>::value_type, 
-		class datatype = detail::basic_datatype<value_type>
-	>
-	request isend_n(ContiguousIterator I, Size count, int dest, int tag = 0);
-
 public:
 	status probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		status s;
@@ -753,6 +818,41 @@ public:
 	template<class It, typename Size>
 	auto receive_n(
 		It dest, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count, 
+		int source, int tag
+	){
+		status sta;
+		int s = MPI_Recv(
+			detail::data(dest), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			source, tag, impl_, &sta.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("receive_n");
+		return dest + count;
+	}
+	template<class It, typename Size>
+	auto ireceive_n(
+		It dest, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count, 
+		int source, int tag
+	){
+		mpi3::request r;
+		int s = MPI_Irecv(
+			detail::data(dest), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			source, tag, impl_, &r.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("receive_n");
+		return r;
+	//	return dest + count;
+	}
+	template<class It, typename Size>
+	auto receive_n(
+		It dest, 
 			detail::forward_iterator_tag,
 			detail::value_unspecified_tag,
 		Size count, 
@@ -765,9 +865,47 @@ public:
 		return dest;
 	}
 	template<class It, typename Size>
+	auto ireceive_n(
+		It dest, 
+			detail::forward_iterator_tag,
+			detail::value_unspecified_tag,
+		Size count, 
+		int source, int tag
+	){
+		detail::package p(*this);
+		p.receive(source, tag);
+		package_iarchive pia(p);
+		while(count--) pia >> *dest++;
+		return dest;
+	}
+/*	template<class It, typename Size>
+	receive_request ireceive_n(
+		It dest, 
+			detail::forward_iterator_tag,
+			detail::value_unspecified_tag,
+		Size count, 
+		int source, int tag
+	){
+		detail::package p(*this);
+		p.receive(source, tag);
+		package_iarchive pia(p);
+		while(count--) pia >> *dest++;
+		return dest;
+	}*/
+	template<class It, typename Size>
 	auto receive_n(It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive_n(
 			dest, 
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			n,
+			source, tag
+		);
+	}
+	template<class It, typename Size>
+	auto ireceive_n(It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		return ireceive_n(
+			dest,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			n,
@@ -821,14 +959,50 @@ public:
 			source, tag
 		);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class It>
+	auto receive(
+		It d_first, It d_last, 
+			detail::random_access_iterator_tag,
+			detail::value_unspecified_tag,
+		int source, int tag
+	){
+		return receive_n(d_first, std::distance(d_first, d_last), source, tag);
+	}
+	template<class It>
+	auto ireceive(
+		It d_first, It d_last, 
+			detail::random_access_iterator_tag,
+			detail::value_unspecified_tag,
+		int source, int tag
+	){
+		return ireceive_n(d_first, std::distance(d_first, d_last), source, tag);
+	}
+	template<class It>
+	auto receive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		return receive(
+			d_first, d_last,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			source, tag
+		);
+	}
+	template<class It>
+	auto ireceive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		return ireceive(
+			d_first, d_last,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			source, tag
+		);
+	}
+/*	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	request isend(InputIterator It1, InputIterator It2, int dest, int tag = 0){//	[[nodiscard]]{
 		return send(standard_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
-	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
+	}*/
+/*	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
 	request ireceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(standard_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
-	}
+	}*/
 	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto bsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
@@ -907,11 +1081,11 @@ public:
 //		return receive_category(cm, bm, category{}, It1, It2, source, tag);
 //	}
 private:
-	template<class CommunicationMode, class BlockingMode, class RandomAccessIterator>
+/*	template<class CommunicationMode, class BlockingMode, class RandomAccessIterator>
 	auto send_category(CommunicationMode cm, BlockingMode bm, std::random_access_iterator_tag, 
 		RandomAccessIterator first, RandomAccessIterator last, int dest, int tag
 	){return send_n_randomaccess(cm, bm, first, std::distance(first, last), dest, tag);}
-
+*/
 	template<class CommunicationMode, class BlockingMode, class InputIterator>
 	auto send_category(CommunicationMode cm, BlockingMode bm, std::input_iterator_tag, 
 		InputIterator first, InputIterator last, int dest, int tag
