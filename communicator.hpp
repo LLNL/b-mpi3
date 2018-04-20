@@ -75,6 +75,7 @@
 #include<iterator> // iterator_traits
 #include<type_traits>
 #include<limits>
+#include<thread>
 
 namespace boost{
 namespace mpi3{
@@ -1049,32 +1050,39 @@ public:
 		int tag; 
 		MPI_Request* requestP; 
 	};
+	struct receive_state{
+		int cancelled = 0;
+		int source = MPI_UNDEFINED;
+		int tag = MPI_UNDEFINED;
+	};
 	template<class It>
-	static void* receive_thread(void* ptr){
+	inline static void* receive_thread(void* ptr){
 		receive_args<It>* args = (receive_args<It>*)ptr;
 		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
 		MPI_Grequest_complete(*args->requestP);
 		::free(ptr);
 		return NULL;
 	}
-	static int query_fn(void* /*extra_state*/, MPI_Status *status){ 
+	inline static int query_fn(void* extra_state, MPI_Status *status){
+		receive_state* rs = (receive_state*)extra_state;
 		/* always send just one int */ 
 		MPI_Status_set_elements(status, MPI_INT, 1);
 		/* can never cancel so always true */ 
-		MPI_Status_set_cancelled(status, 0); 
+		MPI_Status_set_cancelled(status, rs->cancelled); 
 		/* choose not to return a value for this */
-		status->MPI_SOURCE = MPI_UNDEFINED; 
+		status->MPI_SOURCE = rs->source; 
 		/* tag has not meaning for this generalized request */ 
-		status->MPI_TAG = MPI_UNDEFINED; 
+		status->MPI_TAG = rs->tag; 
 		/* this generalized request never fails */ 
 		return MPI_SUCCESS; 
 	}
-	static int free_fn(void* /*extra_state*/){ 
+	inline static int free_fn(void* extra_state){ 
 		/* this generalized request does not need to do any freeing */ 
-		/* as a result it never fails here */ 
+		/* as a result it never fails here */
+		::free(extra_state);
 		return MPI_SUCCESS; 
-	} 
-	static int cancel_fn(void* /*extra_state*/, int complete) 
+	}
+	inline static int cancel_fn(void* /*extra_state*/, int complete) 
 	{ 
 		/* This generalized request does not support cancelling. 
 		   Abort if not already done.  If done then treat as if cancel failed. */ 
@@ -1082,22 +1090,23 @@ public:
 			fprintf(stderr, "Cannot cancel generalized request - aborting program\n"); 
 			MPI_Abort(MPI_COMM_WORLD, 99); 
 		} 
-		return MPI_SUCCESS; 
+		return MPI_SUCCESS;
 	}
 	template<class It>
 	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
-		mpi3::request ret;
-		receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>));
-		args->commP = this;
-		args->d_first = d_first;
-	//	args->d_last = d_last;
-		args->source = source;
-		args->tag = tag;
-		args->requestP = &ret.impl_;
-		MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, args->requestP);
-		pthread_t thread;
-		pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args);
+		mpi3::request ret; /*	receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>)); args->commP = this; args->d_first = d_first; //	args->d_last = d_last; args->source = source; args->tag = tag; args->requestP = &ret.impl_;*/
+		receive_state* rs = (receive_state*)::malloc(sizeof(receive_state));
+		rs->cancelled = 0;
+		rs->source = source;
+		rs->tag = tag;
+		MPI_Grequest_start(query_fn, free_fn, cancel_fn, rs, &ret.impl_);//args->requestP);
+		std::thread( //	static_cast<void*(*)(void*)>(receive_thread<It>), args
+			[this, d_first, source, tag, &ret](){
+				this->receive(d_first, source, tag); //	receive_args<It>* args = (receive_args<It>*)ptr; //	args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+				MPI_Grequest_complete(ret.impl_); //	MPI_Grequest_complete(*args->requestP); //	::free(ptr);
+			}
+		).detach();	//	t.detach(); //	pthread_t thread; //	pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args); //	pthread_detach(thread);
 		return ret;		
 	}
 	template<class It>
@@ -1118,23 +1127,6 @@ public:
 			source, tag
 		);
 	}
-/*	template<class It>
-	auto ireceive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		return ireceive(
-			d_first, d_last,
-				detail::iterator_category_t<It>{},
-				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
-			source, tag
-		);
-	}*/
-/*	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
-	request isend(InputIterator It1, InputIterator It2, int dest, int tag = 0){//	[[nodiscard]]{
-		return send(standard_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
-	}*/
-/*	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
-	request ireceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		return receive(standard_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
-	}*/
 	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto bsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);

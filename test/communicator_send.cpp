@@ -40,6 +40,20 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 			}; break;
 		}
 	}
+	{
+		switch(world.rank()){
+			case 0: {
+				std::istringstream iss("1 2 3");
+				world.send(std::istream_iterator<int>{iss}, std::istream_iterator<int>{}, 1);
+				break;
+			}
+			case 1: {
+				std::vector<int> out(3);
+				world.receive(begin(out), 0);
+				assert((out == std::vector<int>{1,2,3}));
+			}
+		}
+	}
 	return 0;
 }
 
