@@ -60,6 +60,24 @@ The Boost.MPI3 library was designed to use simultaneously (interleaved) with the
 In this way, changes to existing code can be made incrementally.
 Mixing the standard C interface with the Boost.MPI3 is not complicated but requires more knowledge of the library internals than the one provided in this document.
 
+## Installation
+
+The library is "header-only"; no separate compilation is necessary.
+Most functions are inline or template functions.
+In order to compile it requires an MPI distribution (e.g. OpenMPI or MPICH2) and the corresponding compiler-wrapper (`mpic++` or `mpicxx`).
+Currently the library requieres C++14 (usually activated with the compiler option `-std=c++14`) and Boost. In particular it depends on Boost.Serialization and may require linking to this library if values passed are not basic types (`-lboost_serialization`). A typical compilation/run command looks like this:
+
+```
+$ mpic++ -std=c++14 -O3 mpi3/test/communicator_send.cpp -o communicator_send.x -lboost_serialization
+$ mpirun -n 8 ./communicator_send.x
+```
+
+In a system such as Red Hat, the dependencies can by installed by
+
+```
+$ dnf install gcc-c++ boost-devel openmpi-devel mpich-devel
+```
+
 ## Initialization
 
 Like MPI, Boost.MPI3 requires some global library initialization.
@@ -129,11 +147,11 @@ This program for example splits the global communicator in two sub-communicators
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-        assert(world.size() == 8); // this program is only run in 8 processes
-        mpi3::communicator comm = (world <= 1);
-        assert( comm.size() == 2 or comm.size() == 6);
-        return 0;
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+    assert(world.size() == 8); // this program is only run in 8 processes
+    mpi3::communicator comm = (world <= 1);
+    assert( comm.size() == 2 or comm.size() == 6);
+    return 0;
 }
 ```
 
