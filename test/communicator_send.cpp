@@ -35,7 +35,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 			case 0: world.send(cbegin(b), cend(b), 1); break;
 			case 1: {
 				std::list<T> b2(b.size());
-				world.receive(begin(b2), 0);
+				world.receive(begin(b2));//, 0);
 				std::equal(begin(b), end(b), begin(b2));
 			}; break;
 		}

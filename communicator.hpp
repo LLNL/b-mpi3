@@ -15,6 +15,7 @@
 
 #include "../mpi3/message.hpp"
 #include "../mpi3/request.hpp"
+#include "../mpi3/generalized_request.hpp"
 #include "../mpi3/type.hpp"
 
 #include "../mpi3/detail/datatype.hpp"
@@ -138,7 +139,7 @@ protected:
 	}
 public:
 
-	using detail::basic_communicator::send;
+//	using detail::basic_communicator::send;
 //	using detail::basic_communicator::send_n;
 	using detail::basic_communicator::send_receive_n;
 
@@ -228,6 +229,37 @@ public:
 		int dest, int tag
 	){
 		return send_n(first, std::distance(first, last), dest, tag);
+	}
+	template<class It>
+	auto send(
+		It first, It last,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		int dest, int tag
+	){
+		return send_n(first, std::distance(first, last), dest, tag);
+	}
+	template<class It>
+	auto send(
+		It first, It last,
+			detail::input_iterator_tag, 
+			detail::basic_tag,
+		int dest, int tag
+	){
+		mpi3::vector<typename std::iterator_traits<It>::value_type> buffer(first, last);
+		return send_n(buffer.begin(), buffer.size(), dest, tag);
+	}
+	template<class It>
+	auto send(
+		It first, It last,
+			detail::input_iterator_tag,
+			detail::value_unspecified_tag,
+		int dest, int tag
+	){
+		detail::package p(*this);
+		package_oarchive poa(p);
+		while(first!=last) poa << *first++;
+		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
 	template<class It>
 	auto isend(
@@ -358,6 +390,20 @@ public:
 		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
 		return rank;
 	}
+	int right() const{return (rank() + 1) % size();}
+	int left() const{
+		int left = rank() - 1;
+		if(left < 0) left = size() - 1;
+		return left;
+	}
+	int next(int n = 1) const{
+		assert(rank() + n < size());
+		return rank() + n;
+	}
+	int prev(int n = 1) const{
+		assert(rank() - n > 0);
+		return rank() - n;
+	}
 	communicator accept(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -428,18 +474,18 @@ public:
 		send(std::addressof(t[0]), std::addressof(t[N]), dest, tag);
 	}
 
-	template<class T>
-	void receive_value(T& t, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		return receive(std::addressof(t), std::addressof(t) + 1, source, tag);
-	}
-	template<class T>
-	auto ireceive_value(T& t, int source = MPI_ANY_TAG, int tag = MPI_ANY_TAG){
-		return ireceive(std::addressof(t), std::addressof(t) + 1, source, tag);
-	}
-	template<class T, std::size_t N>
-	void receive_value(T(&t)[N], int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		receive(std::addressof(t[0]), std::addressof(t[N]), source, tag);
-	}
+//	template<class T>
+//	void receive_value(T& t, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+//		return receive(std::addressof(t), std::addressof(t) + 1, source, tag);
+//	}
+//	template<class T>
+//	auto ireceive_value(T& t, int source = MPI_ANY_TAG, int tag = MPI_ANY_TAG){
+//		return ireceive(std::addressof(t), std::addressof(t) + 1, source, tag);
+//	}
+//	template<class T, std::size_t N>
+//	void receive_value(T(&t)[N], int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+//		receive(std::addressof(t[0]), std::addressof(t[N]), source, tag);
+//	}
 #if 0
 	template<
 		class ContiguousIterator, 
@@ -944,11 +990,10 @@ public:
 			detail::basic_tag,
 		int source, int tag
 	){
-		match m = matched_probe(source, tag);
-		auto count = m.count<typename std::iterator_traits<It>::value_type>();
-		mpi3::uvector<typename std::iterator_traits<It>::value_type> v(count);
-		m.receive_n(begin(v), count);
-		return dest + count;
+	//	match m = matched_probe(source, tag);
+	//	auto count = m.count<typename std::iterator_traits<It>::value_type>();
+	//	mpi3::uvector<typename std::iterator_traits<It>::value_type> v(count);
+		return matched_probe(source, tag).receive_n(dest);//, count);
 	}
 	template<class It>
 	auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
@@ -969,6 +1014,93 @@ public:
 		return receive_n(d_first, std::distance(d_first, d_last), source, tag);
 	}
 	template<class It>
+	auto receive(
+		It d_first, It d_last, 
+			detail::forward_iterator_tag,
+			detail::basic_tag,
+		int source, int tag
+	){
+		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(std::distance(d_first, d_last));	
+		receive_n(buffer.begin(), buffer.size(), source, tag);
+		return std::copy(buffer.begin(), buffer.end(), d_first);
+	}
+	class ir_req{
+		boost::mpi3::status query(){
+			boost::mpi3::status ret;
+			ret.set_source(MPI_UNDEFINED);
+			ret.set_tag(MPI_UNDEFINED);
+			ret.set_cancelled();
+			ret.set_elements<char>(0);
+			return ret;
+		}
+		void free(){
+			std::cout << "free" << std::endl;
+		}
+		void cancel(int complete){
+			std::cout << "cancel " << complete << std::endl;
+		}
+	};
+	template<class It>
+	struct receive_args{ 
+		communicator* commP; 
+		It d_first;
+	//	It d_last;
+		int source;
+		int tag; 
+		MPI_Request* requestP; 
+	};
+	template<class It>
+	static void* receive_thread(void* ptr){
+		receive_args<It>* args = (receive_args<It>*)ptr;
+		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+		MPI_Grequest_complete(*args->requestP);
+		::free(ptr);
+		return NULL;
+	}
+	static int query_fn(void* /*extra_state*/, MPI_Status *status){ 
+		/* always send just one int */ 
+		MPI_Status_set_elements(status, MPI_INT, 1);
+		/* can never cancel so always true */ 
+		MPI_Status_set_cancelled(status, 0); 
+		/* choose not to return a value for this */
+		status->MPI_SOURCE = MPI_UNDEFINED; 
+		/* tag has not meaning for this generalized request */ 
+		status->MPI_TAG = MPI_UNDEFINED; 
+		/* this generalized request never fails */ 
+		return MPI_SUCCESS; 
+	}
+	static int free_fn(void* /*extra_state*/){ 
+		/* this generalized request does not need to do any freeing */ 
+		/* as a result it never fails here */ 
+		return MPI_SUCCESS; 
+	} 
+	static int cancel_fn(void* /*extra_state*/, int complete) 
+	{ 
+		/* This generalized request does not support cancelling. 
+		   Abort if not already done.  If done then treat as if cancel failed. */ 
+		if(!complete){
+			fprintf(stderr, "Cannot cancel generalized request - aborting program\n"); 
+			MPI_Abort(MPI_COMM_WORLD, 99); 
+		} 
+		return MPI_SUCCESS; 
+	}
+	template<class It>
+	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
+		mpi3::request ret;
+		receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>));
+		args->commP = this;
+		args->d_first = d_first;
+	//	args->d_last = d_last;
+		args->source = source;
+		args->tag = tag;
+		args->requestP = &ret.impl_;
+		MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, args->requestP);
+		pthread_t thread;
+		pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args);
+		return ret;		
+	}
+	template<class It>
 	auto ireceive(
 		It d_first, It d_last, 
 			detail::random_access_iterator_tag,
@@ -986,7 +1118,7 @@ public:
 			source, tag
 		);
 	}
-	template<class It>
+/*	template<class It>
 	auto ireceive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return ireceive(
 			d_first, d_last,
@@ -994,7 +1126,7 @@ public:
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			source, tag
 		);
-	}
+	}*/
 /*	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	request isend(InputIterator It1, InputIterator It2, int dest, int tag = 0){//	[[nodiscard]]{
 		return send(standard_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
@@ -2373,14 +2505,7 @@ struct group{
 	group(group const& other, std::vector<int> ranks){// : group(other, ranks.data(), ranks.size()){
 		MPI_Group_incl(other.impl_, ranks.size(), ranks.data(), &impl_);
 	}
-	~group(){
-		MPI_Group_free(&impl_);
-	}
-/*	friend group _union(group const& g1, group const& g2){
-		group ret;
-		MPI_Group_union(g1.impl_, g2.impl_, &ret.impl_);
-		return ret;
-	}*/
+	~group(){MPI_Group_free(&impl_);}
 	int rank() const{
 		int rank = -1; 
 		int s = MPI_Group_rank(impl_, &rank);

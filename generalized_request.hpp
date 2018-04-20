@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_GENERALIZED_REQUEST $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_GENERALIZED_REQUEST $0x.cpp -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_GENERALIZED_REQUEST_HPP
 #define BOOST_MPI3_GENERALIZED_REQUEST_HPP
@@ -25,7 +25,7 @@ struct default_request{
 		return ret;
 	}
 	void free(){}
-	void cancel(int complete){}
+	void cancel(int /*complete*/){}
 };
 
 struct generalized_request : request{
@@ -73,7 +73,7 @@ struct generalized_request : request{
 
 #ifdef _TEST_BOOST_MPI3_GENERALIZED_REQUEST
 
-#include "../mpi3/environment.hpp"
+#include "../mpi3/main.hpp"
 #include<iostream>
 
 using std::cout;
@@ -94,8 +94,30 @@ struct custom_request{
 	void cancel(int complete){}
 };
 
-int main(){
-	mpi3::environment env;
+struct print_request{
+//	double* first;
+//	boost::mpi3::size_type n;
+//	int counter = 0;
+	boost::mpi3::status query(){
+	//	counter -= 1;
+		std::cout << "query" << std::endl;
+		boost::mpi3::status ret;
+		ret.set_source(MPI_UNDEFINED);
+		ret.set_tag(MPI_UNDEFINED);
+		ret.set_cancelled();
+		ret.set_elements<char>(0);
+		return ret;
+	}
+	void free(){
+		std::cout << "free" << std::endl;
+	}
+	void cancel(int complete){
+		std::cout << "cancel " << complete << std::endl;
+	}
+};
+
+int mpi3::main(int, char*[], mpi3::communicator world){
+
 	{
 		custom_request c{};
 		mpi3::generalized_request gr(c);
@@ -110,6 +132,25 @@ int main(){
 		gr.wait();
 		assert(c.counter == 0);
 	}
+	{
+		assert( world.size() == 2);
+
+	//	int right = (world.rank() + 1) % world.size();
+	//	int left = world.rank() - 1;
+	//	if(left < 0) left = world.size() - 1;
+
+		using T = double;
+		std::vector<T> buffer(10); std::iota(buffer.begin(), buffer.end(), 0);
+		std::vector<T> buffer2(10);
+	//	mpi3::request r1 = world.ireceive(buffer2.begin(), buffer2.end(), left, 123);
+		print_request pr{};
+		mpi3::generalized_request r1(pr);
+	//	world.send(buffer.begin(), buffer.end(), right, 123);
+		std::cout << "middle" << std::endl;
+		r1.wait();
+	//	assert( buffer == buffer2 );
+	}
+	return 0;
 }
 
 #endif
