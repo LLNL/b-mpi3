@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -std=c++14 -O3 -Wall -Wextra -Werrors -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -std=c++14 -O3 -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
@@ -292,6 +292,7 @@ public:
 	using detail::basic_communicator::basic_communicator;
 	communicator(communicator const&) = default;
 	communicator(communicator&&) = default;
+	communicator() = default;
 	communicator& operator=(communicator const& other){
 		communicator tmp(other);
 		swap(tmp);
@@ -2727,7 +2728,7 @@ void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive)
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive)
 
-#ifdef _TEST_BOOST_MPI3_COMMUNICATOR
+#ifdef _TEST_MPI3_COMMUNICATOR
 
 #include "../mpi3/main.hpp"
 #include "../mpi3/version.hpp"
@@ -2744,14 +2745,17 @@ class V{
 	V(mpi3::communicator&& c) : comm_(std::move(c)){}
 };
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+int mpi3::main(int, char*[], mpi3::communicator world){
+
+	static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
+
 //	auto worldcopy1 = world;
 //	auto worldcopy2 = std::move(worldcopy1);
 //	V v(worldcopy);
 //	V v2(std::move(v));
 
-	if(world.rank() == 0) cout << "MPI version " <<  boost::mpi3::version() << '\n';
-	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
+	if(world.rank() == 0) cout << "MPI version " <<  mpi3::version() << '\n';
+//	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
 	cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
 
@@ -2765,7 +2769,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	assert(comm2 == world);
 	assert(&comm2 != &world);
 
-	mpi3::communicator comm3 = world.duplicate();
+	mpi3::communicator comm3 = world;//.duplicate();
 	assert(comm3);
 	assert(comm3 == world);
 	assert(&comm3 != &world);
