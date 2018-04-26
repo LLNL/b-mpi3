@@ -2159,6 +2159,47 @@ public:
 		if(rank() == root) d_first += d_count*size();
 		return d_first;
 	}
+	template<class It1, typename Size1, class It2, typename Size2>
+	auto igather_n(
+		It1 first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size1 count,
+		It2 d_first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size2 d_count, 
+		int root
+	){
+		request ret;
+		int s = MPI_Igather(
+			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
+			root, impl_, &ret.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot Igather");
+		return ret;
+	}
+	template<class It1, typename Size1, class It2, typename Size2>
+	auto iall_gather_n(
+		It1 first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size1 count,
+		It2 d_first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size2 d_count
+	){
+		request ret;
+		int s = MPI_Iallgather(
+			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
+			impl_, &ret.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot Iallgather");
+		return ret;
+	}
 	template<class It1, typename Size1, class It2, class Size2>
 	auto gather_n(
 		It1 first,
@@ -2204,9 +2245,44 @@ public:
 			root
 		);
 	}
+	template<class It1, class Size1, class It2, class Size2>
+	auto igather_n(It1 first, Size1 count, It2 d_first, Size2 d_count, int root){
+		return igather_n(
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			d_first,
+				detail::iterator_category_t<It2>{},
+				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
+			d_count,
+			root
+		);
+	}
+	template<class It1, class Size1, class It2, class Size2>
+	auto iall_gather_n(It1 first, Size1 count, It2 d_first, Size2 d_count){
+		return iall_gather_n(
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			d_first,
+				detail::iterator_category_t<It2>{},
+				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
+			d_count
+		);
+	}
 	template<class It1, class Size1, class It2>
 	auto gather_n(It1 first, Size1 count, It2 d_first, int root){
 		return gather_n(first, count, d_first, count, root);
+	}
+	template<class It1, class Size1, class It2>
+	auto igather_n(It1 first, Size1 count, It2 d_first, int root){
+		return igather_n(first, count, d_first, count, root);
+	}
+	template<class It1, class Size1, class It2>
+	auto iall_gather_n(It1 first, Size1 count, It2 d_first){
+		return iall_gather_n(first, count, d_first, count);
 	}
 	template<typename It1, typename It2>
 	auto gather(
@@ -2216,6 +2292,24 @@ public:
 		It2 d_first, int root
 	){
 		return gather_n(first, std::distance(first, last), d_first, root);
+	}
+	template<typename It1, typename It2>
+	auto igather(
+		It1 first, It1 last, 
+			detail::random_access_iterator_tag,
+			detail::value_unspecified_tag,
+		It2 d_first, int root
+	){
+		return igather_n(first, std::distance(first, last), d_first, root);
+	}
+	template<typename It1, typename It2>
+	auto iall_gather(
+		It1 first, It1 last, 
+			detail::random_access_iterator_tag,
+			detail::value_unspecified_tag,
+		It2 d_first
+	){
+		return iall_gather_n(first, std::distance(first, last), d_first);
 	}
 	template<class It1, class It2>
 	auto gather(
@@ -2235,6 +2329,25 @@ public:
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 			d_first,
 			root
+		);
+	}
+	template<typename It1, typename It2>
+	auto igather(It1 first, It1 last, It2 d_first, int root){
+		return igather(
+			first, last,
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			d_first,
+			root
+		);
+	}
+	template<typename It1, typename It2>
+	auto iall_gather(It1 first, It1 last, It2 d_first){
+		return iall_gather(
+			first, last,
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			d_first
 		);
 	}
 	template<class It1, class It2>
@@ -2299,21 +2412,9 @@ public:
 			root
 		);
 	}
-/*	template<typename It1, typename It2>
-	auto gather(It1 first, It1 last, It2 d_first, int root){
-		return a_gather(
-			gather_mode{},
-			first, last, 
-				detail::iterator_category_t<It1>{},
-			d_first,
-			root
-		);
-	}
-*/
-//	template<class It1, class It2>
-//	auto gather(It1 first, It1 last, It2 d_first, int root){return gather(gather_mode{}, first, last, d_first, root);}
-	template<class It1, class Size, class It2>
-	auto igather_n(It1 first, Size count, It2 d_first, int root = 0){return gather_n(igather_mode{}, first, count, d_first, root);}
+//	template<class It1, class Size, class It2>
+//	auto igather_n(It1 first, Size count, It2 d_first, int root = 0){return gather_n(igather_mode{}, first, count, d_first, root);}
+/*
 	template<class It1, class It2>
 	//	[[nodiscard]] 
 	auto igather(It1 first, It1 last, It2 d_first, int root = 0){
@@ -2325,7 +2426,7 @@ public:
 	template<class It1, class It2>
 	auto igather_category(std::random_access_iterator_tag, It1 first, It1 last, It2 d_first, int root = 0){
 		return igather_n(first, std::distance(first, last), d_first, root);
-	}
+	}*/
 private:
 /*	template<class GatherPolicy, class It1, class Size, class It2,
 		class V1 = typename std::iterator_traits<It1>::value_type, 
