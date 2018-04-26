@@ -156,16 +156,12 @@ class environment : environment_base{
 
 //	communicator& null() const{return mpi3::communicator::null;}
 	communicator self() const{
-	//	static auto p = new communicator{MPI_COMM_SELF};
-	//	return *p;
 		return communicator{MPI_COMM_SELF};
 	}
 	communicator world() const{
-	//	static auto p = new communicator{MPI_COMM_WORLD};
-	//	return *p;
-		return communicator{MPI_COMM_WORLD};
-	//	return communicator{MPI_COMM_WORLD};
-	//	return mpi3::communicator::world;
+		communicator ret{MPI_COMM_WORLD};
+		ret.name("world");
+		return ret;
 	}
 
 	std::string processor_name() const{return get_processor_name();}

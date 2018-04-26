@@ -143,7 +143,7 @@ public:
 //	using detail::basic_communicator::send;
 //	using detail::basic_communicator::send_n;
 	using detail::basic_communicator::send_receive_n;
-
+	using detail::basic_communicator::matched_probe;
 	template<class It, typename Size>
 	auto send_n(
 		It first, 
@@ -2421,7 +2421,9 @@ public:
 		int status = MPI_Comm_set_name(impl_, s.c_str());
 		if(status != MPI_SUCCESS) throw std::runtime_error("cannot get name");
 	}
-	std::string name() const{return get_name();}
+	std::string name() const{
+		return get_name();
+	}
 	void name(std::string const& s){set_name(s);}
 
 	communicator parent() const{

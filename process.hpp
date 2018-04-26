@@ -24,7 +24,8 @@ struct process{
 	template<class T>
 	std::vector<T> operator|=(T const& t) &&{
 		std::vector<T> ret(comm_.size());
-		comm_.gather_value(t, ret.begin(), rank_);
+		comm_.gather_n(&t, 1, ret.begin(), rank_);
+	//	comm_.gather_value(t, ret.begin(), rank_);
 		return ret;
 	}
 //	template<class T>
@@ -34,7 +35,8 @@ struct process{
 //	}
 	template<class T>
 	process&& operator>>(T& t) &&{
-		comm_.receive_value(t, rank_);
+		comm_.receive_n(&t, 1, rank_);
+	//	comm_.receive_value(t, rank_);
 		return std::move(*this);
 	}
 	template<class T>
@@ -66,7 +68,8 @@ inline process communicator::operator[](int rank){
 
 template<class T>
 communicator& operator>>(communicator& comm, T& t){
-	comm.receive_value(t);
+	comm.receive_n(&t, 1);
+//	comm.receive_value(t);
 	return comm;
 }
 template<class T>
