@@ -4,7 +4,7 @@
  
 int main(int argc, char **argv)
 {
-    int mpi_err, errs = 0, size;
+    int /*mpi_err,*/ errs = 0, size;
     MPI_Aint lb, ub, extent;
     MPI_Datatype type;
     struct { float a; int b; } foo;

@@ -5,7 +5,7 @@
 /* Test that communicators have reference count semantics */
 #define NELM 128
 #define NCOMM 1020
-
+	
 int main( int argc, char *argv[] )
 {
     int errs = 0;
