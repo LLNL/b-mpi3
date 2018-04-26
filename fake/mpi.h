@@ -261,9 +261,9 @@ struct MPI_Comm_impl_{
 	MPI_Errhandler errhandler_;
 };
 
-static MPI_Comm MPI_COMM_NULL = NULL;//{{&fatal_error_}};
-static MPI_Comm MPI_COMM_WORLD = NULL;
-static MPI_Comm MPI_COMM_SELF = NULL;
+extern MPI_Comm MPI_COMM_NULL = NULL;//{{&fatal_error_}};
+extern MPI_Comm MPI_COMM_WORLD = NULL;
+extern MPI_Comm MPI_COMM_SELF = NULL;
 
 //typedef MPI_Comm_impl* MPI_Comm;
 
@@ -686,9 +686,9 @@ int MPI_Init( // Initialize the MPI execution environment
 //	MPI_ERRORS_ARE_FATAL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));//{&fatal_error_};
 //	static struct MPI_Errhandler_impl_ MPI_ERRORS_RETURN    = {&no_op_error_};
 
-	MPI_COMM_NULL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
-	MPI_COMM_NULL->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
-	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_ARE_FATAL);
+//	MPI_COMM_NULL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
+//	MPI_COMM_NULL->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
+//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_ARE_FATAL);
 
 	MPI_COMM_WORLD = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
 	MPI_COMM_WORLD->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
