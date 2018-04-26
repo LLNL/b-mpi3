@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_OSTREAM $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_OSTREAM $0x.cpp -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef MPI3_OSTREAM_HPP
 #define MPI3_OSTREAM_HPP
@@ -19,6 +19,7 @@ class ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/22518
 	class streambuf : public std::stringbuf{
 		communicator& comm_;
 		std::ostream& output;
+		std::string msg_;
 		public:
 		streambuf(communicator& comm, std::ostream& strm = std::cout) : 
 			comm_(comm), output(strm)
@@ -30,31 +31,21 @@ class ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/22518
 				messages.insert(std::make_pair(0, str()));
 				for(int i = 1; i != comm_.size(); ++i){
 					match m = comm_.matched_probe(i);
-					std::string msg(m.count<char>(), ' ');
-					m.receive(msg.begin());
-				//	comm_[i] >> msg;
-					if(not msg.empty()) 
-						messages.insert(
-							std::make_pair(
-								i, //boost::icl::discrete_interval<int>::closed(i, i), 
-								msg
-							)
-						);
+					msg_.resize(m.count<char>());
+					m.receive(msg_.begin());
+					messages.insert(std::make_pair(i, msg_));
 				}
-				auto all = boost::icl::discrete_interval<int>::closed(0, comm_.size()-1);
 				for(auto& m : messages){
 					output << comm_.name();
-					if(m.first != all){
+					if((int)size(m.first) < (int)comm_.size()){
 						if(size(m.first) == 1) output << "[" << lower(m.first) << "]";
-						else output << "[" << lower(m.first) << "-" << upper(m.first) << "]";
+						else output << "[" << m.first << "]";
 					}
 					output << ": " << m.second;
 				}
-			}else{
-			//	comm_[0] << str();
-				comm_.send_n(str().begin(), str().size(), 0);
-			}
+			}else comm_.send_n(str().begin(), str().size(), 0);
 			str("");
+			output.flush();
 			comm_.barrier();
 			return 0;
 		}
@@ -71,7 +62,6 @@ public:
 
 #ifdef _TEST_MPI3_OSTREAM
 
-//#include<iostream>
 #include "../mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3;
@@ -82,7 +72,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	wout << "hello" << std::endl;
 	wout << "hello, I am rank " << world.rank() << " in " << world.name() << std::endl;
 	wout << "hello, my rank/2 is " << world.rank()/2 << std::endl;
-
+	wout << (not world.root()?"not root":"") << std::endl;
 	mpi3::communicator firsttwo = (world < 2);
 	if(firsttwo) firsttwo.name("firsttwo");
 
