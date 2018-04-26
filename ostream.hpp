@@ -9,7 +9,8 @@
 
 #include<boost/icl/split_interval_map.hpp>
 
-#include <sstream>
+#include<iostream>
+#include<sstream>
 
 namespace boost{
 namespace mpi3{
@@ -70,7 +71,7 @@ public:
 
 #ifdef _TEST_MPI3_OSTREAM
 
-#include<iostream>
+//#include<iostream>
 #include "../mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3;
@@ -82,12 +83,12 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	wout << "hello, I am rank " << world.rank() << " in " << world.name() << std::endl;
 	wout << "hello, my rank/2 is " << world.rank()/2 << std::endl;
 
-	mpi3::communicator firsttwo = (world < 3);
+	mpi3::communicator firsttwo = (world < 2);
 	if(firsttwo) firsttwo.name("firsttwo");
 
 	if(firsttwo){
 		mpi3::ostream fout(firsttwo);
-		fout << "hola, I am rank " << firsttwo.rank() << " in " << firsttwo.name() << std::endl;
+		fout << "hola, I am rank " << firsttwo.rank() << " in " << firsttwo.name() << " and also rank " << world.rank() << " in " << world.name() << std::endl;
 	}
 
 	return 0;
