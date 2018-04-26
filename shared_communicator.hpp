@@ -18,13 +18,19 @@ private:
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
+	shared_communicator(communicator&& c) : communicator(std::move(c)){}
 	inline shared_communicator(communicator const& comm, int key = 0){
 		int s = MPI_Comm_split_type(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
+		name(mpi3::processor_name());
 	}
 	friend class communicator;
 public:
 	inline shared_communicator split(int key) const{return split_shared(key);}
+	shared_communicator split(int color, int key) const{
+		return communicator::split(color, key);
+	}
+
 	template<class T = char>
 	shared_window<T> make_shared_window(mpi3::size_t size);
 	template<class T = char>
