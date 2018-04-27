@@ -1,8 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_BOOST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -np 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
-#ifndef BOOST_MPI3_SHARED_WINDOW_HPP
-#define BOOST_MPI3_SHARED_WINDOW_HPP
+#ifndef MPI3_SHARED_WINDOW_HPP
+#define MPI3_SHARED_WINDOW_HPP
 
 #include "../mpi3/shared_communicator.hpp"
 #include "../mpi3/dynamic_window.hpp"
@@ -91,6 +91,7 @@ struct array_ptr<const void>{
 template<>
 struct array_ptr<void>{
 	using T = void;
+	using element_type = T;
 	std::shared_ptr<shared_window<>> wSP_;
 	std::ptrdiff_t offset = 0;
 	array_ptr(std::nullptr_t = nullptr){}
@@ -102,6 +103,7 @@ struct array_ptr<void>{
 
 template<class T>
 struct array_ptr{
+	using element_type = T;
 	std::shared_ptr<shared_window<T>> wSP_;
 	std::ptrdiff_t offset = 0;
 	array_ptr(){}
@@ -139,8 +141,8 @@ struct array_ptr{
 		return wSP_->base(0) == other.wSP_->base(0) and offset == other.offset;
 	}
 	bool operator!=(array_ptr<T> const& other) const{return not((*this)==other);}
-	bool operator<=(array_ptr<T> const& other) const{
-		return wSP_->base(0) + offset <= other.wSP_->base(0) + other.offset;
+	bool operator<(array_ptr<T> const& other) const{
+		return wSP_->base(0) + offset < other.wSP_->base(0) + other.offset;
 	}
 };
 
@@ -166,13 +168,13 @@ template<class T> struct allocator{
 
 //	template<class ConstVoidPtr = const void*>
 	array_ptr<T> allocate(size_type n, const void* hint = 0){
-		std::cerr << "allocating " << n << std::endl; 
+	/*	std::cerr << "allocating " << n << std::endl; 
 		std::cerr << " from rank " << comm_.rank() << std::endl;
 		std::cerr << "active1 " << bool(comm_) << std::endl;
 		std::cerr << "active2 " << bool(&comm_ == MPI_COMM_NULL) << std::endl;
 		std::cerr << "size " << comm_.size() << std::endl;
-		std::cout << std::flush;
-		comm_.barrier();
+		std::cout << std::flush;*/
+	//	comm_.barrier();
 		array_ptr<T> ret;
 		if(n == 0) return ret;
 		ret.wSP_ = std::make_shared<shared_window<T>>(
@@ -209,25 +211,28 @@ struct is_root{
 	bool root(){return comm_.root();}
 };
 
-
 }
-
 
 }}
 
-#ifdef _TEST_BOOST_MPI3_SHARED_WINDOW
+#ifdef _TEST_MPI3_SHARED_WINDOW
 
 #include "../mpi3/main.hpp"
+#include "../mpi3/ostream.hpp"
 
-namespace mpi3 = boost::mpi3; using std::cout;
+namespace mpi3 = boost::mpi3; 
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
+	mpi3::ostream wout(world);
+
 	double* p;
 	double* b;
-	std::cout << (p < b) << std::endl;
+	wout << (p < b) << std::endl;
+	wout << (p >= b) << std::endl;
 
 	mpi3::shared_communicator node = world.split_shared();
+
 	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
 
 	assert(win.base() != nullptr);

@@ -1,9 +1,9 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -I${HOME}/prj/ -Wfatal-errors $0 -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "alf/boost/mpi3/environment.hpp"
-#include "alf/boost/mpi3/shared_window.hpp"
+#include "../../mpi3/environment.hpp"
+#include "../../mpi3/shared_window.hpp"
 
 #include<iostream>
 
@@ -12,8 +12,8 @@ using std::endl;
 
 namespace mpi3 = boost::mpi3;
 
-int main(int argc, char* argv[]){
-	mpi3::environment env(argc, argv);
+int main(int, char*[]){
+	mpi3::environment env;
 	auto world = env.world();
 	mpi3::shared_communicator node = world.split_shared();
 	cout<<" rank:  " <<world.rank() <<endl;
@@ -38,10 +38,12 @@ int main(int argc, char* argv[]){
 	auto data8 = A8.allocate(80);
 	auto data9 = A9.allocate(80);
 
+//	assert(data9 != nullptr);
+
 	using ptr = decltype(data1);
 	std::pointer_traits<ptr>::element_type dd = 5.6;
 	std::pointer_traits<ptr>::pointer pp = data1;
-	double* dppp = std::pointer_traits<ptr>::to_address(data1);
+//	double* dppp = std::pointer_traits<ptr>::to_address(data1);
 
 	assert(dd == 5.6);
 

@@ -5,6 +5,7 @@
 #define MPI3_SHARED_COMMUNICATOR_HPP
 
 #include "../mpi3/communicator.hpp"
+#include "../mpi3/environment.hpp" // processor_name
 
 namespace boost{
 namespace mpi3{
