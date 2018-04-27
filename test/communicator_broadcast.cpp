@@ -32,12 +32,12 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	
 	world.barrier();
 	
-	{
-		std::string s;
-		if(world.rank() == 0) s = "mystring";
-		world[0] & s; // world.broadcast_value(s);
-		assert( s == "mystring" );
-	}
+//	{
+//		std::string s;
+//		if(world.rank() == 0) s = "mystring";
+//		world[0] & s; // world.broadcast_value(s);
+//		assert( s == "mystring" );
+//	}
 
 	return 0;
 }

@@ -1502,10 +1502,27 @@ private:
 	void broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root);
 #endif
 	template<class It, typename Size>
+	auto ibroadcast_n(
+		It first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count,
+		int root
+	){
+		request r;
+		int s = MPI_Ibcast(
+			detail::data(first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			root, impl_, &r.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot ibroadcast");
+		return r;
+	}
+	template<class It, typename Size>
 	auto broadcast_n(
 		It first, 
 			detail::contiguous_iterator_tag,
-			detail::memcopyable_tag,
+			detail::basic_tag,
 		Size count,
 		int root
 	){
@@ -1515,6 +1532,16 @@ private:
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot broadcast");
+	}
+	template<class It>
+	auto ibroadcast(
+		It first, It last, 
+			detail::random_access_iterator_tag,
+		int root
+	){
+		return ibroadcast_n(
+			first, std::distance(first, last), root
+		);
 	}
 	template<class It>
 	auto broadcast(
@@ -1528,12 +1555,30 @@ private:
 	}
 public:
 	template<class It, typename Size>
+	auto ibroadcast_n(It first, Size count, int root){
+		return ibroadcast_n(
+			first,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			count, 
+			root
+		);
+	}
+	template<class It, typename Size>
 	auto broadcast_n(It first, Size count, int root){
 		return broadcast_n(
 			first,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			count, 
+			root
+		);
+	}
+	template<class It>
+	auto ibroadcast(It first, It last, int root){
+		return ibroadcast(
+			first, last,
+				detail::iterator_category_t<It>{},
 			root
 		);
 	}
