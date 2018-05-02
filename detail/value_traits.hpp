@@ -18,6 +18,7 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
+/*
 template<class T> 
 struct is_memcopyable : std::integral_constant<bool, std::is_trivially_copyable<T>{}>{};
 
@@ -34,7 +35,7 @@ struct is_memcopyable<std::pair<T1, T2>> :
         is_memcopyable<T1>{} and is_memcopyable<T2>{}
     >
 {};
-
+*/
 /*
 template<
 	class T, 
