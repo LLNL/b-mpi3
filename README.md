@@ -102,27 +102,26 @@ In this way, a parallel program looks very much like normal programs, except tha
 
 #include<iostream>
 
-namespace mpi3 = boost::mpi3; using std::cout;
+namespace mpi3 = boost::mpi3; 
+using std::cout;
 
-int mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	if(world.rank() == 0) cout << mpi3::version() << '\n';
 	return 0;
 }
 ```
 
-Note that the function has to return an integer, for example `0` on success.
-Some compilers and some implementations of MPI-3 will eventually complain if there is no return in this function.
-
 Here `world` is a communicator object that is a wrapper over MPI communicator handle.
 
-Changing the `main` program to this syntax in existing code can be challenging and too intrusive, for this reason a more traditional initialization is also possible.
+Changing the `main` program to this syntax in existing code can be too intrusive. 
+For this reason a more traditional initialization is also possible.
 The alternative initialization is done by instantiating the `mpi3::environment` object (from with the global communicator `.world()` is extracted).
 
 ```
 #include "mpi3/environment.hpp"
 int main(int argc, char** argv){
-	boost::mpi3::environment env(argc, argv);
-	auto& world = env.world(); // communicator is extracted from the environment 
+	mpi3::environment env(argc, argv);
+	auto world = env.world(); // communicator is extracted from the environment 
     // ... code here
 	return 0;
 }
@@ -130,15 +129,16 @@ int main(int argc, char** argv){
 
 ## Communicators
 
-In the last example `world` is the global communicator that passed in this function call.
+In the last example, `world` is a global communicator (not necessarely the same as `MPI_COMM_WORLD`, but a copy of it).
 There is no global communicator variable `world` that can be accessed directly in a nested function.
 The idea behind this is to avoid using the global communicators in nested functions of the program unless they are explicitly passed in the function call.
-Communicators must be usually passed by reference to nested functions.
-Even in traditional MPI it is a mistake to assume that the `COMM_WORLD` is the only available communicator.
+Communicators are usually passed by reference to nested functions.
+Even in traditional MPI it is a mistake to assume that the `MPI_COMM_WORLD` is the only available communicator.
 
 `mpi3::communicator` represent communicators with value-semantics.
 This means that `mpi3::communicator` can be copied or passed by reference.
 A communicator and their copies are different entities that compare equal.
+Communicators can be empty, in a state that is analogous to `MPI_COMM_NULL` but with proper value semantics.
 
 Like in MPI communicators can be duplicated (copied into a new instance) or split.
 They can be also compared. 
@@ -160,9 +160,9 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int argc, char* argv[], mpi3::communicator world){
-    assert(world.size() == 8); // this program is only run in 8 processes
+    assert(world.size() == 8); // this program can only be run in 8 processes
     mpi3::communicator comm = (world <= 1);
-    assert( comm.size() == 2 or comm.size() == 6);
+    assert(!comm || (comm && comm.size() == 2));
     return 0;
 }
 ```
