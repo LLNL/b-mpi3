@@ -75,12 +75,12 @@ MPI3_DECLARE_DATATYPE(cxx_double_complex, MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_CXX_DOUBLE_COMPLEX);
 
 MPI3_DECLARE_DATATYPE(float_float, MPI_CXX_FLOAT_COMPLEX);
-	static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>));
+	static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double, MPI_CXX_DOUBLE_COMPLEX);
-	static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>));
+	static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX);
-	static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>));
+	static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 MPI3_DECLARE_DATATYPE(float_int, MPI_FLOAT_INT);
 MPI3_DECLARE_DATATYPE(long_int, MPI_LONG_INT);
@@ -125,11 +125,11 @@ int main(){
 
 	using mpi3::detail::is_basic;
 
-	static_assert( is_basic<int>{} );
-	static_assert( is_basic<double>{} );
-	static_assert( is_basic<mpi3::detail::float_int>{} );
+	static_assert( is_basic<int>{}, "");
+	static_assert( is_basic<double>{}, "");
+	static_assert( is_basic<mpi3::detail::float_int>{}, "");
 
-	static_assert( not is_basic<std::string>{} );
+	static_assert( not is_basic<std::string>{}, "");
 
 }
 

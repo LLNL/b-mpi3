@@ -115,7 +115,7 @@ int mpi3::main(int, char*[], mpi3::environment&){
 		assert( f(begin(l1)) == "memcopyable_tag" );
 		std::list<double> l2;
 		assert( f(begin(l2)) == "basic_tag" );
-		static_assert(std::is_trivially_copyable<std::complex<double>>{});
+		static_assert(std::is_trivially_copyable<std::complex<double>>{}, "complex is not trivially copyable?");
 		assert( f(nullptr, mpi3::detail::value_category_t<std::tuple<double, double>>{}) == "memcopyable_tag" );
 		assert( f(nullptr, mpi3::detail::value_category_t<std::string>{}) == "memcopyable_tag" );
 	}
