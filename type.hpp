@@ -114,12 +114,12 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot lower bound");
 		return lb;
 	}
-	MPI_Aint upper_bound() const{
+/*	MPI_Aint upper_bound() const{
 		MPI_Aint ub;
 		int s = MPI_Type_ub(impl_, &ub);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot upper bound");
 		return ub;
-	}
+	}*/
 	type operator,(type const& other) const{
 		type ret;
 		int count = 2;

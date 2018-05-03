@@ -204,7 +204,10 @@ public:
 	void save(const boost::archive::class_id_reference_type&){}
 	void save(const boost::archive::class_name_type&){}
 
-	void save(const boost::serialization::collection_size_type& t){save(static_cast<const unsigned int>(t));}
+	void save(const boost::serialization::collection_size_type& t){
+		save(static_cast<      unsigned int>(t));
+//		save(static_cast<const unsigned int>(t));
+	}
 	void save(const boost::serialization::item_version_type&){}
 
 	// string types (like char*, string, etc) have special handling

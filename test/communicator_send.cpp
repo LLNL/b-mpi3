@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` -fmax-errors=2 $0 -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -O3 -Wall -Wextra -Wfatal-errors -fmax-errors=2 $0 -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "../../mpi3/communicator.hpp"
