@@ -15,9 +15,8 @@ using std::cout;
 using T = std::string;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
-
 	assert( world.size() == 2 );
-
+	
 	{
 		std::list<int> b = {3, 4, 5};
 		switch(world.rank()){
