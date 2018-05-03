@@ -31,9 +31,11 @@ We try here to give a uniform interface and abstractions for these features by m
 A typical C-call for MP looks like this,
 
 ```
-int status_send = MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+int status_send = MPI_Send(&numbers, 10, MPI_INT, 1, 0, MPI_COMM_WORLD);
+assert(status_send == MPI_SUCCESS);
 ... // concurrently with 
-int status_recv = MPI_Recv(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+int status_recv = MPI_Recv(&numbers, 10, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+assert(status_recv == MPI_SUCCESS);
 ```
 
 In principle this call can be made from a C++ program. 
@@ -50,6 +52,14 @@ Here we enumerate some of problems,
 * Only contiguous memory blocks can be used with this interface.
 * Error codes are stored and had to be checked after each function call.
 * Use of handles (such as `MPI_COMM_WORLD`), handles do not have a well defined semantics.
+
+A call of this type would be an improvement:
+
+```
+world.send(numbers.begin(), numbers.end(), 1);
+... // concurrently with 
+world.receive(numbers.begin(), numbers.end(), 0); 
+```
 
 For other examples, see here: [http://mpitutorial.com/tutorials/mpi-send-and-receive/](http://mpitutorial.com/tutorials/mpi-send-and-receive/)
 
@@ -77,6 +87,8 @@ In a system such as Red Hat, the dependencies can by installed by
 ```
 $ dnf install gcc-c++ boost-devel openmpi-devel mpich-devel
 ```
+
+The library is tested frequently against `openmpi` and `mpich`, and less frequently with `mvapich2`.
 
 ## Initialization
 
