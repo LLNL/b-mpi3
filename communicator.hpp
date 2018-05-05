@@ -53,15 +53,15 @@
 #include <boost/mpl/placeholders.hpp>
 
 // use this to avoid need for linking
-#ifdef MAKE_BOOST_SERIALIZATION_HEADER_ONLY
-#include "../../mpi3/serialization_hack/archive_exception.cpp"
-#include "../../mpi3/serialization_hack/extended_type_info.cpp"
-#include "../../mpi3/serialization_hack/extended_type_info_typeid.cpp"
-#include "../../mpi3/serialization_hack/basic_archive.cpp"
-#include "../../mpi3/serialization_hack/basic_iarchive.cpp"
-#include "../../mpi3/serialization_hack/basic_oarchive.cpp"
-#include "../../mpi3/serialization_hack/basic_iserializer.cpp"
-#include "../../mpi3/serialization_hack/basic_oserializer.cpp"
+#ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
+#include "../mpi3/serialization_hack/archive_exception.cpp"
+#include "../mpi3/serialization_hack/extended_type_info.cpp"
+#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"
+#include "../mpi3/serialization_hack/basic_archive.cpp"
+#include "../mpi3/serialization_hack/basic_iarchive.cpp"
+#include "../mpi3/serialization_hack/basic_oarchive.cpp"
+#include "../mpi3/serialization_hack/basic_iserializer.cpp"
+#include "../mpi3/serialization_hack/basic_oserializer.cpp"
 #endif
 
 #include "../mpi3/package_archive.hpp"
@@ -1612,7 +1612,7 @@ public:
 		typename = std::enable_if_t<std::is_same<V1, V2>{}>,
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto reduce_n(It1 first, Size count, It2 d_first, Op op, int root){
+	auto reduce_n(It1 first, Size count, It2 d_first, Op /*op*/, int root){
 		int s = MPI_Reduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}

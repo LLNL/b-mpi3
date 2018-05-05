@@ -1,16 +1,16 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 8s $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
-#include "alf/boost/mpi3/detail/strided.hpp"
-#include "alf/boost/mpi3/process.hpp"
+#include "../../mpi3/main.hpp"
+#include "../../mpi3/communicator.hpp"
+#include "../../mpi3/detail/strided.hpp"
+#include "../../mpi3/process.hpp"
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 
 	assert( world.size() > 1);
 	{
