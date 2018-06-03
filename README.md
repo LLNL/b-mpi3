@@ -4,7 +4,7 @@
 [comment]: # (Comment)
 
 # Boost.MPI3
-*Alfredo A. Correa*  `<correaa@llnl.gov>`
+*Alfredo A. Correa*  `<alfredo.correa@gmail.gov>`
 
 Boost.MPI3 is a C++ library wrapper for standard MPI3.
 
