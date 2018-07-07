@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -O3 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -std=c++14 -O3 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 // use this to avoid linking to -lboost_serialization
@@ -49,12 +49,15 @@ struct A{
 	}
 	template<class Archive>
 	void load(Archive & ar, const unsigned int){
+		int n;
 		ar 
 			>> name_ 
-			>> n_
+			>> n;
 		;
-		delete[] data_; 
-		data_ = new double[n_];
+		if(n != n_){
+			delete[] data_; 
+			data_ = new double[n_];
+		}
 		ar >> boost::serialization::make_array(data_, n_);
 	}
 	// end intrusive serialization

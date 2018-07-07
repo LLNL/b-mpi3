@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 `#-Wall` -Wfatal-errors $0 -o $0x.x -lboost_serialization && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
+mpicxx -O3 -std=c++14 `#-Wall` -Wfatal-errors -I$HOME/prj $0 -o $0x.x -lboost_serialization && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "alf/boost/mpi3/main.hpp"
@@ -23,7 +23,7 @@ int rand(int upper = RAND_MAX){return rand(0, upper);}
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 
 //	mpi3::shm::vector<double>::allocator_type alloc(world);
 	mpi3::shm::vector<double> v(10, world);

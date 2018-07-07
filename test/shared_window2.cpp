@@ -16,6 +16,12 @@ int main(int, char*[]){
 	mpi3::environment env;
 	auto world = env.world();
 	mpi3::shared_communicator node = world.split_shared();
+
+	std::vector<double, mpi3::intranode::allocator<double>> v(100, node);
+	
+	cout << "v = " << v[32] << std::endl;
+	return 0;
+
 	cout<<" rank:  " <<world.rank() <<endl;
 
 	mpi3::intranode::allocator<double>   A1(node);
@@ -60,5 +66,7 @@ int main(int, char*[]){
 	A7.deallocate(data7, 80);
 	A8.deallocate(data8, 80);
 	A9.deallocate(data9, 80);
+
+	
 
 }

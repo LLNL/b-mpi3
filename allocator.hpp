@@ -49,39 +49,21 @@ struct allocator{
 template<typename T>
 struct uallocator : allocator<T>{
 	template<class U> void construct(U*){
-		static_assert(std::is_trivially_destructible<T>{}, "uallocator cannot be used with non trivial types");
+		static_assert(
+			std::is_trivially_destructible<T>{}, 
+			"uallocator cannot be used with non trivial types"
+		);
 	}
 };
 
-template< class T1, class T2 >
-bool operator==( const allocator<T1>&, const uallocator<T2>& ){return true;}
+template< class T1, class T2 > constexpr 
+bool operator==(allocator<T1> const&, uallocator<T2> const&){return true;}
 
-template< class T1, class T2 >
-bool operator==( const uallocator<T1>&, const allocator<T2>& ){return true;}
-
-//template< class T1, class T2 >
-//bool operator!=( const allocator<T1>&, const allocator<T2>& ){return false;}
+template< class T1, class T2 > constexpr 
+bool operator==(uallocator<T1> const&, allocator<T2> const&){return true;}
 
 template <class T>
 constexpr std::add_const_t<T>& as_const(T& t) noexcept{return t;}
-
-#if 0
-template<
-	class ContIt, class V = typename std::iterator_traits<ContIt>::value_type, 
-	typename = std::enable_if_t<
-		   std::is_convertible<ContIt, typename std::vector<V, boost::mpi3::uallocator<V>>::const_iterator>{}
-		or std::is_convertible<ContIt, typename std::vector<V, boost::mpi3::allocator<V> >::const_iterator>{}
-//		or std::is_convertible<ContIt, typename std::vector<V                            >::const_iterator>{}
-	>
->
-decltype(auto) data(ContIt const& it){return std::addressof(*it);}
-
-template<class ContIt>
-auto cdata(ContIt const& it)
-->decltype(std::addressof(std::addressof(as_const(*data(it))))){
-	return std::addressof(std::addressof(as_const(*data(it))));
-}
-#endif
 
 }}
 

@@ -21,7 +21,8 @@ int main(int argc, char* argv[]){
 	}else if(argc==2 and argv[1] == "some"s){
 		some = {
 			"./communicator_split.cpp", 
-			"./communicator_send.cpp"
+			"./communicator_send.cpp",
+			"./communicator_reduce.cpp"
 		};
 	}
 	for(fs::path const& p: some){

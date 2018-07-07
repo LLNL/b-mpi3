@@ -18,8 +18,9 @@ namespace mpi3{
 
 template<class T /*= void*/>
 struct shared_window : window<T>{
+	shared_communicator& comm_;
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = sizeof(T)) : 
-		window<T>()
+		window<T>(), comm_{comm}
 	{
 		void* base_ptr = nullptr;
 		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
@@ -38,27 +39,10 @@ struct shared_window : window<T>{
 	mpi3::size_t size(int rank = 0) const{
 		return std::get<0>(query(rank))/sizeof(TT);
 	}
-	int disp_unit(int rank = 0) const{
-		return std::get<1>(query(rank));
-	}
+	int disp_unit(int rank = 0) const{return std::get<1>(query(rank));}
 	template<class TT = T>
 	TT* base(int rank = 0) const{return static_cast<TT*>(std::get<2>(query(rank)));}
-//	template<class T = char>
-//	void attach_n(T* base, mpi3::size_t n){MPI_Win_attach(impl_, base, n*sizeof(T));}
 };
-
-#if 0
-struct managed_shared_memory{
-	shared_window<> sw_;
-	managed_shared_memory(shared_communicator& c, int s) : sw_(c, c.rank()==0?s:0){}
-//	struct segment_manager{};
-	using segment_manager = boost::interprocess::segment_manager<char, boost::interprocess::rbtree_best_fit<boost::interprocess::mutex_family>, boost::interprocess::iset_index>;
-	segment_manager sm_;
-	managed_shared_memory::segment_manager* get_segment_manager(){
-		return &sm_;
-	}
-};
-#endif
 
 template<class T /*= char*/> 
 shared_window<T> shared_communicator::make_shared_window(
@@ -146,6 +130,15 @@ struct array_ptr{
 	}
 };
 
+template<class T, class F>
+void for_each(array_ptr<T> first, array_ptr<T> last, F&& f){
+	assert(first.wSP_->comm_ == last.wSP_->comm_);
+	auto& comm = first.wSP_->comm_;
+	// TODO do a partitioning std::for_each
+	if(first.wSP_->comm_.root()) std::for_each(first, last, std::forward<F>(f));
+	comm.barrier();
+}
+
 template<class T> struct allocator{
 	template<class U> struct rebind{typedef allocator<U> other;};
 	using value_type = T;
@@ -187,19 +180,15 @@ template<class T> struct allocator{
 		ptr.wSP_.reset();
 	}
 //	void deallocate(double* const&, std::size_t&){}
-	bool operator==(allocator const& other) const{
-		return comm_ == other.comm_;
-	}
-	bool operator!=(allocator const& other) const{
-		return not (other == *this);
-	}
+	bool operator==(allocator const& other) const{return comm_ == other.comm_;}
+	bool operator!=(allocator const& other) const{return not(other == *this);}
 	template<class U, class... Args>
 	void construct(U* p, Args&&... args){
-		std::cout << "construct: I am " << comm_.rank() << std::endl;
+	//	std::cout << "construct: I am " << comm_.rank() << std::endl;
 		::new((void*)p) U(std::forward<Args>(args)...);
 	}
 	template< class U >	void destroy(U* p){
-		std::cout << "destroy: I am " << comm_.rank() << std::endl;
+	//	std::cout << "destroy: I am " << comm_.rank() << std::endl;
 		p->~U();
 	}
 };
