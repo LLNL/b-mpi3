@@ -125,8 +125,8 @@ struct environment_base{
 	~environment_base(){}//std::cout << "environment finalized\n";}
 };
 
-inline std::string processor_name(){return detail::call<MPI_Get_processor_name>();}
-inline std::string get_processor_name(){return detail::call<MPI_Get_processor_name>();}
+inline std::string processor_name(){return detail::call<&MPI_Get_processor_name>();}
+inline std::string get_processor_name(){return detail::call<&MPI_Get_processor_name>();}
 
 class environment : environment_base{
 	public:

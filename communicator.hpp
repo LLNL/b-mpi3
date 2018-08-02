@@ -384,7 +384,7 @@ public:
 	}
 
 	enum class topology{undefined = MPI_UNDEFINED, graph = MPI_GRAPH, cartesian = MPI_CART};
-//	topology topo() const{return static_cast<topology>(call<MPI_Topo_test>());}
+//	topology topo() const{return static_cast<topology>(call<&MPI_Topo_test>());}
 	int rank() const{
 		int rank = -1;
 		if(impl_ == MPI_COMM_NULL) throw std::runtime_error("rank on null communicator");
