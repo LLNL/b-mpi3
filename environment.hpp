@@ -132,9 +132,7 @@ class environment : environment_base{
 	public:
 	environment(){initialize();}
 	environment(thread_level required){initialize_thread(required);}
-	environment(int argc, char** argv){
-		initialize(argc, argv);
-	}
+	environment(int argc, char** argv){initialize(argc, argv);}
 	environment(int argc, char** argv, thread_level required){initialize_thread(argc, argv, required);}
 	environment(environment const&) = delete;
 	environment& operator=(environment const&) = delete;

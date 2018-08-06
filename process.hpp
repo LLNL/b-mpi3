@@ -47,8 +47,8 @@ struct process{
 };
 
 template<class T>
-auto operator<<(process&& p, const T& value) -> decltype(std::declval<process&>() << value){
-	return p << value;
+auto operator<<(process&& p, const T& value) -> decltype(std::move(p << value)){
+	return std::move(p << value);
 }
 
 template<class T>
@@ -57,9 +57,9 @@ auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> 
 }
 
 template<class T>
-process&& operator<<(process& self, T const& t){
+process& operator<<(process& self, T const& t){
 	self.comm_.send_value(t, self.rank_);
-	return std::move(self);
+	return self;
 };
 
 inline process communicator::operator[](int rank){

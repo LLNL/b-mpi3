@@ -100,7 +100,7 @@ struct array_ptr{
 	T& operator*() const{return *((T*)(wSP_->base(0)) + offset);}
 	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
-//	T* get() const{return wSP_->base(0) + offset;}
+	T* get() const{return wSP_->base(0) + offset;}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
@@ -114,9 +114,7 @@ struct array_ptr{
 		ret += d;
 		return ret;
 	}
-	std::ptrdiff_t operator-(array_ptr other) const{
-		return offset - other.offset;
-	}
+	std::ptrdiff_t operator-(array_ptr other) const{return offset-other.offset;}
 	array_ptr& operator--(){--offset; return *this;}
 	array_ptr& operator++(){++offset; return *this;}
 	array_ptr& operator-=(std::ptrdiff_t d){offset -= d; return *this;}
@@ -132,6 +130,7 @@ struct array_ptr{
 
 template<class T, class F>
 void for_each(array_ptr<T> first, array_ptr<T> last, F&& f){
+//	assert(0);
 	assert(first.wSP_->comm_ == last.wSP_->comm_);
 	auto& comm = first.wSP_->comm_;
 	// TODO do a partitioning std::for_each
@@ -154,7 +153,7 @@ template<class T> struct allocator{
 	allocator() = delete;
 	~allocator() = default;
 	allocator(allocator const& other) : comm_(other.comm_){
-		std::cout << "popd size " << other.comm_.size() << '\n';
+	//	std::cout << "popd size " << other.comm_.size() << '\n';
 	}
 	template<class U>
 	allocator(allocator<U> const& other) : comm_(other.comm_){}
