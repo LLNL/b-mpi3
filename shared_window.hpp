@@ -19,7 +19,7 @@ namespace mpi3{
 template<class T /*= void*/>
 struct shared_window : window<T>{
 	shared_communicator& comm_;
-	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = sizeof(T)) : 
+	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = alignof(T)) : //sizeof(T)) : // here we assume that disp_unit is used for align
 		window<T>(), comm_{comm}
 	{
 		void* base_ptr = nullptr;
@@ -179,6 +179,10 @@ template<class T> struct allocator{
 		ptr.wSP_.reset();
 	}
 //	void deallocate(double* const&, std::size_t&){}
+	allocator& operator=(allocator const& other){
+		assert( (*this)==other ); // TODO make comm a shared_ptr
+		return *this;
+	}
 	bool operator==(allocator const& other) const{return comm_ == other.comm_;}
 	bool operator!=(allocator const& other) const{return not(other == *this);}
 	template<class U, class... Args>

@@ -32,7 +32,38 @@ struct pointer_traits : std::pointer_traits<Ptr>{
 
 namespace mpi3 = boost::mpi3;
 
+template<class A>
+struct monotonic{
+	A& a_;
+	template<class U> struct rebind{
+		using other = typename std::iterator_traits<A>::template alloc_rebind<U>;
+	};
+	using value_type = typename A::value_type;
+	using pointer = typename A::pointer;
+	using size_type = typename A::size_type;
+	pointer mark_;
+	pointer end_;
+	monotonic(monotonic::size_type s, A& a) : a_{a}{
+		mark_ = a_.allocate(s);
+		end_ = mark_ + s;
+	}
+	monotonic::pointer allocate(monotonic::size_type s, const void* hint = 0){
+		auto ret = mark_;
+		if(size_type(std::distance(mark_, end_)) < s) throw std::bad_alloc{};
+		mark_ += s;
+		return ret;
+	}
+	void deallocate(monotonic::pointer, monotonic::size_type){}
+};
+
 int mpi3::main(int, char*[], mpi3::communicator world){
+
+	std::allocator<double> stda;
+	std::allocator<double>::rebind<int>::other dd;
+	monotonic<std::allocator<double>> a(1024, stda);
+	std::vector<double, std::allocator<double>> v1(600, stda); 
+	std::vector<double, monotonic<std::allocator<double>>> v2(600, a); 
+//	std::vector<double, monotonic<std::allocator<double>>> v2(600, a); 
 
 	mpi3::shared_communicator node = world.split_shared();
 
