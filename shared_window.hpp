@@ -88,7 +88,12 @@ struct array_ptr<void>{
 template<class T>
 struct array_ptr{
 	using element_type = T;
-	std::shared_ptr<shared_window<T>> wSP_;
+	using difference_type = std::ptrdiff_t;
+	using value_type = std::decay_t<T>; // std::remove_cv_t<T>; // T until C++20?
+	using pointer = T*; // TODO self?
+	using reference = T&; //TODO fancy_reference?
+	using iterator_category = std::random_access_iterator_tag;
+	std::shared_ptr<shared_window<value_type>> wSP_;
 	std::ptrdiff_t offset = 0;
 	array_ptr(){}
 	array_ptr(std::nullptr_t){}
@@ -104,6 +109,11 @@ struct array_ptr{
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
+	operator array_ptr<T const>() const{
+		array_ptr<T const> ret;
+		ret.wSP_ = wSP_;
+		return ret;
+	}
 	operator array_ptr<void const>() const{
 		array_ptr<void const> ret;
 		ret.wSP_ = wSP_;
@@ -138,6 +148,27 @@ void for_each(array_ptr<T> first, array_ptr<T> last, F&& f){
 	comm.barrier();
 }
 
+template<typename T, typename Size, typename... Args>
+array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, Args&&...args){
+	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(&*first, n, std::forward<Args>(args)...); // change to to_pointer
+	first.wSP_->comm_.barrier();
+	return first + n;
+}
+template<typename T, typename Size>
+array_ptr<T> destroy_n(array_ptr<T> first, Size n){
+	if(first.wSP_->comm_.root()){
+		auto first_ptr = &*first;
+		for(; n > 0; (void) ++first_ptr, --n) first->~T();
+	}
+	first.wSP_->comm_.barrier();
+	return first + n;
+}
+
+//uninitialized_fill_n(
+//			this->data_, this->num_elements(), 
+//			typename array::element(std::forward<Args>(args)...)
+//		)
+
 template<class T> struct allocator{
 	template<class U> struct rebind{typedef allocator<U> other;};
 	using value_type = T;
@@ -159,7 +190,7 @@ template<class T> struct allocator{
 	allocator(allocator<U> const& other) : comm_(other.comm_){}
 
 //	template<class ConstVoidPtr = const void*>
-	array_ptr<T> allocate(size_type n, const void* hint = 0){
+	array_ptr<T> allocate(size_type n, const void* /*hint*/ = 0){
 	/*	std::cerr << "allocating " << n << std::endl; 
 		std::cerr << " from rank " << comm_.rank() << std::endl;
 		std::cerr << "active1 " << bool(comm_) << std::endl;
@@ -167,18 +198,20 @@ template<class T> struct allocator{
 		std::cerr << "size " << comm_.size() << std::endl;
 		std::cout << std::flush;*/
 	//	comm_.barrier();
-		array_ptr<T> ret;
-		if(n == 0) return ret;
+		array_ptr<T> ret = 0;
+		if(n == 0){
+			ret.wSP_ = std::make_shared<shared_window<T>>(
+				comm_.make_shared_window<T>(0)
+			);
+			return ret;
+		}
 		ret.wSP_ = std::make_shared<shared_window<T>>(
 			comm_.make_shared_window<T>(comm_.root()?n:0)
 		//	comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
 		);
 		return ret;
 	}
-	void deallocate(array_ptr<T> ptr, size_type){
-		ptr.wSP_.reset();
-	}
-//	void deallocate(double* const&, std::size_t&){}
+	void deallocate(array_ptr<T> ptr, size_type){ptr.wSP_.reset();}
 	allocator& operator=(allocator const& other){
 		assert( (*this)==other ); // TODO make comm a shared_ptr
 		return *this;
