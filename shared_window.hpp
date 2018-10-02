@@ -26,9 +26,11 @@ struct shared_window : window<T>{
 		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
 	}
-	shared_window(shared_communicator& comm, int disp_unit = sizeof(T)) : 
+	shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)
 	{}
+	shared_window(shared_window const&) = default;
+	shared_window(shared_window&& other) : window<T>{std::move(other)}, comm_{other.comm_}{}
 	using query_t = std::tuple<mpi3::size_t, int, void*>;
 	query_t query(int rank = MPI_PROC_NULL) const{
 		query_t ret;

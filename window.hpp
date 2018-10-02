@@ -32,8 +32,8 @@ struct window<void>{
 	window(communicator& comm) : window((void*)nullptr, 0, comm){}
 
 	window(window const&) = delete; // windows cannot be duplicated, see text before section 4.5 in Using Adv. MPI
-	window(window&& other) : impl_(other.impl_){ //is movable if null is not a correct state?
-		other.impl_ = MPI_WIN_NULL;
+	window(window&& other) : impl_(std::exchange(other.impl_, MPI_WIN_NULL)){ //is movable if null is not a correct state?
+//		other.impl_ = MPI_WIN_NULL;
 	}
 	window& operator=(window const&) = delete;
 	window& operator=(window&& other){
