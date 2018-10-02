@@ -1981,9 +1981,9 @@ public:
 		std::vector<int> sizes(size());
 		std::vector<int> displs(size());
 		all_gather_n(&posize, 1, sizes.begin(), 1);
-		partial_sum(begin(sizes), end(sizes), displs.begin()+1);
+		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
-		int total = std::accumulate(begin(sizes), end(sizes), 0);
+		int total = std::accumulate(sizes.begin(), sizes.end(), 0);
 		pi.resize(total);
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
