@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 -Wfatal-errors -lboost_serialization $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wfatal-errors -lboost_serialization $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
+//  (C) Copyright Alfredo A. Correa 2018.
 
 #include "alf/boost/mpi3/main.hpp"
 #include "alf/boost/mpi3/communicator.hpp"
