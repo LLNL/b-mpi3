@@ -13,7 +13,7 @@ namespace shm{
 class mutex{
 	mpi3::shared_communicator& scomm_;
 	mpi3::shm::allocator<std::atomic_flag> alloc_;//(node);
-	array_ptr<std::atomic_flag> f_;
+	mpi3::shm::pointer<std::atomic_flag> f_;
 	public:
 	mutex(mpi3::shared_communicator& scomm) : scomm_(scomm), alloc_(scomm_), f_(alloc_.allocate(1)){
 		if(scomm_.root()) alloc_.construct(&*f_, false);
@@ -41,16 +41,16 @@ class mutex{
 namespace mpi3 = boost::mpi3;
 using std::cout; 
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	mpi3::shared_communicator node = world.split_shared();
 	
 	mpi3::shm::mutex m(node);
 	using namespace std::chrono_literals;
 	{
 		std::lock_guard<mpi3::shm::mutex> guard(m);
-		std::cout << "I am rank "; 
+		cout << "I am rank "; 
 		std::this_thread::sleep_for(2s);
-		std::cout << node.rank() << '\n';
+		cout << node.rank() << '\n';
 	}
 
 	return 0;
