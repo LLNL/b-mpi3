@@ -14,6 +14,8 @@ template<class T = void>
 struct shared_window;
 
 struct shared_communicator : communicator{
+	shared_communicator() = default;
+	shared_communicator(shared_communicator const& other) = default;
 private:
 	template<class T> static auto data_(T&& t){
 		using detail::data;
@@ -27,6 +29,8 @@ private:
 	}
 	friend class communicator;
 public:
+	shared_communicator& operator=(shared_communicator const& other) = default;
+	shared_communicator& operator=(shared_communicator&& other) = default;
 	inline shared_communicator split(int key) const{return split_shared(key);}
 	shared_communicator split(int color, int key) const{
 		return communicator::split(color, key);
@@ -55,7 +59,7 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::shared_communicator node){
+int mpi3::main(int, char*[], mpi3::shared_communicator node){
 
 	auto win = node.make_shared_window<int>(node.rank()?0:1);
 	assert(win.base() != nullptr and win.size() == 1);
@@ -75,6 +79,8 @@ int mpi3::main(int argc, char* argv[], mpi3::shared_communicator node){
 //	node.reduce_in_place_n(&minmax[0], 2, mpi3::max<>{}, 0);
 	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
 	assert( -minmax[0] == minmax[1] );
+
+	return 0;
 }
 
 #endif
