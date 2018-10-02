@@ -1555,7 +1555,7 @@ private:
 	}
 public:
 	template<class It, typename Size>
-	auto ibroadcast_n(It first, Size count, int root){
+	auto ibroadcast_n(It first, Size count, int root = 0){
 		return ibroadcast_n(
 			first,
 				detail::iterator_category_t<It>{},
@@ -1565,7 +1565,7 @@ public:
 		);
 	}
 	template<class It, typename Size>
-	auto broadcast_n(It first, Size count, int root){
+	auto broadcast_n(It first, Size count, int root = 0){
 		return broadcast_n(
 			first,
 				detail::iterator_category_t<It>{},
@@ -1575,7 +1575,7 @@ public:
 		);
 	}
 	template<class It>
-	auto ibroadcast(It first, It last, int root){
+	auto ibroadcast(It first, It last, int root = 0){
 		return ibroadcast(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -1583,7 +1583,7 @@ public:
 		);
 	}
 	template<class It>
-	auto broadcast(It first, It last, int root){
+	auto broadcast(It first, It last, int root = 0){
 		return broadcast(
 			first, last,
 				detail::iterator_category_t<It>{},
