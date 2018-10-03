@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
+//  (C) Copyright Alfredo A. Correa 2018.
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
 
@@ -45,7 +46,7 @@ inline void finalize(){
 	int status = MPI_Finalize();
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot finalize");
 }
-void myterminate(){
+inline void myterminate(){
   std::cerr << "myterminate handler called" << '\n';
 	finalize();
   exit(1);  // forces abnormal termination

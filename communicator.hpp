@@ -1018,6 +1018,17 @@ public:
 	template<class It>
 	auto receive(
 		It d_first, It d_last, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		int source, int tag
+	){
+		return receive_n(std::addressof(*d_first), std::distance(d_first, d_last), source, tag);
+	//	return std::copy(buffer.begin(), buffer.end(), d_first);
+	}
+
+	template<class It>
+	auto receive(
+		It d_first, It d_last, 
 			detail::forward_iterator_tag,
 			detail::basic_tag,
 		int source, int tag
@@ -1634,19 +1645,18 @@ public:
 		class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type,
 		class P1 = decltype(detail::data(It1{})), class P2 = decltype(detail::data(It2{})),
 		typename = std::enable_if_t<std::is_same<V1, V2>{}>,
-		class PredefinedOp = predefined_operation<Op>
+		class PredefinedOp = predefined_operation<Op>,
+		typename = decltype(predefined_operation<Op>::value)
 	>
 	auto all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
 		using detail::data;
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
-	template<typename It1, typename It2, class Op = std::plus<> >
+	template<typename It1, typename It2, class Op = std::plus<>>
 	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
-
-
 	template<class T> static auto data_(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
@@ -1664,7 +1674,8 @@ public:
 	template<
 		class It1, class Size, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
-		class PredefinedOp = predefined_operation<Op>
+		class PredefinedOp = predefined_operation<Op>,
+		typename = decltype(predefined_operation<Op>::value)
 	>
 	auto all_reduce_n(It1 first, Size count, Op op){
 		return all_reduce_in_place_n(first, count, op);
@@ -1685,9 +1696,7 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_n(It1 first, Size count, Op op = {}, int root = 0){
-		if(rank() == root){
-			return reduce_in_place_n(first, count, op, root);
-		}
+		if(rank() == root) return reduce_in_place_n(first, count, op, root);
 		return reduce_n(first, 0, nullptr, op, root);
 	}
 	template<
