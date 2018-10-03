@@ -28,6 +28,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	auto sum_rank = 0;
 	world.all_reduce_n(&rank, 1, &sum_rank);
 //	world.all_reduce_n(&rank, 1, &sum_rank, std::plus<>{});
+//	world.all_reduce_n(&rank, 1, &sum_rank, mpi3::plus<>{});
 //	sum_rank = (world += rank);
 	cout << "sum " << sum_rank << std::endl;
 
