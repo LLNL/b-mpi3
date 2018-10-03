@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -O3 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "../../mpi3/main.hpp"
@@ -23,6 +23,21 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		assert(global[i] == local[i]*world.size());
 
 	assert( (world += world.rank()) == world.size()*(world.size()-1)/2 );
+
+	auto rank = world.rank();
+	auto sum_rank = 0;
+	world.all_reduce_n(&rank, 1, &sum_rank);
+//	world.all_reduce_n(&rank, 1, &sum_rank, std::plus<>{});
+//	sum_rank = (world += rank);
+	cout << "sum " << sum_rank << std::endl;
+
+	auto max_rank = -1;
+	world.all_reduce_n(&rank, 1, &max_rank, mpi3::max<>{});
+	cout << "max " << max_rank << std::endl;
+
+	auto min_rank = -1;
+	world.all_reduce_n(&rank, 1, &min_rank, mpi3::min<>{});
+	cout << "min " << min_rank << std::endl;
 
 	return 0;
 }
