@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
@@ -139,30 +139,33 @@ class environment : environment_base{
 	environment& operator=(environment const&) = delete;
 	~environment(){finalize();}
 
-	void initialize(){boost::mpi3::initialize();}
-	void initialize(thread_level required){boost::mpi3::initialize_thread(required);}
-	void initialize(int argc, char** argv){boost::mpi3::initialize(argc, argv);}
-	void initialize(int argc, char** argv, thread_level req){boost::mpi3::initialize_thread(argc, argv, req);}
+	static inline void initialize(){mpi3::initialize();}
+	static inline void initialize(thread_level required){mpi3::initialize_thread(required);}
+	static inline void initialize(int argc, char** argv){mpi3::initialize(argc, argv);}
+	static inline void initialize(int argc, char** argv, thread_level req){mpi3::initialize_thread(argc, argv, req);}
 
-	void finalize(){boost::mpi3::finalize();}
+	static inline void finalize(){mpi3::finalize();}
 
-	bool initialized() const{return boost::mpi3::initialized();}
-	bool finalized() const{return boost::mpi3::finalized();}
+	static inline bool initialized(){return mpi3::initialized();}
+	static inline bool finalized(){return mpi3::finalized();}
 
 	operator bool() const{return initialized();}
 	bool is_thread_main() const{return boost::mpi3::is_thread_main();}
 	thread_level query_thread() const{return boost::mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-	communicator self() const{
+	communicator self() const{ // returns a copy!
 		return communicator{MPI_COMM_SELF};
 	}
-	communicator world() const{
-		communicator ret{MPI_COMM_WORLD};
-		ret.name("world");
+	static inline communicator& get_world_instance(){
+		assert(initialized());
+		static communicator instance{MPI_COMM_WORLD};
+		return instance;
+	}
+	communicator world() const{ // returns a copy!
+		communicator ret{get_world_instance()}; ret.name("world");
 		return ret;
 	}
-
 	std::string processor_name() const{return get_processor_name();}
 	std::string get_processor_name() const{return mpi3::get_processor_name();}
 
@@ -179,9 +182,16 @@ class environment : environment_base{
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int main(int argc, char** argv){
-	mpi3::environment env(argc, argv);
-	[[maybe_unused]] auto world = env.world();
+int main(int argc, char* argv[]){
+	mpi3::environment::initialize(argc, argv); // same as MPI_Init(...);
+	{
+		mpi3::communicator world = mpi3::environment::get_world_instance(); //make a copy
+	}
+	mpi3::environment::finalize(); // same as MPI_Finalize()
+	
+	// or better:
+//	mpi3::environment env(argc, argv);
+//	auto world = env.world();
 	return 0;
 }
 #endif
