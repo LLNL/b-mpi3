@@ -1033,7 +1033,7 @@ public:
 			detail::basic_tag,
 		int source, int tag
 	){
-		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(std::distance(d_first, d_last));	
+		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(std::distance(d_first, d_last));
 		receive_n(buffer.begin(), buffer.size(), source, tag);
 		return std::copy(buffer.begin(), buffer.end(), d_first);
 	}
@@ -2063,7 +2063,7 @@ public:
 		std::vector<int> displs(size());
 		int c = count;
 		all_gather_n(&c, 1, counts.begin());
-		partial_sum(begin(counts), end(counts), displs.begin()+1);
+		partial_sum(counts.begin(), counts.end(), displs.begin()+1);
 		return all_gatherv_n(first, count, d_first, counts.begin(), displs.begin());
 	}
 	template<class It1, typename Size1, class It2, class Size2>
@@ -2084,9 +2084,9 @@ public:
 		std::vector<int> sizes(size());
 		std::vector<int> displs(size());
 		all_gather_n(&posize, 1, sizes.begin(), 1);
-		partial_sum(begin(sizes), end(sizes), displs.begin()+1);
+		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
-		int total = std::accumulate(begin(sizes), end(sizes), 0);
+		int total = std::accumulate(sizes.begin(), sizes.end(), 0);
 		pi.resize(total);
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
@@ -2273,9 +2273,9 @@ public:
 		std::vector<int> sizes(rank()==root?size():0);
 		std::vector<int> displs(rank()==root?size():0);
 		gather_n(&posize, 1, sizes.begin(), 1, root);
-		partial_sum(begin(sizes), end(sizes), displs.begin()+1);
+		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
-		int total = std::accumulate(begin(sizes), end(sizes), 0);
+		int total = std::accumulate(sizes.begin(), sizes.end(), 0);
 		pi.resize(total);
 		gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data(), root);
 		if(rank() == root){
