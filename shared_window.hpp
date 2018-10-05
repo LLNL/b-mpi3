@@ -24,7 +24,7 @@ struct shared_window : window<T>{
 	{
 		void* base_ptr = nullptr;
 		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create shared window");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create shared window"};
 	}
 	shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)
@@ -70,6 +70,7 @@ struct array_ptr<const void>{
 	array_ptr(std::nullptr_t = nullptr){}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
+	array_ptr& operator=(std::nullptr_t){wSP_.reset(); return *this;}
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
 };
@@ -83,6 +84,7 @@ struct array_ptr<void>{
 	array_ptr(std::nullptr_t = nullptr){}
 	array_ptr(array_ptr const& other) = default;
 	array_ptr& operator=(array_ptr const& other) = default;
+	array_ptr& operator=(std::nullptr_t){wSP_.reset(); return *this;}
 	bool operator==(std::nullptr_t) const{return (bool)wSP_;}
 	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
 };
@@ -104,6 +106,8 @@ struct array_ptr{
 //	array_ptr(T* const& other = nullptr) : offset(0){}
 //	array_ptr(T* const& other = nullptr) : offset(0){}
 	array_ptr& operator=(array_ptr const& other) = default;
+	array_ptr& operator=(std::nullptr_t){return *this;}
+	~array_ptr() = default;
 	T& operator*() const{return *((T*)(wSP_->base(0)) + offset);}
 	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
@@ -146,19 +150,19 @@ void for_each(array_ptr<T> first, array_ptr<T> last, F&& f){
 	assert(first.wSP_->comm_ == last.wSP_->comm_);
 	auto& comm = first.wSP_->comm_;
 	// TODO do a partitioning std::for_each
-	if(first.wSP_->comm_.root()) std::for_each(first, last, std::forward<F>(f));
+	if(first != last and first.wSP_->comm_.root()) std::for_each(first, last, std::forward<F>(f));
 	comm.barrier();
 }
 
 template<typename T, typename Size, typename... Args>
 array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, Args&&...args){
-	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(&*first, n, std::forward<Args>(args)...); // change to to_pointer
+	if(n!=0 and first.wSP_->comm_.root()) std::uninitialized_fill_n(&*first, n, std::forward<Args>(args)...); // change to to_pointer
 	first.wSP_->comm_.barrier();
 	return first + n;
 }
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
-	if(first.wSP_->comm_.root()){
+	if(n != 0 and first.wSP_->comm_.root()){
 		auto first_ptr = &*first;
 		for(; n > 0; (void) ++first_ptr, --n) first->~T();
 	}
