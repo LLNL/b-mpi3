@@ -142,28 +142,31 @@ struct array_ptr{
 	bool operator<(array_ptr<T> const& other) const{
 		return wSP_->base(0) + offset < other.wSP_->base(0) + other.offset;
 	}
+	friend pointer to_address(array_ptr const& ap){return ap.wSP_->base(0) + ap.offset;}
 };
 
 template<class T, class F>
-void for_each(array_ptr<T> first, array_ptr<T> last, F&& f){
+F for_each(array_ptr<T> first, array_ptr<T> last, F f){
 //	assert(0);
+	if(first == last) return f;
 	assert(first.wSP_->comm_ == last.wSP_->comm_);
 	auto& comm = first.wSP_->comm_;
 	// TODO do a partitioning std::for_each
-	if(first != last and first.wSP_->comm_.root()) std::for_each(first, last, std::forward<F>(f));
+	if(first.wSP_->comm_.root()) std::for_each(to_address(first), to_address(last), f);
 	comm.barrier();
 }
 
 template<typename T, typename Size, typename... Args>
 array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, Args&&...args){
-	if(n!=0 and first.wSP_->comm_.root()) std::uninitialized_fill_n(&*first, n, std::forward<Args>(args)...); // change to to_pointer
+	if(n == 0) return first;
+	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
 	first.wSP_->comm_.barrier();
 	return first + n;
 }
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
-	if(n != 0 and first.wSP_->comm_.root()){
-		auto first_ptr = &*first;
+	if(first.wSP_->comm_.root()){
+		auto first_ptr = to_address(first);
 		for(; n > 0; (void) ++first_ptr, --n) first->~T();
 	}
 	first.wSP_->comm_.barrier();
