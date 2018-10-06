@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x ddd $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
@@ -65,13 +65,9 @@ inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
 }
 //static MPI_Errhandler throw_error_;
 inline void initialize(){
-	int status = MPI_Init(nullptr, nullptr);
+	int s = MPI_Init(nullptr, nullptr);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
 	std::set_terminate(finalize);
-//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
-	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
-//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
-	if(status != MPI_SUCCESS) throw std::runtime_error("cannot initialize");
 }
 inline thread_level initialize_thread(thread_level required){
 	int provided;
@@ -155,11 +151,15 @@ class environment : environment_base{
 
 //	communicator& null() const{return mpi3::communicator::null;}
 	communicator self() const{ // returns a copy!
+		MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
 		return communicator{MPI_COMM_SELF};
 	}
 	static inline communicator& get_world_instance(){
 		assert(initialized());
+		MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 		static communicator instance{MPI_COMM_WORLD};
+		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+		//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
 		return instance;
 	}
 	communicator world() const{ // returns a copy!
@@ -181,6 +181,8 @@ class environment : environment_base{
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
+
+
 
 int main(int argc, char* argv[]){
 	mpi3::environment::initialize(argc, argv); // same as MPI_Init(...);
