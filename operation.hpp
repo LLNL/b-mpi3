@@ -21,7 +21,12 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 	public:
 	template<class F, typename = std::enable_if_t<not std::is_same<std::decay_t<F>, operation>{}> >
 	operation(F&& f, bool commutative) : operation(detail::uninitialized{}){
-		MPI_Op_create(reinterpret_cast<void (*)(void*, void*, int*, int*)>(f), commutative, &impl_);
+		MPI_Op_create(
+			&f,
+		//	reinterpret_cast<void (*)(void*, void*, int*, int*)>(&f),
+			commutative, 
+			&impl_
+		);
 	}
 
 	operation() = delete;
@@ -54,10 +59,12 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 //operation const maximum(operation::code::maximum);
 //operation const minimum(operation::code::minimum);
 
-template<class T>
+template<class T = void>
 using plus = std::plus<T>;
-template<class T>
+template<class T = void>
 using minus = std::minus<T>;
+template<class T = void>
+using multiplies = std::multiplies<T>;
 
 template<class T = void> struct min{
 	T const& operator()(T const& t1, T const& t2) const{return std::min(t1, t2);}
@@ -77,8 +84,8 @@ template<class Op> struct predefined_operation;
 
 #define BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(CppoP, MpinamE, NamE) \
 template<> struct predefined_operation<CppoP>{ \
-	constexpr operator MPI_Op() const{return value;} \
-	static constexpr MPI_Op value = MpinamE; \
+/*	constexpr*/ operator MPI_Op() const{return MpinamE;} \
+/*	static constexpr MPI_Op value = MpinamE;*/ \
 }; \
 using NamE = predefined_operation<CppoP>;
 

@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wfatal-errors -D_TEST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
+//  (C) Copyright Alfredo A. Correa 2018.
 #ifndef MPI3_SHARED_WINDOW_HPP
 #define MPI3_SHARED_WINDOW_HPP
 
@@ -147,7 +148,6 @@ struct array_ptr{
 
 template<class T, class F>
 F for_each(array_ptr<T> first, array_ptr<T> last, F f){
-//	assert(0);
 	if(first == last) return f;
 	assert(first.wSP_->comm_ == last.wSP_->comm_);
 	auto& comm = first.wSP_->comm_;

@@ -1,6 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
 (echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_TYPE $0x.cpp -o $0x.x -lboost_serialization && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
+//  (C) Copyright Alfredo A. Correa 2018.
+
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
 
@@ -105,18 +107,24 @@ public:
 	MPI_Aint extent() const{
 		MPI_Aint lb, ext;
 		int s = MPI_Type_get_extent(impl_, &lb, &ext);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot extent");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot extent"};
 		return ext;
 	}
 	MPI_Aint lower_bound() const{
 		MPI_Aint lb, ext;
 		int s = MPI_Type_get_extent(impl_, &lb, &ext);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot lower bound");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot lower bound"};
 		return lb;
 	}
-/*	MPI_Aint upper_bound() const{
+	MPI_Aint upper_bound() const{
+		MPI_Aint lb, ext;
+		int s = MPI_Type_get_extent(impl_, &lb, &ext);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot lower bound"};
+		return lb + ext;
+	}
+/*	MPI_Aint upper_bound() const{ // this function is replaced by get_extent
 		MPI_Aint ub;
-		int s = MPI_Type_ub(impl_, &ub);
+		int s = MPI_Type_ub(impl_, &ub); // http://www.mpi.deino.net/mpi_functions/MPI_Type_ub.html
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot upper bound");
 		return ub;
 	}*/

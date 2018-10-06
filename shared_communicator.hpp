@@ -15,7 +15,8 @@ struct shared_window;
 
 struct shared_communicator : communicator{
 	shared_communicator() = default;
-	shared_communicator(shared_communicator const& other) = default;
+	shared_communicator(shared_communicator&&) = default;
+	shared_communicator(shared_communicator const&) = default;
 private:
 	template<class T> static auto data_(T&& t){
 		using detail::data;

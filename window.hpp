@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
+//  (C) Copyright Alfredo A. Correa 2018.
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
 
@@ -39,8 +40,9 @@ struct window<void>{
 	window& operator=(window&& other){
 		if(&other == this) return *this;
 		if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);
-		impl_ = other.impl_;
-		other.impl_ = MPI_WIN_NULL;
+		impl_ = std::exchange(other.impl_, MPI_WIN_NULL);
+	//	impl_ = other.impl_;
+	//	other.impl_ = MPI_WIN_NULL;
 		return *this;
 	}
 	~window(){if(impl_ != MPI_WIN_NULL) MPI_Win_free(&impl_);}

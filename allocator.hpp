@@ -35,7 +35,7 @@ struct allocator{
 	using pointer = T*;
 
 	allocator() = default;
-	template<class U> allocator(allocator<U> const& other){}
+	template<class U> allocator(allocator<U> const&){}
 	pointer allocate(size_type n){
 		if(n <= max_size())
 			if(void* ptr = mpi3::malloc(n*sizeof(T)))

@@ -46,8 +46,8 @@ template<class T> struct basic_datatype;
 
 #define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
 template<> struct basic_datatype<TypE>{ \
-	constexpr operator MPI_Datatype() const{return value;} \
-	static constexpr MPI_Datatype value = MpiiD; \
+/*	constexpr*/ operator MPI_Datatype() const{return MpiiD;} \
+/*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
 
 // basic data types http://beige.ucs.indiana.edu/I590/node100.html

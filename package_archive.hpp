@@ -188,9 +188,9 @@ public:
 	template<class T>
 	void save(const T& t){basic_package_oprimitive::save(t);}
 #if(BOOST_VERSION < 106300)
-	void save(boost::serialization::array<double>& t){
+	void save(boost::serialization::array<double>&){
 #else
-	void save(boost::serialization::array_wrapper<double>& t){
+	void save(boost::serialization::array_wrapper<double>&){
 #endif
 		assert(0);
 	}
@@ -294,6 +294,10 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 };
 
 }}
+
+// maybe needed for optimization to take effect?
+// BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::archive::package_oarchive)
+
 
 namespace boost{
 namespace mpi3{

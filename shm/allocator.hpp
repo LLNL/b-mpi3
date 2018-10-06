@@ -12,6 +12,7 @@ namespace shm{
 
 template<class... As>
 using allocator = mpi3::intranode::allocator<As...>;
+
 template<class T>
 using pointer = mpi3::intranode::array_ptr<T>;
 
