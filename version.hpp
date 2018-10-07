@@ -9,39 +9,47 @@
 
 #include<boost/operators.hpp>
 
+#include<cassert>
 #include<tuple> // tie
 #include<iostream>
 
 namespace boost{
 namespace mpi3{
 
-struct version_t : private boost::totally_ordered<version_t>{
+struct version_t{// : private boost::totally_ordered<version_t>{
 	int major;
 	int minor;
-	version_t() = default;
-	version_t(int major, int minor = 0) : major{major}, minor{minor}{}
+	constexpr version_t() : major{}, minor{}{}
+	constexpr version_t(int major, int minor = 0) : major{major}, minor{minor}{}
 	friend std::ostream& operator<<(std::ostream& os, version_t const& self){
 		return os << self.major <<'.'<< self.minor;
 	}
-	bool operator<(version_t const& other) const{
+	constexpr bool operator<(version_t const& other) const{
 		return std::tie(major, minor) < std::tie(other.major, other.minor);
 	}
-	bool operator==(version_t const& other) const{
-		return std::tie(major, minor) == std::tie(other.major, other.minor);
-	}
+	constexpr bool operator>(version_t const& o) const{return o < *this;}
+	constexpr bool operator==(version_t const& o) const{return not operator<(o) and not operator>(o);}
+	constexpr bool operator>=(version_t const& o) const{return operator>(o) or operator==(o);}
+	constexpr bool operator<=(version_t const& o) const{return operator<(o) or operator==(o);}
 };
+
+constexpr version_t Version(){
+	version_t ret{MPI_VERSION, MPI_SUBVERSION};
+	return ret;
+}
+
+version_t version(){
+	version_t ret;
+	MPI_Get_version(&ret.major, &ret.minor);
+	assert( ret == Version() );
+	return ret;
+}
 
 std::string library_version(){
 	int len;
     char mpi_lib_ver[MPI_MAX_LIBRARY_VERSION_STRING];
     MPI_Get_library_version(mpi_lib_ver, &len);
     return std::string(mpi_lib_ver, len);
-}
-
-version_t version(){
-	version_t ret;
-	MPI_Get_version(&ret.major, &ret.minor);
-	return ret;
 }
 
 }}
@@ -52,17 +60,9 @@ version_t version(){
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
-
-#if 0
-int main(){
-	cout<< mpi3::library_version() <<'\n';
-#if __clang__
-	cout<< "clang" <<'\n';
-#endif
-}
-#endif
-#if 1
 int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+	assert(( mpi3::version() == mpi3::Version() ));
+	assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
 	assert(( mpi3::version() == mpi3::version_t{3, 1} ));
 	assert(( mpi3::version() <  mpi3::version_t{3, 2} ));
 	assert(( mpi3::version() >  mpi3::version_t{3, 0} ));
@@ -73,13 +73,8 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 		;
 	}
 //	cout << mpi3::library_version() <<'\n';
-#if __clang__
-	std::cout <<"dsadasda" << std::endl;
-#endif
 	return 0;
 }
-#endif
-
 #endif
 #endif
 
