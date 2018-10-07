@@ -51,6 +51,12 @@ std::string library_version(){
     MPI_Get_library_version(mpi_lib_ver, &len);
     return std::string(mpi_lib_ver, len);
 }
+std::string library_version_short(){
+	std::string ret = library_version();
+	auto found = ret.find('\n');
+	if(found != std::string::npos) return std::string(ret.c_str(), found);
+	return ret;
+}
 
 }}
 
@@ -60,7 +66,7 @@ std::string library_version(){
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 	assert(( mpi3::version() == mpi3::Version() ));
 	assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
 	assert(( mpi3::version() == mpi3::version_t{3, 1} ));
@@ -72,7 +78,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 			<<"mpi version "<< mpi3::version() <<'\n'
 		;
 	}
-//	cout << mpi3::library_version() <<'\n';
+	cout << mpi3::library_version_short() <<'\n';
 	return 0;
 }
 #endif
