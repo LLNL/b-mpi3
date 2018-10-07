@@ -25,6 +25,12 @@ struct wall_clock{
 	static duration tick() noexcept{return duration{wall_tick()};}
 };
 
+template<class Duration = std::chrono::duration<double>>
+void wall_sleep_for(Duration d){
+	auto then = wall_clock::now();
+	while(wall_clock::now() - then < d){}
+}
+
 }}
 
 #ifdef _TEST_BOOST_MPI3_WALL_CLOCK

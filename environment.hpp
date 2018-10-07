@@ -155,8 +155,10 @@ class environment{
 	std::string processor_name() const{return get_processor_name();}
 	std::string get_processor_name() const{return mpi3::get_processor_name();}
 
-	static auto wall_time(){return mpi3::wall_time();}
-	static auto wall_tick(){return mpi3::wall_tick();}
+	inline static auto wall_time(){return mpi3::wall_time();}
+	inline static auto wall_tick(){return mpi3::wall_tick();}
+	template<class Duration = wall_clock::duration>
+	static auto wall_sleep_for(Duration d){return mpi3::wall_sleep_for(d);}
 };
 
 }}
