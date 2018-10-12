@@ -5,36 +5,30 @@
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
 
-#include "../mpi3/detail/basic_communicator.hpp"
-#include "../mpi3/info.hpp"
-#include "../mpi3/port.hpp"
-#include "../mpi3/status.hpp"
-#include "../mpi3/operation.hpp"
-#include "../mpi3/handle.hpp"
-#include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/communication_mode.hpp"
 #include "../mpi3/equality.hpp"
-
-#include "../mpi3/message.hpp"
-#include "../mpi3/request.hpp"
 #include "../mpi3/generalized_request.hpp"
+#include "../mpi3/handle.hpp"
+#include "../mpi3/info.hpp"
+#include "../mpi3/message.hpp"
+#include "../mpi3/operation.hpp"
+#include "../mpi3/port.hpp"
+#include "../mpi3/request.hpp"
+#include "../mpi3/status.hpp"
 #include "../mpi3/type.hpp"
 
+#include "../mpi3/detail/basic_communicator.hpp"
+#include "../mpi3/detail/buffer.hpp"
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/detail/iterator.hpp"
-
 #include "../mpi3/detail/value_traits.hpp"
-#include "../mpi3/detail/buffer.hpp"
-//#include "../mpi3/detail/is_memcopyable.hpp"
 #include "../mpi3/detail/strided.hpp"
 #include "../mpi3/detail/package.hpp"
 
-//#include "../mpi3/exception.hpp"
-
+#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-#include <boost/optional.hpp>
-//#include <boost/range/irange.hpp>
+#include <boost/optional.hpp> // TODO replace by std::optional (c++17)
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_array.hpp>
 
@@ -54,7 +48,7 @@
 
 #include <boost/mpl/placeholders.hpp>
 
-// use this to avoid need for linking
+// use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
 #include "../mpi3/serialization_hack/archive_exception.cpp"
 #include "../mpi3/serialization_hack/extended_type_info.cpp"
@@ -68,21 +62,22 @@
 
 #include "../mpi3/package_archive.hpp"
 
-#include<numeric> // std::accumulate
 #include<cassert>
-#include<string>
 #include<iostream>
-#include<vector>
-#include<map>
 #include<iterator> // iterator_traits
-#include<type_traits>
 #include<limits>
+#include<map>
+#include<numeric> // std::accumulate
+#include<string>
 #include<thread>
+#include<type_traits>
+#include<vector>
 
 namespace boost{
 namespace mpi3{
 
 class environment;
+class group;
 
 using boost::optional;
 
@@ -107,7 +102,6 @@ struct request;
 struct send_request;
 struct receive_request;
 
-struct group;
 
 struct FILE;
 
@@ -340,6 +334,9 @@ public:
 		int s = MPI_Comm_remote_size(impl_, &ret);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot remote size");
 		return ret;
+	}
+	communicator reversed() const{
+		return split(0, size() - rank());
 	}
 //	template<class Graph> 
 //	graph_communicator make_graph(Graph const& g) const;

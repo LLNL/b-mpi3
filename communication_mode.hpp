@@ -1,6 +1,11 @@
-#ifndef ALF_BOOST_MPI3_DETAIL_COMMUNICATION_MODE
-#define ALF_BOOST_MPI3_DETAIL_COMMUNICATION_MODE
+//  (C) Copyright Alfredo A. Correa 2018.
+#ifndef MPI3_DETAIL_COMMUNICATION_MODE
+#define MPI3_DETAIL_COMMUNICATION_MODE
+
+#define OMPI_SKIP_MPICXX 1//https://github.com/open-mpi/ompi/issues/5157
 #include <mpi.h>
+
+#include<utility> // forward
 
 namespace boost{
 namespace mpi3{

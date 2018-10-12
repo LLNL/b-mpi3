@@ -95,13 +95,13 @@
 namespace boost{
 namespace mpi3{
 
-struct group{
+class group{
 	MPI_Group impl_ = MPI_GROUP_NULL;
+public:
 	MPI_Group& operator&(){return impl_;}
 	MPI_Group const& operator&() const{return impl_;}
-//	MPI_Group operator&() const{return impl_;}
 	explicit group() : impl_{MPI_GROUP_EMPTY}{}
-	group(communicator& c){
+	group(communicator const& c){
 		int s = MPI_Comm_group(&c, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot construct group"};
 	}
@@ -128,6 +128,7 @@ struct group{
 		group ret;
 		int s = MPI_Group_excl(impl_, il.size(), il.begin(), &ret.impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error{"rank not available"};
+		return ret;
 	}
 	int rank() const{
 		int rank = -1; 
@@ -140,6 +141,13 @@ struct group{
 		int s = MPI_Group_size(impl_, &size);
 		if(s != MPI_SUCCESS) throw std::runtime_error{"rank not available"};
 		return size;
+	}
+	group sliced(int first, int last, int stride = 1) const{
+		int ranges[][3] = {{first, last - 1, stride}};
+		group ret;
+		int s = MPI_Group_range_incl(impl_, 1, ranges, &ret.impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot slice"};
+		return ret;
 	}
 	bool empty() const{return size() == 0;}
 	friend mpi3::equality compare(group const& self, group const& other){
@@ -173,6 +181,12 @@ struct group{
 		int s = MPI_Group_union(self.impl_, other.impl_, &ret.impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot union"};
 		return ret;
+	}
+	int translate_rank(int rank, group const& other) const{
+		int out;
+		int s = MPI_Group_translate_ranks(impl_, 1, &rank, other.impl_, &out);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"error translating"};
+		return out;
 	}
 #if 0
 //	group(communicator const& comm){MPI_Comm_group(&comm, &impl_);}
@@ -268,14 +282,14 @@ public:
 
 inline communicator communicator::create(struct group const& g) const{
 	communicator ret;
-	int s = MPI_Comm_create(impl_, g.impl_, &ret.impl_);
+	int s = MPI_Comm_create(impl_, &g, &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot crate group"};
 	return ret;
 }
 
 inline communicator communicator::create_group(struct group const& g, int tag = 0) const{
 	communicator ret;
-	int s = MPI_Comm_create_group(impl_, g.impl_, tag, &ret.impl_);
+	int s = MPI_Comm_create_group(impl_, &g, tag, &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create_group"};
 	return ret;
 }
