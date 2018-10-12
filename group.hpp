@@ -114,10 +114,22 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot copy construct"};
 	}*/
 	group(group&& g) : impl_{std::exchange(g.impl_, MPI_GROUP_EMPTY)}{}
-	void swap(group& other){std::swap(impl_, other.impl_);}
-	~group(){
-		if(impl_ != MPI_GROUP_EMPTY) MPI_Group_free(&impl_);
+	group& operator=(group const&) = delete;
+	group& operator=(group&& other){
+		swap(other);
+		other.clear();
+		return *this;
 	}
+	void swap(group& other){std::swap(impl_, other.impl_);}
+	void clear(){
+		if(impl_ != MPI_GROUP_EMPTY){
+			int s = MPI_Group_free(&impl_);
+			assert( s == MPI_SUCCESS ); // don't want to throw from ctor
+		//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot free group"};
+		}
+		impl_ = MPI_GROUP_EMPTY;
+	}
+	~group(){clear();}
 	group include(std::initializer_list<int> il){
 		group ret;
 		int s = MPI_Group_incl(impl_, il.size(), il.begin(), &ret.impl_);
