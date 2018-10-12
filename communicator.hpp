@@ -2591,12 +2591,9 @@ public:
 	communicator create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		return intercommunicator_create(local_leader, peer, remote_leader, tag);
 	}
-	communicator create(struct group const& g) const;
-	communicator create_group(struct group const& g, int tag) const;
+	communicator create(group const& g) const;
+	communicator create_group(group const& g, int tag) const;
 	FILE* fopen(const char* filename, int amode = MPI_MODE_RDWR | MPI_MODE_CREATE);
-
-//communicator communicator::world{MPI_COMM_WORLD};
-//communicator communicator::self{MPI_COMM_SELF};
 
 inline std::string const& name(communicator::topology const& t){
 	static std::map<communicator::topology, std::string> const names = {

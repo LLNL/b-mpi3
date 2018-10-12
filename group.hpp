@@ -18,81 +18,6 @@
 #include<numeric> // iota
 #include<vector>
 
-#if 0
-#include "../mpi3/detail/basic_communicator.hpp"
-#include "../mpi3/info.hpp"
-#include "../mpi3/port.hpp"
-#include "../mpi3/status.hpp"
-#include "../mpi3/operation.hpp"
-#include "../mpi3/handle.hpp"
-#include "../mpi3/detail/datatype.hpp"
-#include "../mpi3/communication_mode.hpp"
-
-#include "../mpi3/message.hpp"
-#include "../mpi3/request.hpp"
-#include "../mpi3/generalized_request.hpp"
-#include "../mpi3/type.hpp"
-
-#include "../mpi3/detail/datatype.hpp"
-#include "../mpi3/detail/iterator.hpp"
-
-#include "../mpi3/detail/value_traits.hpp"
-#include "../mpi3/detail/buffer.hpp"
-//#include "../mpi3/detail/is_memcopyable.hpp"
-#include "../mpi3/detail/strided.hpp"
-#include "../mpi3/detail/package.hpp"
-
-//#include "../mpi3/exception.hpp"
-
-
-
-#include <boost/optional.hpp>
-//#include <boost/range/irange.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_array.hpp>
-
-#define BOOST_PACKAGE_ARCHIVE_SOURCE
-
-#include <boost/archive/detail/common_oarchive.hpp>
-#include <boost/archive/detail/common_iarchive.hpp>
-#include <boost/archive/basic_streambuf_locale_saver.hpp>
-#include <boost/archive/archive_exception.hpp>
-#include <boost/archive/detail/auto_link_archive.hpp>
-#include <boost/archive/detail/abi_prefix.hpp> // must be the last header
-
-#include <boost/serialization/item_version_type.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/array.hpp>
-#include <boost/serialization/is_bitwise_serializable.hpp>
-
-#include <boost/mpl/placeholders.hpp>
-
-// use this to avoid need for linking
-#ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
-#include "../mpi3/serialization_hack/archive_exception.cpp"
-#include "../mpi3/serialization_hack/extended_type_info.cpp"
-#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"
-#include "../mpi3/serialization_hack/basic_archive.cpp"
-#include "../mpi3/serialization_hack/basic_iarchive.cpp"
-#include "../mpi3/serialization_hack/basic_oarchive.cpp"
-#include "../mpi3/serialization_hack/basic_iserializer.cpp"
-#include "../mpi3/serialization_hack/basic_oserializer.cpp"
-#endif
-
-#include "../mpi3/package_archive.hpp"
-
-#include<numeric> // std::accumulate
-#include<cassert>
-#include<string>
-#include<iostream>
-#include<vector>
-#include<map>
-#include<iterator> // iterator_traits
-#include<type_traits>
-#include<limits>
-#include<thread>
-#endif
-
 namespace boost{
 namespace mpi3{
 
@@ -111,8 +36,7 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot get group"};
 	}
 	group(group const& d) = delete;
-/*		: group()
-	{
+/*	{
 		std::vector<int> v(d.size());
 		std::iota(v.begin(), v.end(), 0);
 		int s = MPI_Group_incl(d.impl_, v.size(), v.data(), &impl_);
@@ -206,106 +130,16 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error{"error translating"};
 		return out;
 	}
-#if 0
-//	group(communicator const& comm){MPI_Comm_group(&comm, &impl_);}
-//	template<class ContiguousIntIterator>
-//	group(group const& other, ContiguousIntIterator ranks_begin, std::size_t n){
-//		MPI_Group_incl(other.impl_, n, ranks_begin, &impl_);
-//	}
-//	group(group const& other, std::vector<int> ranks){// : group(other, ranks.data(), ranks.size()){
-//		MPI_Group_incl(other.impl_, ranks.size(), ranks.data(), &impl_);
-//	}
-//	bool is_null() const{return MPI_GROUP_NULL == impl_;}
-//	operator bool() const{return not is_null();}
-	
-
-	std::vector<int> translate_ranks(std::vector<int> const& ranks1, group const& other) const{
-		std::vector<int> ranks2(ranks1.size());
-		int s = MPI_Group_translate_ranks(impl_, ranks1.size(), ranks1.data(), other.impl_, ranks2.data());
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot translate_ranks"};
-		return ranks2;
-	}
-	std::vector<int> translate_ranks(group const& other) const{
-		std::vector<int> ranks1(other.size());
-		std::iota(ranks1.begin(), ranks1.end(), 0);
-		return translate_ranks(ranks1, other);
-	}
-public:
-	template<class Iterator, class Size>
-	group include_n(Iterator it, Size count) const{
-		return include_n_dispatch(typename std::iterator_traits<Iterator>::value_type{}, detail::iterator_category<Iterator>{}, it, count); 
-	}
-	template<class Iterator>
-	group include(Iterator first, Iterator last) const{return include_n(first, std::distance(first, last));}
-	template<class Range>
-	group include(Range const& r) const{using std::begin; using std::end; return include(begin(r), end(r));}
-private:
-	template<class Iterator, class Size>
-	group include_n_dispatch(int, detail::contiguous_iterator_tag, Iterator first, Size count) const{
-		group ret;
-		MPI_Group_incl(impl_, count, detail::data(first), &ret.impl_);
-		return ret;
-	}
-	template<class Iterator, class Size, class Value, class = decltype(int(Value{}))>
-	group include_n_dispatch(Value, std::input_iterator_tag, Iterator first, Size count) const{
-		std::vector<int> v(count); std::copy_n(first, count, v.begin());
-		return include_n(v.data(), v.size()); 
-	}
-public:
-//	group include(std::vector<int> const& ranks){return group(*this, ranks);}
-	template<class ContiguousIntIterator, class Size>
-	group exclude_n(ContiguousIntIterator it, Size count) const{
-		group ret;
-		MPI_Group_excl(impl_, count, boost::mpi3::detail::data(it), &ret.impl_);
-		return ret;
-	}
-	template<class ContiguousIntIterator>
-	group exclude(ContiguousIntIterator first, ContiguousIntIterator last) const{
-		return exclude_n(first, std::distance(first, last));
-	}
-	template<class ContiguousRangeIterator, class Size>
-	group range_exclude_n(ContiguousRangeIterator it, Size n) const{
-		group ret;
-		using int3 = int[3];
-		auto ptr = const_cast<int3*>(reinterpret_cast<int3 const*>(boost::mpi3::detail::data(it)));
-		int status = MPI_Group_range_excl(impl_, n, ptr, &ret.impl_);
-		if(status != MPI_SUCCESS) throw std::runtime_error("cannot exclude");
-		return ret;
-	}
-	template<class ContiguousRangeIterator, class Size>
-	group range_include_n(ContiguousRangeIterator it, Size n) const{
-		group ret;
-		using int3 = int[3];
-		auto ptr = const_cast<int3*>(reinterpret_cast<int3 const*>(boost::mpi3::detail::data(it)));
-		int status = MPI_Group_range_incl(impl_, n, ptr, &ret.impl_);
-		if(status  != MPI_SUCCESS) throw std::runtime_error("cannot include");
-		return ret;
-	}
-	template<class ContiguousRangeIterator>
-	group range_exclude(ContiguousRangeIterator first, ContiguousRangeIterator last) const{
-		return range_exclude_n(first, std::distance(first, last));
-	}
-//	group range_exclude(std::vector<boost::mpi3::strided_range> const& ranges){
-//		return range_exclude(ranges.begin(), ranges.end());
-//	}
-	template<class ContiguousRangeIterator>
-	group range_include(ContiguousRangeIterator first, ContiguousRangeIterator last) const{
-		return range_include_n(first, std::distance(first, last));
-	}
-//	group range_include(std::vector<boost::mpi3::strided_range> const& ranges){
-//		return range_include(ranges.begin(), ranges.end());
-//	}
-#endif
 };
 
-inline communicator communicator::create(struct group const& g) const{
+inline communicator communicator::create(group const& g) const{
 	communicator ret;
 	int s = MPI_Comm_create(impl_, &g, &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot crate group"};
 	return ret;
 }
 
-inline communicator communicator::create_group(struct group const& g, int tag = 0) const{
+inline communicator communicator::create_group(class group const& g, int tag = 0) const{
 	communicator ret;
 	int s = MPI_Comm_create_group(impl_, &g, tag, &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create_group"};
@@ -313,6 +147,9 @@ inline communicator communicator::create_group(struct group const& g, int tag = 
 }
 
 }}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #ifdef _TEST_MPI3_GROUP
 
