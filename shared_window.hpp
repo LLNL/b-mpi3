@@ -7,6 +7,7 @@
 
 #include "../mpi3/shared_communicator.hpp"
 #include "../mpi3/dynamic_window.hpp"
+#include "../mpi3/group.hpp"
 
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -19,9 +20,9 @@ namespace mpi3{
 
 template<class T /*= void*/>
 struct shared_window : window<T>{
-	shared_communicator& comm_;
+//	shared_communicator& comm_;
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = alignof(T)) : //sizeof(T)) : // here we assume that disp_unit is used for align
-		window<T>(), comm_{comm}
+		window<T>()//, comm_{comm}
 	{
 		void* base_ptr = nullptr;
 		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
@@ -31,7 +32,7 @@ struct shared_window : window<T>{
 		shared_window(comm, 0, disp_unit)
 	{}
 	shared_window(shared_window const&) = default;
-	shared_window(shared_window&& other) : window<T>{std::move(other)}, comm_{other.comm_}{}
+	shared_window(shared_window&& other) : window<T>{std::move(other)}{}//, comm_{other.comm_}{}
 	using query_t = std::tuple<mpi3::size_t, int, void*>;
 	query_t query(int rank = MPI_PROC_NULL) const{
 		query_t ret;
@@ -149,27 +150,36 @@ struct array_ptr{
 template<class T, class F>
 F for_each(array_ptr<T> first, array_ptr<T> last, F f){
 	if(first == last) return f;
-	assert(first.wSP_->comm_ == last.wSP_->comm_);
+//	assert(first.wSP_->comm_ == last.wSP_->comm_);
 	auto& comm = first.wSP_->comm_;
 	// TODO do a partitioning std::for_each
-	if(first.wSP_->comm_.root()) std::for_each(to_address(first), to_address(last), f);
+	if(mpi3::group(*first.wSP_).root()) std::for_each(to_address(first), to_address(last), f);
+//	if(first.wSP_->comm_.root()) std::for_each(to_address(first), to_address(last), f);
 	comm.barrier();
+	first.wSP_->fence();
+	first.wSP_->fence();
 }
 
 template<typename T, typename Size, typename... Args>
 array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, Args&&...args){
 	if(n == 0) return first;
-	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
-	first.wSP_->comm_.barrier();
+	if(mpi3::group(*first.wSP_).root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
+//	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
+	first.wSP_->fence();
+	first.wSP_->fence();
+//	first.wSP_->comm_.barrier();
 	return first + n;
 }
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
-	if(first.wSP_->comm_.root()){
+//	if(first.wSP_->comm_.root()){
+	if(mpi3::group(*first.wSP_).root()){
 		auto first_ptr = to_address(first);
 		for(; n > 0; (void) ++first_ptr, --n) first->~T();
 	}
-	first.wSP_->comm_.barrier();
+	first.wSP_->fence();
+	first.wSP_->fence();
+//	first.wSP_->comm_.barrier();
 	return first + n;
 }
 

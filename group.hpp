@@ -5,13 +5,14 @@
 #ifndef MPI3_GROUP_HPP
 #define MPI3_GROUP_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
-#include<mpi.h>
-
 #include "../mpi3/detail/iterator_traits.hpp"
 #include "../mpi3/detail/strided.hpp"
 #include "../mpi3/equality.hpp"
 #include "../mpi3/communicator.hpp"
+#include "../mpi3/window.hpp"
+
+#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+#include<mpi.h>
 
 #include<algorithm> // copy_n
 #include<numeric> // iota
@@ -100,10 +101,14 @@ class group{
 public:
 	MPI_Group& operator&(){return impl_;}
 	MPI_Group const& operator&() const{return impl_;}
-	explicit group() : impl_{MPI_GROUP_EMPTY}{}
-	group(communicator const& c){
+	group() : impl_{MPI_GROUP_EMPTY}{}
+	group(mpi3::communicator const& c){
 		int s = MPI_Comm_group(&c, &impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot construct group"};
+	}
+	group(mpi3::window<> const& w){ // TODO window<void>
+		int s = MPI_Win_get_group(&w, &impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot get group"};
 	}
 	group(group const& d) = delete;
 /*		: group()
@@ -148,6 +153,7 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("rank not available");
 		return rank;
 	}
+	bool root() const{return rank() == 0;}
 	int size() const{
 		int size = -1;
 		int s = MPI_Group_size(impl_, &size);

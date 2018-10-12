@@ -37,7 +37,8 @@ template<class A>
 struct monotonic{
 	A& a_;
 	template<class U> struct rebind{
-		using other = typename std::iterator_traits<A>::template alloc_rebind<U>;
+		using other = monotonic<U>;
+	//	using other = typename std::iterator_traits<A>::template alloc_rebind<U>;
 	};
 	using value_type = typename A::value_type;
 	using pointer = typename A::pointer;
