@@ -2,8 +2,9 @@
 mpicxx -O3 -std=c++14 `#-Wfatal-errors` $0 -o $0x.x && time mpirun -np 8s $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "alf/boost/mpi3/environment.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
+#include "../../mpi3/environment.hpp"
+#include "../../mpi3/group.hpp"
+#include "../../mpi3/communicator.hpp"
 
 using std::cout;
 namespace mpi3 = boost::mpi3;
@@ -11,7 +12,7 @@ namespace mpi3 = boost::mpi3;
 int main(int argc, char* argv[]){
 	mpi3::environment env(argc, argv);
 
-	mpi3::communicator& world = env.world();
+	mpi3::communicator world = env.world();
 	mpi3::communicator comm = env.world();
 
 	mpi3::group basegroup(world);

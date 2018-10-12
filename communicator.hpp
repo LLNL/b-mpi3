@@ -13,6 +13,7 @@
 #include "../mpi3/handle.hpp"
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/communication_mode.hpp"
+#include "../mpi3/equality.hpp"
 
 #include "../mpi3/message.hpp"
 #include "../mpi3/request.hpp"
@@ -121,13 +122,6 @@ struct message_header{
 
 struct graph_communicator;
 struct shared_communicator; // intracommunicator
-
-enum equality {
-	identical = MPI_IDENT, 
-	congruent = MPI_CONGRUENT, 
-	similar = MPI_SIMILAR, 
-	unequal = MPI_UNEQUAL
-};
 
 class communicator : protected detail::basic_communicator{
 	friend struct detail::package;
@@ -447,7 +441,7 @@ public:
 	}
 
 
-	boost::mpi3::group group() const;
+//	mpi3::group group() const;
 	
 	communicator operator/(int n) const{
 		int color = rank()*n/size();
@@ -2543,7 +2537,7 @@ private:
 		class V1 = typename std::iterator_traits<It1>::value_type, 
 		class V2 = typename std::iterator_traits<It2>::value_type 
 	>
-	auto gather_n_dispatch(all_gather_mode g, std::true_type, It1 first, Size count, It2 d_first, int /*root*/ = 0){
+	auto gather_n_dispatch(all_gather_mode g, std::true_type, It1 first, Size count, It2 d_first, int /*root*/= 0){
 		int s = g(
 			detail::data(first)  , count, detail::basic_datatype<V1>{},
 			detail::data(d_first), count, detail::basic_datatype<V2>{},
@@ -2638,15 +2632,11 @@ struct strided_range{
 	int size() const{return (last - first) / stride;}
 };
 
-
-
+#if 0
 struct group{
-
-
-
 	MPI_Group impl_;
 //	static group empty(){return group();}
-	group() : impl_(MPI_GROUP_EMPTY){}
+	group() : impl_{MPI_GROUP_EMPTY}{}
 	group(communicator const& comm){MPI_Comm_group(&comm, &impl_);}
 //	template<class ContiguousIntIterator>
 //	group(group const& other, ContiguousIntIterator ranks_begin, std::size_t n){
@@ -2799,24 +2789,11 @@ public:
 	}
 #endif
 };
+#endif
 
 //inline communicator::communicator(communicator const& other, struct group const& g, int tag) : communicator(){
 //	MPI_Comm_create_group(other.impl_, g.impl_, tag, &impl_);
 //}
-
-inline communicator communicator::create_group(struct group const& g, int tag = 0) const{
-	communicator ret;
-	MPI_Comm_create_group(impl_, g.impl_, tag, &ret.impl_);
-	return ret;
-}
-
-inline group communicator::group() const{return boost::mpi3::group(*this);}
-
-inline communicator communicator::create(struct group const& g) const{
-	communicator ret;
-	MPI_Comm_create(impl_, g.impl_, &ret.impl_);
-	return ret;
-}
 
 //package communicator::make_package(int n){return package(*this, n);}
 
