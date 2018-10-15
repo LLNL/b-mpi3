@@ -32,9 +32,9 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert(B[2][2] == 3.14);
 	
 	mpi3::shm::multi::array<double, 2> C({1, 1}, node);
-	C = A;
+	C = std::move(A);
 	assert(C[2][2] == 3.14);
-
+	assert(A.size()==0);
 	node.barrier();
 
 	return 0;
