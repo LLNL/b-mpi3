@@ -1199,6 +1199,10 @@ public:
 	auto irreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(ready_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
 	}
+	template<class CommunicationMode, class BlockingMode, class InputIterator>
+	auto send_category(CommunicationMode cm, BlockingMode bm, std::input_iterator_tag, 
+		InputIterator first, InputIterator last, int dest, int tag
+	);
 	template<class CommunicationMode, class BlockingMode, class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto send(CommunicationMode cm, BlockingMode bm, InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send_category(cm, bm, category{}, It1, It2, dest, tag);
@@ -1213,10 +1217,6 @@ private:
 		RandomAccessIterator first, RandomAccessIterator last, int dest, int tag
 	){return send_n_randomaccess(cm, bm, first, std::distance(first, last), dest, tag);}
 */
-	template<class CommunicationMode, class BlockingMode, class InputIterator>
-	auto send_category(CommunicationMode cm, BlockingMode bm, std::input_iterator_tag, 
-		InputIterator first, InputIterator last, int dest, int tag
-	);
 
 /*	{
 		auto it = mpi3::type::registered.find(typeid(V)); assert(it != boost::mpi3::type::registered.end());
