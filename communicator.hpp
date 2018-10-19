@@ -1207,17 +1207,7 @@ public:
 	auto send(CommunicationMode cm, BlockingMode bm, InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send_category(cm, bm, category{}, It1, It2, dest, tag);
 	}
-//	template<class CommunicationMode, class BlockingMode, class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
-//	auto receive(CommunicationMode cm, BlockingMode bm, Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-//		return receive_category(cm, bm, category{}, It1, It2, source, tag);
-//	}
 private:
-/*	template<class CommunicationMode, class BlockingMode, class RandomAccessIterator>
-	auto send_category(CommunicationMode cm, BlockingMode bm, std::random_access_iterator_tag, 
-		RandomAccessIterator first, RandomAccessIterator last, int dest, int tag
-	){return send_n_randomaccess(cm, bm, first, std::distance(first, last), dest, tag);}
-*/
-
 /*	{
 		auto it = mpi3::type::registered.find(typeid(V)); assert(it != boost::mpi3::type::registered.end());
 		int s = cm.Send(detail::data(first), n, it->second.impl_, dest, tag, impl_);
