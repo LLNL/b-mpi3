@@ -1,11 +1,11 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wfatal-errors -lboost_serialization $0 -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
 
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
-#include "alf/boost/mpi3/detail/package_archive.hpp"
+#include "../../mpi3/main.hpp"
+#include "../../mpi3/communicator.hpp"
+//#include "../../mpi3/detail/package_archive.hpp"
 
 #include<boost/serialization/vector.hpp>
 #include<boost/serialization/utility.hpp> // serialize std::pair
@@ -73,66 +73,73 @@ void load(Archive & ar, B& b, const unsigned int){
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-	assert( world.size() == 2);
+int mpi3::main(int, char*[], mpi3::communicator world){
 
-	std::vector<int> v(3);
-	std::vector<int> s = {1,2,3};
-	std::copy(v.begin(), v.end(), std::back_inserter(s));
-	{
-		std::vector<std::vector<double>> buffer(10, std::vector<double>(20));
-		if(world.root()){
+	assert( world.size() > 1 );
+
+	switch(world.rank()){
+		case 0 : {
+			std::vector<std::vector<double>> buffer(10, std::vector<double>(20));
 			buffer[4][5] = 6.1;
 			world.send(buffer.begin(), buffer.end(), 1, 123);
-		}else{
+		}; break;
+		case 1 : {
+			std::vector<std::vector<double>> buffer(10, std::vector<double>(20));
 			world.receive(buffer.begin(), buffer.end(), 0, 123);
 			assert( buffer[4][5] == 6.1 );
-		}
+		}; break;
 	}
-	{
-		std::vector<double> buffer(10);
-		if(world.root()){
-			std::iota(buffer.begin(), buffer.end(), 0);
-			world.send(buffer.begin(), buffer.end(), 1, 123);
-		}else{
+	switch(world.rank()){
+		case 0 : {
+			std::vector<double> buffer(10);
+			iota(begin(buffer), end(buffer), 0);
+			world.send(begin(buffer), end(buffer), 1, 123);
+		}; break;
+		case 1 : {
 			std::vector<double> v(10);
 		//	world.receive(std::back_inserter(v), 0, 123);
-			world.receive(v.begin(), 0, 123);
-		}
+			auto it = world.receive(begin(v), 0, 123);
+			assert(it == v.end() and v[3] == 3.);
+		}; break;
 	}
-	{
-		if(world.root()){
+	switch(world.rank()){
+		case 0: {
 			std::map<int, std::vector<double>> m;
 			m[2] = std::vector<double>(2);
 			m[5] = std::vector<double>(5);
-			world.send(m.begin(), m.end(), 1, 123);
-		}else{
+			world.send(begin(m), end(m), 1, 123);
+		}; break;
+		case 1: {
 			std::vector<std::pair<int, std::vector<double>>> v(2);
-			world.receive(v.begin(), v.end(), 0, 123);
+			world.receive(begin(v), end(v), 0, 123);
 			assert(( v[1] == std::pair<int, std::vector<double>>{5, std::vector<double>(5)} ));
-		}
+		}; break;
 	}
-	{
-		if(world.root()){
+	switch(world.rank()){
+		case 0 : {
 			std::vector<A> v(5, A(3));
 			v[2].data[2] = 3.14;
-			world.send(v.begin(), v.end(), 1, 123);
-		}else{
+			world.send(begin(v), end(v), 1, 123);
+		}; break;
+		case 1 : {
 			std::vector<A> v(5);
-			world.receive(v.begin(), v.end(), 0, 123);
+			world.receive(begin(v), end(v), 0, 123);
 			assert(v[2].data[2] == 3.14);
-		}
+		}; break;
 	}
-	{
-		if(world.root()){
+	switch(world.rank()){
+		case 0 : {
 			std::vector<B> v(5, B(3));
 			v[2].data[2] = 3.14;
-			world.send(v.begin(), v.end(), 1, 123);
-		}else{
+			world.send(begin(v), end(v), 1, 123);
+		}; break;
+		case 1 : {
 			std::vector<B> v(5);
-			world.receive(v.begin(), v.end(), 0, 123);
+			world.receive(begin(v), end(v), 0, 123);
 			assert(v[2].data[2] == 3.14);
-		}
+		}; break;
 	}
+
+	return 0;
 }
 
