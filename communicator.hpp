@@ -1228,6 +1228,31 @@ public:
 	auto issend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(synchronous_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
 	}
+	template<class CommunicationMode, class It1, class Size>
+	auto isend_n(
+		CommunicationMode, 
+		It1 first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count, int dest, int tag
+	){
+		mpi3::request ret;
+		CommunicationMode{}.ISend(
+			std::addressof(*first), count, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{}, dest, tag, impl_, &ret.impl_
+		);
+		return ret;
+	}
+	template<class It1, class Size>
+	auto issend_n(It1 first, Size count, int dest, int tag = 0){
+		return isend_n(
+			synchronous_communication_mode{}, 
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			dest, tag
+		);
+	}
 	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
 	auto isreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(synchronous_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
