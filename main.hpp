@@ -1,9 +1,10 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_MAIN $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_MAIN $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_MAIN_HPP
 #define BOOST_MPI3_MAIN_HPP
 
+#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #include "../mpi3/environment.hpp"
@@ -13,7 +14,6 @@
 namespace boost{
 namespace mpi3{
 
-#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
 // this definition forces the user to define boost::mpi3::main
 int main(int argc, char* argv[], boost::mpi3::communicator world);
 #else
@@ -29,37 +29,27 @@ int main(int argc, char* argv[]){
 		return boost::mpi3::main(argc, argv, env.world());
 	}catch(std::exception& e){
 		int rank = -1;
-		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if(rank == 0){
+		int s = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		if(s == MPI_SUCCESS and rank == 0){
 			std::cerr << 
 				"terminate called after throwing\n"
 				"  what(): " << e.what() << std::endl
 			;
 		}
-		return 1;
+		return 0;
 	}catch(...){
 		int rank = -1;
-		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if(rank == 0){
+		int s = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		if(s == MPI_SUCCESS and rank == 0){
 			std::cerr << "terminate called after throwing an unknown type\n";
 		}
 		return 1;
 	}
-//	boost::mpi3::environment::initialize(argc, argv);
-//	boost::mpi3::communicator::world.name("world");
-//	int ret = boost::mpi3::main(argc, argv, boost::mpi3::communicator::world);
-//	boost::mpi3::communicator::world.barrier();
-//	boost::mpi3::environment::finalize();
 }
 #else
 int main(int argc, char* argv[]){
 	boost::mpi3::environment env(argc, argv);
 	return boost::mpi3::main(argc, argv, env);
-//	boost::mpi3::environment::initialize(argc, argv);
-//	boost::mpi3::communicator::world.name("world");
-//	int ret = boost::mpi3::main(argc, argv, boost::mpi3::communicator::world);
-//	boost::mpi3::communicator::world.barrier();
-//	boost::mpi3::environment::finalize();
 }
 #endif
 
@@ -81,5 +71,5 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 }
 
 #endif
-#endif
+
 
