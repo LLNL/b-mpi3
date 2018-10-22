@@ -16,6 +16,7 @@
 #include "../mpi3/request.hpp"
 #include "../mpi3/status.hpp"
 #include "../mpi3/type.hpp"
+#include "../mpi3/error.hpp"
 
 #include "../mpi3/detail/basic_communicator.hpp"
 #include "../mpi3/detail/buffer.hpp"
@@ -305,15 +306,13 @@ public:
 		}
 	}
 	int size() const{
-		if(is_null()) throw std::runtime_error("size called on null communicator");
+		if(is_null()) return 0;//throw std::runtime_error("size called on null communicator");
 		int size = -1; 
 		int s = MPI_Comm_size(impl_, &size);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
 		return size;
 	}
 	bool empty() const{return size() == 0;}
-
-
 	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
 	bool is_intercommunicator() const{
 		int flag = false;
@@ -338,11 +337,16 @@ public:
 	communicator reversed() const{
 		return split(0, size() - rank());
 	}
-//	template<class Graph> 
-//	graph_communicator make_graph(Graph const& g) const;
-//	template<class Graph> 
-//	int graph_rank(Graph const&) const;
-
+	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const{
+		assert( dims.size() == periods.size() );
+		int ret;
+		int s = MPI_Cart_map(impl_, dims.size(), dims.data(), periods.data(), &ret);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot map"};
+		return ret;
+	}
+	int cartesian_map(std::vector<int> const& dimensions) const{
+		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
+	}
 	template<class T>
 	window<T> make_window(mpi3::size_t n); // Win_allocate
 	template<class T = void>
@@ -591,11 +595,12 @@ public:
 		Size count, int dest, int source, int sendtag, int recvtag
 	){
 		status ret;
-		MPI_Sendrecv_replace(
+		int s = MPI_Sendrecv_replace(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{}, 
 			dest, sendtag, source, recvtag, impl_, &ret.impl_
 		);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot sendrecv_replace"};
 		return ret;
 	}
 	template<class It, typename Size>
@@ -620,8 +625,8 @@ public:
 			detail::basic_tag,
 		int sendtag, int recvtag
 	){
-		status s;
-		MPI_Sendrecv(
+		status ret;
+		int s = MPI_Sendrecv(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, sendtag, 
@@ -629,9 +634,10 @@ public:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, recvtag,
 			impl_,
-			&s.impl_
+			&ret.impl_
 		);
-		return s;
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot sendrecv"};
+		return ret;
 	}
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
@@ -1130,6 +1136,48 @@ public:
 			source, tag
 		);
 	}
+	template<typename InputIt, typename Size, class V = typename std::iterator_traits<InputIt>::value_type>
+	auto bsend_init_n(
+		InputIt first, Size count, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		int dest, int tag
+	){
+		request ret;
+		int s = MPI_Bsend_init(
+			std::addressof(*first), count, detail::basic_datatype<V>{},
+			dest, tag, impl_, &ret.impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot bsend init"};
+		return ret;
+	}
+	template<typename It, typename Size>
+	auto bsend_init_n(It first, Size count, int dest, int tag = 0){
+		return bsend_init_n(
+			first, count,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			dest, tag
+		);				
+	}
+	template<class It>
+	auto bsend_init(
+		It first, It last, 
+			detail::random_access_iterator_tag,
+			detail::value_unspecified_tag,
+		int dest, int tag
+	){
+		return bsend_init_n(first, std::distance(first, last), dest, tag);
+	}
+	template<class It>
+	auto bsend_init(It first, It last, int dest, int tag = 0){
+		bsend_init(
+			first, last,
+				detail::iterator_category_t<It>{},
+				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
+			dest, tag
+		);				
+	}
 	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto bsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
@@ -1261,7 +1309,7 @@ private:
 	request send_n_randomaccess_contiguous_builtin(CommunicationMode cm, nonblocking_mode, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
 		request r;
 		int s = cm.ISend(detail::data(first), n, datatype{}, dest, tag, impl_, &r.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot send random access iterators"};
 		return r;
 	}
 	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
@@ -1518,12 +1566,14 @@ private:
 		Size count,
 		int root
 	){
-		int s = MPI_Bcast( 
-			detail::data(first), count, 
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			root, impl_
+		auto e = error(
+			MPI_Bcast(
+				detail::data(first), count, 
+				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			root, impl_)
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot broadcast");
+		if(e != error::success) throw std::system_error{e, "cannot broadcast"};
+		return first + count;
 	}
 	template<class It>
 	auto ibroadcast(
