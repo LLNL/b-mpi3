@@ -25,9 +25,9 @@ class code{
 	static constexpr MPI_Errhandler value = MPI_ERRORS_RETURN;
 };
 
-struct exception : std::runtime_error{
-	using std::runtime_error::runtime_error;
-};
+//struct exception : std::runtime_error{
+//	using std::runtime_error::runtime_error;
+//};
 
 struct error_handler{
 	MPI_Errhandler impl_ = MPI_ERRORS_ARE_FATAL;
@@ -50,7 +50,7 @@ struct error_handler{
 		char estring[MPI_MAX_ERROR_STRING];
 		MPI_Error_string(*err, estring, &len);
 		std::string w(estring, estring + len);
-		throw boost::mpi3::exception("error code");
+		throw mpi3::exception{"error code"};
 //		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 //		throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 	}
