@@ -45,7 +45,7 @@ struct error_handler{
 	static error_handler const fatal;
 	static error_handler const code;
 //	static error_handler const exception;
-	static void exception(MPI_Comm* comm, int* err, ...){
+	static void exception(MPI_Comm* /*comm*/, int* err, ...){
 		int len = -1;
 		char estring[MPI_MAX_ERROR_STRING];
 		MPI_Error_string(*err, estring, &len);
