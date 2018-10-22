@@ -73,6 +73,8 @@
 #include<thread>
 #include<type_traits>
 #include<vector>
+#include<type_traits> // is_same
+		
 
 namespace boost{
 namespace mpi3{
@@ -1634,7 +1636,7 @@ public:
 	}
 	template<class T, class Op = std::plus<> >
 	void reduce_value(T const& t, T& ret, Op op = {}, int root = 0){
-		reduce(std::addressof(t), std::addressof(t)+1, std::addressof(ret), op, root); 
+		reduce_n(std::addressof(t), 1, std::addressof(ret), op, root); 
 	}
 	template<class T, class Op = std::plus<> >
 	auto reduce_value(T const& t, Op op = {}, int root = 0){
@@ -1642,11 +1644,12 @@ public:
 		reduce_value(t, ret, op, root); // if(rank() == root) return optional<T>(ret);
 		return ret;
 	}
-	template<class It1, class It2, class Op>
-	auto reduce(It1 first, It1 last, It2 d_first, Op op, int root){
-		return reduce_n(first, std::distance(first, last), d_first, op, root);
+//	template<class It1, class It2, class Op>
+//	auto reduce(It1 first, It1 last, It2 d_first, Op op, int root){
+//		return reduce_n(first, std::distance(first, last), d_first, op, root);
 	//	return reduce_category(typename std::iterator_traits<It1>::iterator_category{}, first, last, d_first, op, root);
-	}
+//	}
+#if 0
 	template<
 		class It1, class Size, class It2, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type,
@@ -1658,7 +1661,58 @@ public:
 		int s = MPI_Reduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
-	
+#endif
+/*	template<class It1, class Size, class It2, class Op>
+	auto reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0){
+		return reduce_n(
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			d_first,
+				detail::iterator_category_t<It2>{},
+				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
+			op, root
+		);			
+	}*/
+	template<class It1, class Size, class It2, class Op, class PredefinedOp>
+	auto reduce_n(
+		It1 first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count, 
+		It2 d_first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Op,
+		PredefinedOp,
+		int root
+	){
+		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
+		int s = MPI_Reduce(
+			detail::data(first), detail::data(d_first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, PredefinedOp{}, 
+			root, impl_
+		);
+		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
+		return rank()==root?d_first + count:d_first;
+	}
+			
+	template<class It1, class Size, class It2, class Op>
+	auto reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0){
+		return reduce_n(
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			d_first,
+				detail::iterator_category_t<It2>{},
+				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
+			op, 
+				predefined_operation<Op>{},
+			root
+		);			
+	}
 protected:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
