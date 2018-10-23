@@ -44,8 +44,11 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		std::vector<shm::multi::array<double, 2>> v(2, {node});
 		v.reserve(3);
 		v.emplace_back(shm::multi::array<double, 2>({10,10}, node));
+		v.emplace_back(node);
 		v.emplace_back(shm::multi::array<double, 2>({20,20}, node));
 		v.emplace_back(shm::multi::array<double, 2>({15,15}, node));
+
+
 		if(world.rank() == 0) v[4][2][3] = 5.;
 		world.barrier();
 		if(world.rank() == 1) assert(v[4][2][3] == 5.);
