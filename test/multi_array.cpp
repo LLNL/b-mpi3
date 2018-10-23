@@ -26,17 +26,45 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	node.barrier();
 	assert(A[2][2] == 3.14);
 
-	mpi3::shm::multi::array<double, 2> B = A;
+	shm::multi::array<double, 2> B = A;
 //	multi::array<double, 2, mpi3::shm::allocator<double>> B = A;
 	assert(A[2][2] == 3.14);
 	assert(B[2][2] == 3.14);
 	
-	mpi3::shm::multi::array<double, 2> C({1, 1}, node);
-	C = std::move(A);
-	assert(C[2][2] == 3.14);
-	assert(A.size()==0);
+	shm::multi::array<double, 2> C({1, 1}, node);
+	C.reextent({30,30});
+	assert(C.size() == 30);
+//	C = std::move(A);
+//	assert(C[2][2] == 3.14);
+//	assert(A.size()==0);
 	node.barrier();
-
+		
+	{
+		std::vector<shm::multi::array<double, 2>> v;
+		v.reserve(3);
+		v.emplace_back(shm::multi::array<double, 2>({10,10}, node));
+		v.emplace_back(shm::multi::array<double, 2>({20,20}, node));
+		v.emplace_back(shm::multi::array<double, 2>({15,15}, node));
+		if(world.rank() == 0) v[1][2][3] = 5.;
+		world.barrier();
+		if(world.rank() == 1) assert(v[1][2][3] == 5.);
+		world.barrier();
+		v[2].reextent({30, 30});
+		assert( v[2].size() == 30 );
+		v.pop_back();
+		assert( v.back().size() == 20 );
+	}
+	shm::multi::array<double, 2> AA({0,0}, node);
+	assert(AA.size() == 0);
+	{
+		boost::multi::array<shm::multi::array<double, 2>, 1> v(std::array<boost::multi::index_extension, 1>{{3}}, {{1, 1}, node});
+		v[0].reextent({10, 10});
+		v[1].reextent({20, 20});
+		v[2].reextent({30, 30});
+		if(world.rank() == 1) v[1][2][3] = 5.;
+		world.barrier();
+		if(world.rank() == 1) assert(v[1][2][3] == 5.);
+	}
 	return 0;
 }
 
