@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra -I$HOME/prj/alf $0 -o $0x.x && mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` -I$HOME/prj/alf $0 -o $0x.x && mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "../../mpi3/shm/allocator.hpp"
@@ -19,7 +19,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::shared_communicator node = world.split_shared();
 
-	multi::array<double, 2, mpi3::shm::allocator<double>> A({16, 16}, node);	
+	multi::array<double, 2, shm::allocator<double>> A({16, 16}, node);	
 	assert(A[2][2] == 0);
 	node.barrier();
 	if(node.root()) A[2][2] = 3.14;
@@ -40,14 +40,15 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	node.barrier();
 		
 	{
-		std::vector<shm::multi::array<double, 2>> v;
+		std::vector<shm::multi::array<double, 2>> w;
+		std::vector<shm::multi::array<double, 2>> v(2, {node});
 		v.reserve(3);
 		v.emplace_back(shm::multi::array<double, 2>({10,10}, node));
 		v.emplace_back(shm::multi::array<double, 2>({20,20}, node));
 		v.emplace_back(shm::multi::array<double, 2>({15,15}, node));
-		if(world.rank() == 0) v[1][2][3] = 5.;
+		if(world.rank() == 0) v[4][2][3] = 5.;
 		world.barrier();
-		if(world.rank() == 1) assert(v[1][2][3] == 5.);
+		if(world.rank() == 1) assert(v[4][2][3] == 5.);
 		world.barrier();
 		v[2].reextent({30, 30});
 		assert( v[2].size() == 30 );
@@ -57,7 +58,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	shm::multi::array<double, 2> AA({0,0}, node);
 	assert(AA.size() == 0);
 	{
-		boost::multi::array<shm::multi::array<double, 2>, 1> v(std::array<boost::multi::index_extension, 1>{{3}}, {{1, 1}, node});
+		boost::multi::array<shm::multi::array<double, 2>, 1> v({{3}}, {node});
 		v[0].reextent({10, 10});
 		v[1].reextent({20, 20});
 		v[2].reextent({30, 30});
