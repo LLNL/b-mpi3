@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra $0 -o $0x.x && mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wall -Wextra $0 -o $0x.x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY && mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "../../mpi3/main.hpp"
@@ -14,14 +14,14 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	assert( world.size() > 1 );
 
-	using T = std::string;
-	std::vector<T> const cbuffer = {"0", "1", "2"};
+	using T = double;
+	std::vector<T> const cbuffer = {0, 1, 2};
 	std::vector<T> buffer(3); // TODO, test with list
 
 	int right = world.right();
 	int left = world.left();
 	{
-		auto req = world.ireceive(buffer.begin(), left);
+		auto req = world.ireceive_n(buffer.begin(), buffer.size(), left);
 		world.send(cbuffer.begin(), cbuffer.end(), right);
 		cout <<"waiting ireceive in rank "<< world.rank() << std::endl;
 		req.wait();

@@ -916,7 +916,7 @@ public:
 		while(count--) pia >> *dest++;
 		return dest;
 	}
-	template<class It, typename Size>
+/*	template<class It, typename Size>
 	auto ireceive_n(
 		It dest, 
 			detail::forward_iterator_tag,
@@ -929,7 +929,7 @@ public:
 		package_iarchive pia(p);
 		while(count--) pia >> *dest++;
 		return dest;
-	}
+	}*/
 /*	template<class It, typename Size>
 	receive_request ireceive_n(
 		It dest, 
@@ -955,7 +955,9 @@ public:
 		);
 	}
 	template<class It, typename Size>
-	auto ireceive_n(It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	mpi3::request ireceive_n(
+		It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG
+	){
 		return ireceive_n(
 			dest,
 				detail::iterator_category_t<It>{},

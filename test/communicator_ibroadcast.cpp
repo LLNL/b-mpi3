@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
 #include "../../mpi3/main.hpp"
@@ -8,8 +8,10 @@ mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
-	assert(world.size() == 4);
+int mpi3::main(int, char*[], mpi3::communicator world){
+	assert(world.size() > 2);
+
+
 	mpi3::ostream wout(world);
 
 	std::vector<int> large(10);

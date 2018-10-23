@@ -17,7 +17,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	std::vector<std::size_t> global(local.size(), -1);
 
-	world.all_reduce(begin(local), end(local), begin(global));
+	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
+	assert(last == global.end());
 
 	for(std::size_t i = 0; i != global.size(); ++i) 
 		assert(global[i] == local[i]*world.size());
@@ -30,15 +31,15 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 //	world.all_reduce_n(&rank, 1, &sum_rank, std::plus<>{});
 //	world.all_reduce_n(&rank, 1, &sum_rank, mpi3::plus<>{});
 //	sum_rank = (world += rank);
-	cout << "sum " << sum_rank << std::endl;
+	assert(sum_rank == world.size()*(world.size()-1)/2);
 
 	auto max_rank = -1;
 	world.all_reduce_n(&rank, 1, &max_rank, mpi3::max<>{});
-	cout << "max " << max_rank << std::endl;
+	assert( max_rank == world.size() - 1 );
 
 	auto min_rank = -1;
 	world.all_reduce_n(&rank, 1, &min_rank, mpi3::min<>{});
-	cout << "min " << min_rank << std::endl;
+	assert( min_rank == 0 );
 
 	return 0;
 }
