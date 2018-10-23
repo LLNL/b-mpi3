@@ -294,12 +294,12 @@ shm_pointer<T> communicator::allocate_shared(MPI_Aint size) const
 #endif 
 
 template<class T>
-void communicator::deallocate_shared(pointer<T> p){
+void communicator::deallocate_shared(pointer<T>){
 //	MPI_Free_mem(p.base_ptr(rank()));
 }
 
 template<class T>
-void communicator::deallocate(pointer<T>& p, MPI_Aint){
+void communicator::deallocate(pointer<T>&, MPI_Aint){
 //	p.pimpl_->fence();
 //	MPI_Free_mem(p.local_ptr());
 //	MPI_Win_free(&p.pimpl_->impl_);

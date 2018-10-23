@@ -26,6 +26,7 @@ struct B{
 		delete[] data; 
 		data = new double[other.n_];
 		for(int i = 0; i != n_; ++i) data[i] = other.data[i];
+		return *this;
 	}
 	~B(){delete[] data;}
 };

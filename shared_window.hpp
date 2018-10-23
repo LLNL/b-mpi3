@@ -286,6 +286,10 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	node.barrier();
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
 
+	{
+		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
+	}
+
 	return 0;
 }
 

@@ -447,6 +447,10 @@ public:
 		int status = MPI_Comm_call_errhandler(impl_, errorcode);
 		if(status != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
 	}
+	void error(mpi3::error const& e){
+		int s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e));
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
+	}
 
 
 //	mpi3::group group() const;
@@ -1600,7 +1604,7 @@ private:
 		Size count,
 		int root
 	){
-		auto e = error(
+		auto e = static_cast<enum error>(
 			MPI_Bcast(
 				detail::data(first), count, 
 				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},

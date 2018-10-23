@@ -13,7 +13,7 @@
 namespace boost{
 namespace mpi3{
 
-enum class error : int {
+enum class error : int {//decltype(MPI_SUCCESS) {
 	success = MPI_SUCCESS,
 	invalid_buffer_pointer = MPI_ERR_BUFFER,
 	invalid_count = MPI_ERR_COUNT,

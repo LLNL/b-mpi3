@@ -15,7 +15,7 @@
 namespace boost{
 namespace mpi3{
 
-class ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/225186
+struct ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/225186
 	class streambuf : public std::stringbuf{
 		communicator& comm_;
 		std::ostream& output;
