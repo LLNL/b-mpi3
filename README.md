@@ -26,7 +26,7 @@ It was is originally designed as standardized and portable message-passing syste
 The last standard, MPI-3, uses a combination of techniques to achieve parallelism, Message Passing (MP), (Remote Memory Access (RMA) and Shared Memory (SM).
 We try here to give a uniform interface and abstractions for these features by means of wrapper function calls and concepts brought familiar to C++ and the STL.
 
-## The problem with the standard interface 
+## Motivation: The problem with the standard interface 
 
 A typical C-call for MP looks like this,
 
@@ -89,6 +89,16 @@ $ dnf install gcc-c++ boost-devel openmpi-devel mpich-devel
 ```
 
 The library is tested frequently against `openmpi` and `mpich`, and less frequently with `mvapich2`.
+
+## Testing
+
+The library has a basic `ctest` based testing system.
+
+```
+cd mpi3/test
+mkdir build; cd build
+cmake .. && make && ctest
+```
 
 ## Initialization
 
