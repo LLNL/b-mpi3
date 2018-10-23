@@ -79,6 +79,11 @@
 namespace boost{
 namespace mpi3{
 
+template<int N = 10> struct overload_priority : overload_priority<N-1>{
+//	using overload_priority<N-1>::overload_priority;
+};
+template<> struct overload_priority<0>{};
+
 class environment;
 class group;
 
@@ -1763,6 +1768,38 @@ public:
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
 	}
+	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp>
+	auto all_reduce_n(
+		It1 first, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Size count, 
+		It2 d_first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
+		Op,
+			PredefinedOp
+	){
+		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
+		using detail::data;
+		int s = MPI_Allreduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{}, PredefinedOp{}/*op*/, impl_);
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot reduce n"};
+		return d_first + count;
+	}
+	template<class It1, class Size, class It2, class Op = std::plus<>>
+	auto all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}){
+		return all_reduce_n(
+			first, 
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			count, 
+			d_first,
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			op, 
+				predefined_operation<Op>{}
+		);
+	}
 	template<typename It1, typename It2, class Op = std::plus<>>
 	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
@@ -2341,7 +2378,7 @@ public:
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			root, impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot Igather");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot Igather"};
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, typename Size2>
@@ -2441,7 +2478,7 @@ public:
 		return gather_n(first, count, d_first, count, root);
 	}
 	template<class It1, class Size1, class It2>
-	auto igather_n(It1 first, Size1 count, It2 d_first, int root){
+	auto igather_n(It1 first, Size1 count, It2 d_first, int root = 0){
 		return igather_n(first, count, d_first, count, root);
 	}
 	template<class It1, class Size1, class It2>
@@ -2453,6 +2490,15 @@ public:
 		It1 first, It1 last, 
 			detail::random_access_iterator_tag,
 			detail::value_unspecified_tag,
+		It2 d_first, int root
+	){
+		return gather_n(first, std::distance(first, last), d_first, root);
+	}
+	template<typename It1, typename It2>
+	auto gather(
+		It1 first, It1 last, 
+			detail::contiguous_iterator_tag,
+			detail::basic_tag,
 		It2 d_first, int root
 	){
 		return gather_n(first, std::distance(first, last), d_first, root);
@@ -2486,7 +2532,7 @@ public:
 		return gather_n(buffer.data(), buffer.size(), d_first, root);
 	}
 	template<typename It1, typename It2>
-	auto gather(It1 first, It1 last, It2 d_first, int root){
+	auto gather(It1 first, It1 last, It2 d_first, int root = 0){
 		return gather(
 			first, last,
 				detail::iterator_category_t<It1>{},
