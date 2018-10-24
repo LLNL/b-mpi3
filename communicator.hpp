@@ -79,6 +79,37 @@
 namespace boost{
 namespace mpi3{
 
+#ifndef OPEN_MPI
+#define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_HWTHREAD MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_CORE     MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_L1CACHE  MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_L2CACHE  MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_L3CACHE  MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_SOCKET   MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_NUMA     MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_BOARD    MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_HOST     MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_CU       MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_CLUSTER  MPI_COMM_TYPE_SHARED
+#endif
+
+enum class communicator_type : int{
+	node = OMPI_COMM_TYPE_NODE,
+	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
+	core = OMPI_COMM_TYPE_CORE,
+	l1_cache = OMPI_COMM_TYPE_L1CACHE,
+	l2_cache = OMPI_COMM_TYPE_L2CACHE,
+	l3_cache = OMPI_COMM_TYPE_L3CACHE,
+	socket = OMPI_COMM_TYPE_SOCKET,
+	numa = OMPI_COMM_TYPE_NUMA,
+	board = OMPI_COMM_TYPE_BOARD,
+	host = OMPI_COMM_TYPE_HOST,
+	cu = OMPI_COMM_TYPE_CU,
+	cpu = OMPI_COMM_TYPE_CU,
+	cluster = OMPI_COMM_TYPE_CLUSTER 
+};
+
 template<int N = 10> struct overload_priority : overload_priority<N-1>{
 //	using overload_priority<N-1>::overload_priority;
 };
@@ -335,6 +366,7 @@ public:
 	}
 	communicator split(int color = MPI_UNDEFINED) const{return split(color, rank());}
 	shared_communicator split_shared(int key = 0) const;
+	shared_communicator split_shared(communicator_type t, int key = 0) const;
 	int remote_size() const{
 		int ret = -1;
 		int s = MPI_Comm_remote_size(impl_, &ret);
@@ -1426,42 +1458,41 @@ private:
 	}
 #endif
 
-public:
-	template<class It1, class It2>
-	auto all_to_all(It1 first, It1 last, It2 d_first){
-		return all_to_all_builtinQ(
-			std::integral_constant<bool, 
-				detail::is_basic<typename std::iterator_traits<It1>::value_type>{} and
-				detail::is_basic<typename std::iterator_traits<It2>::value_type>{}
-			>{}, first, last, d_first
-		);
-	}
 private:
-	template<class It1, class It2>
-	auto all_to_all_builtinQ(std::true_type, It1 first, It1 last, It2 d_first){
-		return all_to_all_builtin(
-			detail::iterator_category<It1>{}, 
-			detail::iterator_category<It2>{}, first, last, d_first
-		);
-	}
-	template<class It1, class It2, 
-		class sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
-		class recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
-	>
-	auto all_to_all_builtin(detail::contiguous_iterator_tag, detail::contiguous_iterator_tag, It1 first, It1 last, It2 d_first){
-		int s = MPI_Alltoall( detail::data(first), std::distance(first, last), 
-			sendtype::value,
-			detail::data(d_first), std::distance(first, last),
-			recvtype::value,
+	template<class It1, typename Size, class It2>
+	auto all_to_all_n(
+		It1 first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag, 
+		Size count, 
+		It2 d_first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag
+	){
+		int s = MPI_Alltoall( 
+			detail::data(first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(d_first), count,
+			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 			impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot all2all"};
+		return d_first + count;
 	}
-	template<class Iterator1, class Iterator2>
-	auto all_to_all_builtinQ(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first)
-//	{ TODO implement }
-	;
-
+public:
+	template<class It1, typename Size, class It2>
+	auto all_to_all_n(It1 first, Size count, It2 d_first){
+		return 
+			all_to_all_n(
+				first, 
+					detail::iterator_category_t<It1>{},
+					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+				count,
+				d_first,
+					detail::iterator_category_t<It2>{},
+					detail::value_category_t<typename std::iterator_traits<It2>::value_type>{}
+			);
+	}
 public:
 private:
 /*	template<class BlockingMode, class InputIt, class OutputIt, class InputCategory = typename std::iterator_traits<OutputIt>::iterator_category, class OutputCategory = typename std::iterator_traits<OutputIt>::iterator_category >
@@ -1593,7 +1624,7 @@ private:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot ibroadcast");
+		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot ibroadcast"};
 		return r;
 	}
 	template<class It, typename Size>
@@ -1800,7 +1831,7 @@ public:
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 			count, 
 			d_first,
-				detail::iterator_category_t<It1>{},
+				detail::iterator_category_t<It2>{},
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 			op, 
 				predefined_operation<Op>{}

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_BOOST_MPI3_MAIN_ENVIRONMENT -D_TEST_MPI3_DETAIL_ITERATOR_TRAITS $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
+(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_MPI3_DETAIL_ITERATOR_TRAITS $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
 #endif
 #ifndef MPI3_DETAIL_ITERATOR_TRAITS_HPP
 #define MPI3_DETAIL_ITERATOR_TRAITS_HPP
@@ -155,7 +155,7 @@ std::string g(It&& it){
 }
 #endif
 
-int mpi3::main(int, char*[], mpi3::environment&){
+int mpi3::main(int, char*[], mpi3::communicator){
 	{
 		std::list<int> l = {11, 22};
 		assert( f(l.begin()) == "forward11" );

@@ -56,7 +56,8 @@ foreach(TEST_FILE ${TEST_SRCS})
 
   list(FIND LINK_BOOST_SERIALIZATION ${TEST_FILE} NEED_BOOST_SERIALIZATION)
   if (NOT (${NEED_BOOST_SERIALIZATION} EQUAL -1))
-    target_link_libraries(${TEST_EXE} boost_serialization)
+    target_compile_options(${TEST_EXE} PUBLIC -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY)
+#    target_link_libraries(${TEST_EXE} boost_serialization)
   endif()
 
   target_link_libraries(${TEST_EXE} pthread)
