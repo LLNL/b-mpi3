@@ -9,6 +9,14 @@ include(CTest)
 set(CMAKE_C_COMPILER mpicc)
 set(CMAKE_CXX_COMPILER mpic++)
 
+# Set BOOST_ROOT if boost is in a non-standard location
+find_package(Boost REQUIRED)
+if(Boost_FOUND)
+  set(HAVE_LIBBOOST 1)
+  include_directories(${Boost_INCLUDE_DIRS})
+  message(STATUS "Setting Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+endif()
+
 # This list is only a subset of files.  It might be useful to divide some of the tests into
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
