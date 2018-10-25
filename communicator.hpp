@@ -51,6 +51,9 @@
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
+#if BOOST_VERSION < 106600
+#include "../mpi3/serialization_hack/singleton.cpp"
+#endif
 #include "../mpi3/serialization_hack/archive_exception.cpp"
 #include "../mpi3/serialization_hack/extended_type_info.cpp"
 #include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"
