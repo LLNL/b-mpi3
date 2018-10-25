@@ -37,7 +37,7 @@ public:
 		{};  
 	};
 	template<class T>
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 106100)
 	void load_array(boost::serialization::array<T>& t, unsigned int = 0){ // for boost pre 1.63
 #else
 	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int = 0){
@@ -62,7 +62,7 @@ public:
 	template<class T>
 	void save(const T& t, unsigned int = 0){p_.pack_n(std::addressof(t), 1);}//p_ << t;}
 	template<class T>
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 106100)
 	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
 #else
 	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int = 0){
@@ -102,7 +102,7 @@ class basic_package_oarchive : public boost::archive::detail::common_oarchive<Ar
 protected:
 	template<class T>
 	void save_override(T& t, /*BOOST_PFTO*/ int = 0){
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 105900)
 	  this->detail_common_oarchive::save_override(t, 0);//, 0);
 #else
 	  this->detail_common_oarchive::save_override(t);

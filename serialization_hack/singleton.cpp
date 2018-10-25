@@ -22,7 +22,7 @@ BOOST_SERIALIZATION_DECL bool & singleton_module::get_lock(){
     return lock;
 }
 
-#if 0
+#if BOOST_VERSION < 106400
 BOOST_SERIALIZATION_DECL void singleton_module::lock(){
     get_lock() = true;
 }
