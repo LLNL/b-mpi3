@@ -512,7 +512,7 @@ public:
 
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0){
-		send(std::addressof(t[0]), std::addressof(t[N]), dest, tag);
+		send(std::addressof(t[0]), std::addressof(t[N-1]) + 1, dest, tag);
 	}
 
 //	template<class T>

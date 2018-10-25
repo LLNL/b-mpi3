@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 12 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -n 12 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
@@ -17,7 +17,7 @@ struct cartesian_communicator : communicator{
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
-		int status = MPI_Cart_create(comm_old.impl_, s.size(), s.data(), p.data(), false, &impl_);
+		int status = MPI_Cart_create(&comm_old, s.size(), s.data(), p.data(), false, &impl_);
 		if(status != MPI_SUCCESS) throw std::runtime_error("cannot create cart comm ");
 		assert(impl_ != MPI_COMM_NULL);
 		// there is an bug in mpich, in which the the remaining dim are none then the communicator is not well defined.
@@ -68,17 +68,20 @@ struct cartesian_communicator : communicator{
 #ifdef _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
 
 #include<iostream>
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/version.hpp"
-#include "alf/boost/mpi3/ostream.hpp"
+#include "../mpi3/main.hpp"
+#include "../mpi3/version.hpp"
+#include "../mpi3/ostream.hpp"
 
 using std::cout;
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator& world){
+namespace mpi3 = boost::mpi3;
+int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
 	if(world.size() != 12) throw std::runtime_error("run with 12 procs!");
 
-	boost::mpi3::cartesian_communicator comm(world, {4, 3}, {1, 0});
-	cout << "I am rank " << comm.rank() << " and have coordinates " << comm.coordinates()[0] << ", " << comm.coordinates()[1] << "\n";
+	mpi3::cartesian_communicator comm(world, {4, 3}, {1, 0});
+	cout <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+	
+	return 0;
 }
 
 #endif

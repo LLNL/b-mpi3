@@ -321,12 +321,13 @@ window<T> communicator::make_window(mpi3::size_t size){
 
 #ifdef _TEST_BOOST_MPI3_WINDOW
 
-#include <alf/boost/mpi3/main.hpp>
+#include "../mpi3/main.hpp"
 #include<iostream>
 
-namespace mpi3 = boost::mpi3; using std::cout;
+namespace mpi3 = boost::mpi3; 
+using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 
 	std::vector<double> darr(world.rank()?0:100);
 	mpi3::window<double> w = world.make_window(darr.data(), darr.size());

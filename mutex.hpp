@@ -4,6 +4,7 @@
 #ifndef BOOST_MPI3_MUTEX_HPP
 #define BOOST_MPI3_MUTEX_HPP
 
+#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #include "../mpi3/window.hpp"
@@ -298,7 +299,7 @@ template<> atomic<float >& atomic<float >::operator/=(float  const& d){return op
 
 #ifdef _TEST_BOOST_MPI3_MUTEX
 
-#include "alf/boost/mpi3/main.hpp"
+#include "../mpi3/main.hpp"
 
 #include<thread>
 #include<random>
@@ -309,7 +310,7 @@ template<> atomic<float >& atomic<float >::operator/=(float  const& d){return op
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 
 	{
 		mpi3::mutex m(world);
@@ -363,9 +364,9 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 		mpi3::mutex m(world);
 		std::lock_guard<mpi3::mutex> lock(m);
 
-		cout << "locked from " << world.rank() << '\n';
-		cout << "never interleaved " << world.rank() << '\n';
-		cout << "forever blocked " << world.rank() << '\n';
+		cout <<"locked from "<< world.rank() << '\n';
+		cout <<"never interleaved" << world.rank() << '\n';
+		cout <<"forever blocked "<< world.rank() << '\n';
 		cout << std::endl;
 	}
 	

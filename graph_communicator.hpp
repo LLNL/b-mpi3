@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_GRAPH_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 5 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_GRAPH_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -n 5 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_GRAPH_COMMUNICATOR_HPP
 #define BOOST_MPI3_GRAPH_COMMUNICATOR_HPP
@@ -20,6 +20,7 @@ struct graph_communicator : communicator{
 		MPI_Graph_neighbors_count(impl_, rank, &nneighbors);
 		std::vector<int> ret(nneighbors);
 		MPI_Graph_neighbors(impl_, rank, ret.size(), ret.data());
+		return ret;
 	}
 
 	graph topology() const{
@@ -55,6 +56,7 @@ struct graph_communicator : communicator{
 	}
 };
 
+/*
 template<class Graph>
 graph_communicator communicator::make_graph(Graph const& g) const{
 	graph_communicator ret;
@@ -68,8 +70,9 @@ graph_communicator communicator::make_graph(Graph const& g) const{
 	}
 	MPI_Graph_create(impl_, num_vertices(g), indx.data(), edges.data(), true, &ret.impl_);
 	return ret;
-}
+}*/
 
+/*
 template<class Graph>
 int communicator::graph_rank(Graph const& g) const{
 	std::vector<int> indx;
@@ -83,16 +86,16 @@ int communicator::graph_rank(Graph const& g) const{
 	int ret;
 	MPI_Graph_map(impl_, num_vertices(g), indx.data(), edges.data(), &ret);
 	return ret;
-}
+}*/
 
 }}
 
 #ifdef _TEST_BOOST_MPI3_GRAPH_COMMUNICATOR
 
 #include<iostream>
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/version.hpp"
-#include "alf/boost/mpi3/ostream.hpp"
+#include "../mpi3/main.hpp"
+#include "../mpi3/version.hpp"
+#include "../mpi3/ostream.hpp"
 
 #include<boost/graph/adjacency_list.hpp>
 #include<boost/graph/random.hpp>
@@ -101,7 +104,7 @@ int communicator::graph_rank(Graph const& g) const{
 #include<boost/graph/graphviz.hpp>
 #include <boost/graph/isomorphism.hpp>
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator world){
 	if(world.size() != 5) return 1;
 
 	typedef boost::adjacency_list<boost::setS, boost::vecS, boost::directedS> graph;
@@ -115,9 +118,9 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& w
 		std::cout << "---\n";
 	}
 
-	auto world_graph = world.make_graph(g);
+//	auto world_graph = world.make_graph(g);
 
-	auto outg = world_graph.topology();
+/*	auto outg = world_graph.topology();
 
 	if(world.rank()==0){
 		write_graphviz(std::cout, outg);
@@ -125,9 +128,9 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& w
 	}
 
 	assert(boost::isomorphism(outg, g));
-	
-	return 0;
+*/
 
+	return 0;
 
 }
 

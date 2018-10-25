@@ -41,12 +41,12 @@ class array{
 
 #ifdef _TEST_BOOST_MPI3_ARRAY
 
-#include "alf/boost/mpi3/main.hpp"
+#include "../mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	return 0;
 }
 

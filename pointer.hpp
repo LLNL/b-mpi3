@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpicxx -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_POINTER $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_POINTER $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_POINTER_HPP
 #define BOOST_MPI3_POINTER_HPP
@@ -11,12 +11,12 @@ namespace boost{
 namespace mpi3{
 
 template<> struct pointer<void>{
-	std::shared_ptr<window>	winSP_;
+	std::shared_ptr<window<void>> winSP_;
 };
 
 template<class T>
 struct pointer{
-	std::shared_ptr<window> winSP_;
+	std::shared_ptr<window<T>> winSP_;
 	~pointer(){}
 //	pointer() : winSP_(){}
 //	pointer(pointer const& other) : winSP_(other.win_){}
@@ -101,11 +101,11 @@ pointer<T> communicator::allocate(MPI_Aint size) const{
 pointer<void> communicator::malloc(MPI_Aint size) const{
 	pointer<void> ret;
 	void* ignore; // ???
-	ret.winSP_ = std::make_shared<window>();
+	ret.winSP_ = std::make_shared<window<>>();
 	int i = MPI_Win_allocate(
 		size, 1, MPI_INFO_NULL, impl_, 
 		&ignore, //&ret.ptr_,
-		&ret.winSP_->impl_
+		&(ret.winSP_->operator&())
 	);
 //	if(size == 0) ret.ptr_ = nullptr; 
 	if(i!=0) assert(0);
@@ -127,12 +127,12 @@ struct pgas_allocator{
 		pointer<T> ret;
 		void* ignore;
 		int local_size = size/comm_.size() + (comm_.rank() < (size % comm_.size()))?1:0;
-		ret.winSP_ = std::make_shared<window>();
+		ret.winSP_ = std::make_shared<window<T>>();
 		int i = MPI_Win_allocate(
 			local_size*sizeof(T), sizeof(T), 
-			MPI_INFO_NULL, comm_.impl_,
+			MPI_INFO_NULL, &comm_,
 			&ignore, 
-			&ret.winSP_->impl_
+			&(ret.winSP_->operator&())
 		);
 		assert(i==0);
 		return ret;
@@ -150,11 +150,13 @@ struct pgas_allocator{
 #ifdef _TEST_BOOST_MPI3_POINTER
 #include<iostream>
 
-#include "alf/boost/mpi3/main.hpp"
+#include "../mpi3/main.hpp"
 using std::cout;
 using std::endl;
 
-int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& world){
+namespace mpi3 = boost::mpi3;
+
+int mpi3::main(int, char*[], mpi3::communicator world){
 	{
 		auto p = world.malloc(world.rank()==0?100*sizeof(double):0);
 		if(world.rank() == 1){
@@ -169,6 +171,7 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& w
 			cout << p.winSP_->size() << endl;
 			cout << p.winSP_->disp_unit() << endl;
 		}
+		return 0;
 		if(world.rank() == 1){
 			double t;
 			p.winSP_->lock_exclusive(0);
@@ -178,6 +181,7 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& w
 		}
 		world.free(p);
 	}
+	return 0;
 	if(1){
 		boost::mpi3::pgas_allocator<double> alloc(world);
 		boost::mpi3::pointer<double> p = alloc.allocate(1);
@@ -188,10 +192,12 @@ int boost::mpi3::main(int argc, char* argv[], boost::mpi3::communicator const& w
 		if(world.rank() == 2){if(*p == 5.1) cout << "ok\n"; else cout << "BAD\n";}
 		p.winSP_->fence();
 	//	alloc.deallocate(p, 20);
-		MPI_Win_free(&p.winSP_.get()->impl_);
+		MPI_Win_free(&(p.winSP_.get()->operator&()));
 	}
 	double r = 5.;
-	cout << "great\n";
+	cout <<"great\n";
+	
+	return 0;
 }
 
 #endif

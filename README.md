@@ -107,8 +107,8 @@ The library includes `mpi3/main.hpp` which wraps around this initialization step
 In this way, a parallel program looks very much like normal programs, except that the main function has a third argument with the default global communicator passed in.
 
 ```
-#include "../mpi3/version.hpp"
-#include "../mpi3/main.hpp"
+#include "mpi3/version.hpp"
+#include "mpi3/main.hpp"
 
 #include<iostream>
 
@@ -278,12 +278,12 @@ w.fence();
 This is minimal example using `put` and `get` functions.
 
 ```
-#include "alf/boost/mpi3/main.hpp"
+#include "mpi3/main.hpp"
 #include<iostream>
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char*[], mpi3::communicator world){
 
 	std::vector<double> darr(world.rank()?0:100);
 	mpi3::window<double> w = world.make_window(darr.data(), darr.size());
@@ -330,7 +330,7 @@ Otherwise the global communicator will be split into a number of (shared) commun
 These are special type of memory windows.
 
 ```
-#include "alf/boost/mpi3/main.hpp"
+#include "mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
@@ -375,8 +375,8 @@ Mutexes are used similarly than in threaded code,
 it prevents certain blocks of code to be executed by more than one process (rank) at a time.
 
 ```
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/mutex.hpp"
+#include "mpi3/main.hpp"
+#include "mpi3/mutex.hpp"
 
 #include<iostream>
 

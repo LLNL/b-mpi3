@@ -49,9 +49,13 @@ std::false_type has_data_aux(...);
 
 template<class T> struct has_data : decltype(has_data_aux(std::declval<T>())){};
 
-template<class It, typename = std::enable_if_t<not has_data<It>{}>>
+template<class It, typename = std::enable_if_t<not has_data<It>::value> >
 typename std_translate<typename std::iterator_traits<It>::iterator_category>::type iterator_category_aux(It);
 
+// intel compiler 17 needs this specialization
+template<class T>
+contiguous_iterator_tag iterator_category_aux(T*);
+ 
 template<class It, typename = std::enable_if_t<has_data<It>{}>>
 contiguous_iterator_tag iterator_category_aux(It);
 template<class It, class = decltype(data(It{}.base())), class = decltype(It{}.stride())>

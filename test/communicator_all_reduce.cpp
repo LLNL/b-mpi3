@@ -15,7 +15,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	std::vector<std::size_t> local(120);
 	iota(begin(local), end(local), 0);
 
-	std::vector<std::size_t> global(local.size(), -1);
+	std::vector<std::size_t> global(local.size());
 
 	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 	assert(last == global.end());

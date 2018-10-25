@@ -33,7 +33,7 @@ public:
 	struct use_array_optimization {
 		template<class T>  
 		struct apply : 
-			public mpl_::bool_<mpi3::detail::is_basic<T>::value>
+			public mpl::bool_<mpi3::detail::is_basic<T>::value>
 		{};  
 	};
 	template<class T>

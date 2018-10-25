@@ -54,7 +54,7 @@ struct error_category : std::error_category{
 	}
 };
 
-std::error_code make_error_code(error err) noexcept{
+inline std::error_code make_error_code(error err) noexcept{
 	return std::error_code(int(err), error_category::instance());
 }
 

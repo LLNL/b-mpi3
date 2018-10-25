@@ -1,5 +1,5 @@
 #ifdef COMPILATION_INSTRUCTIONS
-(echo "#include<"$0">" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_PROCESS $0x.cpp -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -D_TEST_BOOST_MPI3_PROCESS $0x.cpp -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_PROCESS_HPP
 #define BOOST_MPI3_PROCESS_HPP
@@ -81,9 +81,9 @@ std::vector<T> operator|=(communicator& comm, T const& t){
 
 #ifdef _TEST_BOOST_MPI3_PROCESS
 
-#include "alf/boost/mpi3/main.hpp"
+#include "../mpi3/main.hpp"
 
-#include "alf/boost/multi_array/serialization.hpp"
+//#include "alf/boost/multi_array/serialization.hpp"
 
 #include<boost/serialization/vector.hpp>
 #include<boost/multi_array.hpp>
