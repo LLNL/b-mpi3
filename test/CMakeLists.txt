@@ -9,6 +9,21 @@ include(CTest)
 set(CMAKE_C_COMPILER mpicc)
 set(CMAKE_CXX_COMPILER mpic++)
 
+# Find the correct parallel program launcher
+if ($ENV{CRAYPE_VERSION} MATCHES ".")
+  find_program(MPIEXEC aprun)
+
+  # Using Slurm
+  if (NOT MPIEXEC)
+     find_program(MPIEXEC srun)
+  endif()
+endif()
+# Everywhere else likely uses mpirun
+if (NOT MPIEXEC)
+  set(MPIEXEC mpirun)
+endif()
+
+
 # Set BOOST_ROOT if boost is in a non-standard location
 find_package(Boost REQUIRED)
 if(Boost_FOUND)
@@ -76,7 +91,7 @@ foreach(TEST_FILE ${TEST_SRCS})
       (TEST_FILE STREQUAL "communicator_scatter.cpp"))
     set(NPROC 8)
   endif()
-  add_test(NAME ${TEST_EXE} COMMAND mpirun -n ${NPROC} ./${TEST_EXE})
+  add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} -n ${NPROC} ./${TEST_EXE})
 endforeach()
 
 set_tests_properties(communicator_abort.cppx.x PROPERTIES WILL_FAIL true)
