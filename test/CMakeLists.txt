@@ -97,3 +97,8 @@ foreach(TEST_FILE ${TEST_SRCS})
 endforeach()
 
 set_tests_properties(communicator_abort.cppx.x PROPERTIES WILL_FAIL true)
+
+# Compile-time check for multiply defined symbols
+add_library(library_check library_check.cpp)
+add_executable(library_main library_main.cpp)
+target_link_libraries(library_main library_check)
