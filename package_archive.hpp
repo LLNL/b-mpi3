@@ -13,6 +13,8 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/item_version_type.hpp>
 
+#include <boost/version.hpp>
+
 #include <sstream>
 
 namespace boost{
@@ -85,7 +87,7 @@ class basic_package_iarchive : public boost::archive::detail::common_iarchive<Ar
 	typedef boost::archive::detail::common_iarchive<Archive> detail_common_iarchive;
 	template<class T>
 	void load_override(T& t, /*BOOST_PFTO*/ int = 0){
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 105900)
 		this->detail_common_iarchive::load_override(t, 0);
 #else
 		this->detail_common_iarchive::load_override(t);//, 0);
@@ -187,7 +189,7 @@ class package_oarchive_impl : public basic_package_oprimitive, public basic_pack
 public:
 	template<class T>
 	void save(const T& t){basic_package_oprimitive::save(t);}
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 106100)
 	void save(boost::serialization::array<double>&){
 #else
 	void save(boost::serialization::array_wrapper<double>&){
@@ -254,7 +256,7 @@ public:
 #if 1
 	// Save all supported datatypes directly
 	template<class T>
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 106100)
 	void save(boost::serialization::array<T> const& t, unsigned int){
 #else
 	void save(boost::serialization::array_wrapper<T> const& t, unsigned int){
@@ -283,7 +285,7 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 		package_oarchive_impl<package_oarchive>(p, flags)
 	{}
 	using package_oarchive_impl<package_oarchive>::operator&;
-#if(BOOST_VERSION < 106300)
+#if(BOOST_VERSION < 106100)
 	package_oarchive& operator & (boost::serialization::array<double>&){
 #else
 	package_oarchive& operator & (boost::serialization::array_wrapper<double>&){
