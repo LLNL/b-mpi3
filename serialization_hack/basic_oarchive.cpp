@@ -455,10 +455,12 @@ BOOST_ARCHIVE_DECL void
 basic_oarchive::end_preamble(){
 }
 
+#if BOOST_VERSION > 105900
 BOOST_ARCHIVE_DECL helper_collection &
 basic_oarchive::get_helper_collection(){
 	return *this;
 }
+#endif
 
 } // namespace detail
 } // namespace archive
