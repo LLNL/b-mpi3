@@ -19,9 +19,14 @@
 #define BOOST_ARCHIVE_SOURCE
 #include <boost/serialization/config.hpp>
 #include <boost/archive/archive_exception.hpp>
+#include <boost/version.hpp>
 
 namespace boost {
 namespace archive {
+
+#if BOOST_VERSION < 105900
+#define BOOST_NOEXCEPT
+#endif
 
 BOOST_ARCHIVE_DECL
 unsigned int
@@ -113,6 +118,7 @@ archive_exception::archive_exception(
     }
 }
 
+#if BOOST_VERSION > 105900
 BOOST_ARCHIVE_DECL
 archive_exception::archive_exception(archive_exception const & oth) BOOST_NOEXCEPT :
 	std::exception(oth),
@@ -120,6 +126,7 @@ archive_exception::archive_exception(archive_exception const & oth) BOOST_NOEXCE
 {
 	std::memcpy(m_buffer,oth.m_buffer,sizeof m_buffer);
 }
+#endif
 
 BOOST_ARCHIVE_DECL
 archive_exception::~archive_exception() BOOST_NOEXCEPT_OR_NOTHROW {}

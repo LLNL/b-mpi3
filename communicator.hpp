@@ -51,9 +51,17 @@
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
+<<<<<<< HEAD
 #include <boost/archive/detail/decl.hpp>
 #if BOOST_VERSION > 106000 && BOOST_VERSION < 106600
+=======
+#if BOOST_VERSION < 106600 and BOOST_VERSION > 106000
+>>>>>>> 0f68db0098987de403db6c9867c9b56be4edf0d9
 #include "../mpi3/serialization_hack/singleton.cpp"
+#endif
+#if BOOST_VERSION < 105900
+#define BOOST_ARCHIVE_DECL
+#define BOOST_SERIALIZATION_DECL
 #endif
 #include "../mpi3/serialization_hack/archive_exception.cpp"
 #include "../mpi3/serialization_hack/extended_type_info.cpp"
@@ -83,7 +91,7 @@
 namespace boost{
 namespace mpi3{
 
-#ifndef OPEN_MPI
+#if !defined(OPEN_MPI) || (OMPI_MAJOR_VERSION < 2)
 #define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED
 #define OMPI_COMM_TYPE_HWTHREAD MPI_COMM_TYPE_SHARED
 #define OMPI_COMM_TYPE_CORE     MPI_COMM_TYPE_SHARED
