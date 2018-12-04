@@ -30,8 +30,8 @@
 #include<mpi.h>
 
 #include <boost/optional.hpp> // TODO replace by std::optional (c++17)
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_array.hpp>
+//#include <boost/static_assert.hpp>
+//#include <boost/type_traits/is_array.hpp> 
 
 #define BOOST_PACKAGE_ARCHIVE_SOURCE
 
@@ -51,7 +51,8 @@
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
-#if BOOST_VERSION < 106600
+#include <boost/archive/detail/decl.hpp>
+#if BOOST_VERSION > 106000 && BOOST_VERSION < 106600
 #include "../mpi3/serialization_hack/singleton.cpp"
 #endif
 #include "../mpi3/serialization_hack/archive_exception.cpp"
@@ -1644,7 +1645,7 @@ private:
 				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_)
 		);
-		if(e != error::success) throw std::system_error{e, "cannot broadcast"};
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot broadcast"};
 		return first + count;
 	}
 	template<class It>
