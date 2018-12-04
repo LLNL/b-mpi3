@@ -1648,7 +1648,7 @@ private:
 				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_)
 		);
-		if(e != error::success) throw std::system_error{e, "cannot broadcast"};
+		if(e != boost::mpi3::error::success) throw std::system_error{e, "cannot broadcast"};
 		return first + count;
 	}
 	template<class It>
