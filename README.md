@@ -16,7 +16,7 @@ However Boost.MPI3 is designed following the principles of Boost and the STL.
 It adds features which were missing in Boost.MPI (which only covers MPI-1), with an iterator-based interface and MPI-3 features (RMA and Shared memory).
 [Boost].MPI3 is written from scratch in C++14.
 
-[Boost].MPI3 depends and has been compiled with Boost +1.58 and one of the MPI library implementations, OpenMPI +2.1.1 or MPICH +3.2.1.
+[Boost].MPI3 depends and has been compiled with Boost +1.58 and one of the MPI library implementations, OpenMPI +2.1.1 or MPICH +3.2.1, using the following compilers gcc +5.4.1, clang +6.0.
 
 ## Introduction
 
