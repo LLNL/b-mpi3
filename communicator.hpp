@@ -51,7 +51,7 @@
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
-#include <boost/archive/detail/decl.hpp>
+//#include <boost/archive/detail/decl.hpp>
 #if BOOST_VERSION > 106000 && BOOST_VERSION < 106600
 #include "../mpi3/serialization_hack/singleton.cpp"
 #endif
