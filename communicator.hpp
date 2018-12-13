@@ -1879,7 +1879,12 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
-		int s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		int s = MPI_SUCCESS;
+		if (rank() == root) {
+			s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		} else {
+			s = MPI_Reduce(data_(first), NULL, count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		}
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot reduce n"};
 	}
 	template<
