@@ -51,12 +51,8 @@
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
-<<<<<<< HEAD
-#include <boost/archive/detail/decl.hpp>
+//#include <boost/archive/detail/decl.hpp>
 #if BOOST_VERSION > 106000 && BOOST_VERSION < 106600
-=======
-#if BOOST_VERSION < 106600 and BOOST_VERSION > 106000
->>>>>>> 0f68db0098987de403db6c9867c9b56be4edf0d9
 #include "../mpi3/serialization_hack/singleton.cpp"
 #endif
 #if BOOST_VERSION < 105900
@@ -1883,7 +1879,12 @@ public:
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
-		int s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		int s = MPI_SUCCESS;
+		if (rank() == root) {
+			s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		} else {
+			s = MPI_Reduce(data_(first), NULL, count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
+		}
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot reduce n"};
 	}
 	template<

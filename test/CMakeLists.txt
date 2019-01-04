@@ -48,6 +48,7 @@ communicator_ibroadcast.cpp
 communicator_igather.cpp
 communicator_operator.cpp
 communicator_reduce.cpp
+communicator_reduce_in_place.cpp
 communicator_scatter.cpp
 communicator_set_error_handler.cpp
 communicator_split.cpp
