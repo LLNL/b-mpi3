@@ -250,13 +250,6 @@ template<class T> struct allocator{
 	}
 };
 
-struct is_root{
-	shared_communicator& comm_;
-	template<class Alloc>
-	is_root(Alloc& a) : comm_(a.comm_){}
-	bool root(){return comm_.root();}
-};
-
 }
 
 }}
