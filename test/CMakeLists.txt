@@ -39,6 +39,8 @@ endif()
 set(TEST_SRCS
 communicator_abort.cpp
 communicator_all_gather.cpp
+communicator_all_gatherv.cpp
+communicator_all_gatherv_output_iterator.cpp
 communicator_all_reduce.cpp
 communicator_barrier.cpp
 communicator_broadcast.cpp
