@@ -2217,8 +2217,8 @@ public:
 		std::vector<typename std::iterator_traits<It1>::value_type> buff(s);
 		auto e = all_gatherv_n(first, count, buff.data(), counts, displs);
 		assert( e == buff.data() + buff.size() );
-		using std::copy;
-		return copy(buff.begin(), buff.end(), d_first);
+		using std::move;
+		return move(buff.begin(), buff.end(), d_first);
 	}
 	template<typename It1, typename Size, typename It2, typename CountsIt, typename DisplsIt>
 	auto all_gatherv_n(
