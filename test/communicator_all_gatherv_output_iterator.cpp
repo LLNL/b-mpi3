@@ -3,9 +3,6 @@ mpic++ -std=c++14 -O3 -Wall -Wextra -Wpedantic $0 -o $0x.x -lboost_serialization
 #endif
 
 #include "../../mpi3/main.hpp"
-#include "../../mpi3/communicator.hpp"
-#include "../../mpi3/detail/iterator.hpp"
-#include<numeric> //iota
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
@@ -14,7 +11,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	using T = double;
 	assert( world.size() > 2 );
 
-// initialize data
+// initialize local data ///////////////////////////////////////////////////////
 	std::vector<T> v_loc;
 	switch(world.rank()){
 		case 0: v_loc = {0., 0., 0.}        ; break;
@@ -22,13 +19,13 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		case 2: v_loc = {2., 2., 2., 2., 2.}; break;
 	}
 
-// gather communication
+// gather communication ////////////////////////////////////////////////////////
 	std::vector<T> v;
 //	v.reserve(v_local.size()*world.size()); // optional! avoid a few allocations
 	world.all_gatherv(begin(v_loc), end(v_loc), std::back_inserter(v)); 
 //	v.shrink_to_fit();                      // optional! save a few memory
 
-// check communication
+// check communication /////////////////////////////////////////////////////////
 	assert((v==std::vector<T>{0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 2.}));
 	return 0;
 }

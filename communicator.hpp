@@ -2214,10 +2214,11 @@ public:
 		CountsIt counts, DisplsIt displs
 	){
 		auto s = std::accumulate(counts, counts + size(), typename std::iterator_traits<CountsIt>::value_type{0});
-		vector<typename std::iterator_traits<It1>::value_type> buff(s);
+		std::vector<typename std::iterator_traits<It1>::value_type> buff(s);
 		auto e = all_gatherv_n(first, count, buff.data(), counts, displs);
 		assert( e == buff.data() + buff.size() );
-		return std::copy(buff.begin(), buff.end(), d_first);
+		using std::copy;
+		return copy(buff.begin(), buff.end(), d_first);
 	}
 	template<typename It1, typename Size, typename It2, typename CountsIt, typename DisplsIt>
 	auto all_gatherv_n(
