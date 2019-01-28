@@ -146,7 +146,10 @@ struct array_ptr{
 	bool operator<(array_ptr<T> const& other) const{
 		return wSP_->base(0) + offset < other.wSP_->base(0) + other.offset;
 	}
-	friend pointer to_address(array_ptr const& ap){return ap.wSP_->base(0) + ap.offset;}
+	static element_type* to_address(array_ptr p) noexcept{
+		return p.wSP_->base(0) + p.offset;
+	}
+	friend pointer to_address(array_ptr const& p){return array_ptr::to_address(p);}
 };
 
 template<class T, class F>
@@ -162,18 +165,20 @@ F for_each(array_ptr<T> first, array_ptr<T> last, F f){
 	first.wSP_->fence();
 }
 
-template<typename T, typename Size, typename... Args>
-array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, Args&&...args){
+template<typename T, typename Size, typename TT>
+array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, TT const& val){
 	if(n == 0) return first;
-	if(mpi3::group(*first.wSP_).root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
+	if(mpi3::group(*first.wSP_).root()) std::uninitialized_fill_n(to_address(first), n, val); // change to to_pointer
 //	if(first.wSP_->comm_.root()) std::uninitialized_fill_n(to_address(first), n, std::forward<Args>(args)...); // change to to_pointer
 	first.wSP_->fence();
 	first.wSP_->fence();
 //	first.wSP_->comm_.barrier();
 	return first + n;
 }
+
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
+	if(n == 0) return first;
 //	if(first.wSP_->comm_.root()){
 	if(mpi3::group(*first.wSP_).root()){
 		auto first_ptr = to_address(first);
@@ -185,30 +190,93 @@ array_ptr<T> destroy_n(array_ptr<T> first, Size n){
 	return first + n;
 }
 
-//uninitialized_fill_n(
-//			this->data_, this->num_elements(), 
-//			typename array::element(std::forward<Args>(args)...)
-//		)
+template<class It1, typename T, typename Size>
+array_ptr<T> copy_n(It1 first, Size n, array_ptr<T> d_first){
+	if(n == 0) return d_first;
+	first.wSP_->fence();
+	using std::copy_n;
+	if(mpi3::group(*d_first.wSP_).root()) copy_n(first, n, to_address(d_first));
+	first.wSP_->fence();
+	return d_first + n;
+}
 
-template<class T> struct allocator{
+template<class It1, typename T>
+array_ptr<T> copy(It1 first, It1 last, array_ptr<T> d_first){
+	if(first == last) return d_first;
+	first.wSP_->fence();
+	using std::copy;
+	if(mpi3::group(*d_first.wSP_).root()) copy(first, last, to_address(d_first));
+	first.wSP_->fence();
+	using std::distance;
+	return d_first + distance(first, last);
+}
+
+template<class It1, class Size, typename T>
+array_ptr<T> uninitialized_copy(It1 first, Size n, array_ptr<T> d_first){
+	if(n == 0) return d_first;
+	first.wSP_->fence();
+	using std::uninitialized_copy_n;
+	if(mpi3::group(*d_first.wSP_).root()) 
+		uninitialized_copy_n(first, n, to_address(d_first));
+	first.wSP_->fence();
+	return d_first + n;
+}
+
+template<class It1, typename T>
+array_ptr<T> uninitialized_copy(It1 first, It1 last, array_ptr<T> d_first){
+	if(first == last) return d_first;
+	first.wSP_->fence();
+	using std::uninitialized_copy;
+	if(mpi3::group(*d_first.wSP_).root())
+		uninitialized_copy(first, last, to_address(d_first));
+	first.wSP_->fence();
+	using std::distance;
+	return d_first + distance(first, last);
+}
+
+template<class T, class Size>
+array_ptr<T> uninitialized_default_construct_n(array_ptr<T> first, Size n){
+	if(n == 0) return first;
+#if __cplusplus >= 201703L
+	using std::uninitialized_default_construct_n;
+#endif
+	first.wSP_->fence();
+	if(mpi3::group(*first.wSP_).root())
+		uninitialized_default_construct_n(to_address(first), n);
+	first.wSP_->fence();
+	return first + n;
+}
+
+template<class T, class Size>
+array_ptr<T> uninitialized_value_construct_n(array_ptr<T> first, Size n){
+	if(n == 0) return first;
+#if __cplusplus >= 201703L
+	using std::uninitialized_value_construct_n;
+#endif
+	first.wSP_->fence();
+	if(mpi3::group(*first.wSP_).root())
+		uninitialized_value_construct_n(to_address(first), n);
+	first.wSP_->fence();
+	return first + n;
+}
+
+template<class T = void> struct allocator{
 	template<class U> struct rebind{typedef allocator<U> other;};
 	using value_type = T;
 	using pointer = array_ptr<T>;
 	using const_pointer = array_ptr<T const>;
-	using reference = T&;
-	using const_reference = T const&;
-	using size_type = std::size_t;
-	using difference_type = std::ptrdiff_t;
+//	using reference = T&;
+//	using const_reference = T const&;
+	using size_type = mpi3::size_t; // std::size_t; 
+	using difference_type = std::make_signed_t<size_type>;//std::ptrdiff_t;
 
 	mpi3::shared_communicator& comm_;
 	allocator(mpi3::shared_communicator& comm) : comm_(comm){}
 	allocator() = delete;
 	~allocator() = default;
-	allocator(allocator const& other) : comm_(other.comm_){
-	//	std::cout << "popd size " << other.comm_.size() << '\n';
-	}
-	template<class U>
-	allocator(allocator<U> const& other) : comm_(other.comm_){}
+	allocator(allocator const& other) : comm_(other.comm_){}
+	template<class U> 
+	allocator(allocator<U> const& o) : comm_(o.comm_){}
 
 //	template<class ConstVoidPtr = const void*>
 	array_ptr<T> allocate(size_type n, const void* /*hint*/ = 0){
