@@ -180,7 +180,7 @@ template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
 	if(n == 0) return first;
 //	if(first.wSP_->comm_.root()){
-	if(mpi3::group(*first.wSP_).root()){
+	if(mpi3::group(*first.wSP_).root()) 
 		auto first_ptr = to_address(first);
 		for(; n > 0; (void) ++first_ptr, --n) first->~T();
 	}
