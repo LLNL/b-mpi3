@@ -463,7 +463,7 @@ public:
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	bool root() const{return rank() == 0;}
+	bool root() const{return (not empty()) and (rank() == 0);}
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 	template<typename T>
