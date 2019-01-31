@@ -114,6 +114,7 @@ struct array_ptr{
 	T& operator[](int idx) const{return ((T*)(wSP_->base(0)) + offset)[idx];}
 	T* operator->() const{return (T*)(wSP_->base(0)) + offset;}
 	T* get() const{return wSP_->base(0) + offset;}
+	explicit operator T*() const{return get();}
 	explicit operator bool() const{return (bool)wSP_;}//.get();}
 	bool operator==(std::nullptr_t) const{return not (bool)wSP_;}
 	bool operator!=(std::nullptr_t) const{return not operator==(nullptr);}
@@ -179,24 +180,23 @@ array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, TT const& val){
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
 	if(n == 0) return first;
-//	if(first.wSP_->comm_.root()){
-	if(mpi3::group(*first.wSP_).root()) 
-		auto first_ptr = to_address(first);
-		for(; n > 0; (void) ++first_ptr, --n) first->~T();
-	}
+	using std::destroy_n;
+	if(mpi3::group(*first.wSP_).root()) destroy_n(to_address(first), n);
+//		auto first_ptr = to_address(first);
+//		for(; n > 0; (void) ++first_ptr, --n) first->~T();
+//	}
 	first.wSP_->fence();
 	first.wSP_->fence();
-//	first.wSP_->comm_.barrier();
 	return first + n;
 }
 
 template<class It1, typename T, typename Size>
 array_ptr<T> copy_n(It1 first, Size n, array_ptr<T> d_first){
-	if(n == 0) return d_first;
-	first.wSP_->fence();
+//	if(n == 0) return d_first;
+	d_first.wSP_->fence();
 	using std::copy_n;
 	if(mpi3::group(*d_first.wSP_).root()) copy_n(first, n, to_address(d_first));
-	first.wSP_->fence();
+	d_first.wSP_->fence();
 	return d_first + n;
 }
 
@@ -212,52 +212,49 @@ array_ptr<T> copy(It1 first, It1 last, array_ptr<T> d_first){
 }
 
 template<class It1, class Size, typename T>
-array_ptr<T> uninitialized_copy(It1 first, Size n, array_ptr<T> d_first){
-	if(n == 0) return d_first;
-	first.wSP_->fence();
+array_ptr<T> uninitialized_copy(It1 f, Size n, array_ptr<T> d){
+	if(n == 0) return d;
+	f.wSP_->fence();
 	using std::uninitialized_copy_n;
-	if(mpi3::group(*d_first.wSP_).root()) 
-		uninitialized_copy_n(first, n, to_address(d_first));
-	first.wSP_->fence();
-	return d_first + n;
+	if(mpi3::group(*d.wSP_).root()) uninitialized_copy_n(f, n, to_address(d));
+	f.wSP_->fence();
+	return d + n;
 }
 
 template<class It1, typename T>
-array_ptr<T> uninitialized_copy(It1 first, It1 last, array_ptr<T> d_first){
-	if(first == last) return d_first;
-	first.wSP_->fence();
+array_ptr<T> uninitialized_copy(It1 f, It1 l, array_ptr<T> d){
+	if(f == l) return d;
+	f.wSP_->fence();
 	using std::uninitialized_copy;
-	if(mpi3::group(*d_first.wSP_).root())
-		uninitialized_copy(first, last, to_address(d_first));
-	first.wSP_->fence();
+	if(mpi3::group(*d.wSP_).root()) uninitialized_copy(f, l, to_address(d));
+	f.wSP_->fence();
 	using std::distance;
-	return d_first + distance(first, last);
+	return d + distance(f, l);
 }
 
 template<class T, class Size>
-array_ptr<T> uninitialized_default_construct_n(array_ptr<T> first, Size n){
-	if(n == 0) return first;
+array_ptr<T> uninitialized_default_construct_n(array_ptr<T> f, Size n){
+	if(n == 0) return f;
 #if __cplusplus >= 201703L
 	using std::uninitialized_default_construct_n;
 #endif
-	first.wSP_->fence();
-	if(mpi3::group(*first.wSP_).root())
-		uninitialized_default_construct_n(to_address(first), n);
-	first.wSP_->fence();
-	return first + n;
+	f.wSP_->fence();
+	if(group(*f.wSP_).root())
+		uninitialized_default_construct_n(to_address(f), n);
+	f.wSP_->fence();
+	return f + n;
 }
 
 template<class T, class Size>
-array_ptr<T> uninitialized_value_construct_n(array_ptr<T> first, Size n){
-	if(n == 0) return first;
+array_ptr<T> uninitialized_value_construct_n(array_ptr<T> f, Size n){
+	if(n == 0) return f;
 #if __cplusplus >= 201703L
 	using std::uninitialized_value_construct_n;
 #endif
-	first.wSP_->fence();
-	if(mpi3::group(*first.wSP_).root())
-		uninitialized_value_construct_n(to_address(first), n);
-	first.wSP_->fence();
-	return first + n;
+	f.wSP_->fence();
+	if(group(*f.wSP_).root()) uninitialized_value_construct_n(to_address(f), n);
+	f.wSP_->fence();
+	return f + n;
 }
 
 template<class T = void> struct allocator{
@@ -271,22 +268,13 @@ template<class T = void> struct allocator{
 	using difference_type = std::make_signed_t<size_type>;//std::ptrdiff_t;
 
 	mpi3::shared_communicator& comm_;
-	allocator(mpi3::shared_communicator& comm) : comm_(comm){}
 	allocator() = delete;
-	~allocator() = default;
+	allocator(mpi3::shared_communicator& comm) : comm_(comm){}
 	allocator(allocator const& other) : comm_(other.comm_){}
-	template<class U> 
-	allocator(allocator<U> const& o) : comm_(o.comm_){}
+	~allocator() = default;
+	template<class U>  allocator(allocator<U> const& o) : comm_(o.comm_){}
 
-//	template<class ConstVoidPtr = const void*>
 	array_ptr<T> allocate(size_type n, const void* /*hint*/ = 0){
-	/*	std::cerr << "allocating " << n << std::endl; 
-		std::cerr << " from rank " << comm_.rank() << std::endl;
-		std::cerr << "active1 " << bool(comm_) << std::endl;
-		std::cerr << "active2 " << bool(&comm_ == MPI_COMM_NULL) << std::endl;
-		std::cerr << "size " << comm_.size() << std::endl;
-		std::cout << std::flush;*/
-	//	comm_.barrier();
 		array_ptr<T> ret = 0;
 		if(n == 0){
 			ret.wSP_ = std::make_shared<shared_window<T>>(
@@ -296,7 +284,6 @@ template<class T = void> struct allocator{
 		}
 		ret.wSP_ = std::make_shared<shared_window<T>>(
 			comm_.make_shared_window<T>(comm_.root()?n:0)
-		//	comm_.allocate_shared(comm_.rank()==0?n*sizeof(T):1)
 		);
 		return ret;
 	}
@@ -307,15 +294,9 @@ template<class T = void> struct allocator{
 	}
 	bool operator==(allocator const& other) const{return comm_ == other.comm_;}
 	bool operator!=(allocator const& other) const{return not(other == *this);}
-	template<class U, class... Args>
-	void construct(U* p, Args&&... args){
-	//	std::cout << "construct: I am " << comm_.rank() << std::endl;
-		::new((void*)p) U(std::forward<Args>(args)...);
-	}
-	template< class U >	void destroy(U* p){
-	//	std::cout << "destroy: I am " << comm_.rank() << std::endl;
-		p->~U();
-	}
+	template<class U, class... As>
+	void construct(U* p, As&&... as){::new((void*)p) U(std::forward<As>(as)...);}
+	template< class U >	void destroy(U* p){p->~U();}
 };
 
 }
