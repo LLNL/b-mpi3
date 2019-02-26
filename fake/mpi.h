@@ -262,20 +262,20 @@ void fatal_error_(MPI_Comm * comm, int * errcode, ...);
 void no_op_error_(MPI_Comm * comm, int * errcode, ...){}
 
 
-static MPI_Errhandler MPI_ERRORS_ARE_FATAL;
-static MPI_Errhandler MPI_ERRORS_RETURN;
+MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
+MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
 //static struct MPI_Errhandler_impl_ MPI_ERRORS_ARE_FATAL = {&fatal_error_};
 //static struct MPI_Errhandler_impl_ MPI_ERRORS_RETURN    = {&no_op_error_};
 
-static MPI_Errhandler* MPI_ERRHANDLER_NULL = NULL;
+MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
 
 struct MPI_Comm_impl_{
 	MPI_Errhandler errhandler_;
 };
 
-extern MPI_Comm MPI_COMM_NULL = NULL;//{{&fatal_error_}};
-extern MPI_Comm MPI_COMM_WORLD = NULL;
-extern MPI_Comm MPI_COMM_SELF = NULL;
+MPI_Comm MPI_COMM_NULL WEAKVAR = NULL;//{{&fatal_error_}};
+MPI_Comm MPI_COMM_WORLD WEAKVAR = NULL;
+MPI_Comm MPI_COMM_SELF WEAKVAR = NULL;
 
 //typedef MPI_Comm_impl* MPI_Comm;
 
@@ -285,7 +285,7 @@ extern MPI_Comm MPI_COMM_SELF = NULL;
 //} MPI_Errhandler;
 
 
-static const void* MPI_IN_PLACE = (const void*)(-1);
+const void* MPI_IN_PLACE WEAKVAR = (const void*)(-1);
 
 typedef enum { // redefined operations are supplied for MPI_REDUCE 
 	MPI_OP_NULL, // TODO: is this an operator?
