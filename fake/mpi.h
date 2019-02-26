@@ -10,6 +10,18 @@
 #include <time.h> // clock_gettime
 #include <stdio.h> // puts for debug
 
+// Use weak linking on functions and variables to avoid multiple-definition
+//   errors at link time.
+
+#ifdef __cplusplus
+#define WEAK inline
+#else
+#define WEAK __attribute__((weak))
+#endif
+
+#define WEAKVAR __attribute__((weak))
+
+
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
 const int MPI_MAX_INFO_KEY = 128;
 const int MPI_MAX_INFO_VAL = 128;
