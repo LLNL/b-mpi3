@@ -346,10 +346,14 @@ typedef struct {
     int MPI_TAG;
 } MPI_Status;
 
-//static MPI_Status *MPI_STATUS_IGNORE = NULL;
+// Constants specifying empty or ignored input
 
-//static char *MPI_ARGV_NULL[] = {};
-//static int MPI_ERRCODES_IGNORE[] = {};
+static MPI_Status *MPI_STATUS_IGNORE = NULL;
+static MPI_Status *MPI_STATUSES_IGNORE = NULL;
+
+static char **MPI_ARGV_NULL = NULL;
+static char ***MPI_ARGVS_NULL = NULL;
+static int *MPI_ERRCODES_IGNORE = NULL;
 
 typedef struct {} MPI_Message;
 //[[noreturn]]
