@@ -10,6 +10,15 @@
 #include <time.h> // clock_gettime
 #include <stdio.h> // puts for debug
 
+#include <stdint.h>
+#ifdef __cplusplus
+#include <complex>
+#endif
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
+
 // Use weak linking on functions and variables to avoid multiple-definition
 //   errors at link time.
 
@@ -20,6 +29,10 @@
 #endif
 
 #define WEAKVAR __attribute__((weak))
+
+
+typedef int MPI_Count;
+typedef long long int MPI_Offset;
 
 
 const int MPI_MAX_PROCESSOR_NAME = HOST_NAME_MAX;
@@ -145,64 +158,81 @@ typedef struct MPI_Datatype_impl_* MPI_Datatype;
 struct MPI_Datatype_impl_{
 //	MPI_Aint lb;
 //	MPI_Aint extent;
+	int bytes; // for basic types - needs to be first for gcc compilation of the DEFINE_FAKE_MPI_DATATYPE macros
+	bool is_basic;
 	int count; // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths 
 	int* blocklens; // [in] number of elements in each block (array) 
 	MPI_Aint* indices; // [in] byte displacement of each block (array) 
 	MPI_Datatype* old_types; // [in] type of elements in each block (array of handles to datatype objects)
 };
 
-static MPI_Datatype MPI_CHAR = NULL;
-static MPI_Datatype MPI_INT = NULL;
-static MPI_Datatype MPI_DOUBLE = NULL;
-static MPI_Datatype MPI_BYTE = NULL;
-static MPI_Datatype MPI_FLOAT_INT = NULL;
+#define DEFINE_FAKE_MPI_DATATYPE(s) \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = (struct MPI_Datatype_impl_){.bytes =0, .is_basic=true}; \
+  MPI_Datatype s WEAKVAR =&DEF##s; \
 
-typedef enum {
-	MPI_DATATYPE_NULL = 0,
-//	MPI_CHAR,
-	MPI_SHORT,
-//	MPI_INT,
-	MPI_LONG,
-	MPI_LONG_LONG_INT,
-	MPI_LONG_LONG,
-	MPI_SIGNED_CHAR,
-	MPI_UNSIGNED_CHAR,
-	MPI_UNSIGNED_SHORT,
-	MPI_UNSIGNED,
-	MPI_UNSIGNED_LONG,
-	MPI_UNSIGNED_LONG_LONG,
-	MPI_FLOAT,
-//	MPI_DOUBLE,
-	MPI_LONG_DOUBLE,
-	MPI_WCHAR,
-	MPI_C_BOOL,
-	MPI_INT8_T,
-	MPI_INT16_T,
-	MPI_INT32_T,
-	MPI_INT64_T,
-	MPI_UINT8_T,
-	MPI_UINT16_T,
-	MPI_UINT32_T,
-	MPI_UINT64_T,
-	MPI_AINT,
-	MPI_COUNT,
-	MPI_OFFSET,
-	MPI_C_COMPLEX,
-	MPI_C_FLOAT_COMPLEX,
-	MPI_C_DOUBLE_COMPLEX,
-//	MPI_BYTE,
-	MPI_PACKED,
-	MPI_CXX_BOOL,
-	MPI_CXX_FLOAT_COMPLEX,
-	MPI_CXX_DOUBLE_COMPLEX,
-	MPI_CXX_LONG_DOUBLE_COMPLEX,
-//	MPI_FLOAT_INT,
-	MPI_DOUBLE_INT,
-	MPI_LONG_INT,
-	MPI_2INT,
-	MPI_SHORT_INT,
-	MPI_LONG_DOUBLE_INT,
-} MPI_Datatype_;
+
+// MPI Datatype with associated C/C++ type
+#define DEFINE_FAKE_MPI_DATATYPE2(s, t) \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = (struct MPI_Datatype_impl_){.bytes=sizeof(t), .is_basic=true}; \
+  MPI_Datatype s WEAKVAR =&DEF##s;
+
+
+DEFINE_FAKE_MPI_DATATYPE(MPI_DATATYPE_NULL)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_CHAR, char)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_SHORT, short int)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_INT, int)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_LONG, long)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_LONG_LONG_INT, long long)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_LONG_LONG, long long)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_SIGNED_CHAR, char)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UNSIGNED_CHAR, unsigned char)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UNSIGNED_SHORT, unsigned short)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UNSIGNED, unsigned)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UNSIGNED_LONG, unsigned long)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UNSIGNED_LONG_LONG, unsigned long long)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_FLOAT, float)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_DOUBLE, double)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_LONG_DOUBLE, long double)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_WCHAR, wchar_t)
+#ifdef __cplusplus
+DEFINE_FAKE_MPI_DATATYPE(MPI_C_BOOL)
+#else
+DEFINE_FAKE_MPI_DATATYPE2(MPI_C_BOOL, _Bool)
+#endif
+DEFINE_FAKE_MPI_DATATYPE2(MPI_INT8_T, int8_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_INT16_T, int16_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_INT32_T, int32_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_INT64_T, int64_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UINT8_T, uint8_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UINT16_T, uint16_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UINT32_T, uint32_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_UINT64_T, uint64_t)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_AINT, MPI_Aint)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_COUNT, MPI_Count)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_OFFSET, MPI_Offset)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_C_COMPLEX, float _Complex)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_C_FLOAT_COMPLEX, float _Complex)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_C_DOUBLE_COMPLEX, double _Complex)
+DEFINE_FAKE_MPI_DATATYPE(MPI_BYTE)
+DEFINE_FAKE_MPI_DATATYPE(MPI_PACKED)
+#ifdef __cplusplus
+DEFINE_FAKE_MPI_DATATYPE2(MPI_CXX_BOOL, bool)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_CXX_FLOAT_COMPLEX, std::complex<float>)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_CXX_DOUBLE_COMPLEX, std::complex<double>)
+DEFINE_FAKE_MPI_DATATYPE2(MPI_CXX_LONG_DOUBLE_COMPLEX, std::complex<long double>)
+#else
+DEFINE_FAKE_MPI_DATATYPE(MPI_CXX_BOOL)
+DEFINE_FAKE_MPI_DATATYPE(MPI_CXX_FLOAT_COMPLEX)
+DEFINE_FAKE_MPI_DATATYPE(MPI_CXX_DOUBLE_COMPLEX)
+DEFINE_FAKE_MPI_DATATYPE(MPI_CXX_LONG_DOUBLE_COMPLEX)
+#endif
+DEFINE_FAKE_MPI_DATATYPE(MPI_FLOAT_INT)
+DEFINE_FAKE_MPI_DATATYPE(MPI_DOUBLE_INT)
+DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_INT)
+DEFINE_FAKE_MPI_DATATYPE(MPI_2INT)
+DEFINE_FAKE_MPI_DATATYPE(MPI_SHORT_INT)
+DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_DOUBLE_INT)
+
 
 
 inline int MPI_Type_create_struct(int count, const int array_of_blocklengths[], const MPI_Aint array_of_displacements[],
@@ -712,62 +742,6 @@ int MPI_Init( // Initialize the MPI execution environment
 	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_ARE_FATAL);
 //	MPI_COMM_SELF->errhandler_ = MPI_ERRORS_ARE_FATAL;
 
-	MPI_BYTE = 0;//(MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-//	MPI_BYTE->lb = 0;
-//	MPI_BYTE->extent = sizeof(unsigned char);
-
-	MPI_CHAR = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_CHAR->count = 1;
-	MPI_CHAR->blocklens = (int*)malloc(1*sizeof(int));
-	MPI_CHAR->indices = (MPI_Aint*)malloc(1*sizeof(MPI_Aint));
-	MPI_CHAR->old_types = (MPI_Datatype*)malloc(1*sizeof(MPI_Datatype));;
-	MPI_CHAR->blocklens[0] = 1;
-	MPI_CHAR->indices[0] = 0;
-	MPI_CHAR->old_types[0] = MPI_BYTE;
-
-	MPI_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_INT->count = 1;
-	MPI_INT->blocklens = (int*)malloc(1*sizeof(int));
-	MPI_INT->indices = (MPI_Aint*)malloc(1*sizeof(MPI_Aint));
-	MPI_INT->old_types = (MPI_Datatype*)malloc(1*sizeof(MPI_Datatype));;
-	MPI_INT->blocklens[0] = sizeof(int);
-	MPI_INT->indices[0] = 0;
-	MPI_INT->old_types[0] = MPI_BYTE;
-
-	MPI_DOUBLE = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_DOUBLE->count = 1;
-	MPI_DOUBLE->blocklens = (int*)malloc(1*sizeof(int));
-	MPI_DOUBLE->indices = (MPI_Aint*)malloc(1*sizeof(MPI_Aint));
-	MPI_DOUBLE->old_types = (MPI_Datatype*)malloc(1*sizeof(MPI_Datatype));;
-
-	MPI_FLOAT_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_FLOAT_INT->count = 1;
-	MPI_FLOAT_INT->blocklens = (int*)malloc(1*sizeof(int));
-	MPI_FLOAT_INT->indices = (MPI_Aint*)malloc(1*sizeof(MPI_Aint));
-	MPI_FLOAT_INT->old_types = (MPI_Datatype*)malloc(1*sizeof(MPI_Datatype));;
-	MPI_FLOAT_INT->blocklens[0] = sizeof(float) + sizeof(int);
-	MPI_FLOAT_INT->indices[0] = 0;
-	MPI_FLOAT_INT->old_types[0] = MPI_BYTE;
-
-
-/*
-	MPI_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_INT->lb = 0;
-	MPI_INT->extent = sizeof(int);
-
-	MPI_DOUBLE = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_DOUBLE->lb = 0;
-	MPI_DOUBLE->extent = sizeof(double);
-
-	MPI_BYTE = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_BYTE->lb = 0;
-	MPI_BYTE->extent = sizeof(unsigned char);
-
-	MPI_FLOAT_INT = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	MPI_FLOAT_INT->lb = 0;
-	MPI_FLOAT_INT->extent = sizeof(float) + sizeof(int);
-*/
-
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
 int MPI_Init_thread( // Initialize the MPI execution environment 
@@ -962,14 +936,11 @@ int MPI_Type_size( // Return the number of bytes occupied by entries in the data
 	int *size // [out] datatype size (integer) 
 ){
 //	assert(size);
-	if(datatype == MPI_BYTE){
-		*size = 1;
+	if(datatype->is_basic){
+		*size = datatype->bytes;
 		return MPI_SUCCESS;
 	}
-	if(datatype == MPI_INT){
-		*size = sizeof(int);
-		return MPI_SUCCESS;
-	}
+
 	if(datatype->count == 1){
 		int oldsize = -1;
 		MPI_Type_size(datatype->old_types[0], &oldsize);
