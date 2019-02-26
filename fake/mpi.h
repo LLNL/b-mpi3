@@ -1057,13 +1057,12 @@ int MPI_Gather( // Gathers together values from a group of processes
 	assert(root == 0);
 	int sendsize = -1;
 	int recvsize = -1;
-#ifndef max
-    #define max(a,b) ((a) > (b) ? (a) : (b))
-#endif
+#define fake_mpi_max(a,b) ((a) > (b) ? (a) : (b))
 	MPI_Type_size(sendtype, &sendsize);
 	MPI_Type_size(recvtype, &recvsize);
-	memcpy((char*)recvbuf, (const char*)sendbuf, max(sendcnt*sendsize, recvcnt*recvsize));
+	memcpy((char*)recvbuf, (const char*)sendbuf, fake_mpi_max(sendcnt*sendsize, recvcnt*recvsize));
 	return MPI_SUCCESS;
+#undef fake_mpi_max
 }
 
 static inline 
