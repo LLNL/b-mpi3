@@ -208,6 +208,22 @@ typedef enum { // redefined operations are supplied for MPI_REDUCE
 } MPI_Op; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
 
 
+// Forward declartions for Chapter 8 - MPI Environment Management
+
+typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...);
+
+struct MPI_Errhandler_impl_{
+	MPI_Comm_errhandler_function* func_;
+};
+
+typedef struct MPI_Errhandler_impl_* MPI_Errhandler;
+
+MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
+MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
+
+MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
+
+
 // -----------------------------------------------------------------------------
 // Chapter 9 - The Info Object
 // -----------------------------------------------------------------------------
@@ -1380,67 +1396,150 @@ int MPI_Graph_map(
     return MPI_SUCCESS;
 }
 
+
+// -----------------------------------------------------------------------------
+//  Chapter 8 - MPI Environmental Management
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+//  Chapter 8.1 Implementation Information
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.1.1 Version Inquiries
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Get_version( // Return the version number of MPI
+	int* version,   // [out] Version of MPI
+	int* subversion // [out] Suversion of MPI
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node209.htm
+	*version = 3;
+	*subversion = 1;
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.1.2 Environmental Inquiries
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call.
+	char *name, // A unique specifier for the actual (as opposed to virtual) node.
+	int *resultlen // Length (in printable characters) of the result returned in name
+){
+	if(gethostname(name, MPI_MAX_PROCESSOR_NAME) > 0)
+		return MPI_ERR_UNKNOWN;
+	*resultlen = strlen(name);
+	return MPI_SUCCESS;
+}  // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node210.htm#Node215
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.2  Memory Allocation
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Alloc_mem(
+	MPI_Aint size,
+	MPI_Info info,
+	void *baseptr
+) {
+    //if (baseptr) *(void **)baseptr = malloc(size);
+    if (baseptr) *(void **)baseptr = 0;
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Free_mem(
+	void *base
+) {
+    //free(base);
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.3  Error Handling
+// -----------------------------------------------------------------------------
 
 // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
-typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...); 
-
-// typedef enum {
-//	MPI_COMM_NULL = 0, 
-//	MPI_COMM_WORLD = 1, 
-//	MPI_COMM_SELF = 2,
-//} MPI_Comm;
-
-struct MPI_Errhandler_impl_{
-	MPI_Comm_errhandler_function* func_;
-};
-
-typedef struct MPI_Errhandler_impl_* MPI_Errhandler;
-
-void fatal_error_(MPI_Comm * comm, int * errcode, ...);
-void no_op_error_(MPI_Comm * comm, int * errcode, ...){}
-
-
-MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
-MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
-//static struct MPI_Errhandler_impl_ MPI_ERRORS_ARE_FATAL = {&fatal_error_};
-//static struct MPI_Errhandler_impl_ MPI_ERRORS_RETURN    = {&no_op_error_};
-
-MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
-
 struct MPI_Comm_impl_{
 	MPI_Errhandler errhandler_;
 };
 
-
-//typedef MPI_Comm_impl* MPI_Comm;
-
-//typedef enum { // Predefined error handlers
-//	MPI_ERRORS_ARE_FATAL, // The handler, when called, causes the program to abort on all executing processes. This has the same effect as if MPI_ABORT was called by the process that invoked the handler. 
-//	MPI_ERRORS_RETURN     // The handler has no effect other than returning the error code to the user. 
-//} MPI_Errhandler;
-
-
-
-
-//[[noreturn]]
-static inline 
-int MPI_Abort( // Terminates MPI execution environment
-	MPI_Comm comm, // [in] communicator of tasks to abort
-	int errorcode  // [in] error code to return to invoking environment
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
-	exit(errorcode);
-//	return MPI_SUCCESS; // function never returns
+WEAK
+int MPI_Comm_create_errhandler( // Create a communicator error handler
+	MPI_Comm_errhandler_function *comm_errhandler_fn, // [in] user defined error handling procedure (function)
+	MPI_Errhandler *errhandler                        // [out] MPI error handler (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
+	*errhandler = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_));
+	(*errhandler)->func_ = comm_errhandler_fn;
+	return MPI_SUCCESS;
 }
-void fatal_error_(MPI_Comm * comm, int * errcode, ...){
-	switch(*errcode){
-		case MPI_ERR_COMM : puts("[] *** MPI_ERR_COMM: invalid communicator\n[] *** MPI_ERRORS_ARE_FATAL (will now abort)"); MPI_Abort(*comm, *errcode);
-	}
+
+WEAK
+int MPI_Comm_set_errhandler( // Set the error handler for a communicator
+	MPI_Comm comm,             // [in] communicator (handle)
+	MPI_Errhandler errhandler  // [in] new error handler for communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
+	assert(comm != MPI_COMM_NULL);
+	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	comm->errhandler_ = errhandler; //->func_ = errhandler->func_;
+	return MPI_SUCCESS;
 }
-int MPI_Comm_call_errhandler( // Call the error handler installed on a communicator 
-	MPI_Comm comm, // [in] communicator with error handler (handle) 
-	int errorcode  // [in] error code (integer) 
+
+
+WEAK
+int MPI_Comm_get_errhandler( // Get the error handler attached to a communicator
+	MPI_Comm comm,              // [in] communicator (handle)
+	MPI_Errhandler *errhandler  // [out] handler currently associated with communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node220.htm
+	return MPI_SUCCESS;
+}
+
+
+void fatal_error_(MPI_Comm * comm, int * errcode, ...);
+WEAK
+void no_op_error_(MPI_Comm * comm, int * errcode, ...){}
+
+
+
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.3.4  Freeing Errohandlers and Retrieving Error Strings
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Errhandler_free( // Frees an MPI-style errorhandler
+	MPI_Errhandler *errhandler // [in-out] MPI error handler (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm
+	free(*errhandler);
+	errhandler = MPI_ERRHANDLER_NULL;
+	return MPI_SUCCESS;
+}
+
+int MPI_Error_string( // Return a string for a given error code
+	int errorcode, // [in] Error code returned by an MPI routine or an MPI error class
+	char *string,  // [out] Text that corresponds to the errorcode
+	int *resultlen // [out] Length of string
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm#Node221
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.4  Error Codes and Classes
+// -----------------------------------------------------------------------------
+
+int MPI_Error_class( // Converts an error code into an error class
+	int errorcode,  // Error code returned by an MPI routine
+	int *errorclass // Error class associated with errorcode
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm#Node222
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.5  Error Classes, Error Codes, and Error Handlers
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Comm_call_errhandler( // Call the error handler installed on a communicator
+	MPI_Comm comm, // [in] communicator with error handler (handle)
+	int errorcode  // [in] error code (integer)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node223.htm
 //	if(comm == MPI_COMM_NULL){
 //		return MPI_ERR_COMM;
@@ -1448,13 +1547,106 @@ int MPI_Comm_call_errhandler( // Call the error handler installed on a communica
 	comm->errhandler_->func_(&comm, &errorcode);
 	return MPI_SUCCESS;
 }
-int MPI_Comm_call_errhandler_(
-	MPI_Comm comm, 
-	int errorcode
-){
-	MPI_Comm_call_errhandler(comm, errorcode);
-	return errorcode;
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.6  Timers and Synchronization
+// -----------------------------------------------------------------------------
+
+WEAK
+double MPI_Wtime( // Returns an elapsed time on the calling processor
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
+    struct timespec tw;
+    clock_gettime(CLOCK_MONOTONIC, &tw);
+	return 1.0*tw.tv_sec + 1e-9*tw.tv_nsec;;
 }
+
+WEAK
+double MPI_Wtick( // Returns the resolution of MPI_Wtime
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
+	return 1e-9;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.7   Startup
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Init( // Initialize the MPI execution environment
+	int *argc,   // [in] Pointer to the number of arguments
+	char ***argv // [in] Pointer to the argument vector
+){
+	MPI_Comm_create_errhandler(&fatal_error_, &MPI_ERRORS_ARE_FATAL);
+	MPI_Comm_create_errhandler(&no_op_error_, &MPI_ERRORS_RETURN);
+//	MPI_ERRORS_ARE_FATAL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));//{&fatal_error_};
+//	static struct MPI_Errhandler_impl_ MPI_ERRORS_RETURN    = {&no_op_error_};
+
+//	MPI_COMM_NULL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
+//	MPI_COMM_NULL->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_));
+//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_ARE_FATAL);
+
+	MPI_COMM_WORLD = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
+	MPI_COMM_WORLD->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_));
+	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+//	MPI_COMM_WORLD->errhandler_ = MPI_ERRORS_ARE_FATAL;
+
+	MPI_COMM_SELF = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
+	MPI_COMM_SELF->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_));
+	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_ARE_FATAL);
+//	MPI_COMM_SELF->errhandler_ = MPI_ERRORS_ARE_FATAL;
+
+	return MPI_SUCCESS;
+} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
+
+
+WEAK
+int MPI_Finalize( // Terminates MPI execution environment
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
+	free(MPI_COMM_WORLD->errhandler_); // TODO revise
+	free(MPI_COMM_WORLD);
+	free(MPI_COMM_SELF->errhandler_); // TODO revise
+	free(MPI_COMM_SELF);
+
+	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
+	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
+
+	free(MPI_INT);
+	free(MPI_FLOAT_INT);
+
+	return MPI_SUCCESS;
+}
+
+int MPI_Initialized( // Indicates whether MPI_Init has been called.
+  int *flag // [out] Flag is true if MPI_Init or MPI_Init_thread has been called and false otherwise.
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
+
+WEAK
+int MPI_Abort( // Terminates MPI execution environment
+	MPI_Comm comm, // [in] communicator of tasks to abort
+	int errorcode  // [in] error code to return to invoking environment
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
+	exit(errorcode);
+//	return MPI_SUCCESS; // function never returns
+}
+
+
+WEAK
+void fatal_error_(MPI_Comm * comm, int * errcode, ...){
+	switch(*errcode){
+		case MPI_ERR_COMM : puts("[] *** MPI_ERR_COMM: invalid communicator\n[] *** MPI_ERRORS_ARE_FATAL (will now abort)"); MPI_Abort(*comm, *errcode);
+	}
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 8.7.2  Determining Whether MPI Has Finished
+// -----------------------------------------------------------------------------
+
+int MPI_Finalized( // Indicates whether MPI_Finalize has been called
+	int *flag // [out] true if MPI was finalized (logical)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node227.htm
+
+// -----------------------------------------------------------------------------
+
+
 static inline
 int MPI_Comm_compare( // Compares two communicators
   MPI_Comm comm1, // [in] comm1 (handle) 
@@ -1511,12 +1703,6 @@ int MPI_Comm_split( // Creates new communicators based on colors and keys
 	int key,           // [in] control of rank assigment (integer)
 	MPI_Comm *newcomm  // [out] new communicator (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-int MPI_Comm_get_errhandler( // Get the error handler attached to a communicator 
-	MPI_Comm comm,              // [in] communicator (handle) 
-	MPI_Errhandler *errhandler  // [out] handler currently associated with communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node220.htm
-	return MPI_SUCCESS;
-}
 int MPI_Comm_get_name( // Return the print name from the communicator 
 	MPI_Comm comm,   // communicator whose name is to be returned (handle)
 	char *comm_name, // the name previously stored on the communicator, or an...
@@ -1537,14 +1723,6 @@ int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the giv
 	*rank = 0;
 	return MPI_SUCCESS;
 }
-int MPI_Get_version( // Return the version number of MPI 
-	int* version,   // [out] Version of MPI
-	int* subversion // [out] Suversion of MPI
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node209.htm
-	*version = 3;
-	*subversion = 1;
-	return MPI_SUCCESS;
-}
 int MPI_Comm_set_name( // Sets the print name for a communicator 
 	MPI_Comm comm,        // [in] communicator to name (handle) 
 	const char *comm_name // [in] Name for communicator (string)
@@ -1557,15 +1735,6 @@ inline int MPI_Comm_create( // Creates a new communicator
 	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
 	if(group == MPI_GROUP_NULL) return MPI_ERR_GROUP;
 	newcomm = (MPI_Comm*)malloc(sizeof(MPI_Comm));
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Comm_create_errhandler( // Create a communicator error handler 
-	MPI_Comm_errhandler_function *comm_errhandler_fn, // [in] user defined error handling procedure (function) 
-	MPI_Errhandler *errhandler                        // [out] MPI error handler (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
-	*errhandler = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_));
-	(*errhandler)->func_ = comm_errhandler_fn;
 	return MPI_SUCCESS;
 }
 int MPI_Comm_create_group( // must be called by all processes in group, which is a subgroup of the group of comm
@@ -1594,25 +1763,6 @@ int MPI_Comm_dup( // Duplicates an existing communicator with all its cached inf
 	(**newcomm).errhandler_ = comm->errhandler_;
 	return MPI_SUCCESS;
 }
-int MPI_Comm_set_errhandler( // Set the error handler for a communicator 
-	MPI_Comm comm,             // [in] communicator (handle) 
-	MPI_Errhandler errhandler  // [in] new error handler for communicator (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
-	assert(comm != MPI_COMM_NULL);
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	comm->errhandler_ = errhandler; //->func_ = errhandler->func_;
-	return MPI_SUCCESS;
-}
-static inline 
-int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
-	char *name, // A unique specifier for the actual (as opposed to virtual) node.
-	int *resultlen // Length (in printable characters) of the result returned in name
-){
-	if(gethostname(name, MPI_MAX_PROCESSOR_NAME) > 0) 
-		return MPI_ERR_UNKNOWN;
-	*resultlen = strlen(name);
-	return MPI_SUCCESS;
-}  // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node210.htm#Node215
 int MPI_Group_free( // Frees a group 
 	MPI_Group *group // group (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node153.htm
@@ -1670,41 +1820,6 @@ int MPI_Group_union( // Produces a group by combining two groups
 	MPI_Group group2,   // second group (handle)
 	MPI_Group *newgroup // union group (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
-int MPI_Error_class( // Converts an error code into an error class 
-	int errorcode,  // Error code returned by an MPI routine
-	int *errorclass // Error class associated with errorcode
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm#Node222
-int MPI_Error_string( // Return a string for a given error code 
-	int errorcode, // [in] Error code returned by an MPI routine or an MPI error class 
-	char *string,  // [out] Text that corresponds to the errorcode 
-	int *resultlen // [out] Length of string 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm#Node221
-int MPI_Errhandler_free( // Frees an MPI-style errorhandler 
-	MPI_Errhandler *errhandler // [in-out] MPI error handler (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm
-	free(*errhandler);
-	errhandler = MPI_ERRHANDLER_NULL;
-	return MPI_SUCCESS;
-}
-static inline 
-int MPI_Finalize( // Terminates MPI execution environment 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
-	free(MPI_COMM_WORLD->errhandler_); // TODO revise
-	free(MPI_COMM_WORLD);
-	free(MPI_COMM_SELF->errhandler_); // TODO revise
-	free(MPI_COMM_SELF);
-
-	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
-	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
-
-	free(MPI_INT);
-	free(MPI_FLOAT_INT);
-
-	return MPI_SUCCESS;
-} 
-int MPI_Finalized( // Indicates whether MPI_Finalize has been called 
-	int *flag // [out] true if MPI was finalized (logical)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node227.htm
 static inline 
 int MPI_Igather( // Gathers together values from a group of processes 
 	const void *sendbuf,   // [in] starting address of send buffer (choice) 
@@ -1721,41 +1836,12 @@ int MPI_Igather( // Gathers together values from a group of processes
 	assert(0); // TODO implementation
 	return MPI_SUCCESS;
 }
-static inline 
-int MPI_Init( // Initialize the MPI execution environment 
-	int *argc,   // [in] Pointer to the number of arguments 
-	char ***argv // [in] Pointer to the argument vector 
-){
-	MPI_Comm_create_errhandler(&fatal_error_, &MPI_ERRORS_ARE_FATAL);
-	MPI_Comm_create_errhandler(&no_op_error_, &MPI_ERRORS_RETURN);
-//	MPI_ERRORS_ARE_FATAL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));//{&fatal_error_};
-//	static struct MPI_Errhandler_impl_ MPI_ERRORS_RETURN    = {&no_op_error_};
-
-//	MPI_COMM_NULL = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
-//	MPI_COMM_NULL->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
-//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_ARE_FATAL);
-
-	MPI_COMM_WORLD = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
-	MPI_COMM_WORLD->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
-	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
-//	MPI_COMM_WORLD->errhandler_ = MPI_ERRORS_ARE_FATAL;
-
-	MPI_COMM_SELF = (MPI_Comm)malloc(sizeof(struct MPI_Comm_impl_));
-	MPI_COMM_SELF->errhandler_ = (struct MPI_Errhandler_impl_*)malloc(sizeof(struct MPI_Errhandler_impl_)); 
-	MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_ARE_FATAL);
-//	MPI_COMM_SELF->errhandler_ = MPI_ERRORS_ARE_FATAL;
-
-	return MPI_SUCCESS;
-} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
 int MPI_Init_thread( // Initialize the MPI execution environment 
 	int *argc,    // [in] Pointer to the number of arguments 
 	char ***argv, // [in] Pointer to the argument vector 
 	int required, // [in] Level of desired thread support 
 	int *provided // [out] Level of provided thread support 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-int MPI_Initialized( // Indicates whether MPI_Init has been called. 
-  int *flag // [out] Flag is true if MPI_Init or MPI_Init_thread has been called and false otherwise. 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
 int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunicators 
 	MPI_Comm local_comm,     // [in] Local (intra)communicator 
 	int local_leader,        // [in] Rank in local_comm of leader (often 0) 
@@ -1770,18 +1856,6 @@ int MPI_Is_thread_main( //  This function can be called by a thread to determine
 int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
 	int *provided // provided level of thread support (integer)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
-static inline
-double MPI_Wtime( // Returns an elapsed time on the calling processor 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
-    struct timespec tw;
-    clock_gettime(CLOCK_MONOTONIC, &tw);
-	return 1.0*tw.tv_sec + 1e-9*tw.tv_nsec;;
-}
-static inline
-double MPI_Wtick( // Returns the resolution of MPI_Wtime 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
-	return 1e-9;
-}
 
 
 
@@ -1796,22 +1870,6 @@ double MPI_Wtick( // Returns the resolution of MPI_Wtime
 
 
 
-// Memory handling 
-
-//#include <stdlib.h>
-
-int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
-{
-    //if (baseptr) *(void **)baseptr = malloc(size);
-    if (baseptr) *(void **)baseptr = 0;
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Free_mem(void *base)
-{
-    //free(base);
-    return MPI_SUCCESS;
-}
 
 
 
