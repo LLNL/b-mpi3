@@ -1143,11 +1143,6 @@ double MPI_Wtick( // Returns the resolution of MPI_Wtime
 	return 1e-9;
 }
 
-inline int MPI_Status_set_cancelled(MPI_Status *status, int flag)
-{
-    return MPI_SUCCESS;
-}
-
 inline int MPI_Test_cancelled(const MPI_Status *status, int *flag)
 {
     if (flag) *flag = -1; // -1 true
@@ -1325,6 +1320,65 @@ inline int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatyp
 {
     return MPI_SUCCESS;
 }
+
+// -----------------------------------------------------------------------------
+// Chapter 12.2  Generalized Requests
+// -----------------------------------------------------------------------------
+
+typedef int MPI_Grequest_query_function(void *extra_state, MPI_Status *status);
+typedef int MPI_Grequest_free_function(void *extra_state);
+typedef int MPI_Grequest_cancel_function(void *extra_state, int complete);
+
+WEAK
+int MPI_Grequest_start(                      // Start new generalized request
+    MPI_Grequest_query_function *query_fn,   // [in] status query callback function
+    MPI_Grequest_free_function *free_fn,     // [in] query free callback function
+    MPI_Grequest_cancel_function *cancel_fn, // [in] request cancel callback function
+    void *extra_state,                       // [in] extra state
+    MPI_Request *request                     // [out] generalized request (handle)
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Grequest_complete(
+    MPI_Request request                     // [in] generalized request (handle)
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 12.3  Associating Information with Status
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Status_set_elements(
+    MPI_Status *status,
+    MPI_Datatype datatype,
+    int count
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Status_set_elements_x(
+    MPI_Status *status,
+    MPI_Datatype datatype,
+    MPI_Count count
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Status_set_cancelled(
+    MPI_Status *status,
+    int flag
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+
 
 
 
