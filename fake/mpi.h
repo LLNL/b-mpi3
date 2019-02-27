@@ -593,13 +593,13 @@ struct MPI_Datatype_impl_{
 };
 
 #define DEFINE_FAKE_MPI_DATATYPE(s) \
-  struct MPI_Datatype_impl_ DEF##s WEAKVAR = (struct MPI_Datatype_impl_){.bytes =0, .is_basic=true}; \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes =0, .is_basic=true}; \
   MPI_Datatype s WEAKVAR =&DEF##s; \
 
 
 // MPI Datatype with associated C/C++ type
 #define DEFINE_FAKE_MPI_DATATYPE2(s, t) \
-  struct MPI_Datatype_impl_ DEF##s WEAKVAR = (struct MPI_Datatype_impl_){.bytes=sizeof(t), .is_basic=true}; \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes=sizeof(t), .is_basic=true}; \
   MPI_Datatype s WEAKVAR =&DEF##s;
 
 
