@@ -1149,6 +1149,27 @@ int MPI_Allreduce( // Combines values from all processes and distributes the res
 }
 
 // -----------------------------------------------------------------------------
+//  Chapter 5.12  Nonblocking Collective Operations
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.12.2  Nonblocking Broadcast
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Ibcast(
+	void *buffer,
+	int count,
+	MPI_Datatype datatype,
+	int root,
+	MPI_Comm comm,
+	MPI_Request *request
+) {
+	return MPI_SUCCESS;
+}
+
+
+// -----------------------------------------------------------------------------
 //  Chapter 5.12.3  Nonblocking Gather
 // -----------------------------------------------------------------------------
 
@@ -1166,6 +1187,24 @@ int MPI_Igather( // Gathers together values from a group of processes
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node130.htm
 	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
 	assert(0); // TODO implementation
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.12.5  Nonblocking Gather-to-all
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Iallgather(
+	const void* sendbuf,
+	int sendcount,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcount,
+	MPI_Datatype recvtype,
+	MPI_Comm comm,
+	MPI_Request *request
+) {
 	return MPI_SUCCESS;
 }
 
