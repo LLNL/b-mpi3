@@ -102,6 +102,9 @@ enum {//: int { // error classes
 	MPI_ERR_LASTCODE      // Last error code
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm
 
+struct MPI_Comm_impl_;
+typedef struct MPI_Comm_impl_* MPI_Comm;
+
 //struct MPI_Group{};
 
 typedef enum {
@@ -150,6 +153,12 @@ enum { // level of thread support
 	MPI_THREAD_MULTIPLE
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
+
+// -----------------------------------------------------------------------------
+// Chapter 4 - Datatypes
+// -----------------------------------------------------------------------------
+
+
 typedef unsigned long long MPI_Aint;
 
 struct MPI_Datatype_impl_;
@@ -160,9 +169,9 @@ struct MPI_Datatype_impl_{
 //	MPI_Aint extent;
 	int bytes; // for basic types - needs to be first for gcc compilation of the DEFINE_FAKE_MPI_DATATYPE macros
 	bool is_basic;
-	int count; // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths 
-	int* blocklens; // [in] number of elements in each block (array) 
-	MPI_Aint* indices; // [in] byte displacement of each block (array) 
+	int count; // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths
+	int* blocklens; // [in] number of elements in each block (array)
+	MPI_Aint* indices; // [in] byte displacement of each block (array)
 	MPI_Datatype* old_types; // [in] type of elements in each block (array of handles to datatype objects)
 };
 
@@ -233,19 +242,267 @@ DEFINE_FAKE_MPI_DATATYPE(MPI_2INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_SHORT_INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_DOUBLE_INT)
 
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.2  Datatype Constructors
+// -----------------------------------------------------------------------------
 
+int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent);
 
-inline int MPI_Type_create_struct(int count, const int array_of_blocklengths[], const MPI_Aint array_of_displacements[],
-                           const MPI_Datatype array_of_types[], MPI_Datatype *newtype)
+WEAK
+int MPI_Type_contiguous( // Creates a contiguous datatype
+	int count, // [in] replication count (nonnegative integer)
+	MPI_Datatype oldtype, // [in] old datatype (handle)
+	MPI_Datatype *newtype // [out] new datatype (handle)
+){
+//	MPI_Aint oldlb;
+//	MPI_Aint oldextent;
+//	int s = MPI_Type_get_extent(oldtype, &oldlb, &oldextent);
+	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	if(oldtype->count == 1){
+		(*newtype)->count = 1;
+		(*newtype)->blocklens = (int*)malloc(sizeof(int));
+		(*newtype)->blocklens[0] = count;
+		(*newtype)->indices = (MPI_Aint*)malloc(sizeof(MPI_Aint));
+		(*newtype)->indices[0] = 0;
+		(*newtype)->old_types = (MPI_Datatype*)malloc(count*sizeof(MPI_Datatype));
+		(*newtype)->old_types[0] = MPI_BYTE;
+	}else assert(0);
+//	if(count < 0) return MPI_ERR_INTERN;
+//	if(!newtype) return MPI_ERR_INTERN;
+//	(*newtype)->lb = 0;
+//	if(s != MPI_SUCCESS) return MPI_ERR_TYPE;
+//	(*newtype)->extent = count*oldextent;
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_vector( // Creates a vector (strided) datatype
+	int count, // [in] number of blocks (nonnegative integer)
+	int blocklength, // [in] number of elements in each block (nonnegative integer)
+	int stride, //  [in] number of elements between start of each block (integer)
+	MPI_Datatype old_type, // [in] old datatype (handle)
+	MPI_Datatype *newtype_p // [out] new datatype (handle)
+){
+	assert(0);
+	if(count < 0) return MPI_ERR_INTERN;
+	*newtype_p = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	if(!newtype_p) return MPI_ERR_INTERN;
+//	(*newtype)->lb = 0;
+	MPI_Aint oldlb;
+	MPI_Aint oldextent;
+	int s = MPI_Type_get_extent(old_type, &oldlb, &oldextent);
+//	(*newtype)
+	if(s != MPI_SUCCESS) return MPI_ERR_TYPE;
+//	(*newtype)
+//	(*newtype)->extent = count*oldextent;
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_create_struct(
+	int count,
+	const int array_of_blocklengths[],
+	const MPI_Aint array_of_displacements[],
+  const MPI_Datatype array_of_types[],
+	MPI_Datatype *newtype)
 {
     return MPI_SUCCESS;
 }
 
-//inline int MPI_Type_size(MPI_Datatype datatype, int *size)
-//{
-//    if (size) *size = 0;
-//    return MPI_SUCCESS;
-//}
+
+// Removed in 3.0
+#if 0
+WEAK
+int MPI_Type_struct( // Creates a struct datatype
+	int count, // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths
+	int blocklens[], // [in] number of elements in each block (array)
+	MPI_Aint indices[], // [in] byte displacement of each block (array)
+	MPI_Datatype old_types[], // [in] type of elements in each block (array of handles to datatype objects)
+	MPI_Datatype *newtype // [out] new datatype (handle)
+){
+	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	(*newtype)->count = count;
+	(*newtype)->blocklens = (int*)malloc(count*sizeof(int));
+	(*newtype)->indices = (MPI_Aint*)malloc(count*sizeof(MPI_Aint));
+	(*newtype)->old_types = (MPI_Datatype*)malloc(count*sizeof(MPI_Datatype));
+	memcpy((*newtype)->blocklens, blocklens, count*sizeof(int));
+	memcpy((*newtype)->indices, indices, count*sizeof(MPI_Aint));
+
+	return MPI_SUCCESS;
+}
+#endif
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.3  Subarray Datatype Constructor
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.4  Distributed Array Datatype Constructor
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.5  Address and Size Functions
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Get_address(
+	const void *location,
+	MPI_Aint *address)
+{
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_size( // Return the number of bytes occupied by entries in the datatype
+	MPI_Datatype datatype, // [in] datatype (handle)
+	int *size // [out] datatype size (integer)
+){
+//	assert(size);
+	if(datatype->is_basic){
+		*size = datatype->bytes;
+		return MPI_SUCCESS;
+	}
+
+	if(datatype->count == 1){
+		int oldsize = -1;
+		MPI_Type_size(datatype->old_types[0], &oldsize);
+		*size = datatype->blocklens[0]*oldsize;
+	}else assert(0);
+//	*size = datatype->extent;
+/*	switch(datatype){
+		MPI_INT      : *size = sizeof(int); break;
+		MPI_FLOAT    : *size = sizeof(float); break;
+		MPI_DOUBLE   : *size = sizeof(double); break;
+		MPI_FLOAT_INT: *size = sizeof(float) + sizeof(int); break;
+		default: assert(0);
+	}*/
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.7  Extent and Bounds of Datatypes
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Type_extent( // Returns the extent of a datatype, deprecated->MPI_Type_get_extent
+	MPI_Datatype datatype, // [in] datatype (handle)
+	MPI_Aint *extent // [out] datatype extent (integer)
+){
+	assert(0);
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_get_extent( // Get the lower bound and extent for a Datatype
+	MPI_Datatype datatype, // [in] datatype to get information on (handle)
+	MPI_Aint *lb, // [out] lower bound of datatype (integer)
+	MPI_Aint *extent // [out] extent of datatype (integer)
+){
+	if(!lb || !extent) return MPI_ERR_ARG;
+	if(datatype == MPI_BYTE){
+		*lb = 0;
+		*extent = 1;
+		return MPI_SUCCESS;
+	}
+	if(datatype->count == 1){
+		MPI_Aint oldlb = 0;
+		MPI_Aint oldextent = 0;
+		int s = MPI_Type_get_extent(datatype->old_types[0], &oldlb, &oldextent);
+		assert(s == MPI_SUCCESS);
+		*lb = 0;
+		*extent = datatype->blocklens[0]*oldextent;
+	}else assert(0);
+	return MPI_SUCCESS;
+}
+
+// Removed from the 3.0 standard
+#if 0
+WEAK
+int MPI_Type_ub( // Returns the upper bound of a datatype
+	MPI_Datatype datatype, //  [in] datatype (handle)
+	MPI_Aint *displacement
+){
+	if(!displacement) return MPI_ERR_ARG;
+	if(!datatype) return MPI_ERR_TYPE;
+	MPI_Aint lb = -1;
+	MPI_Aint extent = -1;
+	MPI_Type_get_extent(datatype, &lb, &extent);
+	*displacement = lb + extent;
+	return MPI_SUCCESS;
+}
+#endif
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.7  True Extent of Datatypes
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.9  Commit and Free
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Type_commit( // Commits the datatype
+	MPI_Datatype *datatype // [in] datatype (handle)
+){
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_free( // Frees the datatype
+	MPI_Datatype *datatype // [in] datatype that is freed (handle)
+){
+	int c;
+//	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+//	(*newtype)->count = oldtype->count;
+//	; = (MPI_Datatype*)malloc(oldtype->count*sizeof(MPI_Datatype));
+	for(c = 0 ; c != (*datatype)->count; ++c){
+		MPI_Type_free((*datatype)->old_types + c);
+	}
+	free((*datatype)->old_types);
+	free((*datatype)->indices);
+	free((*datatype)->blocklens);
+	free((*datatype));
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.10  Duplicating a Datatype
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Type_dup( // MPI_Type_dup
+	MPI_Datatype oldtype, // [in] datatype (handle)
+	MPI_Datatype *newtype // [out] copy of type (handle)
+){
+	int c;
+	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
+	(*newtype)->count = oldtype->count;
+	(*newtype)->blocklens = (int*)malloc(oldtype->count*sizeof(int));
+	(*newtype)->indices = (MPI_Aint*)malloc(oldtype->count*sizeof(MPI_Aint));
+	(*newtype)->old_types = (MPI_Datatype*)malloc(oldtype->count*sizeof(MPI_Datatype));
+	for(c = 0 ; c != oldtype->count; ++c){
+		(*newtype)->blocklens[c] = oldtype->blocklens[c];
+		(*newtype)->indices[c] = oldtype->indices[c];
+		MPI_Type_dup(oldtype->old_types[c], (*newtype)->old_types + c);
+	}
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.2  Pack and Unpack
+// -----------------------------------------------------------------------------
+
+// Returns the upper bound on the amount of space needed to pack a message
+int MPI_Pack_size(
+	int incount,
+	MPI_Datatype datatype,
+	MPI_Comm comm,
+	int *size
+);
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.8  Naming Objects
+// -----------------------------------------------------------------------------
 
 const int MPI_MAX_OBJECT_NAME = 128;
 
@@ -260,6 +517,8 @@ inline int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
     return MPI_SUCCESS;
 }
 
+// -----------------------------------------------------------------------------
+
 enum {
 	MPI_IDENT,
 	MPI_CONGRUENT,
@@ -270,8 +529,6 @@ enum {
 //struct MPI_Comm_impl_{
 //	errorhandler_;
 //};
-struct MPI_Comm_impl_;
-typedef struct MPI_Comm_impl_* MPI_Comm;
 
 // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
 typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...); 
@@ -784,13 +1041,6 @@ int MPI_Irecv( // Start a nonblocking receive
 int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
 	int *flag // true if calling thread is main thread, false otherwise (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-// Returns the upper bound on the amount of space needed to pack a message
-int MPI_Pack_size(
-	int incount, 
-	MPI_Datatype datatype, 
-	MPI_Comm comm, 
-	int *size
-);
 int MPI_Mprobe(
 	int source,           // rank of source or MPI_ANY_SOURCE (integer)
 	int tag,              // message tag or MPI_ANY_TAG (integer)
@@ -859,128 +1109,6 @@ int MPI_Recv( // Blocking receive for a message
 	assert(0);
 	return MPI_SUCCESS;
 }
-static inline int MPI_Type_commit( // Commits the datatype 
-	MPI_Datatype *datatype // [in] datatype (handle) 
-){
-	return MPI_SUCCESS;
-}
-static inline 
-int MPI_Type_contiguous( // Creates a contiguous datatype 
-	int count, // [in] replication count (nonnegative integer) 
-	MPI_Datatype oldtype, // [in] old datatype (handle) 
-	MPI_Datatype *newtype // [out] new datatype (handle) 
-);
-static inline 
-int MPI_Type_dup( // MPI_Type_dup
-	MPI_Datatype oldtype, // [in] datatype (handle) 
-	MPI_Datatype *newtype // [out] copy of type (handle) 
-){
-	int c;
-	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	(*newtype)->count = oldtype->count;
-	(*newtype)->blocklens = (int*)malloc(oldtype->count*sizeof(int));
-	(*newtype)->indices = (MPI_Aint*)malloc(oldtype->count*sizeof(MPI_Aint));
-	(*newtype)->old_types = (MPI_Datatype*)malloc(oldtype->count*sizeof(MPI_Datatype));
-	for(c = 0 ; c != oldtype->count; ++c){
-		(*newtype)->blocklens[c] = oldtype->blocklens[c];
-		(*newtype)->indices[c] = oldtype->indices[c];
-		MPI_Type_dup(oldtype->old_types[c], (*newtype)->old_types + c);
-	}
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_extent( // Returns the extent of a datatype, deprecated->MPI_Type_get_extent
-	MPI_Datatype datatype, // [in] datatype (handle) 
-	MPI_Aint *extent // [out] datatype extent (integer) 
-){
-	assert(0);
-	return MPI_SUCCESS;
-}
-static inline int MPI_Type_free( // Frees the datatype 
-	MPI_Datatype *datatype // [in] datatype that is freed (handle) 
-){
-	int c;
-//	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-//	(*newtype)->count = oldtype->count;
-//	; = (MPI_Datatype*)malloc(oldtype->count*sizeof(MPI_Datatype));
-	for(c = 0 ; c != (*datatype)->count; ++c){
-		MPI_Type_free((*datatype)->old_types + c);
-	}
-	free((*datatype)->old_types);
-	free((*datatype)->indices);
-	free((*datatype)->blocklens);
-	free((*datatype));
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_get_extent( // Get the lower bound and extent for a Datatype 
-	MPI_Datatype datatype, // [in] datatype to get information on (handle) 
-	MPI_Aint *lb, // [out] lower bound of datatype (integer) 
-	MPI_Aint *extent // [out] extent of datatype (integer) 
-){
-	if(!lb || !extent) return MPI_ERR_ARG;
-	if(datatype == MPI_BYTE){
-		*lb = 0;
-		*extent = 1;
-		return MPI_SUCCESS;
-	}
-	if(datatype->count == 1){
-		MPI_Aint oldlb = 0;
-		MPI_Aint oldextent = 0;
-		int s = MPI_Type_get_extent(datatype->old_types[0], &oldlb, &oldextent);
-		assert(s == MPI_SUCCESS);
-		*lb = 0;
-		*extent = datatype->blocklens[0]*oldextent;
-	}else assert(0);
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_size( // Return the number of bytes occupied by entries in the datatype 
-	MPI_Datatype datatype, // [in] datatype (handle) 
-	int *size // [out] datatype size (integer) 
-){
-//	assert(size);
-	if(datatype->is_basic){
-		*size = datatype->bytes;
-		return MPI_SUCCESS;
-	}
-
-	if(datatype->count == 1){
-		int oldsize = -1;
-		MPI_Type_size(datatype->old_types[0], &oldsize);
-		*size = datatype->blocklens[0]*oldsize;
-	}else assert(0);
-//	*size = datatype->extent;
-/*	switch(datatype){
-		MPI_INT      : *size = sizeof(int); break;
-		MPI_FLOAT    : *size = sizeof(float); break;
-		MPI_DOUBLE   : *size = sizeof(double); break;
-		MPI_FLOAT_INT: *size = sizeof(float) + sizeof(int); break;
-		default: assert(0);
-	}*/
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_ub( // Returns the upper bound of a datatype 
-	MPI_Datatype datatype, //  [in] datatype (handle) 
-	MPI_Aint *displacement
-){
-	if(!displacement) return MPI_ERR_ARG;
-	if(!datatype) return MPI_ERR_TYPE;
-	MPI_Aint lb = -1;
-	MPI_Aint extent = -1;
-	MPI_Type_get_extent(datatype, &lb, &extent);
-	*displacement = lb + extent;
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_vector( // Creates a vector (strided) datatype 
-	int count, // [in] number of blocks (nonnegative integer) 
-	int blocklength, // [in] number of elements in each block (nonnegative integer) 
-	int stride, //  [in] number of elements between start of each block (integer) 
-	MPI_Datatype old_type, // [in] old datatype (handle) 
-	MPI_Datatype *newtype_p // [out] new datatype (handle) 
-);
 int MPI_Wait( // Waits for an MPI request to complete 
 	MPI_Request *request, // [in] request (handle) 
 	MPI_Status *status    // [out] status object (Status). May be MPI_STATUS_IGNORE. 
@@ -1052,79 +1180,9 @@ int MPI_Gather( // Gathers together values from a group of processes
 #undef fake_mpi_max
 }
 
-static inline 
-int MPI_Type_contiguous( // Creates a contiguous datatype 
-	int count, // [in] replication count (nonnegative integer) 
-	MPI_Datatype oldtype, // [in] old datatype (handle) 
-	MPI_Datatype *newtype // [out] new datatype (handle) 
-){
-//	MPI_Aint oldlb;
-//	MPI_Aint oldextent;
-//	int s = MPI_Type_get_extent(oldtype, &oldlb, &oldextent);
-	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	if(oldtype->count == 1){
-		(*newtype)->count = 1;
-		(*newtype)->blocklens = (int*)malloc(sizeof(int));
-		(*newtype)->blocklens[0] = count;
-		(*newtype)->indices = (MPI_Aint*)malloc(sizeof(MPI_Aint));
-		(*newtype)->indices[0] = 0;
-		(*newtype)->old_types = (MPI_Datatype*)malloc(count*sizeof(MPI_Datatype));
-		(*newtype)->old_types[0] = MPI_BYTE;
-	}else assert(0);
-//	if(count < 0) return MPI_ERR_INTERN;
-//	if(!newtype) return MPI_ERR_INTERN;
-//	(*newtype)->lb = 0;
-//	if(s != MPI_SUCCESS) return MPI_ERR_TYPE;
-//	(*newtype)->extent = count*oldextent;
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_struct( // Creates a struct datatype 
-	int count, // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths 
-	int blocklens[], // [in] number of elements in each block (array) 
-	MPI_Aint indices[], // [in] byte displacement of each block (array) 
-	MPI_Datatype old_types[], // [in] type of elements in each block (array of handles to datatype objects)
-	MPI_Datatype *newtype // [out] new datatype (handle) 
-){
-	*newtype = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	(*newtype)->count = count;
-	(*newtype)->blocklens = (int*)malloc(count*sizeof(int));
-	(*newtype)->indices = (MPI_Aint*)malloc(count*sizeof(MPI_Aint));
-	(*newtype)->old_types = (MPI_Datatype*)malloc(count*sizeof(MPI_Datatype));
-	memcpy((*newtype)->blocklens, blocklens, count*sizeof(int));
-	memcpy((*newtype)->indices, indices, count*sizeof(MPI_Aint));
-	
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Type_vector( // Creates a vector (strided) datatype 
-	int count, // [in] number of blocks (nonnegative integer) 
-	int blocklength, // [in] number of elements in each block (nonnegative integer) 
-	int stride, //  [in] number of elements between start of each block (integer) 
-	MPI_Datatype old_type, // [in] old datatype (handle) 
-	MPI_Datatype *newtype_p // [out] new datatype (handle) 
-){
-	assert(0);
-	if(count < 0) return MPI_ERR_INTERN;
-	*newtype_p = (MPI_Datatype)malloc(sizeof(struct MPI_Datatype_impl_));
-	if(!newtype_p) return MPI_ERR_INTERN;
-//	(*newtype)->lb = 0;
-	MPI_Aint oldlb;
-	MPI_Aint oldextent;
-	int s = MPI_Type_get_extent(old_type, &oldlb, &oldextent);
-//	(*newtype)
-	if(s != MPI_SUCCESS) return MPI_ERR_TYPE;
-//	(*newtype)
-//	(*newtype)->extent = count*oldextent;
-	return MPI_SUCCESS;
-}
 
 
 
-inline int MPI_Get_address(const void *location, MPI_Aint *address)
-{
-    return MPI_SUCCESS;
-}
 
 
 // Memory handling 
