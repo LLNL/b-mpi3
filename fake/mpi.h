@@ -102,6 +102,7 @@ enum {//: int { // error classes
 	MPI_ERR_LASTCODE      // Last error code
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm
 
+
 struct MPI_Comm_impl_;
 typedef struct MPI_Comm_impl_* MPI_Comm;
 
@@ -116,15 +117,22 @@ typedef enum {
 	MPI_GROUP_EMPTY
 } MPI_Group;
 
-// MPI Info handling.
-//  Would not be too hard to create an std::map implementation
 //struct MPI_Info{};
 //const struct MPI_Info MPI_INFO_NULL;
 
 typedef enum { //MPI_Info {
 	MPI_INFO_NULL
 } MPI_Info ;
+
 //typedef struct {} MPI_Info;
+
+
+// -----------------------------------------------------------------------------
+// Chapter 9 - The Info Object
+// -----------------------------------------------------------------------------
+
+// MPI Info handling.
+//  Would not be too hard to create an std::map implementation
 
 int MPI_Info_create(MPI_Info *info);
 
@@ -143,6 +151,8 @@ int MPI_Info_get_nthkey(MPI_Info info, int n, char *key);
 int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag);
 
 int MPI_Info_set(MPI_Info info, const char *key, const char *value);
+
+// -----------------------------------------------------------------------------
 
 const int MPI_MAX_PORT_NAME = 128;
 
