@@ -593,13 +593,13 @@ struct MPI_Datatype_impl_{
 };
 
 #define DEFINE_FAKE_MPI_DATATYPE(s) \
-  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes =0, .is_basic=true}; \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes =0, .is_basic=true, .count=0, .blocklens=NULL, .indices=NULL, .old_types=NULL}; \
   MPI_Datatype s WEAKVAR =&DEF##s; \
 
 
 // MPI Datatype with associated C/C++ type
 #define DEFINE_FAKE_MPI_DATATYPE2(s, t) \
-  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes=sizeof(t), .is_basic=true}; \
+  struct MPI_Datatype_impl_ DEF##s WEAKVAR = {.bytes=sizeof(t), .is_basic=true, .count=0, .blocklens=NULL, .indices=NULL, .old_types=NULL}; \
   MPI_Datatype s WEAKVAR =&DEF##s;
 
 
@@ -909,13 +909,43 @@ int MPI_Type_dup( // MPI_Type_dup
 //  Chapter 4.2  Pack and Unpack
 // -----------------------------------------------------------------------------
 
+WEAK
+int MPI_Pack(
+	const void *inbuf,
+	int incount,
+	MPI_Datatype datatype,
+	void *outbuf,
+	int outsize,
+	int *position,
+	MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Unpack(
+	const void* inbuf,
+	int insize,
+	int *position,
+	void *outbuf,
+	int outcount,
+	MPI_Datatype datatype,
+	MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
 // Returns the upper bound on the amount of space needed to pack a message
+WEAK
 int MPI_Pack_size(
 	int incount,
 	MPI_Datatype datatype,
 	MPI_Comm comm,
 	int *size
-);
+) {
+	return MPI_SUCCESS;
+}
+
 
 
 
@@ -1321,12 +1351,15 @@ int MPI_Comm_create_group( // must be called by all processes in group, which is
 	MPI_Comm *newcomm // new communicator (handle)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
 
+WEAK
 int MPI_Comm_split( // Creates new communicators based on colors and keys
 	MPI_Comm comm,     // [in] communicator (handle)
 	int color,         // [in] control of subset assignment (integer)
 	int key,           // [in] control of rank assigment (integer)
 	MPI_Comm *newcomm  // [out] new communicator (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+	return MPI_SUCCESS;
+}
 
 // -----------------------------------------------------------------------------
 //  Chapter 6.4.3  Communicator Destructors
@@ -1385,11 +1418,14 @@ int MPI_Comm_set_name( // Sets the print name for a communicator
 	return MPI_SUCCESS;
 }
 
+WEAK
 int MPI_Comm_get_name( // Return the print name from the communicator
 	MPI_Comm comm,   // communicator whose name is to be returned (handle)
 	char *comm_name, // the name previously stored on the communicator, or an...
 	int *resultlen   // length of returned name (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
+	return MPI_SUCCESS;
+}
 
 inline int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 {
