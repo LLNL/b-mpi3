@@ -107,6 +107,10 @@ enum {//: int { // error classes
 struct MPI_Comm_impl_;
 typedef struct MPI_Comm_impl_* MPI_Comm;
 
+MPI_Comm MPI_COMM_NULL WEAKVAR = NULL;//{{&fatal_error_}};
+MPI_Comm MPI_COMM_WORLD WEAKVAR = NULL;
+MPI_Comm MPI_COMM_SELF WEAKVAR = NULL;
+
 struct MPI_Datatype_impl_;
 typedef struct MPI_Datatype_impl_* MPI_Datatype;
 
@@ -152,6 +156,27 @@ typedef enum { //MPI_Info {
 } MPI_Info ;
 
 //typedef struct {} MPI_Info;
+
+const void* MPI_IN_PLACE WEAKVAR = (const void*)(-1);
+
+typedef enum { // redefined operations are supplied for MPI_REDUCE
+	MPI_OP_NULL, // TODO: is this an operator?
+	MPI_MAX, // maximum
+	MPI_MIN, // minimum
+	MPI_SUM, // sum
+	MPI_PROD, // product
+	MPI_LAND, // logical and
+	MPI_BAND, // bitwise and
+	MPI_LOR, // logical or
+	MPI_BOR, // bitwise or
+	MPI_LXOR, // logical exclusive or (xor)
+	MPI_BXOR, // bitwise excluse or (xor)
+	MPI_MAXLOC, // max value and location
+	MPI_MINLOC, // min value and location
+//	MPI_REPLACE, // TODO: is this an operator?
+	MPI_NO_OP, // TODO: is this an operator?
+	MPI_OP_LASTCODE // not standard?
+} MPI_Op; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
 
 
 // -----------------------------------------------------------------------------
@@ -846,6 +871,208 @@ int MPI_Pack_size(
 	int *size
 );
 
+
+
+// -----------------------------------------------------------------------------
+//  Chapter 5 - Collective Communication
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.3  Barrier Synchronization
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Barrier( // Blocks until all processes in the communicator have reached this routine.
+	MPI_Comm comm // [in] communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node100.htm
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.4  Broadcast
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all other processes of the communicator
+	void* buffer,          // starting address of buffer (choice)
+	int count,             // number of entries in buffer (non-negative integer)
+	MPI_Datatype datatype, // data type of buffer (handle)
+	int root,              // rank of broadcast root (integer)
+	MPI_Comm comm          // communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node101.htm
+	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	assert(0); // TODO: is there something to implement?
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.5  Gather
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Gather( // Gathers together values from a group of processes
+	const void *sendbuf, // [in] starting address of send buffer (choice)
+	int sendcnt, // [in] number of elements in send buffer (integer)
+	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
+	void *recvbuf, // [out] address of receive buffer (choice, significant only at root)
+	int recvcnt, // [in] number of elements for any single receive (integer, significant only at root)
+	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle)
+	int root, // [in] rank of receiving process (integer)
+	MPI_Comm comm // [in] communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node103.htm
+	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	assert(root == 0);
+	int sendsize = -1;
+	int recvsize = -1;
+#define fake_mpi_max(a,b) ((a) > (b) ? (a) : (b))
+	MPI_Type_size(sendtype, &sendsize);
+	MPI_Type_size(recvtype, &recvsize);
+	memcpy((char*)recvbuf, (const char*)sendbuf, fake_mpi_max(sendcnt*sendsize, recvcnt*recvsize));
+	return MPI_SUCCESS;
+#undef fake_mpi_max
+}
+
+WEAK
+int MPI_Gatherv(
+    const void *sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void * recvbuf,
+    const int recvcounts[],
+    const int displs[],
+    MPI_Datatype recvtype,
+    int root,
+    MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.6  Scatter
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Scatter(
+    const void* sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void* recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
+    int root,
+    MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Scatterv(
+    const void* sendbuf,
+    const int sendcounts[],
+    const int displs[],
+    MPI_Datatype sendtype,
+    void* recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
+    int root,
+    MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.7  Gather-to-all
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Allgather(
+    const void* sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void* recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
+    MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Allgatherv(
+    const void* sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void* recvbuf,
+    const int recvcounts[],
+    const int displs[],
+    MPI_Datatype recvtype,
+    MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.9.1  Reduce
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Reduce(
+	const void *sendbuf,
+	void *recvbuf,
+	int count,
+	MPI_Datatype datatype,
+	MPI_Op op,
+	int root,
+	MPI_Comm comm
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.9.5  User-Defined Reduction Operators
+// -----------------------------------------------------------------------------
+
+typedef void (MPI_User_function)(void *a, void *b, int *len, MPI_Datatype *);
+
+WEAK
+int MPI_Op_create(
+	MPI_User_function *user_fn,
+	int commute,
+	MPI_Op *op
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Op_free(
+	MPI_Op *op
+) {
+    if (op) *op = MPI_NO_OP;
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.9.6  All-reduce
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Allreduce( // Combines values from all processes and distributes the result back to all processes
+	const void* sendbuf,   // starting address of send buffer (choice)
+	void* recvbuf,         // starting address of receive buffer (choice)
+	int count,             // number of elements in send buffer (non-negative)
+	MPI_Datatype datatype, // data type of elements of send buffer (handle)
+	MPI_Op op,             // operation (handle)
+	MPI_Comm comm          // communicator (handle)
+) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node117.htm#Node117
+{
+	assert(&comm != &MPI_COMM_NULL);
+	assert(sendbuf == MPI_IN_PLACE);
+	return MPI_SUCCESS;
+}
+
+
 // -----------------------------------------------------------------------------
 //  Chapter 6.8  Naming Objects
 // -----------------------------------------------------------------------------
@@ -906,9 +1133,6 @@ struct MPI_Comm_impl_{
 	MPI_Errhandler errhandler_;
 };
 
-MPI_Comm MPI_COMM_NULL WEAKVAR = NULL;//{{&fatal_error_}};
-MPI_Comm MPI_COMM_WORLD WEAKVAR = NULL;
-MPI_Comm MPI_COMM_SELF WEAKVAR = NULL;
 
 //typedef MPI_Comm_impl* MPI_Comm;
 
@@ -918,26 +1142,6 @@ MPI_Comm MPI_COMM_SELF WEAKVAR = NULL;
 //} MPI_Errhandler;
 
 
-const void* MPI_IN_PLACE WEAKVAR = (const void*)(-1);
-
-typedef enum { // redefined operations are supplied for MPI_REDUCE 
-	MPI_OP_NULL, // TODO: is this an operator?
-	MPI_MAX, // maximum
-	MPI_MIN, // minimum
-	MPI_SUM, // sum
-	MPI_PROD, // product
-	MPI_LAND, // logical and
-	MPI_BAND, // bitwise and
-	MPI_LOR, // logical or
-	MPI_BOR, // bitwise or 
-	MPI_LXOR, // logical exclusive or (xor)
-	MPI_BXOR, // bitwise excluse or (xor)
-	MPI_MAXLOC, // max value and location
-	MPI_MINLOC, // min value and location
-//	MPI_REPLACE, // TODO: is this an operator?
-	MPI_NO_OP, // TODO: is this an operator?
-	MPI_OP_LASTCODE // not standard?
-} MPI_Op; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
 
 
 //[[noreturn]]
@@ -949,42 +1153,10 @@ int MPI_Abort( // Terminates MPI execution environment
 	exit(errorcode);
 //	return MPI_SUCCESS; // function never returns
 }
-static inline 
-int MPI_Allreduce( // Combines values from all processes and distributes the result back to all processes 
-	const void* sendbuf,   // starting address of send buffer (choice)
-	void* recvbuf,         // starting address of receive buffer (choice)
-	int count,             // number of elements in send buffer (non-negative)
-	MPI_Datatype datatype, // data type of elements of send buffer (handle)
-	MPI_Op op,             // operation (handle)
-	MPI_Comm comm          // communicator (handle)
-) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node117.htm#Node117
-{
-	assert(&comm != &MPI_COMM_NULL);
-	assert(sendbuf == MPI_IN_PLACE);
-	return MPI_SUCCESS;
-}
 void fatal_error_(MPI_Comm * comm, int * errcode, ...){
 	switch(*errcode){
 		case MPI_ERR_COMM : puts("[] *** MPI_ERR_COMM: invalid communicator\n[] *** MPI_ERRORS_ARE_FATAL (will now abort)"); MPI_Abort(*comm, *errcode);
 	}
-}
-static inline
-int MPI_Barrier( // Blocks until all processes in the communicator have reached this routine. 
-	MPI_Comm comm // [in] communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node100.htm
-	return MPI_SUCCESS;
-}
-static inline 
-int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all other processes of the communicator 
-	void* buffer,          // starting address of buffer (choice)
-	int count,             // number of entries in buffer (non-negative integer)
-	MPI_Datatype datatype, // data type of buffer (handle)
-	int root,              // rank of broadcast root (integer)
-	MPI_Comm comm          // communicator (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node101.htm
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(0); // TODO: is there something to implement?
-	return MPI_SUCCESS; 
 }
 int MPI_Comm_call_errhandler( // Call the error handler installed on a communicator 
 	MPI_Comm comm, // [in] communicator with error handler (handle) 
@@ -1174,17 +1346,6 @@ int MPI_Comm_set_errhandler( // Set the error handler for a communicator
 	return MPI_SUCCESS;
 }
 static inline 
-int MPI_Gather( // Gathers together values from a group of processes 
-	const void *sendbuf, // [in] starting address of send buffer (choice) 
-	int sendcnt, // [in] number of elements in send buffer (integer)
-	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
-	void *recvbuf, // [out] address of receive buffer (choice, significant only at root) 
-	int recvcnt, // [in] number of elements for any single receive (integer, significant only at root) 
-	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle) 
-	int root, // [in] rank of receiving process (integer) 
-	MPI_Comm comm // [in] communicator (handle) 
-);
-static inline 
 int MPI_Get_processor_name( //  the name of the processor on which it was called at the moment of the call. 
 	char *name, // A unique specifier for the actual (as opposed to virtual) node.
 	int *resultlen // Length (in printable characters) of the result returned in name
@@ -1365,45 +1526,12 @@ double MPI_Wtick( // Returns the resolution of MPI_Wtime
 }
 
 
-typedef void (MPI_User_function)(void *a, void *b, int *len, MPI_Datatype *);
-inline int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Op_free(MPI_Op *op)
-{
-    if (op) *op = MPI_NO_OP;
-    return MPI_SUCCESS;
-}
 
 
 //const int MPI_MAX_PROCESSOR_NAME = 128;
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-static inline 
-int MPI_Gather( // Gathers together values from a group of processes 
-	const void *sendbuf, // [in] starting address of send buffer (choice) 
-	int sendcnt, // [in] number of elements in send buffer (integer)
-	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
-	void *recvbuf, // [out] address of receive buffer (choice, significant only at root) 
-	int recvcnt, // [in] number of elements for any single receive (integer, significant only at root) 
-	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle) 
-	int root, // [in] rank of receiving process (integer) 
-	MPI_Comm comm // [in] communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node103.htm
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(root == 0);
-	int sendsize = -1;
-	int recvsize = -1;
-#define fake_mpi_max(a,b) ((a) > (b) ? (a) : (b))
-	MPI_Type_size(sendtype, &sendsize);
-	MPI_Type_size(recvtype, &recvsize);
-	memcpy((char*)recvbuf, (const char*)sendbuf, fake_mpi_max(sendcnt*sendsize, recvcnt*recvsize));
-	return MPI_SUCCESS;
-#undef fake_mpi_max
-}
 
 
 
@@ -1497,10 +1625,6 @@ inline int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_
     return MPI_SUCCESS;
 }
 
-inline int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
-{
-    return MPI_SUCCESS;
-}
 
 // -----------------------------------------------------------------------------
 // Chapter 12.2  Generalized Requests
