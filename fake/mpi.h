@@ -105,6 +105,10 @@ enum {//: int { // error classes
 struct MPI_Comm_impl_;
 typedef struct MPI_Comm_impl_* MPI_Comm;
 
+
+// Communicator split type constants
+const int MPI_COMM_TYPE_SHARED = 1;
+
 //struct MPI_Group{};
 
 typedef enum {
