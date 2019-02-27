@@ -257,11 +257,6 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value);
 
 // -----------------------------------------------------------------------------
 
-const int MPI_MAX_PORT_NAME = 128;
-
-int MPI_Open_port(MPI_Info info, char *port_name);
-
-int MPI_Close_port(const char *port_name);
 
 enum { // level of thread support
 	MPI_THREAD_SINGLE,
@@ -1124,6 +1119,27 @@ int MPI_Allreduce( // Combines values from all processes and distributes the res
 }
 
 // -----------------------------------------------------------------------------
+//  Chapter 5.12.3  Nonblocking Gather
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Igather( // Gathers together values from a group of processes
+	const void *sendbuf,   // [in] starting address of send buffer (choice)
+	int sendcnt,           // [in] number of elements in send buffer (integer)
+	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
+	void *recvbuf,         // [out] address of receive buffer (choice, significant only at root)
+	int recvcnt,           // [in] number of elements for any single receive (integer, significant only at root)
+	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle)
+	int root,              // [in] rank of receiving process (integer)
+	MPI_Comm comm,         // [in] communicator (handle)
+	MPI_Request *request   // [out] communicatio request (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node130.htm
+	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	assert(0); // TODO implementation
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
 //  Chapter 6 - Groups, Context, Communicators, and Caching
 // -----------------------------------------------------------------------------
 
@@ -1850,9 +1866,6 @@ int MPI_Finalize( // Terminates MPI execution environment
 	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
 	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
 
-	free(MPI_INT);
-	free(MPI_FLOAT_INT);
-
 	return MPI_SUCCESS;
 }
 
@@ -1889,23 +1902,87 @@ int MPI_Finalized( // Indicates whether MPI_Finalize has been called
 	int *flag // [out] true if MPI was finalized (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node227.htm
 
+
+
+// -----------------------------------------------------------------------------
+// Chapter 10 - Process Creation and Management
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 10.3  Process Manager Interface
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 10.3.2  Starting Processes and Establishing Communication
+// -----------------------------------------------------------------------------
+
+int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI application
+	const char *command,    // [in] name of program to be spawned (string, at root)
+	char *argv[],           // [in] arguments to command (array of strings, at root)
+	int maxprocs,           // maximum number of processes to start(int at root)
+	MPI_Info info,          // a set of key-value pairs telling the runtime system where and how to start the processes (handle, significant only at root)
+	int root,               // rank of process in which previous arguments are examined (integer)
+	MPI_Comm comm,          // intracommunicator containing group of spawning processes (handle)
+	MPI_Comm *intercomm,    // [out] intercommunicator between original group and the newly spawned group (handle)
+	int array_of_errcodes[] // [out] one code per process (array of integer)
+);
+
+int MPI_Comm_get_parent( // Return the parent communicator for this process
+  MPI_Comm *parent // [out] the parent communicator (handle)
+);
+
+// -----------------------------------------------------------------------------
+// Chapter 10.4  Establishing Communication
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 10.4.2  Server Routines
+// -----------------------------------------------------------------------------
+
+const int MPI_MAX_PORT_NAME = 128;
+
+int MPI_Open_port(
+	MPI_Info info,
+	char *port_name
+);
+
+int MPI_Close_port(
+	const char *port_name
+);
+
+WEAK
+int MPI_Comm_accept(
+	const char *port_name,
+	MPI_Info info,
+	int root,
+	MPI_Comm comm,
+	MPI_Comm *newcomm
+) {
+    return MPI_SUCCESS;
+}
+
+
+// -----------------------------------------------------------------------------
+// Chapter 10.4.2  Client Routines
 // -----------------------------------------------------------------------------
 
 
-int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI application 
-	const char *command,    // [in] name of program to be spawned (string, at root) 
-	char *argv[],           // [in] arguments to command (array of strings, at root) 
-	int maxprocs,           // maximum number of processes to start(int at root) 
-	MPI_Info info,          // a set of key-value pairs telling the runtime system where and how to start the processes (handle, significant only at root) 
-	int root,               // rank of process in which previous arguments are examined (integer) 
-	MPI_Comm comm,          // intracommunicator containing group of spawning processes (handle) 
-	MPI_Comm *intercomm,    // [out] intercommunicator between original group and the newly spawned group (handle) 
-	int array_of_errcodes[] // [out] one code per process (array of integer) 
-);
-int MPI_Comm_get_parent( // Return the parent communicator for this process 
-  MPI_Comm *parent // [out] the parent communicator (handle) 
-);
-static inline 
+WEAK
+int MPI_Comm_connect(
+	const char *port_name,
+	MPI_Info info,
+	int root,
+	MPI_Comm comm,
+	MPI_Comm *newcomm
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 10.5.4  Releasing Connections
+// -----------------------------------------------------------------------------
+
+WEAK
 int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	MPI_Comm *comm // [in] communicator (handle)
 ){
@@ -1914,70 +1991,7 @@ int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
-static inline 
-int MPI_Igather( // Gathers together values from a group of processes 
-	const void *sendbuf,   // [in] starting address of send buffer (choice) 
-	int sendcnt,           // [in] number of elements in send buffer (integer)
-	MPI_Datatype sendtype, // [in] data type of send buffer elements (handle)
-	void *recvbuf,         // [out] address of receive buffer (choice, significant only at root) 
-	int recvcnt,           // [in] number of elements for any single receive (integer, significant only at root) 
-	MPI_Datatype recvtype, // [in] data type of recv buffer elements (significant only at root) (handle) 
-	int root,              // [in] rank of receiving process (integer) 
-	MPI_Comm comm,         // [in] communicator (handle) 
-	MPI_Request *request   // [out] communicatio request (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node130.htm
-	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(0); // TODO implementation
-	return MPI_SUCCESS;
-}
-int MPI_Init_thread( // Initialize the MPI execution environment 
-	int *argc,    // [in] Pointer to the number of arguments 
-	char ***argv, // [in] Pointer to the argument vector 
-	int required, // [in] Level of desired thread support 
-	int *provided // [out] Level of provided thread support 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
-	int *flag // true if calling thread is main thread, false otherwise (logical)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
-	int *provided // provided level of thread support (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
 
-
-
-
-//const int MPI_MAX_PROCESSOR_NAME = 128;
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-//static MPI_Status* MPI_STATUSES_IGNORE = NULL;
-
-
-
-
-
-
-
-// const on last arg should not be there
-inline int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm comm, const MPI_Comm *newcomm)
-{
-    return MPI_SUCCESS;
-}
-
-// const on last arg should not be there
-inline int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm, const MPI_Comm *newcomm)
-{
-    return MPI_SUCCESS;
-}
 
 
 // -----------------------------------------------------------------------------
@@ -2037,6 +2051,28 @@ int MPI_Status_set_cancelled(
 }
 
 // -----------------------------------------------------------------------------
+// Chapter 12.4  MPI and Threads
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 12.4.3  Initialization
+// -----------------------------------------------------------------------------
+
+int MPI_Init_thread( // Initialize the MPI execution environment
+	int *argc,    // [in] Pointer to the number of arguments
+	char ***argv, // [in] Pointer to the argument vector
+	int required, // [in] Level of desired thread support
+	int *provided // [out] Level of provided thread support
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
+
+int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
+	int *provided // provided level of thread support (integer)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
+
+int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
+	int *flag // true if calling thread is main thread, false otherwise (logical)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
+
 
 
 
