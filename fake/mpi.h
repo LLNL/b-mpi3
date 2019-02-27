@@ -218,10 +218,16 @@ struct MPI_Errhandler_impl_{
 
 typedef struct MPI_Errhandler_impl_* MPI_Errhandler;
 
+struct MPI_Comm_impl_{
+	MPI_Errhandler errhandler_;
+};
+
 MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
 MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
 
 MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
+
+int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode);
 
 
 // -----------------------------------------------------------------------------
@@ -1129,10 +1135,245 @@ enum {
 };
 
 // -----------------------------------------------------------------------------
+//  Chapter 6.3  Group Management
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.3.1  Group Accessors
+// -----------------------------------------------------------------------------
+
+int MPI_Group_size( // Returns the size of a group
+	MPI_Group group, // [in] group (handle)
+	int *size        // [out] number of processes in the group (integer)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+
+int MPI_Group_rank( // Determines the rank of the calling process in the communicator
+	MPI_Group group, // group (handle)
+	int *rank        // rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+
+int MPI_Group_translate_ranks( // Translates the ranks of processes in one group to those in another group
+	MPI_Group group1,   // [in] group1 (handle)
+	int n,              // [in] number of ranks in ranks1 and ranks2 arrays (integer)
+	const int ranks1[], // [in] array of zero or more valid ranks in group1
+	MPI_Group group2,   // [in] group2 (handle)
+	int ranks2[]        // [out] array of corresponding ranks in group2, MPI_UNDEFINED when no correspondence exists.
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+
+int MPI_Group_compare( // Compares two groups
+	MPI_Group group1, // [in] group1 (handle)
+	MPI_Group group2, // [in] group2 (handle)
+	int *result       // [out] integer which is MPI_IDENT if the order and members of the two groups are the same, MPI_SIMILAR if only the members are the same, and MPI_UNEQUAL otherwise
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm#Node151
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.3.2  Group Constructors
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Comm_group(
+	MPI_Comm comm,
+	MPI_Group *group
+) {
+    return MPI_SUCCESS;
+}
+
+int MPI_Group_union( // Produces a group by combining two groups
+	MPI_Group group1,   // first group (handle)
+	MPI_Group group2,   // second group (handle)
+	MPI_Group *newgroup // union group (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+
+int MPI_Group_intersection( // Produces a group as the intersection of two existing groups
+	MPI_Group group1,   // [in] first group (handle)
+	MPI_Group group2,   // [in] second group (handle)
+	MPI_Group *newgroup // [out] intersection group (handle)
+);
+
+int MPI_Group_incl( // Produces a group by reordering an existing group and taking only listed members
+ 	MPI_Group group,  // [in] group (handle)
+ 	int n,              // [in] number of elements in array ranks (and size of newgroup ) (integer)
+ 	const int ranks[],
+ 	MPI_Group *newgroup // [in] ranks of processes in group to appear in newgroup (array of integers)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+
+int MPI_Group_excl( // Produces a group by reordering an existing group and taking only unlisted members
+  MPI_Group group,    //[in] group (handle)
+  int n,              // [in] number of elements in array ranks (integer)
+  const int ranks[],         // [in] array of integer ranks in group not to appear in newgroup
+  MPI_Group *newgroup // [out] new group derived from above, preserving the order defined by group (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+
+int MPI_Group_range_incl( // Creates a new group from ranges of ranks in an existing group
+	MPI_Group group,    // [in] group (handle)
+	int n,              // [in] number of triplets in array ranges (integer)
+	int ranges[][3],    // [in] a one-dimensional array of integer triplets, of the form (first rank, last rank, stride) indicating ranks in group or processes to be included in newgroup.
+	MPI_Group *newgroup // [out] new group derived from above, in the order defined by ranges (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+
+int MPI_Group_range_excl( // Produces a group by excluding ranges of processes from an existing group
+	MPI_Group group,    // [in] group (handle)
+	int n,              // [in] number of elements in array ranks (integer)
+	int ranges[][3],    // [in] a one-dimensional array of integer triplets of the form (first rank, last rank, stride), indicating the ranks in group of processes to be excluded from the output group newgroup .
+	MPI_Group *newgroup // [out] new group derived from above, preserving the order in group (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+
+int MPI_Group_free( // Frees a group
+	MPI_Group *group // group (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node153.htm
+
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.4  Communicator Management
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.4.1  Communicator Accessors
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Comm_size( // Determines the size of the group associated with a communicator
+	MPI_Comm comm, // communicator (handle)
+	int *size // number of processes in the group of comm (integer)
+){
+	if(comm == MPI_COMM_NULL){
+		int error = MPI_ERR_COMM;
+		comm->errhandler_->func_(&comm, &error);
+		return error;
+	}
+	*size = 1;
+	return MPI_SUCCESS;
+} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
+
+WEAK
+int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the given group
+	MPI_Comm comm, // [in] group (handle)
+	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
+){
+	if(comm == MPI_COMM_NULL){
+		MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
+		return MPI_ERR_COMM;
+	}
+	*rank = 0;
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_compare( // Compares two communicators
+  MPI_Comm comm1, // [in] comm1 (handle)
+  MPI_Comm comm2, // [in] comm2 (handle)
+  int *result // [out] integer which is MPI_IDENT if the contexts and groups are the same, MPI_CONGRUENT if different contexts but identical groups, MPI_SIMILAR if different contexts but similar groups, and MPI_UNEQUAL otherwise
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
+	if(&comm1 == &MPI_COMM_NULL || &comm2 == &MPI_COMM_NULL) return MPI_ERR_COMM;
+	if(result == NULL) return MPI_ERR_ARG;
+	*result = MPI_CONGRUENT; //MPI_IDENT;
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.4.2  Communicator Constructors
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information
+	MPI_Comm comm,    // communicator (handle)
+	MPI_Comm *newcomm // copy of comm (handle)
+)
+{
+	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
+	*newcomm = (struct MPI_Comm_impl_*)malloc(sizeof(struct MPI_Comm_impl_));
+	(**newcomm).errhandler_ = comm->errhandler_;
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_create( // Creates a new communicator
+	MPI_Comm comm,    // [in]  communicator (handle)
+	MPI_Group group,  // [in]  group, which is a subset of the group of comm (handle)
+	MPI_Comm *newcomm // [out] new communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
+	if(group == MPI_GROUP_NULL) return MPI_ERR_GROUP;
+	newcomm = (MPI_Comm*)malloc(sizeof(MPI_Comm));
+	return MPI_SUCCESS;
+}
+
+int MPI_Comm_create_group( // must be called by all processes in group, which is a subgroup of the group of comm
+	MPI_Comm comm,    // intracommunicator (handle)
+	MPI_Group group,  // group, which is a subset of the group of comm (handle)
+	int tag,          // tag (integer)
+	MPI_Comm *newcomm // new communicator (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+
+int MPI_Comm_split( // Creates new communicators based on colors and keys
+	MPI_Comm comm,     // [in] communicator (handle)
+	int color,         // [in] control of subset assignment (integer)
+	int key,           // [in] control of rank assigment (integer)
+	MPI_Comm *newcomm  // [out] new communicator (handle)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.4.3  Communicator Destructors
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Comm_free( // Marks the communicator object for deallocation
+  MPI_Comm *comm // [in] Communicator to be destroyed (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node157.htm
+	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
+	free(*comm);
+	*comm = MPI_COMM_NULL;
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.6  Inter-Communication
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.6.1  Inter-communicator Accessors
+// -----------------------------------------------------------------------------
+
+int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
+//{
+//    if (flag) *flag = -1; // -1 = true
+//    return MPI_SUCCESS;
+//}
+
+// Determines the size of the remote group associated with an inter-communictor
+int MPI_Comm_remote_size(MPI_Comm comm, int *size);
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.6.2  Inter-communicator Operations
+// -----------------------------------------------------------------------------
+int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunicators
+	MPI_Comm local_comm,     // [in] Local (intra)communicator
+	int local_leader,        // [in] Rank in local_comm of leader (often 0)
+	MPI_Comm peer_comm,      // [in] Communicator used to communicate between a designated process in the other communicator. Significant only at the process in local_comm with rank local_leader.
+	int remote_leader,       // [in] Rank in peer_comm of remote leader (often 0)
+	int tag,                 // [in] Message tag to use in constructing intercommunicator; if multiple MPI_Intercomm_creates are being made, they should use different tags (more precisely, ensure that the local and remote leaders are using different tags for each MPI_intercomm_create).
+	MPI_Comm *newintercomm   // [out] Created intercommunicator
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node168.htm
+
+// -----------------------------------------------------------------------------
 //  Chapter 6.8  Naming Objects
 // -----------------------------------------------------------------------------
 
 const int MPI_MAX_OBJECT_NAME = 128;
+
+WEAK
+int MPI_Comm_set_name( // Sets the print name for a communicator
+	MPI_Comm comm,        // [in] communicator to name (handle)
+	const char *comm_name // [in] Name for communicator (string)
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
+	return MPI_SUCCESS;
+}
+
+int MPI_Comm_get_name( // Return the print name from the communicator
+	MPI_Comm comm,   // communicator whose name is to be returned (handle)
+	char *comm_name, // the name previously stored on the communicator, or an...
+	int *resultlen   // length of returned name (integer)
+); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
 
 inline int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 {
@@ -1462,9 +1703,6 @@ int MPI_Free_mem(
 // -----------------------------------------------------------------------------
 
 // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
-struct MPI_Comm_impl_{
-	MPI_Errhandler errhandler_;
-};
 
 WEAK
 int MPI_Comm_create_errhandler( // Create a communicator error handler
@@ -1517,11 +1755,14 @@ int MPI_Errhandler_free( // Frees an MPI-style errorhandler
 	return MPI_SUCCESS;
 }
 
+WEAK
 int MPI_Error_string( // Return a string for a given error code
 	int errorcode, // [in] Error code returned by an MPI routine or an MPI error class
 	char *string,  // [out] Text that corresponds to the errorcode
 	int *resultlen // [out] Length of string
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm#Node221
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm#Node221
+	return MPI_SUCCESS;
+}
 
 // -----------------------------------------------------------------------------
 //  Chapter 8.4  Error Codes and Classes
@@ -1615,9 +1856,13 @@ int MPI_Finalize( // Terminates MPI execution environment
 	return MPI_SUCCESS;
 }
 
+WEAK
 int MPI_Initialized( // Indicates whether MPI_Init has been called.
   int *flag // [out] Flag is true if MPI_Init or MPI_Init_thread has been called and false otherwise.
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node225.htm
+	if (flag) *flag = true;
+	return MPI_SUCCESS;
+}
 
 WEAK
 int MPI_Abort( // Terminates MPI execution environment
@@ -1647,46 +1892,6 @@ int MPI_Finalized( // Indicates whether MPI_Finalize has been called
 // -----------------------------------------------------------------------------
 
 
-static inline
-int MPI_Comm_compare( // Compares two communicators
-  MPI_Comm comm1, // [in] comm1 (handle) 
-  MPI_Comm comm2, // [in] comm2 (handle) 
-  int *result // [out] integer which is MPI_IDENT if the contexts and groups are the same, MPI_CONGRUENT if different contexts but identical groups, MPI_SIMILAR if different contexts but similar groups, and MPI_UNEQUAL otherwise 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
-	if(&comm1 == &MPI_COMM_NULL || &comm2 == &MPI_COMM_NULL) return MPI_ERR_COMM;
-	if(result == NULL) return MPI_ERR_ARG;
-	*result = MPI_CONGRUENT; //MPI_IDENT;
-	return MPI_SUCCESS;
-}
-static inline
-int MPI_Comm_create( // Creates a new communicator 
-	MPI_Comm comm,    // [in] communicator (handle) 
-	MPI_Group group,  // [in] group, which is a subset of the group of comm (handle) 
-	MPI_Comm *newcomm // [out] new communicator (handle) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-int MPI_Comm_free( // Marks the communicator object for deallocation 
-  MPI_Comm *comm // [in] Communicator to be destroyed (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node157.htm
-	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	free(*comm);
-	*comm = MPI_COMM_NULL;
-	return MPI_SUCCESS;
-} 
-// Determines the size of the remote group associated with an inter-communictor 
-int MPI_Comm_remote_size(MPI_Comm comm, int *size); 
-WEAK
-int MPI_Comm_size( // Determines the size of the group associated with a communicator
-	MPI_Comm comm, // communicator (handle)
-	int *size // number of processes in the group of comm (integer)
-){
-	if(comm == MPI_COMM_NULL){
-		int error = MPI_ERR_COMM;
-		comm->errhandler_->func_(&comm, &error);
-		return error;
-	}
-	*size = 1;
-	return MPI_SUCCESS;
-} // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
 int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI application 
 	const char *command,    // [in] name of program to be spawned (string, at root) 
 	char *argv[],           // [in] arguments to command (array of strings, at root) 
@@ -1697,52 +1902,9 @@ int MPI_Comm_spawn( // Spawn up to maxprocs instances of a single MPI applicatio
 	MPI_Comm *intercomm,    // [out] intercommunicator between original group and the newly spawned group (handle) 
 	int array_of_errcodes[] // [out] one code per process (array of integer) 
 );
-int MPI_Comm_split( // Creates new communicators based on colors and keys 
-	MPI_Comm comm,     // [in] communicator (handle)
-	int color,         // [in] control of subset assignment (integer)
-	int key,           // [in] control of rank assigment (integer)
-	MPI_Comm *newcomm  // [out] new communicator (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-int MPI_Comm_get_name( // Return the print name from the communicator 
-	MPI_Comm comm,   // communicator whose name is to be returned (handle)
-	char *comm_name, // the name previously stored on the communicator, or an...
-	int *resultlen   // length of returned name (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
 int MPI_Comm_get_parent( // Return the parent communicator for this process 
   MPI_Comm *parent // [out] the parent communicator (handle) 
 );
-WEAK
-int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the given group 
-	MPI_Comm comm, // [in] group (handle) 
-	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer) 
-){
-	if(comm == MPI_COMM_NULL){
-		MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
-		return MPI_ERR_COMM;
-	}
-	*rank = 0;
-	return MPI_SUCCESS;
-}
-int MPI_Comm_set_name( // Sets the print name for a communicator 
-	MPI_Comm comm,        // [in] communicator to name (handle) 
-	const char *comm_name // [in] Name for communicator (string)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node179.htm
-inline int MPI_Comm_create( // Creates a new communicator 
-	MPI_Comm comm,    // [in]  communicator (handle)
-	MPI_Group group,  // [in]  group, which is a subset of the group of comm (handle)
-	MPI_Comm *newcomm // [out] new communicator (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
-	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
-	if(group == MPI_GROUP_NULL) return MPI_ERR_GROUP;
-	newcomm = (MPI_Comm*)malloc(sizeof(MPI_Comm));
-	return MPI_SUCCESS;
-}
-int MPI_Comm_create_group( // must be called by all processes in group, which is a subgroup of the group of comm
-	MPI_Comm comm,    // intracommunicator (handle)
-	MPI_Group group,  // group, which is a subset of the group of comm (handle)
-	int tag,          // tag (integer)
-	MPI_Comm *newcomm // new communicator (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node156.htm
 static inline 
 int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	MPI_Comm *comm // [in] communicator (handle)
@@ -1752,74 +1914,6 @@ int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
-static inline 
-int MPI_Comm_dup( // Duplicates an existing communicator with all its cached information 
-	MPI_Comm comm,    // communicator (handle)
-	MPI_Comm *newcomm // copy of comm (handle)
-)
-{
-	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
-	*newcomm = (struct MPI_Comm_impl_*)malloc(sizeof(struct MPI_Comm_impl_));
-	(**newcomm).errhandler_ = comm->errhandler_;
-	return MPI_SUCCESS;
-}
-int MPI_Group_free( // Frees a group 
-	MPI_Group *group // group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node153.htm
-int MPI_Group_incl( // Produces a group by reordering an existing group and taking only listed members 
- 	MPI_Group group,  // [in] group (handle) 
- 	int n,              // [in] number of elements in array ranks (and size of newgroup ) (integer)
- 	const int ranks[], 
- 	MPI_Group *newgroup // [in] ranks of processes in group to appear in newgroup (array of integers) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
-int MPI_Group_excl( // Produces a group by reordering an existing group and taking only unlisted members 
-  MPI_Group group,    //[in] group (handle) 
-  int n,              // [in] number of elements in array ranks (integer) 
-  const int ranks[],         // [in] array of integer ranks in group not to appear in newgroup 
-  MPI_Group *newgroup // [out] new group derived from above, preserving the order defined by group (handle) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
-int MPI_Group_range_excl( // Produces a group by excluding ranges of processes from an existing group 
-	MPI_Group group,    // [in] group (handle) 
-	int n,              // [in] number of elements in array ranks (integer) 
-	int ranges[][3],    // [in] a one-dimensional array of integer triplets of the form (first rank, last rank, stride), indicating the ranks in group of processes to be excluded from the output group newgroup . 
-	MPI_Group *newgroup // [out] new group derived from above, preserving the order in group (handle) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
-int MPI_Group_range_incl( // Creates a new group from ranges of ranks in an existing group 
-	MPI_Group group,    // [in] group (handle) 
-	int n,              // [in] number of triplets in array ranges (integer) 
-	int ranges[][3],    // [in] a one-dimensional array of integer triplets, of the form (first rank, last rank, stride) indicating ranks in group or processes to be included in newgroup. 
-	MPI_Group *newgroup // [out] new group derived from above, in the order defined by ranges (handle) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
-int MPI_Group_rank( // Determines the rank of the calling process in the communicator 
-	MPI_Group group, // group (handle)
-	int *rank        // rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
-int MPI_Group_size( // Returns the size of a group 
-	MPI_Group group, // [in] group (handle)
-	int *size        // [out] number of processes in the group (integer) 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
-int MPI_Group_compare( // Compares two groups 
-	MPI_Group group1, // [in] group1 (handle) 
-	MPI_Group group2, // [in] group2 (handle) 
-	int *result       // [out] integer which is MPI_IDENT if the order and members of the two groups are the same, MPI_SIMILAR if only the members are the same, and MPI_UNEQUAL otherwise 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm#Node151
-int MPI_Group_intersection( // Produces a group as the intersection of two existing groups 
-	MPI_Group group1,   // [in] first group (handle) 
-	MPI_Group group2,   // [in] second group (handle) 
-	MPI_Group *newgroup // [out] intersection group (handle) 
-);
-int MPI_Group_translate_ranks( // Translates the ranks of processes in one group to those in another group 
-	MPI_Group group1,   // [in] group1 (handle) 
-	int n,              // [in] number of ranks in ranks1 and ranks2 arrays (integer) 
-	const int ranks1[], // [in] array of zero or more valid ranks in group1 
-	MPI_Group group2,   // [in] group2 (handle) 
-	int ranks2[]        // [out] array of corresponding ranks in group2, MPI_UNDEFINED when no correspondence exists. 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
-int MPI_Group_union( // Produces a group by combining two groups 
-	MPI_Group group1,   // first group (handle)
-	MPI_Group group2,   // second group (handle)
-	MPI_Group *newgroup // union group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
 static inline 
 int MPI_Igather( // Gathers together values from a group of processes 
 	const void *sendbuf,   // [in] starting address of send buffer (choice) 
@@ -1842,14 +1936,6 @@ int MPI_Init_thread( // Initialize the MPI execution environment
 	int required, // [in] Level of desired thread support 
 	int *provided // [out] Level of provided thread support 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunicators 
-	MPI_Comm local_comm,     // [in] Local (intra)communicator 
-	int local_leader,        // [in] Rank in local_comm of leader (often 0) 
-	MPI_Comm peer_comm,      // [in] Communicator used to communicate between a designated process in the other communicator. Significant only at the process in local_comm with rank local_leader. 
-	int remote_leader,       // [in] Rank in peer_comm of remote leader (often 0) 
-	int tag,                 // [in] Message tag to use in constructing intercommunicator; if multiple MPI_Intercomm_creates are being made, they should use different tags (more precisely, ensure that the local and remote leaders are using different tags for each MPI_intercomm_create). 
-	MPI_Comm *newintercomm   // [out] Created intercommunicator 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node168.htm
 int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
 	int *flag // true if calling thread is main thread, false otherwise (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
@@ -1878,16 +1964,7 @@ int MPI_Query_thread( //  The following function can be used to query the curren
 
 
 
-inline int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
-{
-    return MPI_SUCCESS;
-}
 
-int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
-//{
-//    if (flag) *flag = -1; // -1 = true
-//    return MPI_SUCCESS;
-//}
 
 
 // const on last arg should not be there
