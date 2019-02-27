@@ -102,13 +102,40 @@ enum {//: int { // error classes
 	MPI_ERR_LASTCODE      // Last error code
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm
 
+// Forward declarations
 
 struct MPI_Comm_impl_;
 typedef struct MPI_Comm_impl_* MPI_Comm;
 
+struct MPI_Datatype_impl_;
+typedef struct MPI_Datatype_impl_* MPI_Datatype;
+
+int MPI_Comm_rank(MPI_Comm comm, int* rank);
+int MPI_Comm_size(MPI_Comm comm, int *size);
 
 // Communicator split type constants
 const int MPI_COMM_TYPE_SHARED = 1;
+
+//  MPI Requests
+typedef enum {
+	MPI_REQUEST_NULL
+} MPI_Request;
+
+typedef struct {
+    int MPI_SOURCE;
+    int MPI_TAG;
+} MPI_Status;
+
+// Constants specifying empty or ignored input
+
+static MPI_Status *MPI_STATUS_IGNORE = NULL;
+static MPI_Status *MPI_STATUSES_IGNORE = NULL;
+
+static char **MPI_ARGV_NULL = NULL;
+static char ***MPI_ARGVS_NULL = NULL;
+static int *MPI_ERRCODES_IGNORE = NULL;
+
+typedef struct {} MPI_Message;
 
 //struct MPI_Group{};
 
@@ -167,6 +194,313 @@ enum { // level of thread support
 	MPI_THREAD_MULTIPLE
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
+// -----------------------------------------------------------------------------
+// Chapter 3 - Point-to-Point Communication
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 3.2 Blocking Send and Receive Operations
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Send( // Performs a blocking send
+	const void *buf,       // [in] initial address of send buffer (choice)
+	int count,             // [in] number of elements in send buffer (nonnegat...)
+	MPI_Datatype datatype, // [in] datatype of each send buffer element (handle)
+	int dest,              // [in] rank of destination (integer)
+	int tag,               // [in] message tag (integer)
+	MPI_Comm comm          // [in] communicator (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node47.htm#Node47
+	int rank = -1; MPI_Comm_rank(comm, &rank);
+	assert(rank != dest);
+	int size = -1; MPI_Comm_size(comm, &size);
+	assert(dest < size); // Invalid rank has value 1 but must be nonnegative and less than 1
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Recv( // Blocking receive for a message
+	void *buf,             // [out] initial address of receive buffer (choice)
+	int count,             // [in] maximum number of elements in receive buffer...
+	MPI_Datatype datatype, // [in] datatype of each receive buffer element...
+	int source,            // [in] rank of source (integer)
+	int tag,               // [in] message tag (integer)
+	MPI_Comm comm,         // [in] communicator (handle)
+	MPI_Status *status     // [out] status object (Status)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
+	int rank = -1; MPI_Comm_rank(comm, &rank);
+	assert(rank != source);
+	assert(0);
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Get_count(             // Gets the number of "top level" elements
+	const MPI_Status *status,    // [in] return status of receive operation (Status)
+	MPI_Datatype datatype,       // [in] datatype of each receive buffer element (handle)
+	int *count                   // [out] number of received elements (integer)
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.10  Send-Receive
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Sendrecv( // Sends and receives a message
+	const void *sendbuf,   // [in] initial address of send buffer (choice)
+	int sendcount,         // [in] number of elements in send buffer (integer)
+	MPI_Datatype sendtype, // [in] type of elements in send buffer (handle)
+	int dest,              // [in] rank of destination (integer)
+	int sendtag,           // [in] send tag (integer)
+	void *recvbuf,         // [out] initial address of receive buffer (choice)
+	int recvcount,         // [in] number of elements in receive buffer (integer)
+	MPI_Datatype recvtype, // [in] type of elements in receive buffer (handle)
+	int source,            // [in] rank of source (integer)
+	int recvtag,           // [in] receive tag (integer)
+	MPI_Comm comm,         // [in] communicator (handle)
+	MPI_Status *status     // [out] status object (Status). This refers to the receive operation.
+) {
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Sendrecv_replace( // Sends and receives a message
+  const void *buf,       // [inout]  address of buffer (choice)
+  int sendcount,         // [in] number of elements in send buffer (integer)
+  MPI_Datatype datatype, // [in] type of elements in send buffer (handle)
+  int dest,              // [in] rank of destination (integer)
+  int sendtag,           // [in] send tag (integer)
+  int source,            // [in] rank of source (integer)
+  int recvtag,           // [in] receive tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Status *status     // [out] status object (Status). This refers to the receive operation.
+)
+{
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.7  Nonblocking Communication
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Isend(           // Start a nonblocking send
+  const void *buf,       // [in] initial address of send buffer (choice)
+  int count,             // [in] number of elements in send buffer (nonnegat...)
+  MPI_Datatype datatype, // [in] datatype of each send buffer element (handle)
+  int dest,              // [in] rank of destination (integer)
+  int tag,               // [in] message tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Request *request   // [out] communication request (handle)
+){
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Ibsend(          // Start a nonblocking send in buffered mode
+  const void *buf,       // [in] initial address of send buffer (choice)
+  int count,             // [in] number of elements in send buffer (nonnegat...)
+  MPI_Datatype datatype, // [in] datatype of each send buffer element (handle)
+  int dest,              // [in] rank of destination (integer)
+  int tag,               // [in] message tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Request *request   // [out] communication request (handle)
+){
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Issend(          // Start a nonblocking send in synchronous mode
+  const void *buf,       // [in] initial address of send buffer (choice)
+  int count,             // [in] number of elements in send buffer (nonnegat...)
+  MPI_Datatype datatype, // [in] datatype of each send buffer element (handle)
+  int dest,              // [in] rank of destination (integer)
+  int tag,               // [in] message tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Request *request   // [out] communication request (handle)
+){
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Irsend(          // Start a nonblocking send in ready mode
+  const void *buf,       // [in] initial address of send buffer (choice)
+  int count,             // [in] number of elements in send buffer (nonnegat...)
+  MPI_Datatype datatype, // [in] datatype of each send buffer element (handle)
+  int dest,              // [in] rank of destination (integer)
+  int tag,               // [in] message tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Request *request   // [out] communication request (handle)
+){
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Irecv(           // Nonblocking receive for a message
+  void *buf,             // [out] initial address of receive buffer (choice)
+  int count,             // [in] maximum number of elements in receive buffer...
+  MPI_Datatype datatype, // [in] datatype of each receive buffer element...
+  int source,            // [in] rank of source (integer)
+  int tag,               // [in] message tag (integer)
+  MPI_Comm comm,         // [in] communicator (handle)
+  MPI_Request *request   // [out] communication request (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
+  return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.7.3  Communication Completion
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Wait(           // Waits for an MPI request to complete
+	MPI_Request *request, // [in] request (handle)
+	MPI_Status *status    // [out] status object (Status). May be MPI_STATUS_IGNORE.
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node64.htm
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Request_free(
+	MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.7.5  Multiple Completions
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Waitall(
+	int count,
+	MPI_Request array_of_requests[],
+	MPI_Status array_of_statuses[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Testsome(
+	int incount,
+	MPI_Request array_of_requests[],
+	int *outcount,
+	int array_of_indices[],
+	MPI_Status array_of_statuses[])
+{
+    if (outcount) *outcount = 0;
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.7.6  Non-destructive Test of status
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Request_get_status(
+	MPI_Request request,
+	int *flag,
+	MPI_Status *status
+) {
+    if (flag) *flag = -1; // true
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.8  Probe and Cancel
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Chapter 3.8.1  Probe
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Iprobe(      // Nonblocking test for a message
+	int source,        // [in] source rank, or MPI_ANY_SOURCE (integer)
+	int tag,           // [in] tag value or MPI_ANY_TAG (integer)
+	MPI_Comm comm,     // [in] communicator (handle)
+	int *flag,         // [out] True if a message with the specified source, tag...
+	MPI_Status *status // [out] status object (Status)
+) {
+	return MPI_SUCCESS;
+}
+
+// Blocking test for a message
+WEAK
+int MPI_Probe( // like MPI_IMPROBE except that it is a blocking call that returns only after a matching message has been found.
+	int source,        // [in] source rank, or MPI_ANY_SOURCE (integer)
+	int tag,           // [in] tag value or MPI_ANY_TAG (integer)
+	MPI_Comm comm,     // [in] communicator (handle)
+	MPI_Status *status // [out] status object (Status)
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.8.2  Matching Probe
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Mprobe(
+	int source,           // rank of source or MPI_ANY_SOURCE (integer)
+	int tag,              // message tag or MPI_ANY_TAG (integer)
+	MPI_Comm comm,        // communicator (handle)
+	MPI_Message *message, // returned message (handle)
+	MPI_Status *status    // status object (Status)
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.8.3  Matched Receives
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Mrecv(
+	void* buf,             // initial address of receive buffer (choice)
+	int count,             // number of elements in receive buffer (non-negati)
+	MPI_Datatype datatype, // datatype of each receive buffer element (handle)
+	MPI_Message *message,  // message (handle)
+	MPI_Status *status     // status object (Status)
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.8.4  Cancel
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Cancel(
+	MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Test_cancelled(
+	const MPI_Status *status,
+	int *flag
+) {
+    if (flag) *flag = -1; // -1 true
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.9  Persistent Communication Requests
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Start(
+	MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+
+
 
 // -----------------------------------------------------------------------------
 // Chapter 4 - Datatypes
@@ -175,8 +509,6 @@ enum { // level of thread support
 
 typedef unsigned long long MPI_Aint;
 
-struct MPI_Datatype_impl_;
-typedef struct MPI_Datatype_impl_* MPI_Datatype;
 
 struct MPI_Datatype_impl_{
 //	MPI_Aint lb;
@@ -607,26 +939,7 @@ typedef enum { // redefined operations are supplied for MPI_REDUCE
 	MPI_OP_LASTCODE // not standard?
 } MPI_Op; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node112.htm
 
-//  MPI Requests
-typedef enum {
-	MPI_REQUEST_NULL
-} MPI_Request;
 
-typedef struct {
-    int MPI_SOURCE;
-    int MPI_TAG;
-} MPI_Status;
-
-// Constants specifying empty or ignored input
-
-static MPI_Status *MPI_STATUS_IGNORE = NULL;
-static MPI_Status *MPI_STATUSES_IGNORE = NULL;
-
-static char **MPI_ARGV_NULL = NULL;
-static char ***MPI_ARGVS_NULL = NULL;
-static int *MPI_ERRCODES_IGNORE = NULL;
-
-typedef struct {} MPI_Message;
 //[[noreturn]]
 static inline 
 int MPI_Abort( // Terminates MPI execution environment
@@ -739,7 +1052,7 @@ int MPI_Comm_free( // Marks the communicator object for deallocation
 } 
 // Determines the size of the remote group associated with an inter-communictor 
 int MPI_Comm_remote_size(MPI_Comm comm, int *size); 
-static inline 
+WEAK
 int MPI_Comm_size( // Determines the size of the group associated with a communicator
 	MPI_Comm comm, // communicator (handle)
 	int *size // number of processes in the group of comm (integer)
@@ -782,6 +1095,7 @@ int MPI_Comm_get_name( // Return the print name from the communicator
 int MPI_Comm_get_parent( // Return the parent communicator for this process 
   MPI_Comm *parent // [out] the parent communicator (handle) 
 );
+WEAK
 int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the given group 
 	MPI_Comm comm, // [in] group (handle) 
 	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer) 
@@ -793,11 +1107,6 @@ int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the giv
 	*rank = 0;
 	return MPI_SUCCESS;
 }
-int MPI_Get_count( // Gets the number of "top level" elements 
-	MPI_Status *status,    // [in] return status of receive operation (Status) 
-	MPI_Datatype datatype, // [out] number of received elements (integer)
-	int *count             // [in] datatype of each receive buffer element (han 
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
 int MPI_Get_version( // Return the version number of MPI 
 	int* version,   // [out] Version of MPI
 	int* subversion // [out] Suversion of MPI
@@ -1036,100 +1345,12 @@ int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunica
 	int tag,                 // [in] Message tag to use in constructing intercommunicator; if multiple MPI_Intercomm_creates are being made, they should use different tags (more precisely, ensure that the local and remote leaders are using different tags for each MPI_intercomm_create). 
 	MPI_Comm *newintercomm   // [out] Created intercommunicator 
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node168.htm
-int MPI_Iprobe( // Nonblocking test for a message
-	int source,        // [in] source rank, or MPI_ANY_SOURCE (integer) 
-	int tag,           // [in] tag value or MPI_ANY_TAG (integer) 
-	MPI_Comm comm,     // [in] communicator (handle) 
-	int *flag,         // [out] True if a message with the specified source, tag...
-	MPI_Status *status // [out] status object (Status) 
-);
-int MPI_Irecv( // Start a nonblocking receive
-	void* buf,             // [out] initial address of receive buffer (choice) 
-	int count,             // [in] number of elements in receive buffer (non-negative integer)
-	MPI_Datatype datatype, // [in] datatype of each receive buffer element (handle)
-	int source,            // [in] rank of source or MPI_ANY_SOURCE (integer)
-	int tag,               // [in] message tag or MPI_ANY_TAG (integer)
-	MPI_Comm comm,         // [in] communicator (handle)
-	MPI_Request *request   // [out] communication request (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node63.htm#Node63
 int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
 	int *flag // true if calling thread is main thread, false otherwise (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-int MPI_Mprobe(
-	int source,           // rank of source or MPI_ANY_SOURCE (integer)
-	int tag,              // message tag or MPI_ANY_TAG (integer)
-	MPI_Comm comm,        // communicator (handle)
-	MPI_Message *message, // returned message (handle)
-	MPI_Status *status    // status object (Status)
-);
-int MPI_Mrecv(
-	void* buf,             // initial address of receive buffer (choice)
-	int count,             // number of elements in receive buffer (non-negati)
-	MPI_Datatype datatype, // datatype of each receive buffer element (handle)
-	MPI_Message *message,  // message (handle)
-	MPI_Status *status     // status object (Status)
-); 
-// Blocking test for a message
-int MPI_Probe( // like MPI_IMPROBE except that it is a blocking call that returns only after a matching message has been found.
-	int source,        // [in] source rank, or MPI_ANY_SOURCE (integer) 
-	int tag,           // [in] tag value or MPI_ANY_TAG (integer) 
-	MPI_Comm comm,     // [in] communicator (handle) 
-	MPI_Status *status // [out] status object (Status) 
-);
 int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
 	int *provided // provided level of thread support (integer)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
-static inline 
-int MPI_Send( // Performs a blocking send 
-	const void *buf,       // [in] initial address of send buffer (choice) 
-	int count,             // [in] number of elements in send buffer (nonnegat...) 
-	MPI_Datatype datatype, // [in] datatype of each send buffer element (handle) 
-	int dest,              // [in] rank of destination (integer) 
-	int tag,               // [in] message tag (integer) 
-	MPI_Comm comm          // [in] communicator (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node47.htm#Node47
-	int rank = -1; MPI_Comm_rank(comm, &rank);
-	assert(rank != dest);
-	int size = -1; MPI_Comm_size(comm, &size);
-	assert(dest < size); // Invalid rank has value 1 but must be nonnegative and less than 1 
-	return MPI_SUCCESS;
-}
-int MPI_Sendrecv( // Sends and receives a message 
-	const void *sendbuf,   // [in] initial address of send buffer (choice) 
-	int sendcount,         // [in] number of elements in send buffer (integer) 
-	MPI_Datatype sendtype, // [in] type of elements in send buffer (handle) 
-	int dest,              // [in] rank of destination (integer) 
-	int sendtag,           // [in] send tag (integer) 
-	void *recvbuf,         // [out] initial address of receive buffer (choice) 
-	int recvcount,         // [in] number of elements in receive buffer (integer) 
-	MPI_Datatype recvtype, // [in] type of elements in receive buffer (handle) 
-	int source,            // [in] rank of source (integer) 
-	int recvtag,           // [in] receive tag (integer) 
-	MPI_Comm comm,         // [in] communicator (handle) 
-	MPI_Status *status     // [out] status object (Status). This refers to the receive operation. 
-);
-static inline
-int MPI_Recv( // Blocking receive for a message
-	void *buf,             // [out] initial address of receive buffer (choice) 
-	int count,             // [in] maximum number of elements in receive buffer...
-	MPI_Datatype datatype, // [in] datatype of each receive buffer element...
-	int source,            // [in] rank of source (integer) 
-	int tag,               // [in] message tag (integer) 
-	MPI_Comm comm,         // [in] communicator (handle) 
-	MPI_Status *status     // [out] status object (Status) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node50.htm#Node50
-	int rank = -1; MPI_Comm_rank(comm, &rank);
-	assert(rank != source);
-	assert(0);
-	return MPI_SUCCESS;
-}
-int MPI_Wait( // Waits for an MPI request to complete 
-	MPI_Request *request, // [in] request (handle) 
-	MPI_Status *status    // [out] status object (Status). May be MPI_STATUS_IGNORE. 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node64.htm
-	assert(0); // TODO implement
-	return MPI_SUCCESS;
-}
 static inline
 double MPI_Wtime( // Returns an elapsed time on the calling processor 
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node37.htm
@@ -1143,11 +1364,6 @@ double MPI_Wtick( // Returns the resolution of MPI_Wtime
 	return 1e-9;
 }
 
-inline int MPI_Test_cancelled(const MPI_Status *status, int *flag)
-{
-    if (flag) *flag = -1; // -1 true
-    return MPI_SUCCESS;
-}
 
 typedef void (MPI_User_function)(void *a, void *b, int *len, MPI_Datatype *);
 inline int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
@@ -1211,42 +1427,7 @@ inline int MPI_Free_mem(void *base)
     return MPI_SUCCESS;
 }
 
-//struct MPI_Request {
-//   bool operator!=(const MPI_Request &o) { return false; }
-//};
-//static struct MPI_Request MPI_REQUEST_NULL;
 
-int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status);
-//{
-//    if (flag) *flag = -1; // true
-//    return MPI_SUCCESS;
-//}
-
-inline int MPI_Cancel(MPI_Request *request)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Request_free(MPI_Request *request)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Start(MPI_Request *request)
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
-{
-    return MPI_SUCCESS;
-}
-
-inline int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
-{
-    if (outcount) *outcount = 0;
-    return MPI_SUCCESS;
-}
 
 //static MPI_Status* MPI_STATUSES_IGNORE = NULL;
 
