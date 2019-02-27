@@ -102,6 +102,35 @@ enum {//: int { // error classes
 	MPI_ERR_LASTCODE      // Last error code
 }; // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node222.htm
 
+enum {
+    MPI_PROC_NULL,
+    MPI_ANY_SOURCE,
+    MPI_ANY_TAG,
+    MPI_UNDEFINED,
+    MPI_BSEND_OVERHEAD,
+    MPI_KEYVAL_INVALID,
+    MPI_LOCK_EXCLUSIVE,
+    MPI_LOCK_SHARED,
+    MPI_ROOT
+};
+
+enum {
+    MPI_MODE_APPEND,
+    MPI_MODE_CREATE,
+    MPI_MODE_DELETE_ON_CLOSE,
+    MPI_MODE_EXCL,
+    MPI_MODE_NOCHECK,
+    MPI_MODE_NOPRECEDE,
+    MPI_MODE_NOPUT,
+    MPI_MODE_NOSTORE,
+    MPI_MODE_NOSUCCEED,
+    MPI_MODE_RDONLY,
+    MPI_MODE_RDWR,
+    MPI_MODE_SEQUENTIAL,
+    MPI_MODE_UNIQUE_OPEN,
+    MPI_MODE_WRONLY
+};
+
 // Forward declarations
 
 struct MPI_Comm_impl_;
@@ -1072,6 +1101,16 @@ int MPI_Allreduce( // Combines values from all processes and distributes the res
 	return MPI_SUCCESS;
 }
 
+// -----------------------------------------------------------------------------
+//  Chapter 6 - Groups, Context, Communicators, and Caching
+// -----------------------------------------------------------------------------
+
+enum {
+	MPI_IDENT,
+	MPI_CONGRUENT,
+	MPI_SIMILAR,
+	MPI_UNEQUAL
+};
 
 // -----------------------------------------------------------------------------
 //  Chapter 6.8  Naming Objects
@@ -1091,17 +1130,258 @@ inline int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 }
 
 // -----------------------------------------------------------------------------
+//  Chapter 7 - Process Topologies
+// -----------------------------------------------------------------------------
+
 
 enum {
-	MPI_IDENT,
-	MPI_CONGRUENT,
-	MPI_SIMILAR,
-	MPI_UNEQUAL
+    MPI_GRAPH,
+    MPI_CART,
+    MPI_DIST_GRAPH
 };
 
-//struct MPI_Comm_impl_{
-//	errorhandler_;
-//};
+// -----------------------------------------------------------------------------
+//  Chapter 7.5  Topology Constructors
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Cart_create( // Makes a new communicator to which topology information has been attached
+	MPI_Comm comm_old,  // [in] input communicator (handle)
+	int ndims,          // [in] number of dimensions of cartesian grid (integer)
+	int *dims,          // [in] integer array of size ndims specifying the number of processes in each dimension
+	int *periods,       // [in] logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each dimension
+	int reorder,        // [in] ranking may be reordered (true) or not (false) (logical)
+	MPI_Comm *comm_cart // [out] communicator with new cartesian topology (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node192.htm
+	if(dims == NULL) return MPI_ERR_DIMS;
+	for(int i = 0; i != ndims; ++i) if(dims[i] <= 0) return MPI_ERR_DIMS;
+	*comm_cart = comm_old; // TODO: allocate unique handle
+	return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Dims_create(
+    int nnodes,
+    int ndims,
+    int dims[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graph_create(
+    MPI_Comm comm_old,
+    int nnodes,
+    const int index[],
+    const int edges[],
+    int reorder,
+    MPI_Comm *comm_graph
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Dist_graph_create_adjacent(
+    MPI_Comm comm_old,
+    int indegree,
+    const int sources[],
+    const int sourceweights[],
+    int outdegree,
+    const int destinations[],
+    const int destweights[],
+    MPI_Info info,
+    int reorder,
+    MPI_Comm *comm_dist_graph
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Dist_graph_create(
+    MPI_Comm comm_old,
+    int n,
+    const int sources[],
+    const int degrees[],
+    const int destinations[],
+    const int weights[],
+    MPI_Info info,
+    int reorder,
+    MPI_Comm *comm_dist_graph
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 7.5.5  Topology Inquiry Functions
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Topo_test(
+    MPI_Comm comm,
+    int *status
+) {
+    if (status) *status = MPI_UNDEFINED;
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graphdims_get(
+    MPI_Comm comm,
+    int *nnodes,
+    int *nedges
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graph_get(
+    MPI_Comm comm,
+    int maxindex,
+    int maxedges,
+    int index[],
+    int edges[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Cartdim_get(
+    MPI_Comm comm,
+    int *ndims
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Cart_get(
+    MPI_Comm comm,
+    int maxdims,
+    int dims[],
+    int periods[],
+    int coords[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Cart_rank(
+    MPI_Comm comm,
+    const int coords[],
+    int *rank
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Cart_coords(
+    MPI_Comm comm,
+    int rank,
+    int maxdims,
+    int coords[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graph_neighbors_count(
+    MPI_Comm comm,
+    int rank,
+    int *nneighbors
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graph_neighbors(
+    MPI_Comm comm,
+    int rank,
+    int maxneighbors,
+    int neighbors[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Dist_graph_neighbors_count(
+    MPI_Comm comm,
+    int *indegree,
+    int *outdegree,
+    int *weighted
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Dist_graph_neighbors(
+    MPI_Comm comm,
+    int maxindegree,
+    int sources[],
+    int sourceweights[],
+    int maxoutdegree,
+    int destinations[],
+    int destweights[]
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 7.5.6  Cartesian Shift Coordinates
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Cart_shift(
+    MPI_Comm comm,
+    int direction,
+    int disp,
+    int *rank_source,
+    int *rank_dest
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 7.5.7  Partitioning of Cartesian Structures
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Cart_sub( // Partitions a communicator into subgroups which form lower-dimensional cartesian subgrids
+	MPI_Comm comm,    // [in] communicator with cartesian structure (handle)
+	int *remain_dims, // [in] the ith entry of remain_dims specifies whether the ith dimension is kept in the subgrid (true) or is dropped (false) (logical vector)
+	MPI_Comm *newcomm // [out] communicator containing the subgrid that includes the calling process (handle)
+){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node198.htm
+	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
+	*newcomm = comm; // TODO: allocate unique handle
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 7.5.8  Low-Level Topology Functions
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Cart_map(
+    MPI_Comm comm,
+    int ndims,
+    const int dims[],
+    const int periods[],
+    int *newrank
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Graph_map(
+    MPI_Comm comm,
+    int nnodes,
+    const int index[],
+    const int edges[],
+    int *newrank
+) {
+    return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+
 
 // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
 typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...); 
@@ -1174,28 +1454,6 @@ int MPI_Comm_call_errhandler_(
 ){
 	MPI_Comm_call_errhandler(comm, errorcode);
 	return errorcode;
-}
-int MPI_Cart_create( // Makes a new communicator to which topology information has been attached 
-	MPI_Comm comm_old,  // [in] input communicator (handle) 
-	int ndims,          // [in] number of dimensions of cartesian grid (integer) 
-	int *dims,          // [in] integer array of size ndims specifying the number of processes in each dimension 
-	int *periods,       // [in] logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each dimension 
-	int reorder,        // [in] ranking may be reordered (true) or not (false) (logical) 
-	MPI_Comm *comm_cart // [out] communicator with new cartesian topology (handle) 
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node192.htm
-	if(dims == NULL) return MPI_ERR_DIMS;
-	for(int i = 0; i != ndims; ++i) if(dims[i] <= 0) return MPI_ERR_DIMS;
-	*comm_cart = comm_old; // TODO: allocate unique handle
-	return MPI_SUCCESS;
-}
-int MPI_Cart_sub( // Partitions a communicator into subgroups which form lower-dimensional cartesian subgrids 
-	MPI_Comm comm,    // [in] communicator with cartesian structure (handle) 
-	int *remain_dims, // [in] the ith entry of remain_dims specifies whether the ith dimension is kept in the subgrid (true) or is dropped (false) (logical vector) 
-	MPI_Comm *newcomm // [out] communicator containing the subgrid that includes the calling process (handle)
-){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node198.htm
-	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
-	*newcomm = comm; // TODO: allocate unique handle
-	return MPI_SUCCESS;
 }
 static inline
 int MPI_Comm_compare( // Compares two communicators
@@ -1559,41 +1817,7 @@ inline int MPI_Free_mem(void *base)
 
 //static MPI_Status* MPI_STATUSES_IGNORE = NULL;
 
-enum {
-    MPI_GRAPH,
-    MPI_CART,
-    MPI_DIST_GRAPH
-};
 
-enum {
-    MPI_PROC_NULL,
-    MPI_ANY_SOURCE,
-    MPI_ANY_TAG,
-    MPI_UNDEFINED,
-    MPI_BSEND_OVERHEAD,
-    MPI_KEYVAL_INVALID,
-    MPI_LOCK_EXCLUSIVE,
-    MPI_LOCK_SHARED,
-    MPI_ROOT
-}; 
-
-enum {
-    MPI_MODE_APPEND,
-    MPI_MODE_CREATE,
-    MPI_MODE_DELETE_ON_CLOSE,
-    MPI_MODE_EXCL,
-    MPI_MODE_NOCHECK,
-    MPI_MODE_NOPRECEDE,
-    MPI_MODE_NOPUT,
-    MPI_MODE_NOSTORE,
-    MPI_MODE_NOSUCCEED,
-    MPI_MODE_RDONLY,
-    MPI_MODE_RDWR,
-    MPI_MODE_SEQUENTIAL,
-    MPI_MODE_UNIQUE_OPEN,
-    MPI_MODE_WRONLY
-    
-};
 
 
 inline int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
@@ -1607,11 +1831,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
 //    return MPI_SUCCESS;
 //}
 
-inline int MPI_Topo_test(MPI_Comm comm, int *status)
-{
-    if (status) *status = MPI_UNDEFINED;
-    return MPI_SUCCESS;
-}
 
 // const on last arg should not be there
 inline int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm comm, const MPI_Comm *newcomm)
