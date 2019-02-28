@@ -2226,7 +2226,7 @@ private:
 		std::vector<int> displs(size());
 		for(int i = 0; i != size(); ++i) displs[i+1] = detail::data(citcit1[i+1]) - detail::data(citcit1[i]);//adjacent_difference doesn't work here becuase of type incompatibility
 	//	std::adjacent_difference(citcit1, citcit1 + size(), begin(displs) + 1, [](auto& a, auto& b){return detail::data(a) - detail::data(b);});
-		int n = scatter(begin(counts), end(counts));
+		int n = scatter(counts.begin(), counts.end());
 		scatterv_n(
 			detail::data(*citcit1), counts.data(), displs.data(), detail::contiguous_iterator_tag{}, detail::basic_tag{},
 			it2, n                                              , detail::contiguous_iterator_tag{}, detail::basic_tag{},
@@ -2242,17 +2242,6 @@ private:
 			root
 		);
 	}
-/*	template<class ItIt1, class It2>
-	auto scatterv(ItIt1 itit1, It2 it2, int root = 0){
-		std::vector<int> counts(rank()==root?size():0);
-		std::transform(begin(counts), end(counts), itit1, begin(counts), [](auto&, auto& b){return std::distance(begin(b), end(b));}); 
-		std::vector<decltype(begin(*itit1))> bs(rank()==root?size():0);
-		std::transform(begin(bs), end(bs), itit1, begin(bs), [](auto&, auto& b){return begin(b);});
-	//	std::generate_n(counts.begin(), counts.size(), [&itit1](){auto d = std::distance(begin(itit1), end(itit1)); itit1++; return d;} );
-	//	for(int i = 0; i != counts.size(); ++i)
-	//		counts[i] = std::distance(itit1[i].begin(), itit1[i].end());
-		return scatterv_n(bs.data(), counts.data(), it2, root);
-	}*/
 	template<class Container, class It2, typename = typename Container::iterator>
 	auto scatterv(Container const& c, It2 it2, int root = 0){
 		assert( (int)c.size() == ((rank()==root)?size():0) );
@@ -2270,11 +2259,8 @@ private:
 		if(rank()==root){
 			std::cerr<< "in scatterv 2 " << displs[0] << " " <<  displs[1] << " " <<  displs[2] << std::endl;
 		}
-
-
-	//	std::cerr << __LINE__ << "ddddd" << std::endl;
 		std::vector<int> counts(c.size());
-		std::transform(begin(counts), end(counts), begin(c), begin(counts), [](auto&, auto& b){return std::distance(begin(b), end(b));}); 
+		std::transform(counts.begin(), counts.end(), begin(c), counts.begin(), [](auto&, auto& b){return std::distance(begin(b), end(b));}); 
 		int n = scatter(counts);
 		scatterv_n(
 			detail::data(begin(*begin(c))), counts.data(), displs.data(), detail::contiguous_iterator_tag{}, detail::basic_tag{}, 

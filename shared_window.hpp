@@ -182,11 +182,17 @@ array_ptr<T> uninitialized_fill_n(array_ptr<T> first, Size n, TT const& val){
 template<typename T, typename Size>
 array_ptr<T> destroy_n(array_ptr<T> first, Size n){
 	if(n == 0) return first;
+#if __cpp_lib_raw_memory_algorithms >= 201606
 	using std::destroy_n;
-	if(mpi3::group(*first.wSP_).root()) destroy_n(to_address(first), n);
-//		auto first_ptr = to_address(first);
-//		for(; n > 0; (void) ++first_ptr, --n) first->~T();
-//	}
+#endif
+	if(mpi3::group(*first.wSP_).root()){
+#if __cpp_lib_raw_memory_algorithms >= 201606
+		destroy_n(to_address(first), n);
+#else
+		auto first_ptr = to_address(first);
+		for(; n > 0; (void) ++first_ptr, --n) first->~T();
+#endif
+	}
 	first.wSP_->fence();
 	first.wSP_->fence();
 	return first + n;
