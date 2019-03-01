@@ -155,6 +155,7 @@ typedef enum {
 } MPI_Request;
 
 typedef struct {
+    int MPI_ERROR;
     int MPI_SOURCE;
     int MPI_TAG;
 } MPI_Status;
@@ -170,12 +171,13 @@ static int *MPI_ERRCODES_IGNORE = NULL;
 
 typedef struct {} MPI_Message;
 
-//struct MPI_Group{};
+struct MPI_Group_impl_ {};
+typedef struct MPI_Group_impl_* MPI_Group;
 
-typedef enum {
-	MPI_GROUP_NULL = 0,
-	MPI_GROUP_EMPTY
-} MPI_Group;
+
+static MPI_Group MPI_GROUP_NULL = NULL;
+struct MPI_Group_impl_ MPI_GROUP_EMPTY_impl WEAKVAR;
+MPI_Group MPI_GROUP_EMPTY WEAKVAR = &MPI_GROUP_EMPTY_impl;
 
 //struct MPI_Info{};
 //const struct MPI_Info MPI_INFO_NULL;
@@ -225,7 +227,7 @@ struct MPI_Comm_impl_{
 MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
 MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
 
-MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
+MPI_Errhandler MPI_ERRHANDLER_NULL WEAKVAR = NULL;
 
 int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode);
 
@@ -2300,7 +2302,7 @@ WEAK
 int MPI_Errhandler_free( // Frees an MPI-style errorhandler
 	MPI_Errhandler *errhandler // [in-out] MPI error handler (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm
-	errhandler = MPI_ERRHANDLER_NULL;
+	*errhandler = MPI_ERRHANDLER_NULL;
 	return MPI_SUCCESS;
 }
 
