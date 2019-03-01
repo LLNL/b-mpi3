@@ -1408,8 +1408,6 @@ WEAK
 int MPI_Comm_free( // Marks the communicator object for deallocation
   MPI_Comm *comm // [in] Communicator to be destroyed (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node157.htm
-	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	free(*comm);
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
@@ -1830,6 +1828,31 @@ void fatal_error_(MPI_Comm * comm, int * errcode, ...);
 WEAK
 void no_op_error_(MPI_Comm * comm, int * errcode, ...){}
 
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+WEAK
+int MPI_Errhandler_create(
+  MPI_Handler_function *errhandler_fn,
+  MPI_Errhandler *errhandler
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Errhandler_set(
+  MPI_Comm comm,
+  MPI_Errhandler errhandler
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Errhandler_get(
+  MPI_Comm comm,
+  MPI_Errhandler *errhandler
+) {
+  return MPI_SUCCESS;
+}
+#endif
 
 
 
@@ -1841,7 +1864,6 @@ WEAK
 int MPI_Errhandler_free( // Frees an MPI-style errorhandler
 	MPI_Errhandler *errhandler // [in-out] MPI error handler (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm
-	free(*errhandler);
 	errhandler = MPI_ERRHANDLER_NULL;
 	return MPI_SUCCESS;
 }
@@ -1933,14 +1955,6 @@ int MPI_Init( // Initialize the MPI execution environment
 WEAK
 int MPI_Finalize( // Terminates MPI execution environment
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
-	free(MPI_COMM_WORLD->errhandler_); // TODO revise
-	free(MPI_COMM_WORLD);
-	free(MPI_COMM_SELF->errhandler_); // TODO revise
-	free(MPI_COMM_SELF);
-
-	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
-	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
-
 	return MPI_SUCCESS;
 }
 
@@ -2062,7 +2076,6 @@ int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	MPI_Comm *comm // [in] communicator (handle)
 ){
 	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	free(*comm);
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
