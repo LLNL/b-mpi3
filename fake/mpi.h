@@ -214,6 +214,11 @@ typedef enum { // redefined operations are supplied for MPI_REDUCE
 
 typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...);
 
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+// Deprecated in MPI-2.0.  Removed in MPI_3.0
+typedef MPI_Comm_errhandler_function MPI_Handler_function;
+#endif
+
 struct MPI_Errhandler_impl_{
 	MPI_Comm_errhandler_function* func_;
 };
@@ -314,6 +319,66 @@ int MPI_Get_count(             // Gets the number of "top level" elements
 	int *count                   // [out] number of received elements (integer)
 ) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
 	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.2  Communication Modes
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Bsend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Ssend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Rsend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.6  Buffer Allocation and Usage
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Buffer_attach(
+  void *buffer,
+  int size
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Buffer_detach(
+  void *buffer_addr,
+  int *size
+) {
+  return MPI_SUCCESS;
 }
 
 // -----------------------------------------------------------------------------
@@ -785,6 +850,10 @@ DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_2INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_SHORT_INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_DOUBLE_INT)
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+DEFINE_FAKE_MPI_DATATYPE(MPI_LB)
+DEFINE_FAKE_MPI_DATATYPE(MPI_UB)
+#endif
 
 // -----------------------------------------------------------------------------
 //  Chapter 4.1.2  Datatype Constructors
@@ -843,6 +912,44 @@ int MPI_Type_vector( // Creates a vector (strided) datatype
 }
 
 WEAK
+int MPI_Type_create_hvector( // Creates a vector (strided) datatype
+	int count, // [in] number of blocks (nonnegative integer)
+	int blocklength, // [in] number of elements in each block (nonnegative integer)
+	MPI_Aint stride, //  [in] number of bytes between start of each block (integer)
+	MPI_Datatype old_type, // [in] old datatype (handle)
+	MPI_Datatype *newtype_p // [out] new datatype (handle)
+) {
+    return MPI_SUCCESS;
+}
+
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+#define MPI_Type_hvector MPI_Type_create_hvector
+#endif
+
+WEAK
+int MPI_Type_indexed(
+  int count,
+  const int array_of_blocklengths[],
+  const int array_of_displacements[],
+  MPI_Datatype oldtype,
+  MPI_Datatype *newtype
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_hindexed(
+  int count,
+  const int array_of_blocklengths[],
+  const MPI_Aint array_of_displacements[],
+  MPI_Datatype oldtype,
+  MPI_Datatype *newtype
+) {
+    return MPI_SUCCESS;
+}
+
+
+WEAK
 int MPI_Type_create_struct(
 	int count,
 	const int array_of_blocklengths[],
@@ -854,8 +961,9 @@ int MPI_Type_create_struct(
 }
 
 
+
 // Removed in 3.0
-#if 0
+#ifdef USE_MPI_REMOVED_FUNCTIONS
 WEAK
 int MPI_Type_struct( // Creates a struct datatype
 	int count, // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths
@@ -895,6 +1003,10 @@ int MPI_Get_address(
 {
     return MPI_SUCCESS;
 }
+
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+#define MPI_Address MPI_Get_address
+#endif
 
 WEAK
 int MPI_Type_size( // Return the number of bytes occupied by entries in the datatype
@@ -960,7 +1072,21 @@ int MPI_Type_get_extent( // Get the lower bound and extent for a Datatype
 }
 
 // Removed from the 3.0 standard
-#if 0
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+WEAK
+int MPI_Type_lb( // Returns the lower bound of a datatype
+	MPI_Datatype datatype, //  [in] datatype (handle)
+	MPI_Aint *displacement
+){
+	if(!displacement) return MPI_ERR_ARG;
+	if(!datatype) return MPI_ERR_TYPE;
+	MPI_Aint lb = -1;
+	MPI_Aint extent = -1;
+	MPI_Type_get_extent(datatype, &lb, &extent);
+	*displacement = lb + extent;
+	return MPI_SUCCESS;
+}
+
 WEAK
 int MPI_Type_ub( // Returns the upper bound of a datatype
 	MPI_Datatype datatype, //  [in] datatype (handle)
