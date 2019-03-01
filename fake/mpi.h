@@ -1374,7 +1374,14 @@ int MPI_Allgather(
     MPI_Datatype recvtype,
     MPI_Comm comm
 ) {
-    return MPI_SUCCESS;
+	int sendsize = -1;
+	int recvsize = -1;
+#define fake_mpi_max(a,b) ((a) > (b) ? (a) : (b))
+	MPI_Type_size(sendtype, &sendsize);
+	MPI_Type_size(recvtype, &recvsize);
+	memcpy((char*)recvbuf, (const char*)sendbuf, fake_mpi_max(sendcount*sendsize, recvcount*recvsize));
+	return MPI_SUCCESS;
+#undef fake_mpi_max
 }
 
 WEAK
@@ -1800,10 +1807,10 @@ int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the giv
 	MPI_Comm comm, // [in] group (handle)
 	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
 ){
-	if(comm == MPI_COMM_NULL){
-		MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
-		return MPI_ERR_COMM;
-	}
+	//if(comm == MPI_COMM_NULL){
+	//	MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
+  //	return MPI_ERR_COMM;
+	//}
 	*rank = 0;
 	return MPI_SUCCESS;
 }
