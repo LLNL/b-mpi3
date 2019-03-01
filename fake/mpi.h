@@ -1281,7 +1281,6 @@ int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all 
 	MPI_Comm comm          // communicator (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node101.htm
 	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(0); // TODO: is there something to implement?
 	return MPI_SUCCESS;
 }
 
