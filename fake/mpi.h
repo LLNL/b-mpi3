@@ -1499,7 +1499,7 @@ int MPI_Allreduce( // Combines values from all processes and distributes the res
 ) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node117.htm#Node117
 {
 	assert(&comm != &MPI_COMM_NULL);
-	assert(sendbuf == MPI_IN_PLACE);
+	//assert(sendbuf == MPI_IN_PLACE);
 	return MPI_SUCCESS;
 }
 
