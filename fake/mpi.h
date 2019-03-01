@@ -2149,7 +2149,21 @@ int MPI_Is_thread_main( //  This function can be called by a thread to determine
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
 
+// -----------------------------------------------------------------------------
+// Chapter 14 - Tool Support
+// -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+// Chapter 14.2.4  Miscellaneous Control of Profiling
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Pcontrol(
+  int level,
+  ...
+) {
+  return MPI_SUCCESS;
+}
 
 
 #endif
