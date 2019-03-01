@@ -1792,11 +1792,11 @@ int MPI_Comm_size( // Determines the size of the group associated with a communi
 	MPI_Comm comm, // communicator (handle)
 	int *size // number of processes in the group of comm (integer)
 ){
-	if(comm == MPI_COMM_NULL){
-		int error = MPI_ERR_COMM;
-		comm->errhandler_->func_(&comm, &error);
-		return error;
-	}
+	//if(comm == MPI_COMM_NULL){
+	//	int error = MPI_ERR_COMM;
+	//	comm->errhandler_->func_(&comm, &error);
+	//	return error;
+	//}
 	*size = 1;
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
