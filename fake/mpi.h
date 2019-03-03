@@ -155,6 +155,7 @@ typedef enum {
 } MPI_Request;
 
 typedef struct {
+    int MPI_ERROR;
     int MPI_SOURCE;
     int MPI_TAG;
 } MPI_Status;
@@ -170,12 +171,13 @@ static int *MPI_ERRCODES_IGNORE = NULL;
 
 typedef struct {} MPI_Message;
 
-//struct MPI_Group{};
+struct MPI_Group_impl_ {};
+typedef struct MPI_Group_impl_* MPI_Group;
 
-typedef enum {
-	MPI_GROUP_NULL = 0,
-	MPI_GROUP_EMPTY
-} MPI_Group;
+
+static MPI_Group MPI_GROUP_NULL = NULL;
+struct MPI_Group_impl_ MPI_GROUP_EMPTY_impl WEAKVAR;
+MPI_Group MPI_GROUP_EMPTY WEAKVAR = &MPI_GROUP_EMPTY_impl;
 
 //struct MPI_Info{};
 //const struct MPI_Info MPI_INFO_NULL;
@@ -212,6 +214,11 @@ typedef enum { // redefined operations are supplied for MPI_REDUCE
 
 typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...);
 
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+// Deprecated in MPI-2.0.  Removed in MPI_3.0
+typedef MPI_Comm_errhandler_function MPI_Handler_function;
+#endif
+
 struct MPI_Errhandler_impl_{
 	MPI_Comm_errhandler_function* func_;
 };
@@ -225,7 +232,7 @@ struct MPI_Comm_impl_{
 MPI_Errhandler MPI_ERRORS_ARE_FATAL WEAKVAR;
 MPI_Errhandler MPI_ERRORS_RETURN WEAKVAR;
 
-MPI_Errhandler* MPI_ERRHANDLER_NULL WEAKVAR = NULL;
+MPI_Errhandler MPI_ERRHANDLER_NULL WEAKVAR = NULL;
 
 int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode);
 
@@ -312,6 +319,66 @@ int MPI_Get_count(             // Gets the number of "top level" elements
 	int *count                   // [out] number of received elements (integer)
 ) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node51.htm
 	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.2  Communication Modes
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Bsend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Ssend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Rsend(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+// Chapter 3.6  Buffer Allocation and Usage
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Buffer_attach(
+  void *buffer,
+  int size
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Buffer_detach(
+  void *buffer_addr,
+  int *size
+) {
+  return MPI_SUCCESS;
 }
 
 // -----------------------------------------------------------------------------
@@ -434,6 +501,15 @@ int MPI_Wait(           // Waits for an MPI request to complete
 }
 
 WEAK
+int MPI_Test(
+	MPI_Request *request,
+  int *flag,
+	MPI_Status *status
+){
+	return MPI_SUCCESS;
+}
+
+WEAK
 int MPI_Request_free(
 	MPI_Request *request
 ) {
@@ -445,11 +521,54 @@ int MPI_Request_free(
 // -----------------------------------------------------------------------------
 
 WEAK
+int MPI_Waitany(
+	int count,
+	MPI_Request array_of_requests[],
+  int *index,
+	MPI_Status *status
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Testany(
+	int count,
+	MPI_Request array_of_requests[],
+  int *index,
+  int *flag,
+	MPI_Status *status
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
 int MPI_Waitall(
 	int count,
 	MPI_Request array_of_requests[],
 	MPI_Status array_of_statuses[]
 ) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Testall(
+	int count,
+	MPI_Request array_of_requests[],
+  int *flag,
+	MPI_Status array_of_statuses[]
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Waitsome(
+	int incount,
+	MPI_Request array_of_requests[],
+	int *outcount,
+	int array_of_indices[],
+	MPI_Status array_of_statuses[])
+{
+    if (outcount) *outcount = 0;
     return MPI_SUCCESS;
 }
 
@@ -564,8 +683,81 @@ int MPI_Test_cancelled(
 // -----------------------------------------------------------------------------
 
 WEAK
+int MPI_Send_init(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm,
+  MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Bsend_init(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm,
+  MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Ssend_init(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm,
+  MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Rsend_init(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int dest,
+  int tag,
+  MPI_Comm comm,
+  MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Recv_init(
+  const void *buf,
+  int count,
+  MPI_Datatype datatype,
+  int source,
+  int tag,
+  MPI_Comm comm,
+  MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
 int MPI_Start(
 	MPI_Request *request
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Startall(
+  int count,
+	MPI_Request array_of_requests[]
 ) {
     return MPI_SUCCESS;
 }
@@ -658,6 +850,10 @@ DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_2INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_SHORT_INT)
 DEFINE_FAKE_MPI_DATATYPE(MPI_LONG_DOUBLE_INT)
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+DEFINE_FAKE_MPI_DATATYPE(MPI_LB)
+DEFINE_FAKE_MPI_DATATYPE(MPI_UB)
+#endif
 
 // -----------------------------------------------------------------------------
 //  Chapter 4.1.2  Datatype Constructors
@@ -716,6 +912,44 @@ int MPI_Type_vector( // Creates a vector (strided) datatype
 }
 
 WEAK
+int MPI_Type_create_hvector( // Creates a vector (strided) datatype
+	int count, // [in] number of blocks (nonnegative integer)
+	int blocklength, // [in] number of elements in each block (nonnegative integer)
+	MPI_Aint stride, //  [in] number of bytes between start of each block (integer)
+	MPI_Datatype old_type, // [in] old datatype (handle)
+	MPI_Datatype *newtype_p // [out] new datatype (handle)
+) {
+    return MPI_SUCCESS;
+}
+
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+#define MPI_Type_hvector MPI_Type_create_hvector
+#endif
+
+WEAK
+int MPI_Type_indexed(
+  int count,
+  const int array_of_blocklengths[],
+  const int array_of_displacements[],
+  MPI_Datatype oldtype,
+  MPI_Datatype *newtype
+) {
+    return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_hindexed(
+  int count,
+  const int array_of_blocklengths[],
+  const MPI_Aint array_of_displacements[],
+  MPI_Datatype oldtype,
+  MPI_Datatype *newtype
+) {
+    return MPI_SUCCESS;
+}
+
+
+WEAK
 int MPI_Type_create_struct(
 	int count,
 	const int array_of_blocklengths[],
@@ -727,8 +961,9 @@ int MPI_Type_create_struct(
 }
 
 
+
 // Removed in 3.0
-#if 0
+#ifdef USE_MPI_REMOVED_FUNCTIONS
 WEAK
 int MPI_Type_struct( // Creates a struct datatype
 	int count, // [in] number of blocks (integer) -- also number of entries in arrays array_of_types , array_of_displacements and array_of_blocklengths
@@ -768,6 +1003,10 @@ int MPI_Get_address(
 {
     return MPI_SUCCESS;
 }
+
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+#define MPI_Address MPI_Get_address
+#endif
 
 WEAK
 int MPI_Type_size( // Return the number of bytes occupied by entries in the datatype
@@ -833,7 +1072,21 @@ int MPI_Type_get_extent( // Get the lower bound and extent for a Datatype
 }
 
 // Removed from the 3.0 standard
-#if 0
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+WEAK
+int MPI_Type_lb( // Returns the lower bound of a datatype
+	MPI_Datatype datatype, //  [in] datatype (handle)
+	MPI_Aint *displacement
+){
+	if(!displacement) return MPI_ERR_ARG;
+	if(!datatype) return MPI_ERR_TYPE;
+	MPI_Aint lb = -1;
+	MPI_Aint extent = -1;
+	MPI_Type_get_extent(datatype, &lb, &extent);
+	*displacement = lb + extent;
+	return MPI_SUCCESS;
+}
+
 WEAK
 int MPI_Type_ub( // Returns the upper bound of a datatype
 	MPI_Datatype datatype, //  [in] datatype (handle)
@@ -903,6 +1156,56 @@ int MPI_Type_dup( // MPI_Type_dup
 		MPI_Type_dup(oldtype->old_types[c], (*newtype)->old_types + c);
 	}
 	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.11  Use of General Datatypes in Communication
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Get_elements(
+  const MPI_Status *status,
+  MPI_Datatype datatype,
+  int *count
+) {
+  return MPI_SUCCESS;
+
+}
+WEAK
+int MPI_Get_elements_x(
+  const MPI_Status *status,
+  MPI_Datatype datatype,
+  MPI_Count *count
+) {
+  return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 4.1.13  Decoding a Datatype
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Type_get_envelope(
+  MPI_Datatype datatype,
+  int *num_integers,
+  int *num_addresses,
+  int *num_datatypes,
+  int *combiner
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Type_get_contents(
+  MPI_Datatype datatype,
+  int max_integers,
+  int max_addresses,
+  int max_datatypes,
+  int array_of_integers[],
+  MPI_Aint array_of_addresses[],
+  MPI_Datatype array_of_datatypes[]
+) {
+  return MPI_SUCCESS;
 }
 
 // -----------------------------------------------------------------------------
@@ -978,7 +1281,6 @@ int MPI_Bcast( // Broadcasts a message from the process with rank "root" to all 
 	MPI_Comm comm          // communicator (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node101.htm
 	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	assert(0); // TODO: is there something to implement?
 	return MPI_SUCCESS;
 }
 
@@ -1071,7 +1373,14 @@ int MPI_Allgather(
     MPI_Datatype recvtype,
     MPI_Comm comm
 ) {
-    return MPI_SUCCESS;
+	int sendsize = -1;
+	int recvsize = -1;
+#define fake_mpi_max(a,b) ((a) > (b) ? (a) : (b))
+	MPI_Type_size(sendtype, &sendsize);
+	MPI_Type_size(recvtype, &recvsize);
+	memcpy((char*)recvbuf, (const char*)sendbuf, fake_mpi_max(sendcount*sendsize, recvcount*recvsize));
+	return MPI_SUCCESS;
+#undef fake_mpi_max
 }
 
 WEAK
@@ -1088,6 +1397,52 @@ int MPI_Allgatherv(
     return MPI_SUCCESS;
 }
 
+// -----------------------------------------------------------------------------
+//  Chapter 5.8  All-to-All Scatter/Gather
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Alltoall(
+  const void* sendbuf,
+  int sendcount,
+  MPI_Datatype sendtype,
+  void *recvbuf,
+  int recvcount,
+  MPI_Datatype recvtype,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Alltoallv(
+  const void* sendbuf,
+  const int sendcounts[],
+  const int sdispls[],
+  MPI_Datatype sendtype,
+  void *recvbuf,
+  const int recvcounts[],
+  const int rdispls[],
+  MPI_Datatype recvtype,
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Alltoallw(
+  const void* sendbuf,
+  const int sendcounts[],
+  const int sdispls[],
+  MPI_Datatype sendtypes[],
+  void *recvbuf,
+  const int recvcounts[],
+  const int rdispls[],
+  const MPI_Datatype recvtypes[],
+  MPI_Comm comm
+) {
+  return MPI_SUCCESS;
+}
 
 // -----------------------------------------------------------------------------
 //  Chapter 5.9.1  Reduce
@@ -1144,9 +1499,83 @@ int MPI_Allreduce( // Combines values from all processes and distributes the res
 ) // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node117.htm#Node117
 {
 	assert(&comm != &MPI_COMM_NULL);
-	assert(sendbuf == MPI_IN_PLACE);
+	//assert(sendbuf == MPI_IN_PLACE);
 	return MPI_SUCCESS;
 }
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.10  Reduce-Scatter
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.10.1  MPI_REDUCE_SCATTER_BLOCK
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Reduce_scatter_block(
+  const void* sendbuf,
+  void *recvbuf,
+  int recvcount,
+  MPI_Datatype datatype,
+  MPI_Op op,
+  MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.10.2  MPI_REDUCE_SCATTER
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Reduce_scatter(
+  const void* sendbuf,
+  void *recvbuf,
+  const int recvcounts[],
+  MPI_Datatype datatype,
+  MPI_Op op,
+  MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.11  Scan
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.11.1  Inclusive Scan
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Scan(
+  const void *sendbuf,
+  void *recvbuf,
+  int count,
+  MPI_Datatype datatype,
+  MPI_Op op,
+  MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 5.11.2  Exclusive Scan
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Exscan(
+  const void *sendbuf,
+  void *recvbuf,
+  int count,
+  MPI_Datatype datatype,
+  MPI_Op op,
+  MPI_Comm comm
+) {
+	return MPI_SUCCESS;
+}
+
+
 
 // -----------------------------------------------------------------------------
 //  Chapter 5.12  Nonblocking Collective Operations
@@ -1227,29 +1656,41 @@ enum {
 //  Chapter 6.3.1  Group Accessors
 // -----------------------------------------------------------------------------
 
+WEAK
 int MPI_Group_size( // Returns the size of a group
 	MPI_Group group, // [in] group (handle)
 	int *size        // [out] number of processes in the group (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_rank( // Determines the rank of the calling process in the communicator
 	MPI_Group group, // group (handle)
 	int *rank        // rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_translate_ranks( // Translates the ranks of processes in one group to those in another group
 	MPI_Group group1,   // [in] group1 (handle)
 	int n,              // [in] number of ranks in ranks1 and ranks2 arrays (integer)
 	const int ranks1[], // [in] array of zero or more valid ranks in group1
 	MPI_Group group2,   // [in] group2 (handle)
 	int ranks2[]        // [out] array of corresponding ranks in group2, MPI_UNDEFINED when no correspondence exists.
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_compare( // Compares two groups
 	MPI_Group group1, // [in] group1 (handle)
 	MPI_Group group2, // [in] group2 (handle)
 	int *result       // [out] integer which is MPI_IDENT if the order and members of the two groups are the same, MPI_SIMILAR if only the members are the same, and MPI_UNEQUAL otherwise
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm#Node151
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node151.htm#Node151
+  return MPI_SUCCESS;
+}
 
 // -----------------------------------------------------------------------------
 //  Chapter 6.3.2  Group Constructors
@@ -1263,49 +1704,79 @@ int MPI_Comm_group(
     return MPI_SUCCESS;
 }
 
+WEAK
 int MPI_Group_union( // Produces a group by combining two groups
 	MPI_Group group1,   // first group (handle)
 	MPI_Group group2,   // second group (handle)
 	MPI_Group *newgroup // union group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_intersection( // Produces a group as the intersection of two existing groups
 	MPI_Group group1,   // [in] first group (handle)
 	MPI_Group group2,   // [in] second group (handle)
 	MPI_Group *newgroup // [out] intersection group (handle)
-);
+) {
+  return MPI_SUCCESS;
+}
 
+WEAK
+int MPI_Group_difference( // Produces a group as the difference of two existing groups
+	MPI_Group group1,   // [in] first group (handle)
+	MPI_Group group2,   // [in] second group (handle)
+	MPI_Group *newgroup // [out] difference group (handle)
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
 int MPI_Group_incl( // Produces a group by reordering an existing group and taking only listed members
  	MPI_Group group,  // [in] group (handle)
  	int n,              // [in] number of elements in array ranks (and size of newgroup ) (integer)
  	const int ranks[],
  	MPI_Group *newgroup // [in] ranks of processes in group to appear in newgroup (array of integers)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_excl( // Produces a group by reordering an existing group and taking only unlisted members
   MPI_Group group,    //[in] group (handle)
   int n,              // [in] number of elements in array ranks (integer)
   const int ranks[],         // [in] array of integer ranks in group not to appear in newgroup
   MPI_Group *newgroup // [out] new group derived from above, preserving the order defined by group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_range_incl( // Creates a new group from ranges of ranks in an existing group
 	MPI_Group group,    // [in] group (handle)
 	int n,              // [in] number of triplets in array ranges (integer)
 	int ranges[][3],    // [in] a one-dimensional array of integer triplets, of the form (first rank, last rank, stride) indicating ranks in group or processes to be included in newgroup.
 	MPI_Group *newgroup // [out] new group derived from above, in the order defined by ranges (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_range_excl( // Produces a group by excluding ranges of processes from an existing group
 	MPI_Group group,    // [in] group (handle)
 	int n,              // [in] number of elements in array ranks (integer)
 	int ranges[][3],    // [in] a one-dimensional array of integer triplets of the form (first rank, last rank, stride), indicating the ranks in group of processes to be excluded from the output group newgroup .
 	MPI_Group *newgroup // [out] new group derived from above, preserving the order in group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node152.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Group_free( // Frees a group
 	MPI_Group *group // group (handle)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node153.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node153.htm
+  return MPI_SUCCESS;
+}
 
 
 // -----------------------------------------------------------------------------
@@ -1321,11 +1792,11 @@ int MPI_Comm_size( // Determines the size of the group associated with a communi
 	MPI_Comm comm, // communicator (handle)
 	int *size // number of processes in the group of comm (integer)
 ){
-	if(comm == MPI_COMM_NULL){
-		int error = MPI_ERR_COMM;
-		comm->errhandler_->func_(&comm, &error);
-		return error;
-	}
+	//if(comm == MPI_COMM_NULL){
+	//	int error = MPI_ERR_COMM;
+	//	comm->errhandler_->func_(&comm, &error);
+	//	return error;
+	//}
 	*size = 1;
 	return MPI_SUCCESS;
 } // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node155.htm
@@ -1335,10 +1806,10 @@ int MPI_Comm_rank( // MPI_Group_rank Returns the rank of this process in the giv
 	MPI_Comm comm, // [in] group (handle)
 	int* rank      // [out] rank of the calling process in group, or MPI_UNDEFINED if the process is not a member (integer)
 ){
-	if(comm == MPI_COMM_NULL){
-		MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
-		return MPI_ERR_COMM;
-	}
+	//if(comm == MPI_COMM_NULL){
+	//	MPI_Comm_call_errhandler(comm, MPI_ERR_COMM);
+  //	return MPI_ERR_COMM;
+	//}
 	*rank = 0;
 	return MPI_SUCCESS;
 }
@@ -1408,8 +1879,6 @@ WEAK
 int MPI_Comm_free( // Marks the communicator object for deallocation
   MPI_Comm *comm // [in] Communicator to be destroyed (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node157.htm
-	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	free(*comm);
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
@@ -1422,18 +1891,36 @@ int MPI_Comm_free( // Marks the communicator object for deallocation
 //  Chapter 6.6.1  Inter-communicator Accessors
 // -----------------------------------------------------------------------------
 
-int MPI_Comm_test_inter(MPI_Comm comm, int *flag);
-//{
-//    if (flag) *flag = -1; // -1 = true
-//    return MPI_SUCCESS;
-//}
+WEAK
+int MPI_Comm_test_inter(
+  MPI_Comm comm,
+  int *flag
+) {
+  return MPI_SUCCESS;
+}
 
 // Determines the size of the remote group associated with an inter-communictor
-int MPI_Comm_remote_size(MPI_Comm comm, int *size);
+WEAK
+int MPI_Comm_remote_size(
+  MPI_Comm comm,
+  int *size
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_remote_group(
+  MPI_Comm comm,
+  MPI_Group *group
+) {
+  return MPI_SUCCESS;
+}
 
 // -----------------------------------------------------------------------------
 //  Chapter 6.6.2  Inter-communicator Operations
 // -----------------------------------------------------------------------------
+
+WEAK
 int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunicators
 	MPI_Comm local_comm,     // [in] Local (intra)communicator
 	int local_leader,        // [in] Rank in local_comm of leader (often 0)
@@ -1441,7 +1928,88 @@ int MPI_Intercomm_create( // Creates an intercommuncator from two intracommunica
 	int remote_leader,       // [in] Rank in peer_comm of remote leader (often 0)
 	int tag,                 // [in] Message tag to use in constructing intercommunicator; if multiple MPI_Intercomm_creates are being made, they should use different tags (more precisely, ensure that the local and remote leaders are using different tags for each MPI_intercomm_create).
 	MPI_Comm *newintercomm   // [out] Created intercommunicator
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node168.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node168.htm
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Intercomm_merge(
+  MPI_Comm intercomm,
+  int high,
+  MPI_Comm *newintracomm
+) {
+  return MPI_SUCCESS;
+}
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.7  Caching
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+//  Chapter 6.7.2  Communicators
+// -----------------------------------------------------------------------------
+
+typedef int MPI_Comm_copy_attr_function(MPI_Comm oldcomm, int comm_keyval,
+  void *extra_state, void *attribute_val_in, void *attribute_val_out, int *flag);
+
+typedef int MPI_Comm_delete_attr_function(MPI_Comm comm, int comm_keyval,
+  void *attribute_val, void *extra_state);
+
+WEAK
+int MPI_Comm_create_keyval(
+  MPI_Comm_copy_attr_function *comm_copy_attr_fn,
+  MPI_Comm_delete_attr_function *comm_delete_attr_fn,
+  int *comm_keyval,
+  void *extra_state
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_free_keyval(
+  int *comm_keyval
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_set_attr(
+  MPI_Comm comm,
+  int comm_keyval,
+  void *attribute_val
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_get_attr(
+  MPI_Comm comm,
+  int comm_keyval,
+  void *attribute_val,
+  int *flag
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Comm_delete_attr(
+  MPI_Comm comm,
+  int comm_keyval
+) {
+  return MPI_SUCCESS;
+}
+
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+#define MPI_Attr_get MPI_Comm_get_attr
+#define MPI_Attr_put MPI_Comm_set_attr
+#endif
+
+enum {
+  MPI_HOST,
+  MPI_IO,
+  MPI_WTIME_IS_GLOBAL,
+  MPI_TAG_UB
+};
 
 // -----------------------------------------------------------------------------
 //  Chapter 6.8  Naming Objects
@@ -1830,6 +2398,31 @@ void fatal_error_(MPI_Comm * comm, int * errcode, ...);
 WEAK
 void no_op_error_(MPI_Comm * comm, int * errcode, ...){}
 
+#ifdef USE_MPI_REMOVED_FUNCTIONS
+WEAK
+int MPI_Errhandler_create(
+  MPI_Handler_function *errhandler_fn,
+  MPI_Errhandler *errhandler
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Errhandler_set(
+  MPI_Comm comm,
+  MPI_Errhandler errhandler
+) {
+  return MPI_SUCCESS;
+}
+
+WEAK
+int MPI_Errhandler_get(
+  MPI_Comm comm,
+  MPI_Errhandler *errhandler
+) {
+  return MPI_SUCCESS;
+}
+#endif
 
 
 
@@ -1841,8 +2434,7 @@ WEAK
 int MPI_Errhandler_free( // Frees an MPI-style errorhandler
 	MPI_Errhandler *errhandler // [in-out] MPI error handler (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node221.htm
-	free(*errhandler);
-	errhandler = MPI_ERRHANDLER_NULL;
+	*errhandler = MPI_ERRHANDLER_NULL;
 	return MPI_SUCCESS;
 }
 
@@ -1933,14 +2525,6 @@ int MPI_Init( // Initialize the MPI execution environment
 WEAK
 int MPI_Finalize( // Terminates MPI execution environment
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node28.htm
-	free(MPI_COMM_WORLD->errhandler_); // TODO revise
-	free(MPI_COMM_WORLD);
-	free(MPI_COMM_SELF->errhandler_); // TODO revise
-	free(MPI_COMM_SELF);
-
-	MPI_Errhandler_free(&MPI_ERRORS_RETURN);
-	MPI_Errhandler_free(&MPI_ERRORS_ARE_FATAL);
-
 	return MPI_SUCCESS;
 }
 
@@ -2062,7 +2646,6 @@ int MPI_Comm_disconnect( // MPI_Comm_disconnect
 	MPI_Comm *comm // [in] communicator (handle)
 ){
 	if(*comm == MPI_COMM_NULL) return MPI_ERR_COMM;
-	free(*comm);
 	*comm = MPI_COMM_NULL;
 	return MPI_SUCCESS;
 }
@@ -2133,23 +2716,43 @@ int MPI_Status_set_cancelled(
 // Chapter 12.4.3  Initialization
 // -----------------------------------------------------------------------------
 
+WEAK
 int MPI_Init_thread( // Initialize the MPI execution environment
 	int *argc,    // [in] Pointer to the number of arguments
 	char ***argv, // [in] Pointer to the argument vector
 	int required, // [in] Level of desired thread support
 	int *provided // [out] Level of provided thread support
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
+  return MPI_SUCCESS;
+}
 
+WEAK
 int MPI_Query_thread( //  The following function can be used to query the current level of thread support.
 	int *provided // provided level of thread support (integer)
-); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
+) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm#Node303
+  return MPI_SUCCESS;
+}
 
 int MPI_Is_thread_main( //  This function can be called by a thread to determine if it is the main thread (the thread that called MPI_INIT or MPI_INIT_THREAD).
 	int *flag // true if calling thread is main thread, false otherwise (logical)
 ); // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
 
 
+// -----------------------------------------------------------------------------
+// Chapter 14 - Tool Support
+// -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+// Chapter 14.2.4  Miscellaneous Control of Profiling
+// -----------------------------------------------------------------------------
+
+WEAK
+int MPI_Pcontrol(
+  int level,
+  ...
+) {
+  return MPI_SUCCESS;
+}
 
 
 #endif
