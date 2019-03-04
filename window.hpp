@@ -5,7 +5,7 @@
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
 
-#include "../mpi3/communicator.hpp"
+#include "../mpi3/types.hpp"
 #include "../mpi3/detail/datatype.hpp"
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
@@ -14,7 +14,11 @@
 namespace boost{
 namespace mpi3{
 
+template<class T = void>
+struct window;
+
 class group;
+class communicator;
 
 template<class T = void>
 class panel;
@@ -37,17 +41,19 @@ struct window<void> : basic_window{
 	window(){}
 	template<class T>
 	window(T* base, mpi3::size_t size, communicator& comm){
-		int s = MPI_Win_create(
-			(void*)base, size*sizeof(T), sizeof(T), MPI_INFO_NULL, 
-			&comm, &impl_
-		); // TODO probably need alignof
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create window"};
+		auto e = static_cast<enum error>(
+			MPI_Win_create(
+				(void*)base, size*sizeof(T), alignof(T), MPI_INFO_NULL, 
+				&comm, &impl_
+			)
+		);
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot create window"};
 	}
-	window(void* base, mpi3::size_t size, communicator& comm){
-		int s = MPI_Win_create(base, size, 1, MPI_INFO_NULL, &comm, &impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create window"};
-	}
-	window(communicator& comm) : window((void*)nullptr, 0, comm){}
+//	window(void* base, mpi3::size_t size, communicator& comm){
+//		int s = MPI_Win_create(base, size, 1, MPI_INFO_NULL, comm.get(), &impl_);
+//		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create window"};
+//	}
+//	window(communicator& comm) : window((void*)nullptr, 0, comm){}
 	window(window const&) = delete; // cannot be duplicated, see text before sec. 4.5 in Using Adv. MPI
 	window(window&& other) : basic_window{std::exchange(other.impl_, MPI_WIN_NULL)}{//is movable if null is not a correct state?
 //		other.impl_ = MPI_WIN_NULL;
@@ -238,16 +244,6 @@ class panel{
 //	friend window;
 };
 
-template<class T /*=void*/>
-window<T> communicator::make_window(T* t, mpi3::size_t n){
-	return window<T>(t, n, *this);
-}
-
-template<class T /*=void*/>
-window<T> communicator::make_window(){
-	return make_window<T>((T*)nullptr, 0);
-}
-
 template<class T> struct reference;
 
 template<class T>
@@ -292,30 +288,6 @@ shm_pointer<T> communicator::allocate_shared(MPI_Aint size) const
 	return ret;
 }
 #endif 
-
-template<class T>
-void communicator::deallocate_shared(pointer<T>){
-//	MPI_Free_mem(p.base_ptr(rank()));
-}
-
-template<class T>
-void communicator::deallocate(pointer<T>&, MPI_Aint){
-//	p.pimpl_->fence();
-//	MPI_Free_mem(p.local_ptr());
-//	MPI_Win_free(&p.pimpl_->impl_);
-//	delete p.pimpl_;
-//	p.pimpl_ == nullptr;
-}
-
-template<class T>
-window<T> communicator::make_window(mpi3::size_t size){
-	mpi3::info inf;
-	void* ptr;
-	window<T> ret;
-	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
-	return ret;
-}
 
 }}
 

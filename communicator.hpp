@@ -17,6 +17,8 @@
 #include "../mpi3/status.hpp"
 #include "../mpi3/type.hpp"
 #include "../mpi3/error.hpp"
+#include "../mpi3/group.hpp"
+#include "../mpi3/window.hpp"
 
 #include "../mpi3/detail/basic_communicator.hpp"
 #include "../mpi3/detail/buffer.hpp"
@@ -128,9 +130,6 @@ class group;
 
 using boost::optional;
 
-template<class T = void>
-struct window;
-
 struct error_handler;
 struct keyval;
 
@@ -179,7 +178,14 @@ protected:
 		return ret;
 	}
 public:
+	communicator(communicator const& o, group const& g);
+	communicator(group const& g);
 
+	explicit operator group() const;
+//	group(mpi3::communicator const& c){
+//		int s = MPI_Comm_group(c.get(), &impl_);
+//		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot construct group"};
+//	}
 //	using detail::basic_communicator::send;
 //	using detail::basic_communicator::send_n;
 	using detail::basic_communicator::send_receive_n;
@@ -406,7 +412,12 @@ public:
 	template<class T>
 	window<T> make_window(mpi3::size_t n); // Win_allocate
 	template<class T = void>
-	window<T> make_window(T* base, mpi3::size_t n);
+	window<T> make_window(T* base = nullptr, mpi3::size_t n  = 0){
+		window<T> ret;
+		auto e = static_cast<enum error>(MPI_Win_create(base, n*sizeof(T), 1, MPI_INFO_NULL, impl_, &(ret.impl_)));
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot win create"};
+		return ret;
+	}
 	template<class T = void>
 	window<T> make_window();
 
@@ -3110,6 +3121,61 @@ friend communicator& operator<<(communicator& comm, T const& t){
 
 
 };
+
+inline communicator::communicator(group const& g){
+	auto e = static_cast<enum error>(MPI_Comm_create(MPI_COMM_WORLD, &g, &impl_));
+	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};
+}
+inline communicator::communicator(communicator const& o, group const& g){
+	auto e = static_cast<enum error>(MPI_Comm_create(o.impl_, &g, &impl_));
+	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};
+}
+
+inline communicator::operator group() const{
+	group ret;
+	auto e = static_cast<enum error>( MPI_Comm_group(impl_, &(&ret)) );
+	if(e != mpi3::error::success) throw std::system_error{e, "cannot group"};
+	return ret;
+}
+
+inline communicator communicator::create(group const& g) const{
+	communicator ret;
+	int s = MPI_Comm_create(impl_, &g, &ret.impl_);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot crate group"};
+	return ret;
+}
+
+inline communicator communicator::create_group(class group const& g, int tag = 0) const{
+	communicator ret;
+	int s = MPI_Comm_create_group(impl_, &g, tag, &ret.impl_);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create_group"};
+	return ret;
+}
+
+template<class T>
+inline void communicator::deallocate_shared(pointer<T>){
+//	MPI_Free_mem(p.base_ptr(rank()));
+}
+
+template<class T>
+inline void communicator::deallocate(pointer<T>&, MPI_Aint){
+//	p.pimpl_->fence();
+//	MPI_Free_mem(p.local_ptr());
+//	MPI_Win_free(&p.pimpl_->impl_);
+//	delete p.pimpl_;
+//	p.pimpl_ == nullptr;
+}
+
+template<class T>
+inline window<T> communicator::make_window(mpi3::size_t size){
+	mpi3::info inf;
+	void* ptr;
+	window<T> ret;
+	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
+	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
+	return ret;
+}
+
 
 struct strided_range{
 	int first;
