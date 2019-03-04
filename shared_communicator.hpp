@@ -23,25 +23,23 @@ private:
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
-	shared_communicator(communicator&& c) : communicator(std::move(c)){}
-	shared_communicator(communicator const& comm, int key = 0){
-		int s = MPI_Comm_split_type(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_);
-	//	std::clog << "split " << static_cast<int>(MPI_COMM_TYPE_SHARED) << '\n';
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split shared");
+	explicit shared_communicator(communicator&& c) : communicator(std::move(c)){}
+	explicit shared_communicator(communicator const& comm, int key = 0){
+		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot split"};
 		name(mpi3::processor_name());
 	}
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
-		int s = MPI_Comm_split_type(&comm, static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
-		std::clog << "split " << static_cast<int>(t) << '\n';
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot split shared custom ompi type"};
+		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_));
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
 	}
 	friend class communicator;
 public:
 	shared_communicator& operator=(shared_communicator const& other) = default;
 	shared_communicator& operator=(shared_communicator&& other) = default;
 	inline shared_communicator split(int key) const{return split_shared(key);}
-	shared_communicator split(int color, int key) const{
-		return communicator::split(color, key);
+	auto split(int color, int key) const{
+		return shared_communicator{communicator::split(color, key)};
 	}
 
 	template<class T = char>
