@@ -18,42 +18,54 @@
 namespace boost{
 namespace mpi3{
 
-template<class T /*= void*/>
+template<class T>
 struct shared_window : window<T>{
 	shared_communicator& comm_;
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = alignof(T)) : //sizeof(T)) : // here we assume that disp_unit is used for align
 		window<T>(), comm_{comm}
 	{
 		void* base_ptr = nullptr;
-		int s = MPI_Win_allocate_shared(n*sizeof(T), disp_unit, MPI_INFO_NULL, &comm, &base_ptr, &this->impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create shared window"};
+		auto e = static_cast<enum error>(
+			MPI_Win_allocate_shared(
+				n*sizeof(T), disp_unit, 
+				MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_
+			)
+		);
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot win_alloc"};
 	}
 	shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)
 	{}
 	shared_window(shared_window const&) = default;
 	shared_window(shared_window&& other) : window<T>{std::move(other)}, comm_{other.comm_}{}
-	auto get_group() const{return group(*this);}
+	group get_group() const{
+		group ret;
+		auto e = static_cast<enum error>(MPI_Win_get_group(this->impl_, &(&ret)));
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot get group"};
+	}
 	shared_communicator& get_communicator() const{return comm_;}
-	using query_t = std::tuple<mpi3::size_t, int, void*>;
+	struct query_t{
+		mpi3::size_t size;
+		int disp_unit;
+		void* base;
+	};
 	query_t query(int rank = MPI_PROC_NULL) const{
-		query_t ret;
-		MPI_Win_shared_query(this->impl_, rank, &std::get<0>(ret), &std::get<1>(ret), &std::get<2>(ret));
-		return ret;
+		query_t r;
+		auto e = static_cast<enum error>(
+			MPI_Win_shared_query(this->impl_, rank, &r.size, &r.disp_unit, &r.base)
+		);
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot query"};
+		return r;
 	}
 	template<class TT = T>
-	mpi3::size_t size(int rank = 0) const{
-		return std::get<0>(query(rank))/sizeof(TT);
-	}
-	int disp_unit(int rank = 0) const{return std::get<1>(query(rank));}
+	mpi3::size_t size(int rank = 0) const{return query(rank).size/sizeof(TT);}
+	int disp_unit(int rank = 0) const{return query(rank).disp_unit;}
 	template<class TT = T>
-	TT* base(int rank = 0) const{return static_cast<TT*>(std::get<2>(query(rank)));}
+	TT* base(int rank = 0) const{return static_cast<TT*>(query(rank).base);}
 };
 
 template<class T /*= char*/> 
-shared_window<T> shared_communicator::make_shared_window(
-	mpi3::size_t size
-){
+shared_window<T> shared_communicator::make_shared_window(mpi3::size_t size){
 	return shared_window<T>(*this, size);
 }
 
@@ -62,6 +74,8 @@ shared_window<T> shared_communicator::make_shared_window(){
 	return shared_window<T>(*this);//, sizeof(T));
 }
 
+
+#if 0
 namespace intranode{
 
 template<class T> struct array_ptr;
@@ -308,6 +322,7 @@ template<class T = void> struct allocator{
 };
 
 }
+#endif
 
 }}
 
@@ -337,11 +352,9 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	win.base()[node.rank()] = node.rank() + 1;
 	node.barrier();
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
-
 	{
 		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
 	}
-
 	return 0;
 }
 

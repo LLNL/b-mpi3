@@ -136,7 +136,7 @@ class environment{
 	thread_level query_thread() const{return mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-	communicator self() const{ // returns a copy!
+	static communicator self(){ // returns a copy!
 		MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
 		return communicator{MPI_COMM_SELF};
 	}

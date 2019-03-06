@@ -357,7 +357,7 @@ public:
 	}
 	bool operator!=(communicator const& other) const{return not (*this == other);}
 	explicit operator bool() const{return not is_null();}
-//	impl_t operator&() const{returns impl_;}
+	impl_t operator&() const{return impl_;}
 	auto get() const{return impl_;}
 	~communicator(){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
