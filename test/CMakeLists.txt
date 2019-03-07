@@ -54,6 +54,7 @@ communicator_reduce_in_place.cpp
 communicator_scatter.cpp
 communicator_set_error_handler.cpp
 communicator_split.cpp
+window_put_get.cpp
 )
 
 # List of tests that need to link with boost_serialization

@@ -18,7 +18,7 @@
 #include "../mpi3/type.hpp"
 #include "../mpi3/error.hpp"
 #include "../mpi3/group.hpp"
-#include "../mpi3/window.hpp"
+//#include "../mpi3/window.hpp"
 
 #include "../mpi3/detail/basic_communicator.hpp"
 #include "../mpi3/detail/buffer.hpp"
@@ -167,8 +167,11 @@ struct shared_communicator; // intracommunicator
 class communicator_ptr{
 };
 
+template<class T> class window;
+
 class communicator : protected detail::basic_communicator{
 	friend struct detail::package;
+	friend class window<void>;
 protected:
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 	friend class mpi3::environment;
@@ -409,7 +412,7 @@ public:
 	int cartesian_map(std::vector<int> const& dimensions) const{
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
-	template<class T>
+/*	template<class T>
 	window<T> make_window(mpi3::size_t n); // Win_allocate
 	template<class T = void>
 	window<T> make_window(T* base = nullptr, mpi3::size_t n  = 0){
@@ -420,7 +423,7 @@ public:
 	}
 	template<class T = void>
 	window<T> make_window();
-
+*/
 	pointer<void> malloc(MPI_Aint size) const;
 	template<class T = void>
 	void deallocate_shared(pointer<T> p);
@@ -473,7 +476,7 @@ public:
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const{MPI_Barrier(impl_);}
+	void barrier() const{MPI3_CALL(MPI_Barrier)(impl_);}
 	communicator connect(port const& p, int root = 0) const{
 		communicator ret;
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -3122,6 +3125,8 @@ friend communicator& operator<<(communicator& comm, T const& t){
 
 };
 
+inline void barrier(communicator const& self){self.barrier();}
+
 inline communicator::communicator(group const& g){
 	auto e = static_cast<enum error>(MPI_Comm_create(MPI_COMM_WORLD, &g, &impl_));
 	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};
@@ -3166,6 +3171,7 @@ inline void communicator::deallocate(pointer<T>&, MPI_Aint){
 //	p.pimpl_ == nullptr;
 }
 
+#if 0
 template<class T>
 inline window<T> communicator::make_window(mpi3::size_t size){
 	mpi3::info inf;
@@ -3175,7 +3181,7 @@ inline window<T> communicator::make_window(mpi3::size_t size){
 	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
 	return ret;
 }
-
+#endif
 
 struct strided_range{
 	int first;
