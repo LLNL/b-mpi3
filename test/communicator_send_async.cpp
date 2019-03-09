@@ -37,19 +37,19 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		switch(world.rank()){
 			case 0: {
 				std::list<int> b = {3, 4, 5};
-				auto req = std::async(std::launch::async, [&](){return world.send(cbegin(b), cend(b), 1);});
 				std::this_thread::sleep_for(10s);
+				auto req = std::async(std::launch::async, [&](){return world.send(cbegin(b), cend(b), 1);});
 			}; break;
 			case 1: {
 				std::vector<int> b2(3);
 				auto req = std::async(std::launch::async, [&](){return world.receive(begin(b2), 0);});
 				std::this_thread::sleep_for(2s);
+				std::cout << "rank " << world.rank() << " has the req" << std::endl;
 				assert( req.get() == end(b2) );
 				assert( b2[1] == 4. );
 			}; break;
 		}
 	}
-	std::cout << "rank " << world.rank() << " finished " << std::endl;
 	return 0;
 }
 
