@@ -27,10 +27,14 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	check_isa_communicator(node);
 
 	mpi3::communicator virtual_node{node};
+	assert( &virtual_node != &node );
+
 	mpi3::communicator virtual_node2;
 	virtual_node2 = node2;
+	assert( &virtual_node2 != &node2 );
 
 	mpi3::communicator virtual_node3  = world.split_shared();
+	assert( &virtual_node3 != &world );
 
 	return 0;
 }
