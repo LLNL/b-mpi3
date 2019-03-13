@@ -1419,75 +1419,6 @@ private:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
 		return r;
 	}
-
-#if 0
-public:
-	template<class It1, class It2>
-	auto all_gather(It1 first, It1 last, It2 d_first){
-		return all_gather_builtinQ(
-			std::integral_constant<bool, 
-				detail::is_builtin_type<typename std::iterator_traits<It1>::value_type>{} and
-				detail::is_builtin_type<typename std::iterator_traits<It2>::value_type>{}
-			>{}, first, last, d_first
-		);
-	}
-private:
-	template<class It1, class It2>
-	auto all_gather_builtinQ(std::true_type, It1 first, It1 last, It2 d_first){
-		return all_gather_builtin(
-			detail::iterator_category<It1>{}, 
-			detail::iterator_category<It2>{}, first, last, d_first
-		);
-	}
-	template<class It1, class It2, 
-		class sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
-		class recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
-	>
-	auto all_gather_builtin(detail::contiguous_iterator_tag, detail::contiguous_iterator_tag, It1 first, It1 last, It2 d_first){
-		int s = MPI_Allgather( detail::data(first), std::distance(first, last), 
-			sendtype::value,
-			detail::data(d_first), std::distance(first, last),
-			recvtype::value,
-			impl_
-		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
-	}
-	template<class Iterator1, class Iterator2>
-	auto all_gather_builtinQ(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first)
-//	{ TODO implement }
-	;
-#endif
-
-#if 0
-public:
-	template<class InputIt, class OutputIt, class InputCategory = typename std::iterator_traits<OutputIt>::iterator_category, class OutputCategory = typename std::iterator_traits<OutputIt>::iterator_category >
-	auto all_gather(InputIt first, InputIt last, OutputIt d_first, OutputIt d_last){
-		return all_gather_category(InputCategory{}, OutputCategory{}, first, last, d_first, d_last);
-	}
-private:
-	template<class InputIt, class OutputIt>
-	auto all_gather_category(std::random_access_iterator_tag, std::random_access_iterator_tag, InputIt first, InputIt last, OutputIt d_first, OutputIt d_last){
-		return all_gather_n_randomaccess(first, std::distance(first, last), d_first, std::distance(d_first, d_last));
-	}
-	template<class RandomAccessIt1, class RandomAccessIt2, class Size>
-	auto all_gather_n_randomaccess(RandomAccessIt1 first, Size count, RandomAccessIt2 d_first, Size d_count){
-		return all_gather_n_randomaccess_contiguity(detail::is_contiguous<RandomAccessIt1>{}, detail::is_contiguous<RandomAccessIt2>{}, first, count, d_first, d_count);
-	}
-	template<class ContiguousIt1, class ContiguousIt2, class Size>
-	auto all_gather_n_randomaccess_contiguity(std::true_type, std::true_type, ContiguousIt1 first, Size count, ContiguousIt2 d_first, Size d_count){
-		return all_gather_n_randomaccess_contiguous_builtin(
-			detail::is_builtin_type<typename std::iterator_traits<ContiguousIt1>::value_type>{}, 
-			detail::is_builtin_type<typename std::iterator_traits<ContiguousIt2>::value_type>{}, 
-			first, count, d_first, d_count
-		);
-	}
-	template<class ContiguousIt1, class ContiguousIt2, class Size, class ValueType1 = typename std::iterator_traits<ContiguousIt1>::value_type, class ValueType2 = typename std::iterator_traits<ContiguousIt2>::value_type, class datatype1 = typename detail::basic_datatype<ValueType1>, class datatype2 = typename detail::basic_datatype<ValueType2> >
-	auto all_gather_n_randomaccess_contiguous_builtin(std::true_type, std::true_type, ContiguousIt1 first, Size count, ContiguousIt2 d_first, Size d_count){
-		int s = MPI_Allgather(detail::data(first), count, datatype1{}, detail::data(d_first), d_count, datatype2{}, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot all gather");
-	}
-#endif
-
 private:
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(
@@ -1608,38 +1539,7 @@ private:
 	;
 public:
 	template<class T>
-	auto broadcast_value(T& t, int root = 0){
-		return broadcast_n(std::addressof(t), 1, root);
-	}
-#if 0
-public:
-	template<class T>
 	auto broadcast_value(T& t, int root = 0){return broadcast_n(std::addressof(t), 1, root);}
-	template<class InputIt>
-	auto broadcast(InputIt first, InputIt last, int root = 0){
-		return broadcast_category(typename std::iterator_traits<InputIt>::iterator_category{}, first, last, root);
-	}
-	template<class InputIt, typename Size>
-	auto broadcast_n(InputIt first, Size count, int root = 0){
-		return broadcast_n_category(typename detail::iterator_category<InputIt>{}, first, count, root);
-	}
-private:
-	template<class RandomAccessIt>
-	auto broadcast_category(std::random_access_iterator_tag, RandomAccessIt first, RandomAccessIt last, int root){
-		broadcast_n(first, std::distance(first, last), root);
-	}
-	template<class ContiguousIt, typename Size>
-	auto broadcast_n_category(detail::contiguous_iterator_tag, ContiguousIt first, Size count, int root){
-		return broadcast_n_contiguous_builtinQ(detail::is_basic<typename std::iterator_traits<ContiguousIt>::value_type>{}, first, count, root);
-	}
-	template<class ContiguousIt, typename Size, class sendtype = detail::basic_datatype<typename std::iterator_traits<ContiguousIt>::value_type>>
-	auto broadcast_n_contiguous_builtinQ(std::true_type, ContiguousIt first, Size count, int root){
-		int s = MPI_Bcast( detail::data(first), count, sendtype::value, root, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot broadcast");
-	}
-	template<class ContiguousIt, typename Size>
-	void broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root);
-#endif
 	template<class It, typename Size>
 	auto ibroadcast_n(
 		It first, 
@@ -1658,7 +1558,7 @@ private:
 		return r;
 	}
 	template<class It, typename Size>
-	auto broadcast_n(
+	void broadcast_n(
 		It first, 
 			detail::contiguous_iterator_tag,
 			detail::basic_tag,
@@ -1672,7 +1572,6 @@ private:
 			root, impl_)
 		);
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot broadcast"};
-		return first + count;
 	}
 	template<class It>
 	auto ibroadcast(
@@ -1685,15 +1584,11 @@ private:
 		);
 	}
 	template<class It>
-	auto broadcast(
+	void broadcast(
 		It first, It last, 
 			detail::random_access_iterator_tag,
 		int root
-	){
-		return broadcast_n(
-			first, std::distance(first, last), root
-		);
-	}
+	){broadcast_n(first, std::distance(first, last), root);}
 public:
 	template<class It, typename Size>
 	auto ibroadcast_n(It first, Size count, int root = 0){
@@ -1706,7 +1601,7 @@ public:
 		);
 	}
 	template<class It, typename Size>
-	auto broadcast_n(It first, Size count, int root = 0){
+	void broadcast_n(It first, Size count, int root = 0){
 		return broadcast_n(
 			first,
 				detail::iterator_category_t<It>{},
@@ -1724,7 +1619,7 @@ public:
 		);
 	}
 	template<class It>
-	auto broadcast(It first, It last, int root = 0){
+	void broadcast(It first, It last, int root = 0){
 		return broadcast(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -1741,39 +1636,8 @@ public:
 		reduce_value(t, ret, op, root); // if(rank() == root) return optional<T>(ret);
 		return ret;
 	}
-//	template<class It1, class It2, class Op>
-//	auto reduce(It1 first, It1 last, It2 d_first, Op op, int root){
-//		return reduce_n(first, std::distance(first, last), d_first, op, root);
-	//	return reduce_category(typename std::iterator_traits<It1>::iterator_category{}, first, last, d_first, op, root);
-//	}
-#if 0
-	template<
-		class It1, class Size, class It2, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type,
-		class P1 = decltype(detail::data(It1{})), class P2 = decltype(detail::data(It2{})),
-		typename = std::enable_if_t<std::is_same<V1, V2>{}>,
-		class PredefinedOp = predefined_operation<Op>
-	>
-	auto reduce_n(It1 first, Size count, It2 d_first, Op /*op*/, int root){
-		int s = MPI_Reduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
-	}
-#endif
-/*	template<class It1, class Size, class It2, class Op>
-	auto reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0){
-		return reduce_n(
-			first, 
-				detail::iterator_category_t<It1>{},
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			count, 
-			d_first,
-				detail::iterator_category_t<It2>{},
-				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
-			op, root
-		);			
-	}*/
 	template<class It1, class Size, class It2, class Op, class PredefinedOp>
-	auto reduce_n(
+	It2 reduce_n(
 		It1 first, 
 			detail::contiguous_iterator_tag,
 			detail::basic_tag,
@@ -1796,7 +1660,7 @@ public:
 	}
 			
 	template<class It1, class Size, class It2, class Op>
-	auto reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0){
+	It2 reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0){
 		return reduce_n(
 			first, 
 				detail::iterator_category_t<It1>{},
@@ -1813,9 +1677,10 @@ public:
 protected:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
-		all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); 
+		auto e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op);
+		assert( e = std::addressof(ret) + 1 );
 	}
-	template<class T, class Op = std::plus<> >
+	template<class T, class Op = std::plus<>, typename = decltype(T{T(0)})>
 	auto all_reduce_value(T const& t, Op op = {}){
 		T ret = T(0);
 		all_reduce_value(t, ret, op); // if(rank() == root) return optional<T>(ret);
@@ -1830,7 +1695,7 @@ public:
 		class PredefinedOp = predefined_operation<Op>,
 		typename = decltype(predefined_operation<Op>::value)
 	>
-	auto all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
+	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
 		using detail::data;
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
@@ -1854,7 +1719,7 @@ public:
 		return d_first + count;
 	}
 	template<class It1, class Size, class It2, class Op = std::plus<>>
-	auto all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}){
+	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}){
 		return all_reduce_n(
 			first, 
 				detail::iterator_category_t<It1>{},
@@ -1868,14 +1733,13 @@ public:
 		);
 	}
 	template<typename It1, typename It2, class Op = std::plus<>>
-	auto all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
+	It2 all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
 	template<class T> static auto data_(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
-
 	template<
 		class It1, class Size, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
@@ -1891,10 +1755,9 @@ public:
 		class PredefinedOp = predefined_operation<Op>,
 		typename = decltype(predefined_operation<Op>::value)
 	>
-	auto all_reduce_n(It1 first, Size count, Op op){
+	void all_reduce_n(It1 first, Size count, Op op){
 		return all_reduce_in_place_n(first, count, op);
 	}
-
 	template<
 		class It1, class Size, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
@@ -1951,9 +1814,6 @@ private:
 	auto reduce_category(ReducePolicy rp, std::random_access_iterator_tag, RandomAccessIt1 first, RandomAccessIt1 last, It2 d_first, Op op, int root){
 		return reduce_n(rp, first, std::distance(first, last), d_first, op, root);
 	}
-//	template<class It1, class Size, class It2>
-//	auto reduce_n_category(detail::contiguous_iterator_tag, detail::contiguous_iterator_tag, It1 first, Size count, It2 d_first, Op op, int root){
-//	}
 	template<class It1, class Size, class It2, class Op, 
 		class V1 = typename std::iterator_traits<It1>::value_type, 
 		class V2 = typename std::iterator_traits<It2>::value_type 
@@ -2406,21 +2266,6 @@ public:
 		return d_first;
 	}
 	public:
-/*	template<typename It1, typename Size, typename It2>
-	auto gather_n(It1 first, Size count, It2 d_first, Size d_count, int root){
-		return a_gather_n(
-			gather_mode{},
-			first, 
-				detail::iterator_category_t<It1>{},
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			count, 
-			d_first, 
-				detail::iterator_category_t<It2>{},
-				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
-			d_count,
-			root
-		);
-	}*/
 	template<typename It1, typename Size, typename It2>
 	auto all_gather_n(
 		It1 first  , Size count  , 
@@ -2452,27 +2297,15 @@ public:
 		);
 	}
 	template<class It1, typename It2>
-	auto all_gather(
+	It2 all_gather(
 		It1 first, It1 last, 
 			detail::random_access_iterator_tag, 
 		It2 d_first
 	){return all_gather_n(first, std::distance(first, last), d_first);}
 	template<class It1, typename It2>
-	auto all_gather(It1 first, It1 last, It2 d_first){
+	It2 all_gather(It1 first, It1 last, It2 d_first){
 		return all_gather(first, last, detail::iterator_category_t<It1>{}, d_first);
 	}
-/*	template<typename It1, typename Size, typename It2, typename CountsIt, typename DisplsIt>
-	auto all_gatherv_n(It1 first, Size count, It2 d_first, CountsIt counts, DisplsIt displs){
-		return all_gatherv_n(
-			first, count, 
-				detail::iterator_category_t<It1>{},
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			d_first,
-				detail::iterator_category_t<It2>{},
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			counts, displs
-		);
-	}*/
 	template<typename It1, typename Size, typename It2, typename CountsIt, typename DisplsIt>
 	auto all_gatherv_n(
 		It1 first, Size count, 
@@ -2620,58 +2453,6 @@ public:
 			d_first
 		);
 	}
-/*	template<typename It1, typename Size, typename It2>
-	auto all_gather_n(It1 first, Size count, It2 d_first){
-		return
-			a_gather_n(
-				all_gather_mode{},
-				first, 
-					detail::iterator_category_t<It1>{},
-					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-				count, 
-				d_first, 
-					detail::iterator_category_t<It2>{},
-					detail::value_category_t<typename std::iterator_traits<It2>::value_type>{}
-			);
-	}*/
-	public:
-/*
-	template<typename It1, typename It2>
-	auto all_gather(It1 first, It1 last, It2 d_first){
-		return
-			a_gather(
-				all_gather_mode{},
-				first, last,
-					detail::iterator_category_t<It1>{},
-				d_first 
-			);
-	}*/
-	protected:
-/*
-	template<typename GatherMode, typename It1, typename It2, typename... Root>
-	auto a_gather(
-		GatherMode gm, 
-		It1 first, It1 last, 
-			detail::random_access_iterator_tag,
-		It2 d_first, Root... root
-	){
-		return a_gather_n(
-			gm, 
-			first, 
-				detail::iterator_category_t<It1>{},
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			std::distance(first, last), 
-			d_first, 
-				detail::iterator_category_t<It2>{},
-				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
-			root...
-		);
-	}
-*/
-//	auto gather_n_randomaccess_contiguous_builtin(std::true_type, std::true_type, ContiguousIt1 first, Size count, ContiguousIt2 d_first, Size d_count, int root){
-//		int s = MPI_Gather(detail::data(first), count, datatype1{}, detail::data(d_first), d_count, datatype2{}, root, impl_);
-//		if(s != MPI_SUCCESS) throw std::runtime_error("cannot gather");
-//	}
 public:
 	template<class It1, typename Size1, class It2, class Itc, class Itd>
 	auto gatherv_n(
