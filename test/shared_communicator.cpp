@@ -30,6 +30,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	mpi3::communicator virtual_node2;
 	virtual_node2 = node2;
 
+	mpi3::communicator virtual_node3  = world.split_shared();
+
 	return 0;
 }
 
