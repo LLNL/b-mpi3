@@ -7,6 +7,10 @@
 #include "../mpi3/communicator.hpp"
 #include "../mpi3/environment.hpp" // processor_name
 
+//#include "/usr/src/kernels/4.18.16-300.fc29.x86_64/include/linux/getcpu.h"
+#include<sched.h>
+#include<numa.h> // sudo dnf install numactl-devel
+
 namespace boost{
 
 namespace mpi3{
@@ -32,7 +36,69 @@ private:
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_));
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
+		if(t == mpi3::communicator_type::core){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":core/pu" + std::to_string(cpu));
+		}else 
+		if(t == mpi3::communicator_type::hw_thread){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":hw_thread/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::l1_cache){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":l1_cache/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::l2_cache){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":l2_cache/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::l3_cache){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":l3_cache/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::socket){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":socket/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::numa){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":numa/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::board){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":board/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::host){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":host/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::cu){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":cu/pu" + std::to_string(cpu));
+		}else
+		if(t == mpi3::communicator_type::cluster){
+			int cpu = sched_getcpu();
+			set_name(comm.name() + ":cluster/pu" + std::to_string(cpu));
+		}
+
 	}
+/*
+enum class communicator_type : int{
+	node = OMPI_COMM_TYPE_NODE,
+	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
+	core = OMPI_COMM_TYPE_CORE,
+	l1_cache = OMPI_COMM_TYPE_L1CACHE,
+	l2_cache = OMPI_COMM_TYPE_L2CACHE,
+	l3_cache = OMPI_COMM_TYPE_L3CACHE,
+	socket = OMPI_COMM_TYPE_SOCKET,
+	numa = OMPI_COMM_TYPE_NUMA,
+	board = OMPI_COMM_TYPE_BOARD,
+	host = OMPI_COMM_TYPE_HOST,
+	cu = OMPI_COMM_TYPE_CU,
+	cpu = OMPI_COMM_TYPE_CU,
+	cluster = OMPI_COMM_TYPE_CLUSTER 
+};
+*/
 	friend class communicator;
 public:
 	shared_communicator& operator=(shared_communicator const& other) = default;
