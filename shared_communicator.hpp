@@ -11,6 +11,9 @@
 #include<sched.h>
 #include<numa.h> // sudo dnf install numactl-devel
 
+#include <boost/uuid/uuid.hpp>
+#include<boost/uuid/uuid_generators.hpp>
+
 namespace boost{
 
 namespace mpi3{
@@ -36,51 +39,43 @@ private:
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_));
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
+		boost::uuids::uuid tag = boost::uuids::random_generator()();
+		char Tag = reinterpret_cast<char const&>(tag);
+		this->broadcast_value(Tag, 0);
 		if(t == mpi3::communicator_type::core){
 			int cpu = sched_getcpu();
 			set_name(comm.name() + ":core/pu" + std::to_string(cpu));
 		}else 
 		if(t == mpi3::communicator_type::hw_thread){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":hw_thread/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":hw_thread/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::l1_cache){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":l1_cache/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":l1_cache/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::l2_cache){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":l2_cache/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":l2_cache/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::l3_cache){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":l3_cache/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":l3_cache/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::socket){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":socket/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":socket/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::numa){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":numa/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":numa/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::board){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":board/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":board/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::host){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":host/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":host/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::cu){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":cu/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":cu/tag" + std::to_string(Tag));
 		}else
 		if(t == mpi3::communicator_type::cluster){
-			int cpu = sched_getcpu();
-			set_name(comm.name() + ":cluster/pu" + std::to_string(cpu));
+			set_name(comm.name() + ":cluster/tag" + std::to_string(Tag));
 		}
-
 	}
 /*
 enum class communicator_type : int{
