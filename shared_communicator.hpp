@@ -40,7 +40,7 @@ private:
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_));
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
 		boost::uuids::uuid tag = boost::uuids::random_generator()();
-		char Tag = reinterpret_cast<char const&>(tag);
+		unsigned int Tag = reinterpret_cast<unsigned int const&>(tag);
 		this->broadcast_value(Tag, 0);
 		if(t == mpi3::communicator_type::core){
 			int cpu = sched_getcpu();
