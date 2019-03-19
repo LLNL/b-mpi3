@@ -120,9 +120,9 @@ enum class communicator_type : int{
 	cluster = OMPI_COMM_TYPE_CLUSTER 
 };
 
-//enum constant{
-//	undefined = MPI_UNDEFINED;
-//};
+enum constant{
+	undefined = MPI_UNDEFINED
+};
 
 template<int N = 10> struct overload_priority : overload_priority<N-1>{
 //	using overload_priority<N-1>::overload_priority;
@@ -416,28 +416,12 @@ public:
 	int cartesian_map(std::vector<int> const& dimensions) const{
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
-/*	template<class T>
-	window<T> make_window(mpi3::size_t n); // Win_allocate
-	template<class T = void>
-	window<T> make_window(T* base = nullptr, mpi3::size_t n  = 0){
-		window<T> ret;
-		auto e = static_cast<enum error>(MPI_Win_create(base, n*sizeof(T), 1, MPI_INFO_NULL, impl_, &(ret.impl_)));
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot win create"};
-		return ret;
-	}
-	template<class T = void>
-	window<T> make_window();
-*/
 	pointer<void> malloc(MPI_Aint size) const;
-	template<class T = void>
-	void deallocate_shared(pointer<T> p);
-	template<class T = void>
-	void deallocate(pointer<T>& p, MPI_Aint size = 0);
+	template<class T = void> void deallocate_shared(pointer<T> p);
+	template<class T = void> void deallocate(pointer<T>& p, MPI_Aint size = 0);
 	void free(pointer<void>& p) const;
 
-	bool similar(communicator const& other) const{
-		return compare(other) == equality::similar;
-	}
+	bool similar(communicator const& o) const{return compare(o)==equality::similar;}
 	template<class Vector>//, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
 	communicator subcomm(Vector const& v) const{
 		MPI_Group old_g;
@@ -518,12 +502,17 @@ public:
 		int s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e));
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
 	}
-
-	communicator operator/(int n) const{return split(rank()/n);}
+	communicator operator/(int n) const{
+		return split(
+			(rank() < size()/n*(n-size()%n))?
+				rank()/(size()/n):
+				n-size()%n + (rank() - (n-size()%n)*(size()/n))/((size()/n)+1)
+		);
+	}
 	communicator operator%(int n) const{return split(rank()%n);}
 	communicator operator/(double nn) const{
 		int n = nn;
-		return split(2*(rank()%n) > n?MPI_UNDEFINED:rank()/n);
+		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
 	communicator operator<(int n) const{return split((rank() < n)?0:MPI_UNDEFINED);}
 	communicator operator<=(int n) const{return split((rank() <= n)?0:MPI_UNDEFINED);}
@@ -539,57 +528,14 @@ public:
 	auto isend_value(T const& t, int dest, int tag = 0){
 		return isend(std::addressof(t), std::addressof(t) + 1, dest, tag);
 	}
-
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0){
 		send(std::addressof(t[0]), std::addressof(t[N-1]) + 1, dest, tag);
 	}
-
-//	template<class T>
-//	void receive_value(T& t, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-//		return receive(std::addressof(t), std::addressof(t) + 1, source, tag);
-//	}
-//	template<class T>
-//	auto ireceive_value(T& t, int source = MPI_ANY_TAG, int tag = MPI_ANY_TAG){
-//		return ireceive(std::addressof(t), std::addressof(t) + 1, source, tag);
-//	}
-//	template<class T, std::size_t N>
-//	void receive_value(T(&t)[N], int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-//		receive(std::addressof(t[0]), std::addressof(t[N]), source, tag);
-//	}
-#if 0
-	template<
-		class ContiguousIterator, 
-		typename Size, 
-		class datatype = detail::basic_datatype<typename std::iterator_traits<ContiguousIterator>::value_type>
-	//	, typename = std::enable_if_t<detail::iterator_stride<ContiguousIterator>==1>
-	> 
-	void send_n_aux(std::random_access_iterator_tag, ContiguousIterator it, Size count, int dest, int tag = 0) const{
-		MPI_Send(std::addressof(*it), count, datatype{}, dest, tag, impl_);
-	}
-	template<
-		class RandomAccessIterator, 
-		class Size, class value_type = typename std::iterator_traits<RandomAccessIterator>::value_type, 
-		class datatype = detail::basic_datatype<value_type>
-	>
-	void send_n_aux(std::random_access_iterator_tag, RandomAccessIterator I, Size count, int dest, int tag = 0) const{
-		MPI_Send(std::addressof(*I), count, datatype{}, dest, tag, impl_);
-	}
-	template<class InputIterator, class Size>
-	void send_n_aux(std::input_iterator_tag, InputIterator I, Size count, int dest, int tag = 0) const{
-		for(Size i = 0; i != count; ++i) send_value(*I++, dest, tag);
-	}
-	template<class InputIterator, class... A, class Category = typename std::iterator_traits<InputIterator>::iterator_category>
-	void send_n(InputIterator I, A&&... a) const{send_n_aux(Category(), I, std::forward<A>(a)...);}
-#endif
-
 	template<class ContIt, class Size>
-//	send_request 
 	request send_init_n(ContIt first, Size count, int dest, int tag = 0);
 	template<class ContIt>
-	request
-//	send_request 
-	send_init(ContIt first, ContIt last, int dest, int tag = 0);
+	request send_init(ContIt first, ContIt last, int dest, int tag = 0);
 
 	template<class ContIt, class Size>
 	receive_request receive_init_n(ContIt first, Size count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
@@ -3228,6 +3174,7 @@ class V{
 };
 
 int mpi3::main(int, char*[], mpi3::communicator world){
+	std::cout << mpi3::undefined << std::endl;
 
 	static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
 
