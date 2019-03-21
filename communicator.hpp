@@ -431,6 +431,8 @@ public:
 	communicator split(int color = MPI_UNDEFINED) const{
 		return split(color, rank());
 	}
+	communicator keep(bool cond) const{return split(cond?0:mpi3::undefined);}
+
 	shared_communicator split_shared(int key = 0) const;
 	shared_communicator split_shared(communicator_type t, int key = 0) const;
 	int remote_size() const{
