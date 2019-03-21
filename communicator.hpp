@@ -564,18 +564,32 @@ public:
 		int s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e));
 		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
 	}
-	communicator operator/(int n) const{
+	communicator divide_low(int n) const{
 		return split(
 			(rank() < size()/n*(n-size()%n))?
 				rank()/(size()/n):
 				n-size()%n + (rank() - (n-size()%n)*(size()/n))/((size()/n)+1)
 		);
 	}
+	communicator divide_high(int n) const{
+		int bat=size()/n; int residue = size()%n;
+		int i = 0;
+		for(int last = 0; ; i++){
+			last += bat + ((i < residue)?1:0);
+			if(rank() < last) break;
+		}
+		return split(i);
+	}
+	communicator operator/(int n) const{
+		assert(n!=0);
+		if(n > 0) return divide_high(n);
+		return divide_low(n);
+	}
 	communicator operator%(int n) const{return split(rank()%n);}
-	communicator operator/(double nn) const{
-		int n = nn;
+	communicator divide_even(int n) const{
 		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
+	communicator operator/(double nn) const{return divide_even(nn);}
 	communicator operator<(int n) const{return split((rank() < n)?0:MPI_UNDEFINED);}
 	communicator operator<=(int n) const{return split((rank() <= n)?0:MPI_UNDEFINED);}
 	communicator operator>(int n) const{return split((rank() > n)?0:MPI_UNDEFINED);}

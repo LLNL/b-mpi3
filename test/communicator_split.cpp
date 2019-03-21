@@ -13,14 +13,14 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::ostream wout(world);
 	
-	mpi3::communicator third = world/3;
+	mpi3::communicator third = world.divide_even(3); // divide_low // divide_high
 
 	wout << "I am 'world' rank "<<world.rank(); 
 	if(third) wout << " and " << third.name() <<"'s rank "<<third.rank() << " with color attribute " << mpi3::any_cast<int>(third.attribute("color"));
 	else wout << " and not in 'third'";
 	wout << std::endl;
 
-	if(mpi3::any_cast<int>(third.attribute("color")) == 0) cout << "I am in leader group " << std::endl;
+	if(third and mpi3::any_cast<int>(third.attribute("color")) == 0) cout << "I am in leader group " << std::endl;
 
 	return 0;
 }
