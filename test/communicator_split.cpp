@@ -16,23 +16,12 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	mpi3::communicator third = world/3;
 
 	wout << "I am 'world' rank "<<world.rank(); 
-	if(third) wout << " and 'third' rank "<<third.rank();
+	if(third) wout << " and " << third.name() <<"'s rank "<<third.rank() << " with color attribute " << mpi3::any_cast<int>(third.attribute("color"));
 	else wout << " and not in 'third'";
 	wout << std::endl;
-/*
-	assert( world.size() >= 2 );
 
-	auto comm = (world < 2);
-	cout <<"First, I am rank "<< world.rank() <<"\n";
-	if(comm){
-		assert(comm.size() == 2);
-		cout <<"Second, I am rank "<< world.rank() <<" in world and "<< comm.rank() <<" in comm\n";
-	}else{
-		assert(comm.size() == 0);
-		assert(comm.empty());
-		cout <<"Second, I am rank "<< world.rank() <<" but I am not in comm\n";
-	}
-*/
+	if(mpi3::any_cast<int>(third.attribute("color")) == 0) cout << "I am in leader group " << std::endl;
+
 	return 0;
 }
 
