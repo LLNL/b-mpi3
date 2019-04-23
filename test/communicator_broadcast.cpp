@@ -19,19 +19,21 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	std::vector<value_type> buf(128*1024);
 
 	for(std::size_t n=0; n != sizes.size(); ++n){
-		if(world.root()) cout << "bcasting " << sizes[n] << " ints " << NUM_REPS << " times.\n";
+		if(world.root()) 
+			cout<<"bcasting "<< sizes[n] <<" ints "<< NUM_REPS <<" times.\n";
+
 		for(int reps = 0; reps != NUM_REPS; ++reps){
 			if(world.root()) 
-				for(std::size_t i=0; i != sizes[n]; ++i) 
+				for(std::size_t i = 0; i != sizes[n]; ++i) 
 					buf[i] = 1000000.*(n * NUM_REPS + reps) + i;
 			else
-				for(std::size_t i=0; i != sizes[n]; ++i) 
+				for(std::size_t i = 0; i != sizes[n]; ++i) 
 					buf[i] = -1 - (n * NUM_REPS + reps);
 
 			world.broadcast_n(buf.begin(), sizes[n]);
 		//	world.broadcast(buf.begin(), buf.begin() + sizes[n], 0);
 
-			for(std::size_t i=0; i != sizes[n]; ++i) 
+			for(std::size_t i = 0; i != sizes[n]; ++i) 
 				assert( buf[i] == 1000000.*(n * NUM_REPS + reps) + i );
 		}
 	}
