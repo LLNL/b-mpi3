@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2019
 #ifndef BOOST_MPI3_WINDOW_HPP
@@ -17,13 +17,18 @@
 namespace boost{
 namespace mpi3{
 
+struct target{
+	int rank;
+	mpi3::size_t disp;
+};
 
 template<class T = void> class panel;
 
 template<class T = void> struct window;
 
 template<>
-class window<void>{
+struct window<void>{
+protected:
 	MPI_Win impl_ = MPI_WIN_NULL;
 public:
 	MPI_Win& operator&(){return impl_;}
@@ -32,15 +37,16 @@ public:
 		if(impl_ != MPI_WIN_NULL) MPI3_CALL(MPI_Win_free)(&impl_);
 		assert(impl_ == MPI_WIN_NULL);
 	}
-	public:
-	window() = delete;
+protected:
+	window() = default;
+public:
 	template<class T, class Size = mpi3::size_t>
-	window(communicator const& c, T* base, Size size = 0){
-		MPI3_CALL(MPI_Win_create)
-			(base, size*sizeof(T), alignof(T), MPI_INFO_NULL, c.impl_, &impl_);
+	window(communicator const& c, T* b, Size n = 0){
+		MPI3_CALL(MPI_Win_create)(b, n*sizeof(T), alignof(T), MPI_INFO_NULL, c.impl_, &impl_);
+		assert( alignof(T) == sizeof(T) ); // to see in what type it is different
 	}
 	window(window const&) = delete;// see text before §4.5 in Using Adv. MPI
-	window(window&& o) : impl_{std::exchange(o.impl_, MPI_WIN_NULL)}{}
+	window(window&& o) noexcept : impl_{std::exchange(o.impl_, MPI_WIN_NULL)}{}
 	window& operator=(window const&) = delete; // see cctor
 	window& operator=(window&& other){// self assignment is undefined
 		clear(); swap(*this, other); return *this;
@@ -97,6 +103,7 @@ public:
 //	group get_group(){use reinterpret_cast?}
 //	... get_info
 //	... get_name
+	// lock arguments are reversed
 	void lock(int rank, int lock_type = MPI_LOCK_EXCLUSIVE, int assert = MPI_MODE_NOCHECK){
 		MPI3_CALL(MPI_Win_lock)(lock_type, rank, assert, impl_);
 	}
@@ -133,7 +140,6 @@ public:
 //	void fetch_exchange(T const*  origin, T* target, int target_rank, int target_disp = 0) const{
 //		MPI_Fetch_and_op(origin, target,detail::datatype<T>{}, target_rank, target_disp, MPI_REPLACE, impl_);
 //	}
-
 //	maybe this goes to a pointer impl
 	template<class T>
 	void fetch_sum_value(T const& origin, T& target, int target_rank, int target_disp=0) const{
@@ -208,10 +214,12 @@ public:
 
 template<class T>
 struct window : window<void>{
+protected:
 	window() = default;
+public:
 	template<class Size = mpi3::size_t>
-	window(communicator& comm, T* base, Size n = 0) : window<void>{comm, base, n*sizeof(T)}{}
-	T* base() const{return window<void>::base();}
+	window(communicator const& c, T* b, Size n = 0) : window<void>{c, b, n}{}
+	T* base() const{return static_cast<T*>(window<void>::base());}
 	mpi3::size_t size() const{return window<void>::size()/sizeof(T);}
 };
 
@@ -280,21 +288,29 @@ using std::cout;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
-	std::vector<double> darr(world.rank()?0:100);
+	std::vector<double> darr(world.rank()?0:20);
+	std::iota(darr.begin(), darr.end(), 0);
 
 	mpi3::window<double> win{world, darr.data(), darr.size()};
+	if(world.rank() == 0){
+		std::cout << win.size() << std::endl;
+		assert( win.size() == 20 );
+		assert( win.base()[13] == 13 );
+	}else{
+		assert(win.size() == 0);
+		assert(win.base() == nullptr );
+	}
 	win.fence();
 	if(world.rank() == 0){
 		std::vector<double> a = {5., 6.};
 		win.put(a.begin(), a.end(), 0);
 	}
-//	mpi3::communicator(win.get_group()).barrier();
+	mpi3::communicator{win.get_group()}.barrier();
 	win.fence();
 	std::vector<double> b(2);
 	win.get(b.begin(), b.end(), 0);
 	win.fence();
 	assert( b[0] == 5. and b[1] == 6. );
-
 	return 0;
 }
 

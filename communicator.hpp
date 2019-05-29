@@ -185,11 +185,11 @@ using boost::any_cast;
 
 //class communicator_ptr{};
 
-template<class T> class window;
+template<class T> struct window;
 
 class communicator : protected detail::basic_communicator{
 	friend struct detail::package;
-	friend class window<void>;
+	friend struct window<void>;
 protected:
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 	friend class mpi3::environment;
