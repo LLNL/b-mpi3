@@ -35,6 +35,7 @@ public:
 
 	pointer allocate(size_type n, const void* /*hint*/ = 0) const{
 		pointer ret = 0;
+	// this code using reset is to workaround a bug in outdated libc++ https://bugs.llvm.org/show_bug.cgi?id=42021
 		ret.w_.reset(new shared_window<T>{
 			comm_->make_shared_window<T>(comm_->root()?n:0)
 		});
