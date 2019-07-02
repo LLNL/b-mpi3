@@ -38,7 +38,7 @@ enum class error : int {//decltype(MPI_SUCCESS) {
 	last_code = MPI_ERR_LASTCODE
 };
 
-auto string(enum error err){
+auto inline string(enum error err){
 	char estring[MPI_MAX_ERROR_STRING];
 	int len;
 	MPI_Error_string(static_cast<int>(err), estring, &len);
