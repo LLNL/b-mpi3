@@ -6,7 +6,7 @@
 #define BOOST_MPI3_WINDOW_HPP
 
 #include "../mpi3/error.hpp"
-#include "../mpi3/types.hpp"
+#include "../mpi3/type.hpp"
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/detail/call.hpp"
 #include "../mpi3/communicator.hpp"
