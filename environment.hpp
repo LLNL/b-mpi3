@@ -191,7 +191,7 @@ class environment{
 	static auto wall_sleep_for(Duration d){return mpi3::wall_sleep_for(d);}
 };
 
-mpi3::any& communicator::attribute(std::string const& s){
+inline mpi3::any& communicator::attribute(std::string const& s){
 	return attribute(environment::named_attributes_key())[s];
 }
 
