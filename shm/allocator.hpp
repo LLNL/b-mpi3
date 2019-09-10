@@ -50,10 +50,10 @@ public:
 	bool operator!=(allocator const& other) const{return not(other == *this);}
 	template<class P = pointer, class... As>
 	void construct(P p, As&&... as){
-		if(comm_->root()) ::new((void*)p) typename std::pointer_traits<P>::value_type(std::forward<As>(as)...);
+		if(comm_->root()) ::new((void*)p) typename std::pointer_traits<P>::element_type(std::forward<As>(as)...);
 	}
 	template<class P = pointer> void destroy(P p){
-		using V = typename std::pointer_traits<P>::value_type;
+		using V = typename std::pointer_traits<P>::element_type;
 		p->~V();
 	}
 };
