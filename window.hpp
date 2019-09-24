@@ -42,7 +42,7 @@ protected:
 public:
 	template<class T, class Size = mpi3::size_t>
 	window(communicator const& c, T* b, Size n = 0){
-		MPI3_CALL(MPI_Win_create)(b, n*sizeof(T), alignof(T), MPI_INFO_NULL, c.impl_, &impl_);
+		MPI3_CALL(MPI_Win_create)(b, n*sizeof(T), alignof(T), MPI_INFO_NULL, c.get(), &impl_);
 		assert( alignof(T) == sizeof(T) ); // to see in what type it is different
 	}
 	window(window const&) = delete;// see text before §4.5 in Using Adv. MPI
