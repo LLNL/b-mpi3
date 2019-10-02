@@ -106,36 +106,36 @@ namespace mpi3{
 #define OMPI_COMM_TYPE_CLUSTER  MPI_COMM_TYPE_SHARED
 #endif
 
+// https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
 enum class communicator_type : int{
-	node = OMPI_COMM_TYPE_NODE,
+	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
 	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
-	core = OMPI_COMM_TYPE_CORE,
-	l1_cache = OMPI_COMM_TYPE_L1CACHE,
-	l2_cache = OMPI_COMM_TYPE_L2CACHE,
-	l3_cache = OMPI_COMM_TYPE_L3CACHE,
-	socket = OMPI_COMM_TYPE_SOCKET,
-	numa = OMPI_COMM_TYPE_NUMA,
-	board = OMPI_COMM_TYPE_BOARD,
-	host = OMPI_COMM_TYPE_HOST,
-	cu = OMPI_COMM_TYPE_CU,
-	cpu = OMPI_COMM_TYPE_CU,
-	cluster = OMPI_COMM_TYPE_CLUSTER 
+	core      = OMPI_COMM_TYPE_CORE    ,
+	l1_cache  = OMPI_COMM_TYPE_L1CACHE ,
+	l2_cache  = OMPI_COMM_TYPE_L2CACHE ,
+	l3_cache  = OMPI_COMM_TYPE_L3CACHE ,
+	socket    = OMPI_COMM_TYPE_SOCKET  ,
+	numa      = OMPI_COMM_TYPE_NUMA    ,
+	board     = OMPI_COMM_TYPE_BOARD   ,
+	host      = OMPI_COMM_TYPE_HOST    ,
+	cu        = OMPI_COMM_TYPE_CU      ,/*synomym*/ cpu = OMPI_COMM_TYPE_CU   ,
+	cluster   = OMPI_COMM_TYPE_CLUSTER 
 };
 
 enum constant{
-	undefined = MPI_UNDEFINED,
-	process_null = MPI_PROC_NULL,
-	any_source = MPI_ANY_SOURCE
+	undefined    = MPI_UNDEFINED ,
+	process_null = MPI_PROC_NULL ,
+	any_source   = MPI_ANY_SOURCE
 };
 
 enum key{ // for attributes
-	tag_ub = MPI_TAG_UB, 
-	host = MPI_HOST,
-	io = MPI_IO,
-	wtime_is_global = MPI_WTIME_IS_GLOBAL,
+	tag_ub             = MPI_TAG_UB, 
+	host               = MPI_HOST,
+	io                 = MPI_IO,
+	wtime_is_global    = MPI_WTIME_IS_GLOBAL,
 	application_number = MPI_APPNUM,
-	universe_size = MPI_UNIVERSE_SIZE,
-	last_used_code = MPI_LASTUSEDCODE
+	universe_size      = MPI_UNIVERSE_SIZE,
+	last_used_code     = MPI_LASTUSEDCODE
 };
 
 template<int N = 10> struct overload_priority : overload_priority<N-1>{
