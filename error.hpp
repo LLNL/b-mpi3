@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_BOOST_MPI3_ERROR $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.cpp; exit
+(echo '#include "'$0'"'>$0.cpp)&& mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_BOOST_MPI3_ERROR $0.cpp -o $0x && mpirun -n 4 $0x && rm $0.cpp $0x; exit
 #endif
 #ifndef BOOST_MPI3_ERROR_HPP
 #define BOOST_MPI3_ERROR_HPP

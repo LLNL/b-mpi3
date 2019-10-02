@@ -15,6 +15,9 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
+template<class It>
+struct iterator_traits : std::iterator_traits<It>{};
+
 struct unspecified{};
 struct output_iterator_tag{using base = unspecified;};
 struct input_iterator_tag{using base = unspecified;};
@@ -179,12 +182,9 @@ int mpi3::main(int, char*[], mpi3::communicator){
 		assert( *std::addressof(*it) == 1 );
 		++it;
 		assert( *std::addressof(*it) == 2 );		
-		cout << typeid(std::iterator_traits<std::istream_iterator<int>>::iterator_category).name() << '\n';
-		cout << typeid(std::iterator_traits<std::back_insert_iterator<std::vector<double>>>::iterator_category).name() << '\n';
-//		std::vector<double> v{5.,6.};// q.push(5.);//,6.};
-//		g(v.begin());
-	//	cout << mpi3::detail::has_data<decltype(v.begin())>{} << '\n';
+		cout << typeid(detail::iterator_category_t<std::vector<double>::iterator>).name() <<'\n';
 	}
+	return 0;
 	{
 		mpi3::uvector<int> v = {444, 333};
 	//	assert( f(v.begin()) == "cont444" );

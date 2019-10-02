@@ -11,12 +11,6 @@ namespace boost{
 namespace mpi3{
 namespace shm{
 
-//template<class... As>
-//using allocator = mpi3::intranode::allocator<As...>;
-
-//template<class T>
-//using pointer = mpi3::intranode::array_ptr<T>;
-
 template<class T = void>
 struct allocator{
 	template<class U> struct rebind{typedef allocator<U> other;};
@@ -32,7 +26,6 @@ public:
 	allocator(mpi3::shared_communicator* comm) : comm_{comm}{}
 	template<class U> allocator(allocator<U> const& o) : comm_{o.comm_}{}
 	~allocator() = default;
-
 	pointer allocate(size_type n, const void* /*hint*/ = 0) const{
 		pointer ret = 0;
 	// this code using reset is to workaround a bug in outdated libc++ https://bugs.llvm.org/show_bug.cgi?id=42021
@@ -56,6 +49,13 @@ public:
 		using V = typename std::pointer_traits<P>::element_type;
 		p->~V();
 	}
+#if 0
+	template<class... As>
+	void construct(pointer p, As&&... as){
+		if(comm_->root()) ::new((void*)p) value_type(std::forward<As>(as)...);
+	}
+#endif
+	void destroy(pointer p){if(comm_->root()) p->~value_type();}
 };
 
 }}
@@ -67,33 +67,6 @@ public:
 #include "../../mpi3/shm/allocator.hpp"
 
 namespace mpi3 = boost::mpi3;
-
-#if 0
-template<class A>
-struct monotonic{
-	A& a_;
-	template<class U> struct rebind{
-		using other = monotonic<typename A::template rebind<U>::other>;
-	//	using other = typename std::iterator_traits<A>::template alloc_rebind<U>;
-	};
-	using value_type = typename A::value_type;
-	using pointer = typename A::pointer;
-	using size_type = typename A::size_type;
-	pointer mark_;
-	pointer end_;
-	monotonic(monotonic::size_type s, A& a) : a_{a}{
-		mark_ = a_.allocate(s);
-		end_ = mark_ + s;
-	}
-	monotonic::pointer allocate(monotonic::size_type s, const void*/*hint*/= 0){
-		auto ret = mark_;
-		if(size_type(std::distance(mark_, end_)) < s) throw std::bad_alloc{};
-		mark_ += s;
-		return ret;
-	}
-	void deallocate(monotonic::pointer, monotonic::size_type){}
-};
-#endif
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
@@ -123,5 +96,4 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 #endif
 #endif
-
 

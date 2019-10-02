@@ -6,7 +6,8 @@
 
 #include<mpi.h>
 
-#include<boost/serialization/strong_typedef.hpp>
+//#include<boost/strong_typedef.hpp> // BOOST_STRONG_TYPEDEF
+//#include<boost/serialization/strong_typedef.hpp>
 
 #include<type_traits>
 #include<utility> // pair
@@ -40,7 +41,21 @@ using wchar = wchar_t;
 using byte = std::byte;
 #endif
 
-BOOST_STRONG_TYPEDEF(unsigned char, packed)
+//BOOST_STRONG_TYPEDEF(unsigned char, packed)
+#if 1
+struct packed{
+	unsigned char t;
+    explicit packed(unsigned char t_) : t{t_}{};
+    packed() = default;
+    packed(packed const&) = default;
+    packed& operator=(const packed& rhs) = default;
+    unsigned char& operator=(unsigned char const& rhs){t = rhs; return *this;}
+    operator const unsigned char&() const{return t;}
+    operator unsigned char&(){return t;}
+    bool operator==(packed const& rhs) const{return t == rhs.t;}
+    bool operator<(packed const& rhs) const{return t < rhs.t;}
+};
+#endif
 
 template<class T> struct basic_datatype;
 

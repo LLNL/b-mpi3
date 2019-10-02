@@ -60,6 +60,7 @@ int main(){
 		double w = l / world;
 		assert( w == world.rank() );
 	}
+#if 0
 	{
 		std::vector<double> v = {1, 2, 2, 3, 3, 3}; if(!world.root()) v.clear();
 		std::vector<double> w(world.rank() + 1);
@@ -98,7 +99,7 @@ int main(){
 		//	}
 		}
 	}
-
+#endif
 	return 0;
 }
 

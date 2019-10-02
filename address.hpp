@@ -5,6 +5,7 @@
 #define BOOST_MPI3_ADDRESS_HPP
 
 #include "../mpi3/detail/call.hpp"
+#include "../mpi3/types.hpp"
 
 #define OMPI_SKIP_MPICXX 1 // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
@@ -13,9 +14,6 @@
 
 namespace boost{
 namespace mpi3{
-
-using address = MPI_Aint;
-using size_t = MPI_Aint;
 
 inline address get_address(void const* location){
 	address ret; 

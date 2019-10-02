@@ -18,15 +18,17 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	if(comm){
 		std::vector<double> inbuf(100);
 		std::vector<double> outbuf(100);
-		
+
 		std::iota(outbuf.begin(), outbuf.end(), 0.0);
-		mpi3::window<double> win{comm, comm.rank()==1?inbuf.data():nullptr, comm.rank()==1?inbuf.size():0};
+		mpi3::window<double> win{
+			comm, comm.rank()==1?inbuf.data():nullptr, 
+			comm.rank()==1?inbuf.size():0
+		};
 		win.fence();
 		if(world.rank() == 0) win.put_n(outbuf.data(), outbuf.size(), 1);
 		win.fence();
 		if(world.rank() == 1) assert( inbuf[7] == 7.0 );
 	}
-
 	return 0;
 }
 

@@ -38,11 +38,11 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 			case 0: {
 				std::list<int> b = {3, 4, 5};
 				std::this_thread::sleep_for(10s);
-				auto req = std::async(std::launch::async, [&](){return world.send(cbegin(b), cend(b), 1);});
+				auto req = std::async([&](){return world.send(cbegin(b), cend(b), 1);});
 			}; break;
 			case 1: {
 				std::vector<int> b2(3);
-				auto req = std::async(std::launch::async, [&](){return world.receive(begin(b2), 0);});
+				auto req = std::async([&](){return world.receive(begin(b2), 0);});
 				std::this_thread::sleep_for(2s);
 				std::cout << "rank " << world.rank() << " has the req" << std::endl;
 				assert( req.get() == end(b2) );

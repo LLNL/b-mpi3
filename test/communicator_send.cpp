@@ -23,7 +23,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		}; break;
 		case 1: {
 			std::vector<int> b2(3);
-			world.receive(begin(b2), 0);
+			auto e = world.receive(begin(b2), 0);
+			assert( e == end(b2) );
 			assert( b2[1] == 4. );
 		}; break;
 	}
