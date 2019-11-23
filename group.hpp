@@ -129,7 +129,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	mpi3::communicator w1 = world;
 	assert( w1.size() == world.size() );
 	assert( w1.rank() == world.rank() );
-	mpi3::group g1 = w1;
+	mpi3::group g1{w1};
 	assert( g1.rank() == w1.rank() );
 	mpi3::communicator w2 = w1.create(g1);
 	assert( w2.size() == w1.size() );
