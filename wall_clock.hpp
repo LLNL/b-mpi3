@@ -1,7 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_WALL_CLOCK $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_BOOST_MPI3_WALL_CLOCK $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0.x $0.cpp;exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Copyright Alfredo A. Correa 2018-2019s
 #ifndef BOOST_MPI3_WALL_CLOCK_HPP
 #define BOOST_MPI3_WALL_CLOCK_HPP
 
@@ -54,7 +54,6 @@ int main(int argc, char* argv[]){
 
 	mpi3::environment::finalize(); // same as MPI_Finalize()
 	assert(mpi3::environment::is_finalized());
-	return 0;
 }
 #endif
 #endif

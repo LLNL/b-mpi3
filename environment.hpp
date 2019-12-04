@@ -1,13 +1,13 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -Wall -Wextra -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ENVIRONMENT $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x ddd $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Alfredo A. Correa 2018-2019
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
 
-#include "../mpi3/communicator.hpp"
-#include "../mpi3/wall_clock.hpp"
-#include "../mpi3/detail/call.hpp"
+#include "./communicator.hpp"
+#include "./wall_clock.hpp"
+#include "./detail/call.hpp"
 
 #include<mpi.h>
 

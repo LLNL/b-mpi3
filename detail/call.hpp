@@ -6,7 +6,7 @@
 #ifndef BOOST_MPI3_DETAIL_CALL_HPP
 #define BOOST_MPI3_DETAIL_CALL_HPP
 
-#include "../../mpi3/error.hpp"
+#include "../error.hpp"
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h> // MPI_MAX_PROCESSOR_NAME
