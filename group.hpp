@@ -1,12 +1,12 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -std=c++14 -O3 -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_GROUP $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_GROUP $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
 #ifndef MPI3_GROUP_HPP
 #define MPI3_GROUP_HPP
 
 #include "../mpi3/detail/iterator_traits.hpp"
-#include "../mpi3/detail/strided.hpp"
+//#include "../mpi3/detail/strided.hpp"
 #include "../mpi3/equality.hpp"
 #include "../mpi3/error.hpp"
 

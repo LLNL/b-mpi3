@@ -25,7 +25,7 @@
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/detail/iterator.hpp"
 #include "../mpi3/detail/value_traits.hpp"
-#include "../mpi3/detail/strided.hpp"
+//#include "../mpi3/detail/strided.hpp"
 #include "../mpi3/detail/package.hpp"
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
