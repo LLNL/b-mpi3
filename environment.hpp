@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo '#include"'$0'" '>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2019
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
