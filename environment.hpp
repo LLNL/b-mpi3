@@ -160,9 +160,8 @@ class environment{
 	thread_level query_thread() const{return mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-  static inline communicator& get_self_instance(){
-    assert(initialized());
-    //	static communicator instance{MPI_COMM_WORLD};
+    static inline communicator& get_self_instance(){
+        assert(initialized());
 		static communicator instance = []{
 		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
 		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
@@ -170,8 +169,6 @@ class environment{
 		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 			return communicator{MPI_COMM_SELF};
 		}();
-		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
-		//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
 		return instance;
 	}
   
@@ -181,7 +178,6 @@ class environment{
 	}
 	static inline communicator& get_world_instance(){
 		assert(initialized());
-	//	static communicator instance{MPI_COMM_WORLD};
 		static communicator instance = []{
 		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
 		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
@@ -189,8 +185,6 @@ class environment{
 		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 			return communicator{MPI_COMM_WORLD};
 		}();
-		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
-		//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
 		return instance;
 	}
 	communicator world() const{ // returns a copy!
@@ -213,8 +207,9 @@ inline mpi3::any& communicator::attribute(std::string const& s){
 }}
 
 #ifdef _TEST_BOOST_MPI3_ENVIRONMENT
+
 #include<iostream>
-#include <thread> // this_tread::sleep_for
+#include<thread> // this_tread::sleep_for
 #include<chrono>
 
 namespace mpi3 = boost::mpi3;
@@ -235,8 +230,6 @@ int main(int argc, char* argv[]){
 // or better:
 //	mpi3::environment env(argc, argv);
 //	auto world = env.world();
-	return 0;
 }
 #endif
 #endif
-
