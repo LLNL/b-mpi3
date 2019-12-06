@@ -13,8 +13,6 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert( world.size() == 8 );
 	
 	mpi3::communicator fifth = world/5;
-//	mpi3::communicator third2 = std::move(third);
-//	assert(not third);
 
 	cout << "I am rank " << world.rank() << " in " << world.name() << ", ";
 	if(fifth){
@@ -22,7 +20,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	}else{
 		cout << "I am not in " << fifth.name() << '\n';
 	}
-	return 0;
+
 #if 0
 	mpi3::communicator third3;
 	third3 = std::move(third2);
@@ -31,7 +29,5 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		<< "I am rank " << world.rank() << " in " << world.name() << ", "
 		<< "I am also " << third3.rank() << " in " << third3.name() << '\n'
 	;
-
-	return 0;
 #endif
 }
