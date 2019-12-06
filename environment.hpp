@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
+(echo '#include"'$0'" '>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2019
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
@@ -160,6 +160,21 @@ class environment{
 	thread_level query_thread() const{return mpi3::query_thread();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
+  static inline communicator& get_self_instance(){
+    assert(initialized());
+    //	static communicator instance{MPI_COMM_WORLD};
+		static communicator instance = []{
+		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
+			MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
+		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+			return communicator{MPI_COMM_SELF};
+		}();
+		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+		//	MPI_Comm_set_errhandler(MPI_COMM_NULL, MPI_ERRORS_RETURN);
+		return instance;
+	}
+  
 	static communicator self(){ // returns a copy!
 		MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
 		return communicator{MPI_COMM_SELF};
