@@ -153,9 +153,9 @@ public:
 	void fetch_replace_value(T const&  origin, T& target, int target_rank, int target_disp = 0) const{
 		MPI3_CALL(MPI_Fetch_and_op)(&origin, &target, detail::basic_datatype<T>{}, target_rank, target_disp, MPI_REPLACE, impl_);
 	}
-	template<class CI1, class CI2, class datatype = detail::basic_datatype<typename std::iterator_traits<CI1>::value_type> >
+	template<class CI1, class CI2, class datatypeT = detail::basic_datatype<typename std::iterator_traits<CI1>::value_type> >
 	void fetch_replace(CI1 it1, CI2 it2, int target_rank, int target_disp = 0) const{
-		MPI3_CALL(MPI_Fetch_and_op)(std::addressof(*it1), std::addressof(*it2), datatype{}, target_rank, target_disp, MPI_REPLACE, impl_); 
+		MPI3_CALL(MPI_Fetch_and_op)(std::addressof(*it1), std::addressof(*it2), datatypeT{}, target_rank, target_disp, MPI_REPLACE, impl_); 
 	}
 	template<class ContiguousIterator>
 	void blocking_put_n(ContiguousIterator it, int count, int target_rank, int target_offset = 0){
