@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wpedantic -Wfatal-errors -D_TEST_MPI3_SHARED_WINDOW $0x.cpp -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_MPI3_SHARED_WINDOW $0.cpp -o $0x&&mpirun -n 3 $0x&&rm $0x $0.cpp;exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
 #ifndef MPI3_SHARED_WINDOW_HPP
@@ -37,8 +37,9 @@ struct shared_window : window<T>{
 		shared_window(comm, 0, disp_unit)
 	{}
 	shared_window(shared_window const&) = default;
-	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
-	{}
+	shared_window(shared_window&& other) = default;
+//	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
+//	{}
 	group get_group() const{
 		group r; MPI3_CALL(MPI_Win_get_group)(this->impl_, &(&r)); return r;
 	}
@@ -100,6 +101,10 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
 	{
 		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
+	}
+	{
+		mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
+		mpi3::shared_window<int> win2 = std::move(win);
 	}
 	return 0;
 }
