@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
-(echo '#include "'$0'"'>$0.cpp)&& mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_BOOST_MPI3_ERROR $0.cpp -o $0x && mpirun -n 4 $0x && rm $0.cpp $0x; exit
+(echo '#include "'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_BOOST_MPI3_ERROR $0.cpp -o$0x&&mpirun -n 4 $0x&&rm $0.cpp $0x;exit
 #endif
+// © Alfredo A. Correa 2017-2020
 #ifndef BOOST_MPI3_ERROR_HPP
 #define BOOST_MPI3_ERROR_HPP
 
@@ -12,7 +13,9 @@
 namespace boost{
 namespace mpi3{
 
-enum class error : int {//decltype(MPI_SUCCESS) {
+static_assert(sizeof(MPI_SUCCESS) <= sizeof(int), "!");
+
+enum class error : int {//decltype(MPI_SUCCESS){
 	success = MPI_SUCCESS,
 	invalid_buffer_pointer = MPI_ERR_BUFFER,
 	invalid_count = MPI_ERR_COUNT,
