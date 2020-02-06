@@ -1,6 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_MAIN $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -O3 -Wfatal-errors -D_TEST_BOOST_MPI3_MAIN $0.cpp -o $0x&&time mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
+// © Alfredo A. Correa 2018-2020
+
 #ifndef BOOST_MPI3_MAIN_HPP
 #define BOOST_MPI3_MAIN_HPP
 
