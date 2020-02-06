@@ -1701,7 +1701,8 @@ public:
 			root
 		);			
 	}
-protected:
+//protected: // these functions have been made public by popular demand, they might be deprecated in the future by a more composable idiom
+public:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
 		auto e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op);

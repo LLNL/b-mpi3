@@ -30,7 +30,7 @@ We try here to give a uniform interface and abstractions for these features by m
 
 A typical C-call for MP looks like this,
 
-```
+```c++
 int status_send = MPI_Send(&numbers, 10, MPI_INT, 1, 0, MPI_COMM_WORLD);
 assert(status_send == MPI_SUCCESS);
 ... // concurrently with 
@@ -55,7 +55,7 @@ Here we enumerate some of problems,
 
 A call of this type would be an improvement:
 
-```
+```c++
 world.send(numbers.begin(), numbers.end(), 1);
 ... // concurrently with 
 world.receive(numbers.begin(), numbers.end(), 0); 
@@ -77,14 +77,14 @@ Most functions are inline or template functions.
 In order to compile it requires an MPI distribution (e.g. OpenMPI or MPICH2) and the corresponding compiler-wrapper (`mpic++` or `mpicxx`).
 Currently the library requieres C++14 (usually activated with the compiler option `-std=c++14`) and Boost. In particular it depends on Boost.Serialization and may require linking to this library if values passed are not basic types (`-lboost_serialization`). A typical compilation/run command looks like this:
 
-```
+```bash
 $ mpic++ -std=c++14 -O3 mpi3/test/communicator_send.cpp -o communicator_send.x -lboost_serialization
 $ mpirun -n 8 ./communicator_send.x
 ```
 
 In a system such as Red Hat, the dependencies can by installed by
 
-```
+```bash
 $ dnf install gcc-c++ boost-devel openmpi-devel mpich-devel
 ```
 
@@ -94,7 +94,7 @@ The library is tested frequently against `openmpi` and `mpich`, and less frequen
 
 The library has a basic `ctest` based testing system.
 
-```
+```c++
 cd mpi3/test
 mkdir build; cd build
 cmake .. && make && ctest
@@ -106,7 +106,7 @@ Like MPI, Boost.MPI3 requires some global library initialization.
 The library includes `mpi3/main.hpp` which wraps around this initialization steps and *simulates* a main function. 
 In this way, a parallel program looks very much like normal programs, except that the main function has a third argument with the default global communicator passed in.
 
-```
+```c++
 #include "mpi3/version.hpp"
 #include "mpi3/main.hpp"
 
@@ -127,7 +127,7 @@ Changing the `main` program to this syntax in existing code can be too intrusive
 For this reason a more traditional initialization is also possible.
 The alternative initialization is done by instantiating the `mpi3::environment` object (from with the global communicator `.world()` is extracted).
 
-```
+```c++
 #include "mpi3/environment.hpp"
 int main(int argc, char** argv){
 	mpi3::environment env(argc, argv);
@@ -153,7 +153,7 @@ Communicators can be empty, in a state that is analogous to `MPI_COMM_NULL` but 
 Like in MPI communicators can be duplicated (copied into a new instance) or split.
 They can be also compared. 
 
-```
+```c++
 mpi3::communicator world2 = world;
 assert( world2 == world );
 mpi3::communicator hemisphere = world/2;
@@ -162,7 +162,7 @@ mpi3::communicator interleaved = world%2;
 
 This program for example splits the global communicator in two sub-communicators one of size 2 (including process 0 and 1) and one with size 6 (including 2, 3, ... 7);
 
-```
+```c++
 #include "mpi3/main.hpp"
 #include "mpi3/communicator.hpp"
 
@@ -198,7 +198,7 @@ Although there are optimizations that amortize the cost, we decided to generaliz
 Here we replicate the design of STL to process information, that is, aggregated data is passed mainly via iterators. (Pointer is a type of iterator).
 
 For example in STL data is copied between ranges in this way.
-```
+```c++
 std::copy(origin.begin(), origin.end(), destination.begin());
 ```
 
@@ -213,7 +213,7 @@ The main interface for message passing in Boost.MPI3 are member functions of the
 For example `communicator::send`, `::receive` and `::barrier`. 
 The functions `::rank` and `::size` allows each process to determine their unique identity inside the communicator.
 
-```
+```c++
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
     assert(world.size() == 2);
 	if(world.rank() == 0){
@@ -241,7 +241,7 @@ If the iterators are contiguous and the associated value types are primitive MPI
 Alternatively, value-based interface can be used.
 We will show the terse syntax, using the process objects.
 
-```
+```c++
 int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
     assert(world.size() == 2);
 	if(world.rank() == 0){
@@ -262,14 +262,14 @@ Remote Memory (RM) is handled by `mpi3::window` objects.
 `mpi3::window`s are created by `mpi3::communicator` via a collective (member) functions.
 Since `mpi3::window`s represent memory, it cannot be copied (but can be moved). 
 
-```
+```c++
 mpi3::window w = world.make_window(begin, end);
 ```
 
 Just like in the MPI interface, local access and remote access is synchronized by a `window::fence` call.
 Read and write remote access is performed via put and get functions.
 
-```
+```c++
 w.fence();
 w.put(begin, end, rank);
 w.fence();
@@ -277,7 +277,7 @@ w.fence();
 
 This is minimal example using `put` and `get` functions.
 
-```
+```c++
 #include "mpi3/main.hpp"
 #include<iostream>
 
@@ -329,7 +329,7 @@ Otherwise the global communicator will be split into a number of (shared) commun
 `mpi3::shared_communicator`s can create `mpi3::shared_window`s. 
 These are special type of memory windows.
 
-```
+```c++
 #include "mpi3/main.hpp"
 
 namespace mpi3 = boost::mpi3; using std::cout;
@@ -374,7 +374,7 @@ Mutexes can be implemented fairly simply on top of RMA.
 Mutexes are used similarly than in threaded code, 
 it prevents certain blocks of code to be executed by more than one process (rank) at a time.
 
-```
+```c++
 #include "mpi3/main.hpp"
 #include "mpi3/mutex.hpp"
 

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
+mpic++ -std=c++14 -Wall -Wextra $0 -o $0x &&mpirun -n 8 $0x&&rm $0x;exit
 #endif
 
 #include "../../mpi3/main.hpp"
@@ -12,9 +12,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	assert( world.size() == 8 );
 	
-	mpi3::communicator fifth = world/3;
-//	mpi3::communicator third2 = std::move(third);
-//	assert(not third);
+	mpi3::communicator fifth = world/5;
 
 	cout << "I am rank " << world.rank() << " in " << world.name() << ", ";
 	if(fifth){
@@ -22,7 +20,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	}else{
 		cout << "I am not in " << fifth.name() << '\n';
 	}
-	return 0;
+
 #if 0
 	mpi3::communicator third3;
 	third3 = std::move(third2);
@@ -31,8 +29,5 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		<< "I am rank " << world.rank() << " in " << world.name() << ", "
 		<< "I am also " << third3.rank() << " in " << third3.name() << '\n'
 	;
-
-	return 0;
 #endif
 }
-
