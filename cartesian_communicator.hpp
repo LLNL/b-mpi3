@@ -1,6 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 -Wfatal-errors -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -n 12 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include "'$0'"'>$0.cpp)&&mpic++ -O3 -Wfatal-errors -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
 #endif
+// © Alfredo A. Correa 2018-2020
+
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 
@@ -74,9 +76,10 @@ struct cartesian_communicator : communicator{
 
 using std::cout;
 namespace mpi3 = boost::mpi3;
+
 int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
-	if(world.size() != 12) throw std::runtime_error("run with 12 procs!");
+	if(world.size() != 12) throw std::runtime_error{"run with 12 procs!"};
 
 	mpi3::cartesian_communicator comm(world, {4, 3}, {1, 0});
 	cout <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
