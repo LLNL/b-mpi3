@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
 (echo '#include "'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_BOOST_MPI3_ERROR $0.cpp -o$0x&&mpirun -n 4 $0x&&rm $0.cpp $0x;exit
 #endif
 // © Alfredo A. Correa 2017-2020

@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
 (echo '#include"'$0'"'>$0.cpp)&&mpic++ -std=c++14 -O3 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_PACKAGE_ARCHIVE $0.cpp -o$0x -lboost_serialization&&mpirun -n 2 $0x && rm $0x $0.cpp; exit
 #endif
 
