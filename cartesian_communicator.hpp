@@ -91,16 +91,14 @@ template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 	constexpr static dimensionality_type dimensionality = D;
 	using cartesian_communicator<dynamic_extent>::cartesian_communicator;
-	static auto dims_create(int nnodes, int ndims){
-		std::vector<int> dims(ndims, 0);
-		MPI_Dims_create(nnodes, ndims, dims.data());
-		return dims;
+	static auto dims_create(int n, int nd){
+		std::vector<int> ds(nd); MPI_Dims_create(n, nd, ds.data()); return ds;
 	}
 	explicit cartesian_communicator(communicator& other) : 
 		cartesian_communicator<>(other, dims_create(other.size(), D))
 	{}
 	cartesian_communicator<D-1> sub() const{
-		auto sh = this->shape();
+		static_assert( D != 1 );
 		auto comm_sub = cartesian_communicator<>::sub();
 		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
