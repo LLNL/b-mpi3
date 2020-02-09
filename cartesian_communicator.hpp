@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-(echo '#include "'$0'"'>$0.cpp)&&mpic++ -O3 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
+(echo '#include "'$0'"'>$0.cpp)&&mpic++ `#-Wfatal-errors` -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -118,14 +118,17 @@ namespace mpi3 = boost::mpi3;
 int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
 {
-	if(world.size() != 12) throw std::runtime_error{"run with 12 procs!"};
+	assert(world.size() == 12);
 
 	mpi3::cartesian_communicator<> comm(world, {4, 3}, {1, 0});
 	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
 }
 	if(world.root()) cerr<<"---"<<std::endl;
 {
+	assert(world.size() == 12);
+
 	mpi3::cartesian_communicator<3> comm{world};
+	static_assert( mpi3::cartesian_communicator<3>::dimensionality == 3, "!");
 	assert( comm.num_elements() == world.size() );
 	assert( comm.shape()[0] == 3 );
 	assert( comm.shape()[1] == 2 );
