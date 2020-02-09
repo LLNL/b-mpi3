@@ -55,14 +55,15 @@ void call(Args... args){
 #endif
 
 #define MPI3_CALL(F) detail::call<decltype(F), F>
+#define MPI_(F) MPI3_CALL(MPI_##F)
 
-template<class R, class T, class... Args>
-R last_argument_aux(R(*pp)(Args..., T));
+//template<class R, class T, class... Args>
+//R last_argument_aux(R(*pp)(Args..., T));
 
-template<class F>
-struct last_argument{
-	using type = decltype(last_argument_aux(std::declval<F*>()));
-};
+//template<class F>
+//struct last_argument{
+//	using type = decltype(last_argument_aux(std::declval<F*>()));
+//};
 
 }}}
 
@@ -73,7 +74,7 @@ void f(double, int){}
 
 int main(){
 //	static_assert( 
-	typename boost::mpi3::detail::last_argument<decltype(f)>::type a;
+//	typename boost::mpi3::detail::last_argument<decltype(f)>::type a;
 }
 #endif
 
