@@ -401,9 +401,8 @@ public:
 	auto get() const{return impl_;}
 	~communicator(){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
-		//	if(std::current_exception()) std::cerr << "exception during destruction" << std::endl; 
-		//	MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, if it gets to this point is probably an error anyway
-			MPI_Comm_free(&impl_);
+			MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
+		//	MPI_Comm_free(&impl_);
 		}
 	}
 	int size() const{
