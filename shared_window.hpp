@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
 (echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_MPI3_SHARED_WINDOW $0.cpp -o $0x&&mpirun -n 3 $0x&&rm $0x $0.cpp;exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.

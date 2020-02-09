@@ -1,4 +1,4 @@
-#ifdef COMPILATION_INSTRUCTIONS
+#ifdef COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -D_TEST_BOOST_MPI3_PROCESS $0x.cpp -o $0x.x -lboost_serialization && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_PROCESS_HPP
