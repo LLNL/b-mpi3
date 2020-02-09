@@ -41,7 +41,7 @@ struct shared_window : window<T>{
 //	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
 //	{}
 	group get_group() const{
-		group r; MPI3_CALL(MPI_Win_get_group)(this->impl_, &(&r)); return r;
+		group r; MPI_(Win_get_group)(this->impl_, &(r.impl_)); return r;
 	}
 //	shared_communicator& get_communicator() const{return comm_;}
 	struct query_t{
@@ -101,6 +101,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
 	{
 		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
+	//	assert( mpi3::shared_communicator(win.get_group()) == node );
 	}
 	{
 		mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);

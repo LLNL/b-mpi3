@@ -2105,16 +2105,13 @@ private:
 		detail::contiguous_iterator_tag, detail::basic_tag,
 		int root = 0
 	){
-		auto e = static_cast<enum error>(
-			MPI_Scatterv( 
-				detail::data(first), counts, displs,
-				detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
-				detail::data(d_first), n,
-				detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
-				root, impl_
-			)
+		MPI_(Scatterv)( 
+			detail::data(first), counts, displs,
+			detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
+			detail::data(d_first), n,
+			detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
+			root, impl_
 		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot scatter_n"};
 	}
 	template<class CItCIt1, class CItN, class CIt2>
 	auto scatterv_n(
