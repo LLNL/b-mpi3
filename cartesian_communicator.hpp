@@ -25,18 +25,18 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator() : communicator(){}
 	public:
 	template<class Shape, class Period>
-	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
+	cartesian_communicator(communicator const& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
 		MPI_(Cart_create)(&comm_old, s.size(), s.data(), p.data(), false, &impl_);
 		assert(impl_ != MPI_COMM_NULL);
 		// there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
-	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), 0)){}
+	cartesian_communicator(communicator const& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
 	
-	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape) 
+	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape)){}
-	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
+	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)){}
 
 	[[deprecated("use dimensionality() instead of dimension")]] 
@@ -81,22 +81,29 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 		return sub(std::vector<int>(remain_dims.begin(), remain_dims.end()));
 	}
 	cartesian_communicator sub() const{
+		assert( dimensionality()>1 );
 		std::vector<int> remain(dimensionality(), true); remain[0] = false;
 		return sub(remain);
 	}
 };
 
 template<dimensionality_type D>
-struct cartesian_communicator : cartesian_communicator<-1>{
+struct cartesian_communicator : cartesian_communicator<>{
 	constexpr static dimensionality_type dimensionality = D;
+	using cartesian_communicator<dynamic_extent>::cartesian_communicator;
 	static auto dims_create(int nnodes, int ndims){
 		std::vector<int> dims(ndims, 0);
 		MPI_Dims_create(nnodes, ndims, dims.data());
 		return dims;
 	}
 	explicit cartesian_communicator(communicator& other) : 
-		cartesian_communicator<-1>(other, dims_create(other.size(), D))
+		cartesian_communicator<>(other, dims_create(other.size(), D))
 	{}
+	cartesian_communicator<D-1> sub() const{
+		auto sh = this->shape();
+		auto comm_sub = cartesian_communicator<>::sub();
+		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
+	}
 };
 
 #ifdef __cpp_deduction_guides
@@ -129,7 +136,7 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
 	mpi3::cartesian_communicator<> comm(world, {4, 3}, {true, false});
 	assert( comm.dimensionality() == 2 );
-	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+	cerr <<"= I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
 	auto comm_sub = comm.sub();
 	assert( comm_sub.dimensionality() == 1 );
 }
@@ -140,9 +147,10 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
 	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
 	assert( comm.dimensionality() == 2 );
-	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+	cerr <<"- I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
 }
 #endif
+	if(world.root()) cerr<<"---"<<std::endl;
 {
 	assert(world.size() == 12);
 
@@ -153,7 +161,13 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 	assert( comm.shape()[0] == 3 );
 	assert( comm.shape()[1] == 2 );
 	assert( comm.shape()[2] == 2 );
-	cerr<<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
+	cerr<<"+ I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
+
+	auto comm_sub = comm.sub();
+	static_assert( comm_sub.dimensionality == 2 , "!" );
+	assert( comm_sub.num_elements() == 4 );
+	assert( comm_sub.shape()[0] == 2 );
+	assert( comm_sub.shape()[1] == 2 );
 }
 	return 0;
 }
