@@ -25,11 +25,14 @@ struct shared_communicator : communicator{
 	shared_communicator() = default;
 	shared_communicator(shared_communicator&&) = default;
 	shared_communicator(shared_communicator const&) = default;
+	shared_communicator(mpi3::group const& g) : communicator(g){}
+	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag){}
 private:
 	template<class T> static auto data_(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
+	template<class T> friend struct shared_window;
 	explicit shared_communicator(communicator&& c) : communicator(std::move(c)){}
 	explicit shared_communicator(communicator const& comm, int key = 0){
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
@@ -46,7 +49,7 @@ private:
 		auto Tag = std::to_string(utag);
 		std::string const& base = comm.name();
 		// switch-case don't work here because in some MPI impls there are repeats
-		if(communicator_type::shared==t) set_name(base+":core/pu" + std::to_string(::sched_getcpu()));
+		     if(communicator_type::shared   ==t) set_name(base+":core/pu" + std::to_string(::sched_getcpu()));
 		else if(communicator_type::hw_thread==t) set_name(base+":hw_thread"+Tag);
 		else if(communicator_type::l1_cache ==t) set_name(base+":l1_cache" +Tag);
 		else if(communicator_type::l2_cache ==t) set_name(base+":l2_cache" +Tag);

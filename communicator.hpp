@@ -2933,13 +2933,15 @@ friend communicator& operator<<(communicator& comm, T const& t){
 inline void barrier(communicator const& self){self.barrier();}
 
 inline communicator::communicator(group const& g, int tag){
-	MPI3_CALL(MPI_Comm_create_group)(MPI_COMM_WORLD, &g, tag, &impl_);
+	MPI_(Comm_create_group)(MPI_COMM_WORLD, &g, tag, &impl_);
 }
 
 inline communicator::communicator(group const& g){
-	auto e = static_cast<enum error>(MPI_Comm_create(MPI_COMM_WORLD, &g, &impl_));
-	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};
+	MPI_(Comm_create)(MPI_COMM_WORLD, &g, &impl_);
 }
+// https://www.open-mpi.org/doc/v3.0/man3/MPI_Comm_create_group.3.php
+// MPI_Comm_create_group is similar to MPI_Comm_create; however, MPI_Comm_create must be called by all processes in the group of comm, whereas MPI_Comm_create_group must be called by all processes in group, which is a subgroup of the group of comm. In addition, MPI_Comm_create_group requires that comm is an intracommunicator. MPI_Comm_create_group returns a new intracommunicator, newcomm, for which the group argument defines the communication group. No cached information propagates from comm to newcomm. 
+
 inline communicator::communicator(communicator const& o, group const& g){
 	auto e = static_cast<enum error>(MPI_Comm_create(o.impl_, &g, &impl_));
 	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};

@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
+#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 (echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_MPI3_SHARED_WINDOW $0.cpp -o $0x&&mpirun -n 3 $0x&&rm $0x $0.cpp;exit
 #endif
 //  (C) Copyright Alfredo A. Correa 2018.
@@ -41,7 +41,7 @@ struct shared_window : window<T>{
 //	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
 //	{}
 	group get_group() const{
-		group r; MPI_(Win_get_group)(this->impl_, &(r.impl_)); return r;
+		group r; MPI_(Win_get_group)(this->impl_, &(&r)); return r;
 	}
 //	shared_communicator& get_communicator() const{return comm_;}
 	struct query_t{
@@ -82,19 +82,18 @@ namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
-	mpi3::ostream wout(world);
-
-	double* p;
-	double* b;
-	wout << (p < b) << std::endl;
-	wout << (p >= b) << std::endl;
+	mpi3::ostream wout{world};
 
 	mpi3::shared_communicator node = world.split_shared();
 
 	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
+	mpi3::shared_communicator node_cpy{win.get_group()};
+//	mpi3::shared_communicator node_cpy{win.get_group(), 0};
+	assert( node_cpy == node );
 
-	assert(win.base() != nullptr);
-	assert(win.size() == node.size());
+
+	assert( win.base() != nullptr );
+	assert( win.size() == node.size() );
 
 	win.base()[node.rank()] = node.rank() + 1;
 	node.barrier();
