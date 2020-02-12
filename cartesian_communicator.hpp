@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include "'$0'" '>$0.cpp)&&mpic++ -std=c++17 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
+#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
+(echo '#include"'$0'" '>$0.cpp)&&mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -15,7 +15,7 @@ namespace boost{
 namespace mpi3{
 
 using dimensionality_type = int;
-static constexpr int dynamic_extent = -1;
+static constexpr dimensionality_type dynamic_extent = -1;
 
 template<dimensionality_type D = dynamic_extent> struct cartesian_communicator;
 
@@ -45,7 +45,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}
 	std::vector<int> coordinates() const{
 		std::vector<int> ret(dimensionality());
-		MPI_Cart_coords(impl_, rank(), dimensionality(), ret.data());
+		MPI_(Cart_coords)(impl_, rank(), dimensionality(), ret.data());
 		return ret;
 	}
 	auto topology() const{
@@ -67,7 +67,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	template<class Coord>
 	auto operator()(Coord const& coord){
 		int rank = -1;
-		MPI_Cart_rank(impl_, coord.data(), &rank);
+		MPI_(Cart_rank)(impl_, coord.data(), &rank);
 		return (*this)[rank];
 	//	return operator[](rank);
 	}
@@ -92,15 +92,20 @@ struct cartesian_communicator : cartesian_communicator<>{
 	constexpr static dimensionality_type dimensionality = D;
 	using cartesian_communicator<dynamic_extent>::cartesian_communicator;
 	static auto dims_create(int n, int nd){
-		std::vector<int> ds(nd); MPI_Dims_create(n, nd, ds.data()); return ds;
+		std::vector<int> ds(nd); MPI_(Dims_create)(n, ds.size(), ds.data()); return ds;
 	}
 	explicit cartesian_communicator(communicator& other) : 
 		cartesian_communicator<>(other, dims_create(other.size(), D))
 	{}
 	cartesian_communicator<D-1> sub() const{
-		static_assert( D != 1 );
+		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
 		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
+	}
+	cartesian_communicator<1> axis(int d) const{
+		std::vector<int> remains(D, false); remains[d] = true;
+		auto comm_sub = cartesian_communicator<>::sub(remains);
+		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
 	}
 };
 
@@ -163,9 +168,16 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 
 	auto comm_sub = comm.sub();
 	static_assert( comm_sub.dimensionality == 2 , "!" );
+	std::cout << "numelements " << comm_sub.num_elements() << std::endl;
 	assert( comm_sub.num_elements() == 4 );
+
 	assert( comm_sub.shape()[0] == 2 );
 	assert( comm_sub.shape()[1] == 2 );
+	{
+		auto comm_sub1 = comm.axis(0);
+		std::cout << "comm_sub.shape()[0] " << comm_sub1.shape()[0] << std::endl;
+		assert( comm_sub1.shape()[0] == 3 );
+	}
 }
 	return 0;
 }
