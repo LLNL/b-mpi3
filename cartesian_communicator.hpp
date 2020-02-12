@@ -100,12 +100,14 @@ struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
-		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
+		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
+//		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
 	cartesian_communicator<1> axis(int d) const{
 		std::vector<int> remains(D, false); remains[d] = true;
 		auto comm_sub = cartesian_communicator<>::sub(remains);
-		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
+		return static_cast<cartesian_communicator<1>&>(comm_sub);
+//		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
 	}
 };
 
