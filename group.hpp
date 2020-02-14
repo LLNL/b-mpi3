@@ -1,7 +1,8 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_GROUP $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+(echo '#include"'$0'"'>$0.cpp)&&mpic++ -D_TEST_MPI3_GROUP $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Alfredo A. Correa 2018-2020
+
 #ifndef MPI3_GROUP_HPP
 #define MPI3_GROUP_HPP
 
@@ -129,12 +130,15 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	mpi3::communicator w1 = world;
 	assert( w1.size() == world.size() );
 	assert( w1.rank() == world.rank() );
+
 	mpi3::group g1{w1};
 	assert( g1.rank() == w1.rank() );
+
 	mpi3::communicator w2 = w1.create(g1);
 	assert( w2.size() == w1.size() );
 	assert( w2.rank() == w1.rank() );
 	assert( w2.rank() == world.rank() );
+
 	return 0;
 }
 
