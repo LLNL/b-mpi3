@@ -1,15 +1,19 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -D_TEST_MPI3_GROUP $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
+#if COMPILATION_INSTRUCTIONS /*-*-indent-tabs-mode:t; c-basic-offset:4; tab-width:4-*-*/
+(echo '#include"'$0'" '>$0.cpp)&&mpic++ -D_TEST_MPI3_GROUP $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
 #ifndef MPI3_GROUP_HPP
 #define MPI3_GROUP_HPP
 
-#include "../mpi3/detail/iterator_traits.hpp"
-//#include "../mpi3/detail/strided.hpp"
+
 #include "../mpi3/equality.hpp"
 #include "../mpi3/error.hpp"
+
+#include "../mpi3/detail/iterator_traits.hpp"
+#include "../mpi3/detail/call.hpp"
+
+#include<cassert>
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
@@ -23,59 +27,35 @@ public:
 	MPI_Group& operator&(){return impl_;}
 	MPI_Group const& operator&() const{return impl_;}
 	group() : impl_{MPI_GROUP_EMPTY}{}
-	group(group&& o) noexcept : impl_{std::exchange(o.impl_, MPI_GROUP_EMPTY)}{}
-	group(group const& o){
-		auto e = static_cast<enum error>(MPI_Group_excl(o.impl_, 0, nullptr, &impl_));
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot copy group"};
-	}
+	group(group&& other) noexcept : impl_{std::exchange(&other, MPI_GROUP_EMPTY)}{}
+	group(group const& other){MPI_(Group_excl)(&other, 0, nullptr, &impl_);}
 	void swap(group& other) noexcept{std::swap(impl_, other.impl_);}
 	group& operator=(group const& other){group t{other}; swap(t); return *this;}
 	group& operator=(group&& other){swap(other); other.clear(); return *this;}
 	void clear(){
 		if(impl_ != MPI_GROUP_EMPTY){
-			auto e = static_cast<enum error>(MPI_Group_free(&impl_));
-			if(e != mpi3::error::success) throw std::system_error{e, "cannot free group"}; // don't want to throw from dtor
+			MPI_(Group_free)(&impl_);
+			impl_ = MPI_GROUP_EMPTY;
 		}
-		impl_ = MPI_GROUP_EMPTY;
 	}
 	~group(){clear();}
 	group include(std::initializer_list<int> il){
-		group ret;
-		int s = MPI_Group_incl(impl_, il.size(), il.begin(), &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"rank not available"};
-		return ret;
+		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &(&ret)); return ret;
 	}
 	group exclude(std::initializer_list<int> il){
-		group ret;
-		int s = MPI_Group_excl(impl_, il.size(), il.begin(), &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"rank not available"};
-		return ret;
+		group ret; MPI_(Group_excl)(impl_, il.size(), il.begin(), &(&ret)); return ret;
 	}
-	int rank() const{
-		int rank = -1; 
-		int s = MPI_Group_rank(impl_, &rank);
-		if(s != MPI_SUCCESS) throw std::runtime_error("rank not available");
-		return rank;
-	}
-	bool root() const{return (not empty()) and (rank() == 0);}
-	int size() const{
-		int size = -1;
-		auto e = static_cast<enum error>(MPI_Group_size(impl_, &size));
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot group size"};
-		return size;
-	}
+	int rank() const{int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
+	bool root() const{assert(not empty()); return rank() == 0;}
+	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
 	group sliced(int first, int last, int stride = 1) const{
 		int ranges[][3] = {{first, last - 1, stride}};
-		group ret;
-		int s = MPI_Group_range_incl(impl_, 1, ranges, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot slice"};
-		return ret;
+		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &(&ret)); return ret;
 	}
 	bool empty() const{return size()==0;}
 	friend mpi3::equality compare(group const& self, group const& other){
-		int result;
-		int s = MPI_Group_compare(self.impl_, other.impl_, &result);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot compare"};
+		int result; 
+		MPI_(Group_compare)(self.impl_, other.impl_, &result);
 		return static_cast<boost::mpi3::equality>(result);
 	}
 	bool operator==(group const& other) const{
@@ -87,34 +67,21 @@ public:
 		return compare(self, other) != mpi3::unequal;
 	}
 	friend group set_intersection(group const& self, group const& other){
-		group ret;
-		int s = MPI_Group_intersection(self.impl_, other.impl_, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot difference"};
-		return ret;
+		group ret; MPI_(Group_intersection)(self.impl_, other.impl_, &(&ret)); return ret;
 	}
 	friend group set_difference(group const& self, group const& other){
-		group ret;
-		int s = MPI_Group_difference(self.impl_, other.impl_, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot difference"};
-		return ret;
+		group ret; MPI_(Group_difference)(&self, &other, &(&ret)); return ret;
 	}
 	friend group set_union(group const& self, group const& other){
-		group ret;
-		int s = MPI_Group_union(self.impl_, other.impl_, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot union"};
-		return ret;
+		group ret; MPI_(Group_union)(&self, &other, &(&ret)); return ret;
 	}
 	int translate_rank(int rank, group const& other) const{
-		int out;
-		int s = MPI_Group_translate_ranks(impl_, 1, &rank, other.impl_, &out);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"error translating"};
-		return out;
+		int out; MPI_(Group_translate_ranks)(impl_, 1, &rank, &other, &out); return out;
 	}
 };
 
 }}
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #ifdef _TEST_MPI3_GROUP
