@@ -40,16 +40,20 @@ private:
 		name(mpi3::processor_name());
 	}
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
-		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_));
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
-		boost::uuids::uuid tag = boost::uuids::random_generator{}();
-		static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
+		MPI3_CALL(MPI_Comm_split_type)(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
+		boost::uuids::uuid tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
 		auto utag = reinterpret_cast<unsigned int const&>(tag);
 		this->broadcast_n(&utag, 1, 0);
 		auto Tag = std::to_string(utag);
 		std::string const& base = comm.name();
-		// switch-case don't work here because in some MPI impls there are repeats
-		     if(communicator_type::shared   ==t) set_name(base+":core/pu" + std::to_string(::sched_getcpu()));
+		// !!! switch-case don't work here because in some MPI impls there are repeats !!!
+		if(communicator_type::shared==t){
+			#if __linux__
+			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu()
+			#else
+			set_name(base+":core/pu" + Tag);
+			#endif
+		}
 		else if(communicator_type::hw_thread==t) set_name(base+":hw_thread"+Tag);
 		else if(communicator_type::l1_cache ==t) set_name(base+":l1_cache" +Tag);
 		else if(communicator_type::l2_cache ==t) set_name(base+":l2_cache" +Tag);
