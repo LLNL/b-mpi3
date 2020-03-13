@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-(echo '#include"'$0'" '>$0.cpp)&&mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR $0.cpp -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x $0.cpp;exit
+mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -176,10 +176,21 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 	assert( comm_sub.shape()[0] == 2 );
 	assert( comm_sub.shape()[1] == 2 );
 	{
-		auto comm_sub1 = comm.axis(0);
-		std::cout << "comm_sub.shape()[0] " << comm_sub1.shape()[0] << std::endl;
-		assert( comm_sub1.shape()[0] == 3 );
+		auto comm_sub0 = comm.axis(0);
+		assert( comm_sub0.shape()[0] == 3 );
+		assert( comm_sub0.size() == 3 );
 	}
+	{
+		auto comm_sub1 = comm.axis(1);
+		assert( comm_sub1.shape()[0] == 2 );
+		assert( comm_sub1.size() == 2 );
+	}
+	{
+		auto comm_sub2 = comm.axis(2);
+		assert( comm_sub2.shape()[0] == 2 );
+		assert( comm_sub2.size() == 2 );
+	}
+
 }
 	return 0;
 }
