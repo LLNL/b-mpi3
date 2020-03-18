@@ -21,16 +21,9 @@ mpich:
         - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make g++ libboost-all-dev
         - cd ..
         - ln -s boost-mpi3 mpi3
-        - cd mpi3
-        - cd test
-        - ls
+        - cd mpi3/test
         - mkdir build
         - cd build
-        - ls
-        - ls ../
-        - ls ../../
-        - cmake ..
-        - pwd
         - mpirun --version
         - make
         - ctest
