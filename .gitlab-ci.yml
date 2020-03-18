@@ -23,7 +23,9 @@ mpich:
         - ln --symbolic --force . ../boost/mpi3
         - cd ..
         - ls
-        - cd boost/mpi3/test
+        - cd boost
+        - ls
+        - cd mpi3/test
         - mkdir build
         - cd build
         - cmake ..
