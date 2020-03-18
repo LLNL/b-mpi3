@@ -20,7 +20,7 @@ openmpi:
         - pwd
         - mpirun --version
         - make
-        - ctest
+        - ctest -V
 
 mpich:
     stage: build
