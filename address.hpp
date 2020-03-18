@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ADDRESS -lboost_serialization $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.cpp; exit
+#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
+mpic++ -D_TEST_BOOST_MPI3_ADDRESS -xc++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
 #endif
 #ifndef BOOST_MPI3_ADDRESS_HPP
 #define BOOST_MPI3_ADDRESS_HPP
@@ -18,8 +18,7 @@ namespace mpi3{
 inline address get_address(void const* location){
 	address ret; 
 	// this function requires an initialized environment, TODO should be a (static?) member of environment?
-	int status = MPI_Get_address(location, &ret); // MPI_Address is deprecated
-	if(status != MPI_SUCCESS) throw std::runtime_error{"error taking address"};
+	MPI_(Get_address)(location, &ret); // MPI_Address is deprecated
 	return ret;
 }
 
