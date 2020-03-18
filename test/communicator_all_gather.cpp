@@ -2,9 +2,9 @@
 mpic++ -std=c++14  -O3 -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include "../../mpi3/main.hpp"
-#include "../../mpi3/communicator.hpp"
-#include "../../mpi3/detail/iterator.hpp"
+#include "../main.hpp"
+#include "../communicator.hpp"
+#include "../detail/iterator.hpp"
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
