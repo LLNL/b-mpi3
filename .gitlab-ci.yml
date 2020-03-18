@@ -25,10 +25,13 @@ mpich:
         - ls
         - cd boost
         - ls
-        - cd mpi3/test
+        - cd mpi3
+        - ls
+        - cd test
         - mkdir build
         - cd build
         - cmake ..
+        - pwd
         - make
         - ctest
 
