@@ -15,8 +15,8 @@ variables:
 mpich:
     stage: build
     script:
-        - apt update -qq
-        - apt install libopenmpi-dev openmpi-bin cmake
+        - apt update  -y -qq
+        - apt install -y -qq libopenmpi-dev openmpi-bin cmake
         - cd test
         - mkdir build
         - cd build
