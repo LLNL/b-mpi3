@@ -80,7 +80,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 
 foreach(TEST_FILE ${TEST_SRCS})
-  SET(TEST_EXE "${TEST_FILE}x.x")
+  SET(TEST_EXE "${TEST_FILE}x")
   add_executable(${TEST_EXE} ${TEST_FILE})
   target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Wpedantic -Wfatal-errors)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
@@ -102,7 +102,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} -n ${NPROC} ./${TEST_EXE})
 endforeach()
 
-set_tests_properties(communicator_abort.cppx.x PROPERTIES WILL_FAIL true)
+set_tests_properties(communicator_abort.cppx PROPERTIES WILL_FAIL true)
 
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)
