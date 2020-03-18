@@ -2,6 +2,7 @@
 
 # Not sure of the actual required minimum.
 cmake_minimum_required(VERSION 3.6.0)
+project(boostmpi3_tests)
 
 enable_testing()
 include(CTest)

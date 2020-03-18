@@ -8,6 +8,7 @@ image: debian:testing
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  CXX: "mpic++"
   CXXFLAGS: "-O3 -pipe"
   OMPI_ALLOW_RUN_AS_ROOT: 1
   OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
