@@ -28,5 +28,6 @@ mpich:
         - pwd
         - mpirun --version
         - make
-        - ctest
+        - ctest -V
+
 
