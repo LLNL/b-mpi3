@@ -1,7 +1,7 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -std=c++14 -O3 -Wall -Wextra -fmax-errors=2 `#-Wfatal-errors` -D_TEST_MPI3_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -np 1 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
+mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x; exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Alfredo A. Correa 2018-2020
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
 
@@ -1456,19 +1456,37 @@ private:
 			detail::contiguous_iterator_tag,
 			detail::basic_tag
 	){
-		int s = MPI_Alltoall( 
-			detail::data(first), count, 
+		assert( count % size() == 0 );
+		MPI_(Alltoall)( 
+			detail::data(first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), count,
+			detail::data(d_first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 			impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot all2all"};
 		return d_first + count;
+	}
+	template<class It1, typename Size>
+	auto all_to_all_n(
+		It1 first,
+			detail::contiguous_iterator_tag,
+			detail::basic_tag, 
+		Size count 
+	){
+		assert( count % size() == 0 );
+		MPI_(Alltoall)( 
+			MPI_IN_PLACE, 0*count/size(),
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(first), count/size(),
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			impl_
+		);
+		return first + count;
 	}
 public:
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(It1 first, Size count, It2 d_first){
+		assert( count % size() == 0 );
 		return 
 			all_to_all_n(
 				first, 
@@ -1480,6 +1498,21 @@ public:
 					detail::value_category_t<typename std::iterator_traits<It2>::value_type>{}
 			);
 	}
+	template<class It1, typename Size>
+	auto all_to_all_n(It1 first, Size count){
+		assert( count % size() == 0 );
+		return 
+			all_to_all_n(
+				first, 
+					detail::iterator_category_t<It1>{},
+					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+				count
+			);
+	}
+	template<class It1, class It2>
+	auto all_to_all(It1 first, It2 d_first){return all_to_all_n(first, size(), d_first);}
+	template<class It1>
+	auto all_to_all(It1 first){return all_to_all_n(first, size());}
 public:
 private:
 /*	template<class BlockingMode, class InputIt, class OutputIt, class InputCategory = typename std::iterator_traits<OutputIt>::iterator_category, class OutputCategory = typename std::iterator_traits<OutputIt>::iterator_category >

@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
 mpic++ -D_TEST_BOOST_MPI3_ADDRESS -xc++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
 #endif
+// © Alfredo A. Correa 2018-2020
 #ifndef BOOST_MPI3_ADDRESS_HPP
 #define BOOST_MPI3_ADDRESS_HPP
 
