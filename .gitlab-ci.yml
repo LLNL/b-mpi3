@@ -16,6 +16,7 @@ openmpi:
         - cd mpi3/test
         - mkdir build
         - cd build
+        - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - cmake ..
         - pwd
         - mpirun --version
@@ -32,6 +33,7 @@ mpich:
         - cd mpi3/test
         - mkdir build
         - cd build
+        - export MPI_OVERSUBSCRIBE=""
         - cmake ..
         - pwd
         - mpirun --version
