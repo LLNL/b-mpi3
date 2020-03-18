@@ -26,7 +26,7 @@ mpich:
     stage: build
     script:
         - apt update  -qq
-        - apt install -qq -y --no-install-recommends mpich cmake make g++ libboost-serialization-dev
+        - apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev
         - cd ..
         - ln -s boost-mpi3 mpi3
         - cd mpi3/test
