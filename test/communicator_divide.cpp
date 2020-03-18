@@ -1,6 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -Wall -Wextra $0 -o $0x &&mpirun -n 8 $0x&&rm $0x;exit
+mpic++ -Wall -Wextra $0 -o $0x &&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 #endif
+// © Alfredo Correa 2018-2020
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
@@ -30,4 +31,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		<< "I am also " << third3.rank() << " in " << third3.name() << '\n'
 	;
 #endif
+
+	return 0;
 }
+
