@@ -9,15 +9,15 @@ image: debian:testing
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   CXX: "mpic++"
-  CXXFLAGS: "-O3 -pipe"
+  CXXFLAGS: "-O3"
   OMPI_ALLOW_RUN_AS_ROOT: 1
   OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
 mpich:
     stage: build
     script:
-        - apt update  -y -qq
-        - apt install -y -qq libopenmpi-dev openmpi-bin cmake
+        - apt update  -qq
+        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake
         - cd test
         - mkdir build
         - cd build
