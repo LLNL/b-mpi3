@@ -27,6 +27,8 @@ mpich:
         - ls
         - cd mpi3
         - ls
+        - cd mpi3
+        - ls
         - cd test
         - mkdir build
         - cd build
