@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x; exit
+mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 #ifndef MPI3_COMMUNICATOR_HPP
