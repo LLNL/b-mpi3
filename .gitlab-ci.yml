@@ -1,0 +1,24 @@
+#  /* -*- indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4;-*- */
+#required packages:
+#    - time apt update -qq
+#    - time apt install --no-install-recommends -y -qq ssh g++ gfortran clang autoconf make automake libgsl-dev libblas-dev liblapack-dev libfftw3-dev libxc-dev libopenmpi-dev openmpi-bin libboost-all-dev
+#    - time apt install --no-install-recommends -y -qq nvidia-cuda-toolkit nvidia-cuda-dev nvidia-smi
+
+image: debian:testing
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  CXXFLAGS: "-O3 -pipe"
+  OMPI_ALLOW_RUN_AS_ROOT: 1
+  OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
+
+mpich:
+    stage: build
+    script:
+        - cd test
+        - mkdir build
+        - cd build
+        - cmake
+        - make
+        - ctest
+
