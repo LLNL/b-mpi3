@@ -24,6 +24,8 @@ mpich:
         - cd mpi3/test
         - mkdir build
         - cd build
+        - cmake ..
+        - pwd
         - mpirun --version
         - make
         - ctest
