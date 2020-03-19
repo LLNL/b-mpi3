@@ -1,11 +1,11 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -O3 -Wall -Wextra -Werror -fmax-errors=2 `#-Wfatal-errors` -lboost_serialization $0 -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
+mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
+// © Alfredo A. Correa 2018-2020
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
-//#include "../../mpi3/detail/strided.hpp"
-//#include "../../mpi3/process.hpp"
+
 #include<boost/serialization/utility.hpp>
 
 #include<list>
