@@ -1,6 +1,8 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_SHARED_COMMUNICATOR $0x.cpp -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
+mpic++ -D_TEST_MPI3_SHARED_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
+// © Alfredo A. Correa 2018-2020
+
 #ifndef MPI3_SHARED_COMMUNICATOR_HPP
 #define MPI3_SHARED_COMMUNICATOR_HPP
 
