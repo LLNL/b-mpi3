@@ -15,7 +15,7 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
-enum equality : std::underlying_type_t<decltype(MPI_IDENT)>{
+enum equality : typename std::underlying_type<decltype(MPI_IDENT)>::type{
 	identical = MPI_IDENT,     // same (same address)
 	congruent = MPI_CONGRUENT, // equal (in the value sense)
 	similar   = MPI_SIMILAR,   // same processes in different order (permutation)
