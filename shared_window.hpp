@@ -1,7 +1,8 @@
 #if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -D_TEST_MPI3_SHARED_WINDOW $0.cpp -o $0x&&mpirun -n 3 $0x&&rm $0x $0.cpp;exit
+mpic++ -D_TEST_MPI3_SHARED_WINDOW -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Alfredo A. Correa 2018-2020
+
 #ifndef MPI3_SHARED_WINDOW_HPP
 #define MPI3_SHARED_WINDOW_HPP
 
