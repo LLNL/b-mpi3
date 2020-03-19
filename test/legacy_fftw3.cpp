@@ -26,18 +26,19 @@ int mpi3::main(int argc, char **argv, mpi3::communicator world){
 	/* get local data size and allocate */
 	ptrdiff_t local_n0, local_0_start;
 	ptrdiff_t alloc_local = fftw_mpi_local_size_2d(N0, N1, &world, &local_n0, &local_0_start);
-	assert( alloc_local == local_n0*N1 );
-	auto data = (std::complex<double>*)fftw_alloc_complex(alloc_local);
+	assert( alloc_local >= local_n0*N1 and alloc_local%4==0 ); // seems to be multiple of 4 (number of complexs)
+	auto data = reinterpret_cast<std::complex<double>*>(fftw_alloc_complex( alloc_local )); 
 
 	/* create plan for in-place forward DFT */
 	fftw_plan plan = fftw_mpi_plan_dft_2d(
-		N0, N1, (fftw_complex*)data, (fftw_complex*)data, 
-		&world, FFTW_FORWARD, FFTW_ESTIMATE
+		N0, N1, reinterpret_cast<fftw_complex*>(data), reinterpret_cast<fftw_complex*>(data), 
+		&world, // pass an old fashion comm handle to legacy libraries
+		FFTW_FORWARD, FFTW_ESTIMATE
 	);
 
 	/* initialize data to some function my_function(x,y) */
-	for(ptrdiff_t i = 0; i < local_n0; ++i)
-		for(ptrdiff_t j = 0; j < N1; ++j)
+	for(ptrdiff_t i = 0; i != local_n0; ++i)
+		for(ptrdiff_t j = 0; j != N1; ++j)
 			data[i*N1 + j] = myf_x(local_0_start + i, j);
 
 	/* compute transforms, in-place, as many times as desired */

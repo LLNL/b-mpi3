@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -Wall -Wextra $0 -o $0x &&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
+mpic++ -Wall -Wextra $0 -o $0x &&mpirun -n 6 $0x&&rm $0x;exit
 #endif
 // © Alfredo Correa 2018-2020
 
@@ -11,7 +11,7 @@ using std::cout;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
-	assert( world.size() == 8 );
+	assert( world.size() == 6 );
 	
 	mpi3::communicator fifth = world/5;
 

@@ -20,30 +20,18 @@ namespace mpi3{
 
 template<class T>
 struct shared_window : window<T>{
-//	shared_communicator& comm_;
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = alignof(T)) //: //sizeof(T)) : // here we assume that disp_unit is used for align
 	//	window<T>{}//, comm_{comm}
 	{
 		void* base_ptr = nullptr;
-		auto e = static_cast<enum error>(
-			MPI_Win_allocate_shared(
-				n*sizeof(T), disp_unit, 
-				MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_
-			)
-		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot win_alloc"};
+		MPI_(Win_allocate_shared)(n*sizeof(T), disp_unit, MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_);
 	}
 	shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)
 	{}
 	shared_window(shared_window const&) = default;
 	shared_window(shared_window&& other) = default;
-//	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
-//	{}
-	group get_group() const{
-		group r; MPI_(Win_get_group)(this->impl_, &(&r)); return r;
-	}
-//	shared_communicator& get_communicator() const{return comm_;}
+//	group get_group() const{group r; MPI_(Win_get_group)(this->impl_, &(&r)); return r;}
 	struct query_t{
 		mpi3::size_t size;
 		int disp_unit;

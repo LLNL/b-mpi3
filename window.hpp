@@ -1,7 +1,8 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2019
+// © Alfredo A. Correa 2018-2020
+
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
 
@@ -96,9 +97,7 @@ public:
 	}
 //	get_errhandler(...);
 	group get_group() const{
-		group ret;
-		MPI3_CALL(MPI_Win_get_group)(impl_, &(&ret));
-		return ret;
+		group ret; MPI_(Win_get_group)(impl_, &ret.impl_); return ret;
 	}
 //	group get_group(){use reinterpret_cast?}
 //	... get_info

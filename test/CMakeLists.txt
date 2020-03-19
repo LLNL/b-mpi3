@@ -97,7 +97,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   if ((TEST_FILE STREQUAL "communicator_divide.cpp") OR
       (TEST_FILE STREQUAL "communicator_operator.cpp") OR
       (TEST_FILE STREQUAL "communicator_scatter.cpp"))
-    set(NPROC 8)
+    set(NPROC 6)
   endif()
   add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} ./${TEST_EXE})
 endforeach()

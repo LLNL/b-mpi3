@@ -2,11 +2,11 @@
 mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
+
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
 
 #include "../mpi3/communication_mode.hpp"
-#include "../mpi3/equality.hpp"
 #include "../mpi3/generalized_request.hpp"
 #include "../mpi3/handle.hpp"
 #include "../mpi3/info.hpp"
@@ -20,6 +20,7 @@ mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 #include "../mpi3/group.hpp"
 //#include "../mpi3/window.hpp"
 
+#include "../mpi3/detail/equality.hpp"
 #include "../mpi3/detail/basic_communicator.hpp"
 #include "../mpi3/detail/buffer.hpp"
 #include "../mpi3/detail/datatype.hpp"
@@ -193,9 +194,9 @@ class communicator : protected detail::basic_communicator{
 protected:
 	bool is_null() const{return MPI_COMM_NULL == impl_;}
 	friend class mpi3::environment;
-	equality compare(communicator const& other) const{
-		equality ret = boost::mpi3::unequal;
-		MPI_Comm_compare(impl_, other.impl_, reinterpret_cast<int*>(&ret));
+	detail::equality compare(communicator const& other) const{
+		detail::equality ret;// = boost::mpi3::detail::unequal;
+		MPI_(Comm_compare)(impl_, other.impl_, reinterpret_cast<int*>(&ret));
 		return ret;
 	}
 public:
@@ -391,7 +392,7 @@ public:
 		return *this;
 	}
 	bool operator==(communicator const& other) const{
-		return &*this==&other or compare(other)==equality::congruent;
+		return &*this==&other or compare(other)==detail::equality::congruent;
 	//	auto eq = compare(other);
 	//	return (eq == equality::identical) or (eq == equality::congruent);
 	}
@@ -458,7 +459,7 @@ public:
 	template<class T = void> void deallocate(pointer<T>& p, MPI_Aint size = 0);
 	void free(pointer<void>& p) const;
 
-	bool similar(communicator const& o) const{return compare(o)==equality::similar;}
+	bool similar(communicator const& o) const{return compare(o)==detail::equality::similar;}
 	template<class Vector>//, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
 	communicator subcomm(Vector const& v) const{
 		MPI_Group old_g;
@@ -2966,38 +2967,34 @@ friend communicator& operator<<(communicator& comm, T const& t){
 inline void barrier(communicator const& self){self.barrier();}
 
 inline communicator::communicator(group const& g, int tag){
-	MPI_(Comm_create_group)(MPI_COMM_WORLD, &g, tag, &impl_);
+	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);
 }
 
 inline communicator::communicator(group const& g){
-	MPI_(Comm_create)(MPI_COMM_WORLD, &g, &impl_);
+	MPI_(Comm_create)(MPI_COMM_WORLD, &const_cast<group&>(g), &impl_);
 }
 // https://www.open-mpi.org/doc/v3.0/man3/MPI_Comm_create_group.3.php
 // MPI_Comm_create_group is similar to MPI_Comm_create; however, MPI_Comm_create must be called by all processes in the group of comm, whereas MPI_Comm_create_group must be called by all processes in group, which is a subgroup of the group of comm. In addition, MPI_Comm_create_group requires that comm is an intracommunicator. MPI_Comm_create_group returns a new intracommunicator, newcomm, for which the group argument defines the communication group. No cached information propagates from comm to newcomm. 
 
 inline communicator::communicator(communicator const& o, group const& g){
-	auto e = static_cast<enum error>(MPI_Comm_create(o.impl_, &g, &impl_));
-	if(e != mpi3::error::success) throw std::system_error{e, "cannot create"};
+	MPI_(Comm_create)(o.impl_, &const_cast<group&>(g), &impl_);
 }
 
 inline communicator::operator group() const{
-	group ret;
-	auto e = static_cast<enum error>( MPI_Comm_group(impl_, &(&ret)) );
-	if(e != mpi3::error::success) throw std::system_error{e, "cannot group"};
-	return ret;
+	group ret; MPI_(Comm_group)(impl_, &ret.impl_); return ret;
 }
+//inline group::group(communicator const& c){MPI_(Comm_group)(&const_cast<communicator&>(c), &impl_);}
 
 inline communicator communicator::create(group const& g) const{
 	communicator ret;
-	int s = MPI_Comm_create(impl_, &g, &ret.impl_);
+	int s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot crate group"};
 	return ret;
 }
 
 inline communicator communicator::create_group(class group const& g, int tag = 0) const{
 	communicator ret;
-	int s = MPI_Comm_create_group(impl_, &g, tag, &ret.impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot create_group"};
+	MPI_(Comm_create_group)(impl_, &const_cast<group&>(g), tag, &ret.impl_);
 	return ret;
 }
 

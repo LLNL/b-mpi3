@@ -56,7 +56,7 @@ auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> 
 	return p >> value;
 }
 
-template<class T>
+template<class T> 
 process& operator<<(process& self, T const& t){
 	self.comm_.send_value(t, self.rank_);
 	return self;
@@ -64,6 +64,15 @@ process& operator<<(process& self, T const& t){
 
 inline process communicator::operator[](int rank){
 	return {*this, rank};
+}
+
+template<class T>
+communicator& operator&(communicator& comm, T&& t){
+	using std::begin;
+	auto e = comm.all_to_all(begin(std::forward<T>(t)));
+	using std::end;
+	assert( e == end(t) );
+	return comm;
 }
 
 template<class T>
