@@ -26,14 +26,9 @@ enum equality : typename std::underlying_type<decltype(MPI_IDENT)>::type{
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_EQUALITY
 
-#include<iostream>
-#include<chrono>
-#include<cassert>
-
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int main(int, char*[]){
+int main(){
 
 	mpi3::detail::equality q = mpi3::detail::identical;
 	q = mpi3::detail::congruent;
