@@ -22,13 +22,13 @@ namespace boost{
 namespace mpi3{
 
 //class communicator;
-//template<class T = void> class window;
+//template<class T = void> struct window;
 
 class group{
 	MPI_Group impl_ = MPI_GROUP_EMPTY;
 public:
 	friend class communicator;
-	template<class T> friend class window;
+	template<class T> friend struct window;
 	MPI_Group operator&(){return impl_;}
 	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;}
 	group() = default;
