@@ -14,6 +14,10 @@
 #include<tuple>
 #include<complex>
 
+#ifdef __CUDACC__
+#include <thrust/complex.h>
+#endif
+
 namespace boost{
 namespace mpi3{
 namespace detail{
@@ -96,6 +100,10 @@ MPI3_DECLARE_DATATYPE(double_double, MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX);
 	static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
+
+#ifdef __CUDACC__
+  MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
+#endif
 
 MPI3_DECLARE_DATATYPE(float_int, MPI_FLOAT_INT);
 MPI3_DECLARE_DATATYPE(long_int, MPI_LONG_INT);
