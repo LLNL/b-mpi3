@@ -31,7 +31,7 @@ public:
 	template<class T> friend struct window;
 	MPI_Group operator&(){return impl_;}
 	MPI_Group& get(){return impl_;}
-//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;}
+//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not a pointer type
 	group() = default;
 	group(group&& other) noexcept : impl_{std::exchange(other.impl_, MPI_GROUP_EMPTY)}{}
 	group(group const& other){MPI_(Group_excl)(other.impl_, 0, nullptr, &impl_);}
