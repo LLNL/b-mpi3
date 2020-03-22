@@ -30,6 +30,7 @@ public:
 	friend class communicator;
 	template<class T> friend struct window;
 	MPI_Group operator&(){return impl_;}
+	MPI_Group& get(){return impl_;}
 	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;}
 	group() = default;
 	group(group&& other) noexcept : impl_{std::exchange(other.impl_, MPI_GROUP_EMPTY)}{}
