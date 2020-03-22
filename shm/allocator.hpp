@@ -47,21 +47,18 @@ public:
 	allocator& operator=(allocator const& other) = default;
 	bool operator==(allocator const& other) const{return comm_==other.comm_;}
 	bool operator!=(allocator const& other) const{return not(other == *this);}
-#if 0
-	template<class P = pointer, class... As>
-	void construct(P p, As&&... as){
-		if(comm_->root()) ::new((void*)p) typename std::pointer_traits<P>::element_type(std::forward<As>(as)...);
+	template<class... As>
+	void construct(pointer p, As&&... as){
+		if(comm_->root()) ::new((void*)raw_pointer_cast(p)) value_type(std::forward<As>(as)...);
 	}
+#if 0
 	template<class P = pointer> void destroy(P p){
 		using V = typename std::pointer_traits<P>::element_type;
 		p->~V();
 	}
-	template<class... As>
-	void construct(pointer p, As&&... as){
-		if(comm_->root()) ::new((void*)p) value_type(std::forward<As>(as)...);
-	}
-	void destroy(pointer p){if(comm_->root()) p->~value_type();}
+
 #endif
+	void destroy(pointer p){if(comm_->root()) raw_pointer_cast(p)->~value_type();}
 	template<class TT, class Size, class TT1>
 	auto alloc_uninitialized_fill_n(ptr<TT> it, Size n, TT1 const& t){
 		if(comm_->root()) std::uninitialized_fill_n(raw_pointer_cast(it), n, t); // TODO implement with with for_each in parallel

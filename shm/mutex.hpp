@@ -21,8 +21,8 @@ class mutex{
 	}
 	mutex(mutex const&) = delete;
 	mutex(mutex&&) = delete;
-	void lock(){while((*f_).test_and_set(std::memory_order_acquire));}
-	void unlock(){(*f_).clear(std::memory_order_release);}
+	void lock(){while(raw_reference_cast(*f_).test_and_set(std::memory_order_acquire));}
+	void unlock(){raw_reference_cast(*f_).clear(std::memory_order_release);}
 	~mutex(){
 		if(scomm_.root()) alloc_.destroy(&*f_);
 		scomm_.barrier();
