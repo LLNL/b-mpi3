@@ -25,18 +25,18 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator() : communicator(){}
 	public:
 	template<class Shape, class Period>
-	cartesian_communicator(communicator const& comm_old, Shape const& s, Period const& p){
+	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
-		MPI_(Cart_create)(&comm_old, s.size(), s.data(), p.data(), false, &impl_);
+		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
 		assert(impl_ != MPI_COMM_NULL);
 		// there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
-	cartesian_communicator(communicator const& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
+	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
 	
-	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape) 
+	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape)){}
-	cartesian_communicator(communicator const& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
+	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)){}
 
 	[[deprecated("use dimensionality() instead of dimension")]] 
@@ -112,8 +112,11 @@ struct cartesian_communicator : cartesian_communicator<>{
 };
 
 #ifdef __cpp_deduction_guides
+<<<<<<< Updated upstream
 template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<bool>)
 	->cartesian_communicator<dynamic_extent>;
+=======
+>>>>>>> Stashed changes
 template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<int>)
 	->cartesian_communicator<dynamic_extent>;
 template<class T> cartesian_communicator(T, std::initializer_list<int>)
@@ -156,6 +159,15 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 }
 #endif
 	if(world.root()) cerr<<"---"<<std::endl;
+#ifdef __cpp_deduction_guides
+{
+	assert(world.size() == 12);
+
+	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
+	assert( comm.dimensionality() == 2 );
+	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+}
+#endif
 {
 	assert(world.size() == 12);
 

@@ -32,7 +32,16 @@ struct shared_window : window<T>{
 	{}
 	shared_window(shared_window const&) = default;
 	shared_window(shared_window&& other) = default;
+<<<<<<< Updated upstream
 //	group get_group() const{group r; MPI_(Win_get_group)(this->impl_, &(&r)); return r;}
+=======
+//	shared_window(shared_window&& other) noexcept : window<T>{std::move(other)}//, comm_{other.comm_}
+//	{}
+	group get_group() const{
+		group r; MPI_(Win_get_group)(this->impl_, &(r.impl_)); return r;
+	}
+//	shared_communicator& get_communicator() const{return comm_;}
+>>>>>>> Stashed changes
 	struct query_t{
 		mpi3::size_t size;
 		int disp_unit;
