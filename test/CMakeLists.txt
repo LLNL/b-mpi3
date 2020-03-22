@@ -46,7 +46,7 @@ communicator_all_reduce.cpp
 communicator_barrier.cpp
 communicator_broadcast.cpp
 communicator_divide.cpp
-communicator_gather2.cpp
+gather2.cpp
 communicator_ibroadcast.cpp
 communicator_igather.cpp
 communicator_operator.cpp
