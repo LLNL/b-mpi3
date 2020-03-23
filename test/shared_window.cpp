@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 mpicxx -O3 -std=c++14 $0 -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
