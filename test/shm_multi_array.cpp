@@ -48,6 +48,11 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	shm_vector<double> V(200, 99., &node);
 	assert( V.size() == size(V) );
 	assert( size(V) == 200 );
+
+	cout << raw_reference_cast(V[10]) << std::endl;
+
+	double x = 10.0 * raw_reference_cast(V[10]);
+	assert( x == 10.*99. );
 }
 {
 	multi::array<double, 2, mpi3::shm::allocator<double>> A({5, 5}, 1.); // implicitly uses self communicator
