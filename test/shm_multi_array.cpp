@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -Wno-deprecated-declarations `#-Wfatal-errors` $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
+mpic++ -std=c++14 -Wno-deprecated-declarations $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -30,12 +30,25 @@ using array = multi::array<T, D, mpi3::shm::allocator<T>>;
 
 }}}
 
-template<class T> void what(T&&) = delete;
+template<class T> using shm_vector = multi::array<T, 1, mpi3::shm::allocator<double>>;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::shared_communicator node = world.split_shared();
+{ 
+	multi::array<double, 1, mpi3::shm::allocator<double>> V(100, 99., &node);
+	assert( V[13] == 99. );
 
+	multi::array<double, 1, mpi3::shm::allocator<double>> W(100, 88., &node);
+	assert( W[13] == 88. );
+	W = V;
+	assert( V[13] == 99. );
+}
+{
+	shm_vector<double> V(200, 99., &node);
+	assert( V.size() == size(V) );
+	assert( size(V) == 200 );
+}
 {
 	multi::array<double, 2, mpi3::shm::allocator<double>> A({5, 5}, 1.); // implicitly uses self communicator
 	multi::array<double, 2, mpi3::shm::allocator<double>> B({5, 5}, 2.);
