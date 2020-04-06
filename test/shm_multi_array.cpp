@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 -Wno-deprecated-declarations $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
+mpic++ -std=c++14 $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -49,9 +49,10 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert( V.size() == size(V) );
 	assert( size(V) == 200 );
 
-	cout << raw_reference_cast(V[10]) << std::endl;
+	cout << V[10] << std::endl;
 
-	double x = 10.0 * raw_reference_cast(V[10]);
+	double x = 10.0 * V[10];
+	node.barrier();
 	assert( x == 10.*99. );
 }
 {
