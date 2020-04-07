@@ -13,10 +13,10 @@ namespace shm{
 class mutex{
 	mpi3::shared_communicator& scomm_;
 	using allocator_type = mpi3::shm::allocator<std::atomic_flag>;
-	allocator_type alloc_;//(node);
+	allocator_type alloc_;
 	mpi3::shm::ptr<std::atomic_flag> f_;
 	public:
-	mutex(mpi3::shared_communicator& scomm) : scomm_(scomm), alloc_(std::addressof(scomm_)), f_(alloc_.allocate(1)){
+	mutex(mpi3::shared_communicator& scomm) : scomm_(scomm), alloc_{&scomm_}, f_(alloc_.allocate(1)){
 		if(scomm_.root()) std::allocator_traits<mpi3::shm::allocator<std::atomic_flag>>::construct(alloc_, &*f_, false);
 		scomm_.barrier();
 	}
@@ -26,7 +26,7 @@ class mutex{
 	void unlock(){f_->clear(std::memory_order_release);}
 	~mutex(){
 		if(scomm_.root()) std::allocator_traits<allocator_type>::destroy(alloc_, &*f_);
-		scomm_.barrier();
+	//	scomm_.barrier();
 		alloc_.deallocate(f_, 1);
 	}
 };
