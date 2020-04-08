@@ -56,6 +56,19 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert( x == 10.*99. );
 }
 {
+	auto const V = [&]{
+		shm_vector<double> V(1000, 0., &node);
+		if(node.root()) std::iota(V.begin(), V.end(), 10.);
+		node.barrier();
+		return V;
+	}();
+	std::cout
+		<< "accumulation result in rank "<< node.rank() 
+		<<' '<< std::accumulate(V.begin(), V.begin() + node.rank(), 0.) << std::endl
+	;
+	node.barrier();
+}
+{
 	multi::array<double, 2, mpi3::shm::allocator<double>> A({5, 5}, 1.); // implicitly uses self communicator
 	multi::array<double, 2, mpi3::shm::allocator<double>> B({5, 5}, 2.);
 
