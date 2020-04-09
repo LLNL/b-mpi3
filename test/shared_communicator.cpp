@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
+mpic++ $0 -o $0x&&mpirun -n 4 $0x $@&&rm $0x;exit
 #endif
 
 #include "../../mpi3/main.hpp"
@@ -17,6 +17,10 @@ void check_isa_shared_comm (mpi3::shared_communicator const&){}
 int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::ostream wout(world);
+
+	mpi3::shared_communicator node = world.split_shared();
+	wout << "I am rank " << node.rank() << " in comm " << node.name() << std::endl;
+	wout << "----" << std::endl;
 
 	mpi3::shared_communicator core = world.split_shared(mpi3::communicator_type::core);
 	wout << "I am rank " << core.rank() << " in comm " << core.name() << std::endl;

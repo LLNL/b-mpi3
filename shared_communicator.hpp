@@ -39,7 +39,7 @@ private:
 	explicit shared_communicator(communicator const& comm, int key = 0){
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot split"};
-		name(mpi3::processor_name());
+		name(comm.name()+":"+mpi3::processor_name());
 	}
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
 		MPI3_CALL(MPI_Comm_split_type)(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
@@ -50,6 +50,13 @@ private:
 		std::string const& base = comm.name();
 		// !!! switch-case don't work here because in some MPI impls there are repeats !!!
 		if(communicator_type::shared==t){
+			#if __linux__
+			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu()
+			#else
+			set_name(base+":shared/pu" + Tag);
+			#endif
+		}
+		else if(communicator_type::core     ==t){
 			#if __linux__
 			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu()
 			#else
