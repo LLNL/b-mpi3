@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -std=c++14 $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
+mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 

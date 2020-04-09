@@ -29,6 +29,8 @@ mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 //#include "../mpi3/detail/strided.hpp"
 #include "../mpi3/detail/package.hpp"
 
+#include "../mpi3/config/NODISCARD.hpp"
+
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
@@ -1473,17 +1475,23 @@ private:
 			detail::contiguous_iterator_tag,
 			detail::basic_tag, 
 		Size count 
-	){
-		assert( count % size() == 0 );
-		MPI_(Alltoall)( 
+	)
+	->decltype(MPI_(Alltoall)( 
 			MPI_IN_PLACE, 0*count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
-		);
-		return first + count;
-	}
+		), first + count)
+	{
+		assert( count % size() == 0 );
+		return MPI_(Alltoall)( 
+			MPI_IN_PLACE, 0*count/size(),
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(first), count/size(),
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			impl_
+		), first + count;}
 public:
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(It1 first, Size count, It2 d_first){
@@ -1500,7 +1508,15 @@ public:
 			);
 	}
 	template<class It1, typename Size>
-	auto all_to_all_n(It1 first, Size count){
+	auto all_to_all_n(It1 first, Size count)
+	->decltype(
+			all_to_all_n(
+				first, 
+					detail::iterator_category_t<It1>{},
+					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+				count
+			))
+	{
 		assert( count % size() == 0 );
 		return 
 			all_to_all_n(
@@ -1508,13 +1524,32 @@ public:
 					detail::iterator_category_t<It1>{},
 					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 				count
-			);
-	}
+			);}
 	template<class It1, class It2>
 	auto all_to_all(It1 first, It2 d_first){return all_to_all_n(first, size(), d_first);}
-	template<class It1>
-	auto all_to_all(It1 first){return all_to_all_n(first, size());}
+	template<class It1> 
+	auto all_to_all(It1 first)
+	->decltype(all_to_all_n(first, size())){
+		return all_to_all_n(first, size());}
 public:
+	template<class T>
+	auto operator()(T&& t)
+	->decltype(communicator::all_to_all(begin(std::forward<T>(t))), void()){
+		assert(t.size() == size());
+		auto e = communicator::all_to_all(begin(std::forward<T>(t)));
+		using std::end;
+		assert( e == end(t) );
+		return std::forward<T>(t);
+	}
+	template<class T> 
+	NODISCARD("do not ignore result when second argument is const")
+	auto operator()(T const& t)
+	->decltype(communicator::all_to_all(t.begin(), std::declval<T>().begin()), T(communicator::size())){
+		assert(t.size() == communicator::size());
+		T ret(communicator::size()); 
+		communicator::all_to_all(t.begin(), ret.begin());
+		return ret;
+	}
 private:
 /*	template<class BlockingMode, class InputIt, class OutputIt, class InputCategory = typename std::iterator_traits<OutputIt>::iterator_category, class OutputCategory = typename std::iterator_traits<OutputIt>::iterator_category >
 	auto gather(BlockingMode bm, InputIt first, InputIt last, OutputIt d_first, OutputIt d_last, int root = 0){

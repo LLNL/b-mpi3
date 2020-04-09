@@ -7,6 +7,8 @@
 #include "../mpi3/communicator.hpp"
 #include<experimental/optional>
 
+#include "config/NODISCARD.hpp"
+
 namespace boost{
 namespace mpi3{
 
@@ -67,12 +69,24 @@ inline process communicator::operator[](int rank){
 }
 
 template<class T>
-communicator& operator&(communicator& comm, T&& t){
-	using std::begin;
+auto operator&(communicator& comm, T&& t)
+->decltype(comm.all_to_all(begin(std::forward<T>(t))), std::forward<T>(t)){
+	assert(t.size() == comm.size());
+//	using std::begin;
 	auto e = comm.all_to_all(begin(std::forward<T>(t)));
 	using std::end;
 	assert( e == end(t) );
-	return comm;
+	return std::forward<T>(t);
+}
+
+template<class T> 
+NODISCARD("do not ignore result when second argument is const")
+auto operator&(communicator& comm, T const& t)
+->decltype(comm.all_to_all(t.begin(), std::declval<T>().begin()), T(comm.size())){
+	assert(t.size() == comm.size());
+	T ret(comm.size()); 
+	comm.all_to_all(t.begin(), ret.begin());
+	return ret;
 }
 
 template<class T>
@@ -124,7 +138,7 @@ bool load_xml(std::string file, T&& ma) try{
 	throw std::runtime_error("cannot load from file `\n" + file + ": line 0:\n', because " + e.what() + ". Are the save and load type compatible?");
 }
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 	assert(world.size() == 2);
 	if(world.rank() == 0){
 		int a = 7;
