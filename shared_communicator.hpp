@@ -51,14 +51,14 @@ private:
 		// !!! switch-case don't work here because in some MPI impls there are repeats !!!
 		if(communicator_type::shared==t){
 			#if __linux__
-			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu()
+			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
 			#else
 			set_name(base+":shared/pu" + Tag);
 			#endif
 		}
 		else if(communicator_type::core     ==t){
 			#if __linux__
-			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu()
+			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
 			#else
 			set_name(base+":core/pu" + Tag);
 			#endif
@@ -96,7 +96,6 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
 inline shared_communicator communicator::split_shared(communicator_type t, int key /*= 0*/) const{
 	return shared_communicator(*this, t, key);
 }
-
 
 }}
 
