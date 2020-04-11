@@ -1542,7 +1542,7 @@ public:
 		return std::forward<T>(t);
 	}
 	template<class T> 
-	NODISCARD("do not ignore result when second argument is const")
+	NODISCARD("do not ignore result when argument is const")
 	auto operator()(T const& t)
 	->decltype(communicator::all_to_all(t.begin(), std::declval<T>().begin()), T(communicator::size())){
 		assert(t.size() == communicator::size());
