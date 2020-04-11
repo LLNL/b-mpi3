@@ -73,7 +73,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	}
 	// int MPI_Cart_map not implemented
 	cartesian_communicator sub(std::vector<int> const& remain_dims) const{
-		assert( remain_dims.size() == dimensionality() );
+		assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
 		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
 	}
 	template<class RemainDim = std::initializer_list<bool>>
@@ -112,11 +112,8 @@ struct cartesian_communicator : cartesian_communicator<>{
 };
 
 #ifdef __cpp_deduction_guides
-<<<<<<< Updated upstream
 template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<bool>)
 	->cartesian_communicator<dynamic_extent>;
-=======
->>>>>>> Stashed changes
 template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<int>)
 	->cartesian_communicator<dynamic_extent>;
 template<class T> cartesian_communicator(T, std::initializer_list<int>)
