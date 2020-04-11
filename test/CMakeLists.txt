@@ -82,7 +82,7 @@ set(CMAKE_CXX_STANDARD 14)
 foreach(TEST_FILE ${TEST_SRCS})
   SET(TEST_EXE "${TEST_FILE}x")
   add_executable(${TEST_EXE} ${TEST_FILE})
-  target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Wpedantic -Wfatal-errors)
+  target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Wpedantic -Werror -Wfatal-errors)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
   list(FIND NEED_BOOST_SERIALIZATION_SRCS ${TEST_FILE} NEED_BOOST_SERIALIZATION)
