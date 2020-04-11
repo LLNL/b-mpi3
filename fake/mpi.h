@@ -1,4 +1,4 @@
-#ifndef FAKE_MPI_H
+#ifndef FAKE_MPI_H//-*-indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*-
 #define FAKE_MPI_H
 // Fake MPI for serial execution
 
@@ -770,8 +770,8 @@ int MPI_Startall(
 // -----------------------------------------------------------------------------
 
 
-typedef unsigned long long MPI_Aint;
-
+//typedef unsigned long long MPI_Aint;
+typedef ssize_t MPI_Aint;
 
 struct MPI_Datatype_impl_{
 //	MPI_Aint lb;
@@ -1838,6 +1838,7 @@ int MPI_Comm_dup( // Duplicates an existing communicator with all its cached inf
 {
 	if(&comm == &MPI_COMM_NULL) return MPI_ERR_COMM;
 	*newcomm = (struct MPI_Comm_impl_*)malloc(sizeof(struct MPI_Comm_impl_));
+	assert(*newcomm != MPI_COMM_NULL);
 	(**newcomm).errhandler_ = comm->errhandler_;
 	return MPI_SUCCESS;
 }
@@ -2005,10 +2006,13 @@ int MPI_Comm_delete_attr(
 #endif
 
 enum {
-  MPI_HOST,
-  MPI_IO,
-  MPI_WTIME_IS_GLOBAL,
-  MPI_TAG_UB
+	MPI_HOST,
+	MPI_IO,
+	MPI_WTIME_IS_GLOBAL,
+	MPI_APPNUM,
+	MPI_UNIVERSE_SIZE,
+	MPI_LASTUSEDCODE,
+	MPI_TAG_UB
 };
 
 // -----------------------------------------------------------------------------
@@ -2378,7 +2382,7 @@ int MPI_Comm_set_errhandler( // Set the error handler for a communicator
 	MPI_Comm comm,             // [in] communicator (handle)
 	MPI_Errhandler errhandler  // [in] new error handler for communicator (handle)
 ){ // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node218.htm
-	assert(comm != MPI_COMM_NULL);
+//	assert(comm != MPI_COMM_NULL);
 	if(comm == MPI_COMM_NULL) return MPI_ERR_COMM;
 	comm->errhandler_ = errhandler; //->func_ = errhandler->func_;
 	return MPI_SUCCESS;
@@ -2722,8 +2726,9 @@ int MPI_Init_thread( // Initialize the MPI execution environment
 	char ***argv, // [in] Pointer to the argument vector
 	int required, // [in] Level of desired thread support
 	int *provided // [out] Level of provided thread support
-) { // http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
-  return MPI_SUCCESS;
+){// http://mpi-forum.org/docs/mpi-3.1/mpi31-report/node303.htm
+	*provided = MPI_THREAD_MULTIPLE;
+	return MPI_SUCCESS;
 }
 
 WEAK
