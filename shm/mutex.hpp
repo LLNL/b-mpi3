@@ -26,7 +26,7 @@ class mutex{
 	void unlock(){f_->clear(std::memory_order_release);}
 	~mutex(){
 		if(scomm_.root()) std::allocator_traits<allocator_type>::destroy(alloc_, &*f_);
-	//	scomm_.barrier();
+		scomm_.barrier();
 		alloc_.deallocate(f_, 1);
 	}
 };
