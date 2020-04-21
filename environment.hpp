@@ -117,7 +117,7 @@ class environment{
 	}
 	environment(thread_level required){initialize_thread(required);}
 	environment(int argc, char** argv){
-		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
+		[[maybe_unused]] auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
 		assert( provided == boost::mpi3::thread_level::multiple );
 	//	color_key_p = new communicator::keyval<int>;
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
