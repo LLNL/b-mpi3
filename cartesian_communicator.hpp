@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x;exit
+#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
+mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR -x c++ $0 -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -94,9 +94,20 @@ struct cartesian_communicator : cartesian_communicator<>{
 	static auto dims_create(int n, int nd){
 		std::vector<int> ds(nd); MPI_(Dims_create)(n, ds.size(), ds.data()); return ds;
 	}
-	explicit cartesian_communicator(communicator& other) : 
-		cartesian_communicator<>(other, dims_create(other.size(), D))
+//	explicit cartesian_communicator(communicator& other) : 
+//		cartesian_communicator<>(other, dims_create(other.size(), D))
+//	{}
+	static auto dims_create(int size, std::array<int, D> dims){
+		MPI_(Dims_create)(size, D, dims.data());
+		return dims;
+	}
+//	explicit cartesian_communicator(communicator& other) : 
+//		cartesian_communicator<>(other, dims_create(other.size(), D))
+//	{}
+	cartesian_communicator(communicator& other, std::array<int, D> const dims) : 
+		cartesian_communicator<>(other, dims_create(dims))
 	{}
+//	cartesian_communicator(cartesian_communicator const&n other) : cartesa
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
@@ -168,7 +179,7 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 {
 	assert(world.size() == 12);
 
-	mpi3::cartesian_communicator<3> comm{world};
+	mpi3::cartesian_communicator<3> comm(world, {});
 	static_assert( mpi3::cartesian_communicator<3>::dimensionality == 3, "!");
 	assert( comm.cartesian_communicator<>::dimensionality() == 3 );
 	assert( comm.num_elements() == world.size() );
