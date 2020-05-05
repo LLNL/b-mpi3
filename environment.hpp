@@ -1,7 +1,8 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT $0.cpp -o $0x&&mpirun -n 4 $0x&&rm $0x $0.cpp;exit
+mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0.cpp;exit
 #endif
 // © Alfredo A. Correa 2018-2019
+
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
 
@@ -118,7 +119,7 @@ class environment{
 	environment(thread_level required){initialize_thread(required);}
 	environment(int argc, char** argv){
 		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
-		assert( provided == boost::mpi3::thread_level::multiple );
+		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
 	//	color_key_p = new communicator::keyval<int>;
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
