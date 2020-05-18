@@ -45,7 +45,7 @@ mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 #include <boost/archive/basic_streambuf_locale_saver.hpp>
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/detail/auto_link_archive.hpp>
-#include <boost/archive/detail/abi_prefix.hpp> // must be the last header
+//#include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
 #include <boost/serialization/item_version_type.hpp>
 #include <boost/serialization/string.hpp>
@@ -381,13 +381,14 @@ public:
 	}
 	using detail::basic_communicator::basic_communicator;
 	communicator(communicator const&) = default;
+//	communicator(communicator&) = default;
 	communicator(communicator&&) = default;
 	communicator() = default;
-	communicator& operator=(communicator const& other){
+/*	communicator& operator=(communicator const& other){
 		communicator tmp(other);
 		swap(tmp);
 		return *this;
-	}
+	}*/
 	communicator& operator=(communicator&& other){
 		communicator tmp(std::move(other));
 		swap(tmp);
@@ -3349,7 +3350,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert(comm3);
 	assert(comm3 == world);
 	assert(&comm3 != &world);
-	comm = comm2;
+	comm = std::move(comm2);
 	assert(&comm != &comm2);
 
 //	world2 = world;
