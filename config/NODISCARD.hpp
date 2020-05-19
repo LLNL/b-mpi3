@@ -10,6 +10,7 @@ $CXX $0 -o $0x &&$0x&&rm $0x;exit
 #define __has_cpp_attribute(name) 0
 #endif
 
+#ifndef NODISCARD
 #if (__has_cpp_attribute(nodiscard)) && (__cplusplus>=201703L)
 	#define NODISCARD(MsG) [[nodiscard]]
 	#if (__has_cpp_attribute(nodiscard)>=201907) && (__cplusplus>=201703L)
@@ -19,6 +20,7 @@ $CXX $0 -o $0x &&$0x&&rm $0x;exit
 	#define NODISCARD(MsG) [[gnu::warn_unused_result]]
 #else
 	#define NODISCARD(MsG)
+#endif
 #endif
 
 #if not __INCLUDE_LEVEL__ // _TEST_MPI3_CONFIG_NODISCARD
