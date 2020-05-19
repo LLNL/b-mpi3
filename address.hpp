@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-mpic++ -D_TEST_BOOST_MPI3_ADDRESS -xc++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
+#if COMPILATION/* -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*- */
+mpic++ -D_TEST_BOOST_MPI3_ADDRESS -x c++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -37,6 +37,8 @@ using std::cout;
 namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
+
+	std::cout << "dsadsad" << std::endl;
 
 	std::vector<int> v(10);
 	mpi3::address a1 = mpi3::addressof(v[0]);
