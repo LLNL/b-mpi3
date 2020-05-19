@@ -389,11 +389,12 @@ public:
 		swap(tmp);
 		return *this;
 	}*/
-	communicator& operator=(communicator&& other){
-		communicator tmp(std::move(other));
-		swap(tmp);
-		return *this;
-	}
+//	communicator& operator=(communicator&& other){
+//		communicator tmp(std::move(other));
+//		swap(tmp);
+//		return *this;
+//	}
+	communicator& operator=(communicator other){return swap(other), *this;}
 	bool operator==(communicator const& other) const{
 		return &*this==&other or compare(other)==detail::equality::congruent;
 	//	auto eq = compare(other);
@@ -3350,7 +3351,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert(comm3);
 	assert(comm3 == world);
 	assert(&comm3 != &world);
-	comm = std::move(comm2);
+	comm = comm2;
 	assert(&comm != &comm2);
 
 //	world2 = world;
