@@ -221,6 +221,7 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 	assert(cart_comm.dimensions()[1] == 3);
 }
 try{
+	assert(world.size() == 6);
 	mpi3::cartesian_communicator<2> cart_comm(world, {4});
 	assert(cart_comm.dimensions()[0] == 2);
 	assert(cart_comm.dimensions()[1] == 3);
