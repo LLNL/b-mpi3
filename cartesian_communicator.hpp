@@ -1,5 +1,5 @@
 #if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-mpic++ -D_TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR -x c++ $0 -o $0x&&mpirun -n 12 --oversubscribe $0x&&rm $0x;exit
+OMPI_CXX=$CXX mpic++ $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -29,7 +29,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 		assert(s.size() == p.size());
 		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
 		assert(impl_ != MPI_COMM_NULL);
-		// there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
+		// TODO try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
 	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
@@ -87,27 +87,32 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	}
 };
 
+enum fill_t{fill = 0};
+
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
+	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
+		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
+	}
 	constexpr static dimensionality_type dimensionality = D;
-	using cartesian_communicator<dynamic_extent>::cartesian_communicator;
-	static auto dims_create(int n, int nd){
-		std::vector<int> ds(nd); MPI_(Dims_create)(n, ds.size(), ds.data()); return ds;
+	cartesian_communicator(communicator& other, std::array<int, D> dims) try: 
+		cartesian_communicator<>(other, division(other.size(), dims))
+	{}catch(std::runtime_error& e){
+		std::ostringstream ss; 
+		std::copy(begin(dims), end(dims), std::ostream_iterator<int>{ss, " "});
+		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
 	}
-//	explicit cartesian_communicator(communicator& other) : 
-//		cartesian_communicator<>(other, dims_create(other.size(), D))
-//	{}
-	static auto dims_create(int size, std::array<int, D> dims){
-		MPI_(Dims_create)(size, D, dims.data());
-		return dims;
+	auto topology() const{
+		struct topology_t{
+			std::array<int, dimensionality> dimensions, periods, coordinates;
+		} ret;
+		MPI_(Cart_get)(
+			impl_, dimensionality, 
+			ret.dimensions.data(), ret.periods.data(), ret.coordinates.data()
+		);
+		return ret;
 	}
-//	explicit cartesian_communicator(communicator& other) : 
-//		cartesian_communicator<>(other, dims_create(other.size(), D))
-//	{}
-	cartesian_communicator(communicator& other, std::array<int, D> const dims) : 
-		cartesian_communicator<>(other, dims_create(dims))
-	{}
-//	cartesian_communicator(cartesian_communicator const&n other) : cartesa
+	auto dimensions() const{return topology().dimensions;}
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
@@ -135,9 +140,10 @@ template<class... As> cartesian_communicator(As...)
 
 }}
 
-#ifdef _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
+#if not __INCLUDE_LEVEL__ // def _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
 
 #include<iostream>
+
 #include "../mpi3/main.hpp"
 #include "../mpi3/version.hpp"
 #include "../mpi3/ostream.hpp"
@@ -148,7 +154,89 @@ namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], boost::mpi3::communicator world){
 {
-	assert(world.size() == 12);
+	auto div = mpi3::cartesian_communicator<2>::division(6);
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 3 );
+	assert( div[1] == 2 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(6, {});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 3 );
+	assert( div[1] == 2 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 3 );
+	assert( div[1] == 2 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, mpi3::fill});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 3 );
+	assert( div[1] == 2 );
+}
+{
+	assert(world.size() == 6);
+	auto div = mpi3::cartesian_communicator<2>::division(6, {2});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 2 );
+	assert( div[1] == 3 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(6, {2, mpi3::fill});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 2 );
+	assert( div[1] == 3 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, 3});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 2 );
+	assert( div[1] == 3 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(7);
+	assert( div[0]*div[1] == 7 );
+	assert( div[0] == 7 );
+	assert( div[1] == 1 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(7);
+	assert( div[0]*div[1] == 7 );
+	assert( div[0] == 7 );
+	assert( div[1] == 1 );
+}
+{
+	auto div = mpi3::cartesian_communicator<2>::division(7, {mpi3::fill, mpi3::fill});
+	assert( div[0]*div[1] == 7 );
+	assert( div[0] == 7 );
+	assert( div[1] == 1 );
+}
+{
+	assert(world.size() == 6);
+	mpi3::cartesian_communicator<2> cart_comm(world, {2, 3});
+	assert(cart_comm.dimensions()[0] == 2);
+	assert(cart_comm.dimensions()[1] == 3);
+}
+try{
+	mpi3::cartesian_communicator<2> cart_comm(world, {4});
+	assert(cart_comm.dimensions()[0] == 2);
+	assert(cart_comm.dimensions()[1] == 3);
+}catch(...){}
+{
+	mpi3::cartesian_communicator<2> cart_comm(world, {2, mpi3::fill});
+	assert(cart_comm.dimensions()[0] == 2);
+	assert(cart_comm.dimensions()[1] == 3);
+}
+{
+	mpi3::cartesian_communicator<2> cart_comm(world, {mpi3::fill, 2});
+	assert(cart_comm.dimensions()[0] == 3);
+	assert(cart_comm.dimensions()[1] == 2);
+}
+{
+	return 0;
 
 	mpi3::cartesian_communicator<> comm(world, {4, 3}, {true, false});
 	assert( comm.dimensionality() == 2 );
