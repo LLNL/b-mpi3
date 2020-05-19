@@ -11,17 +11,13 @@ $CXX $0 -o $0x &&$0x&&rm $0x;exit
 #endif
 
 #if (__has_cpp_attribute(nodiscard)) && (__cplusplus>=201703L)
-	#define nodiscard_(MsG) nodiscard
-	#define NODISCARD(MsG) [[nodiscard_(MsG)]]
+	#define NODISCARD(MsG) [[nodiscard]]
 	#if (__has_cpp_attribute(nodiscard)>=201907) && (__cplusplus>=201703L)
-		#define nodiscard_(MsG) nodiscard(MsG)
-		#define NODISCARD(MsG) [[nodiscard_(MsG)]]
+		#define NODISCARD(MsG) [[nodiscard(MsG)]]
 	#endif
 #elif __has_cpp_attribute(gnu::warn_unused_result)
-	#define nodiscard_(MsG) gnu::warn_unused_result
-	#define NODISCARD(MsG) [[nodiscard_(MsG)]]
+	#define NODISCARD(MsG) [[gnu::warn_unused_result]]
 #else
-	#define nodiscard_(MsG)
 	#define NODISCARD(MsG)
 #endif
 
