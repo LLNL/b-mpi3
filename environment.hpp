@@ -157,8 +157,8 @@ class environment{
 //	thread_level thread_support() const{return mpi3::thread_support();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
-    static inline communicator& get_self_instance(){
-        assert(initialized());
+	static inline communicator& get_self_instance(){
+		assert(initialized());
 		static communicator instance = []{
 		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
 		//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
