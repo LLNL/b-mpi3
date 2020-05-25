@@ -39,28 +39,30 @@ inline void myterminate(){
 	std::abort();
 //	exit(1);  // forces abnormal termination
 }
-//inline void initialize(){
-//	int s = MPI_Init(nullptr, nullptr);
-//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
-//	std::set_terminate(&finalize);
-//}
-//inline void initialize(int& argc, char**& argv){
-//	int s = MPI_Init(&argc, &argv);
-//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
-//	std::set_terminate(&finalize);
+inline void initialize(){
+	int s = MPI_Init(nullptr, nullptr);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
+	std::set_terminate(&finalize);
+}
+inline void initialize(int& argc, char**& argv){
+	int s = MPI_Init(&argc, &argv);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
+	std::set_terminate(&finalize);
 //	std::set_terminate(myterminate);
-//}
-inline thread_level initialize(int& argc, char**& argv, thread_level required = thread_level::multiple){
+}
+inline thread_level initialize(int& argc, char**& argv, thread_level required){
 	int provided;
-	MPI_(Init_thread)(&argc, &argv, static_cast<int>(required), &provided);
+	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
 	return static_cast<thread_level>(provided);
 }
 inline thread_level initialize_thread(thread_level required){
 	int provided;
-	MPI_(Init_thread)(nullptr, nullptr, static_cast<int>(required), &provided);
+	int s = MPI_Init_thread(nullptr, nullptr, static_cast<int>(required), &provided);
+	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
 	return static_cast<thread_level>(provided);
 }
-inline thread_level initialize(thread_level required = thread_level::multiple){
+inline thread_level initialize(thread_level required){
 	return initialize_thread(required);
 }
 inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
@@ -112,20 +114,20 @@ inline std::string get_processor_name(){return detail::call<&MPI_Get_processor_n
 
 class environment{
 	public:
-//	environment(){
-//		initialize();
-//		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
-//	}
-	environment(thread_level required = thread_level::multiple){
+	environment(){
+		initialize_thread(thread_level::multiple);
+		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+	}
+	environment(thread_level required){
 		initialize_thread(required);
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-//	environment(int argc, char** argv){
-//		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
-//		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
-//		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
-//	}
-	environment(int argc, char** argv, thread_level required = thread_level::multiple){initialize(argc, argv, required);}
+	environment(int argc, char** argv){
+		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
+		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
+		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+	}
+	environment(int argc, char** argv, thread_level required){initialize(argc, argv, required);}
 	environment(environment const&) = delete;
 	environment& operator=(environment const&) = delete;
 	~environment(){
