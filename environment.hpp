@@ -102,12 +102,6 @@ inline bool is_thread_main(){
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot determine is thread main"};
 	return flag;
 }
-inline thread_level query_thread(){
-	int ret;
-	int status = MPI_Query_thread(&ret);
-	if(status != MPI_SUCCESS) throw std::runtime_error("cannot query thread level");
-	return static_cast<thread_level>(ret);
-}
 
 inline std::string processor_name(){return detail::call<&MPI_Get_processor_name>();}
 inline std::string get_processor_name(){return detail::call<&MPI_Get_processor_name>();}
@@ -134,6 +128,7 @@ class environment{
 		delete named_attributes_key_f();
 		finalize();
 	}
+	inline static thread_level thread_support(){return mpi3::thread_support();}
 //	static /*inline*/ communicator::keyval<int> const* color_key_p;
 //	static communicator::keyval<int> const& color_key(){return *color_key_p;}
 //	static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
@@ -159,7 +154,7 @@ class environment{
 	using wall_clock = mpi3::wall_clock;
 	operator bool() const{return initialized();}
 	bool is_thread_main() const{return mpi3::is_thread_main();}
-	thread_level query_thread() const{return mpi3::query_thread();}
+//	thread_level thread_support() const{return mpi3::thread_support();}
 
 //	communicator& null() const{return mpi3::communicator::null;}
     static inline communicator& get_self_instance(){
@@ -219,7 +214,8 @@ using std::cout;
 using namespace std::chrono_literals; // 2s
 
 int main(int argc, char* argv[]){
-	mpi3::environment::initialize(argc, argv, boost::mpi3::thread_level::multiple); // same as MPI_Init(...);
+	mpi3::environment::initialize(argc, argv, mpi3::thread_level::multiple); // same as MPI_Init(...);
+	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
 	assert(mpi3::environment::is_initialized());
 	{
 		mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
