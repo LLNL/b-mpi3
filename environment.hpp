@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0.cpp;exit
+mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2019
 
@@ -17,7 +17,7 @@ mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT -x c++ $0 -o $0x&
 namespace boost{
 namespace mpi3{
 
-enum class thread_level : int{
+enum thread_level : int{
 	single     = MPI_THREAD_SINGLE,
 	funneled   = MPI_THREAD_FUNNELED,
 	serialized = MPI_THREAD_SERIALIZED, 
@@ -39,30 +39,28 @@ inline void myterminate(){
 	std::abort();
 //	exit(1);  // forces abnormal termination
 }
-inline void initialize(){
-	int s = MPI_Init(nullptr, nullptr);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
-	std::set_terminate(&finalize);
-}
-inline void initialize(int& argc, char**& argv){
-	int s = MPI_Init(&argc, &argv);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
-	std::set_terminate(&finalize);
+//inline void initialize(){
+//	int s = MPI_Init(nullptr, nullptr);
+//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
+//	std::set_terminate(&finalize);
+//}
+//inline void initialize(int& argc, char**& argv){
+//	int s = MPI_Init(&argc, &argv);
+//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
+//	std::set_terminate(&finalize);
 //	std::set_terminate(myterminate);
-}
-inline thread_level initialize(int& argc, char**& argv, thread_level required){
+//}
+inline thread_level initialize(int& argc, char**& argv, thread_level required = thread_level::multiple){
 	int provided;
-	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
+	MPI_(Init_thread)(&argc, &argv, static_cast<int>(required), &provided);
 	return static_cast<thread_level>(provided);
 }
 inline thread_level initialize_thread(thread_level required){
 	int provided;
-	int s = MPI_Init_thread(nullptr, nullptr, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
+	MPI_(Init_thread)(nullptr, nullptr, static_cast<int>(required), &provided);
 	return static_cast<thread_level>(provided);
 }
-inline thread_level initialize(thread_level required){
+inline thread_level initialize(thread_level required = thread_level::multiple){
 	return initialize_thread(required);
 }
 inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
@@ -93,6 +91,9 @@ inline bool finalized(){
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot probe finalization"};
 	return flag;
 }
+inline thread_level thread_support(){
+	int r; MPI_(Query_thread)(&r); return static_cast<thread_level>(r);
+}
 inline bool is_thread_main(){
 	int flag = -1;
 	int s = MPI_Is_thread_main(&flag);
@@ -111,24 +112,24 @@ inline std::string get_processor_name(){return detail::call<&MPI_Get_processor_n
 
 class environment{
 	public:
-	environment(){
-		initialize();
-	//	color_key_p = new communicator::keyval<int>;
+//	environment(){
+//		initialize();
+//		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+//	}
+	environment(thread_level required = thread_level::multiple){
+		initialize_thread(required);
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-	environment(thread_level required){initialize_thread(required);}
-	environment(int argc, char** argv){
-		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
-		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
-	//	color_key_p = new communicator::keyval<int>;
-		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
-	}
-	environment(int argc, char** argv, thread_level required){initialize(argc, argv, required);}
+//	environment(int argc, char** argv){
+//		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
+//		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
+//		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+//	}
+	environment(int argc, char** argv, thread_level required = thread_level::multiple){initialize(argc, argv, required);}
 	environment(environment const&) = delete;
 	environment& operator=(environment const&) = delete;
 	~environment(){
 		delete named_attributes_key_f();
-	//	delete color_key_p;
 		finalize();
 	}
 //	static /*inline*/ communicator::keyval<int> const* color_key_p;
@@ -186,7 +187,7 @@ class environment{
 		}();
 		return instance;
 	}
-	communicator world() const{ // returns a copy!
+	communicator world(){// const{ // returns a copy!
 		communicator ret{get_world_instance()}; ret.name("world");
 		return ret;
 	}
