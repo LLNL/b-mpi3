@@ -215,8 +215,8 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 using namespace std::chrono_literals; // 2s
 
-int main(int argc, char* argv[]){
-	mpi3::environment::initialize(argc, argv, mpi3::thread_level::multiple); // same as MPI_Init(...);
+int main(){//int argc, char* argv[]){
+	mpi3::environment::initialize();//argc, argv); // same as MPI_Init(...);
 	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
 	assert(mpi3::environment::is_initialized());
 	{
