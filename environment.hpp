@@ -39,6 +39,7 @@ inline void myterminate(){
 	std::abort();
 //	exit(1);  // forces abnormal termination
 }
+/*
 inline void initialize(){
 	int s = MPI_Init(nullptr, nullptr);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
@@ -50,7 +51,8 @@ inline void initialize(int& argc, char**& argv){
 	std::set_terminate(&finalize);
 //	std::set_terminate(myterminate);
 }
-inline thread_level initialize(int& argc, char**& argv, thread_level required){
+*/
+inline thread_level initialize(int& argc, char**& argv, thread_level required = thread_level::multiple){
 	int provided;
 	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
@@ -62,7 +64,7 @@ inline thread_level initialize_thread(thread_level required){
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
 	return static_cast<thread_level>(provided);
 }
-inline thread_level initialize(thread_level required){
+inline thread_level initialize(thread_level required = thread_level::multiple){
 	return initialize_thread(required);
 }
 inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
@@ -168,7 +170,7 @@ class environment{
 		}();
 		return instance;
 	}
-  
+
 	static communicator self(){ // returns a copy!
 		MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
 		return communicator{MPI_COMM_SELF};
