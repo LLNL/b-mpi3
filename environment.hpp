@@ -52,7 +52,7 @@ inline void initialize(int& argc, char**& argv){
 //	std::set_terminate(myterminate);
 }
 */
-inline thread_level initialize(int& argc, char**& argv, thread_level required = thread_level::multiple){
+inline thread_level initialize(int& argc, char**& argv, thread_level required = thread_level::single){
 	int provided;
 	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
@@ -64,7 +64,7 @@ inline thread_level initialize_thread(thread_level required){
 	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
 	return static_cast<thread_level>(provided);
 }
-inline thread_level initialize(thread_level required = thread_level::multiple){
+inline thread_level initialize(thread_level required = thread_level::single){
 	return initialize_thread(required);
 }
 inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
@@ -119,8 +119,9 @@ class environment{
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
 	environment(int argc, char** argv){
-		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::multiple); // initialize(argc, argv); // TODO have an environment_mt/st version?
-		assert( provided == boost::mpi3::thread_level::multiple ); (void)provided;
+		auto provided = initialize_thread(argc, argv, boost::mpi3::thread_level::single); // initialize(argc, argv); // TODO have an environment_mt/st version?
+	//	assert( provided == boost::mpi3::thread_level::multiple ); 
+		(void)provided;
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
 	environment(int argc, char** argv, thread_level required){initialize(argc, argv, required);}
@@ -216,7 +217,7 @@ using std::cout;
 using namespace std::chrono_literals; // 2s
 
 int main(){//int argc, char* argv[]){
-	mpi3::environment::initialize();//argc, argv); // same as MPI_Init(...);
+	mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
 	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
 	assert(mpi3::environment::is_initialized());
 	{
