@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-mpic++ -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_ENVIRONMENT -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+$CXX `mpic++ -showme:compile|sed 's/-pthread/ /g'` $0 -o $0x `mpic++ -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2019
 
@@ -206,7 +206,7 @@ inline mpi3::any& communicator::attribute(std::string const& s){
 
 }}
 
-#ifdef _TEST_BOOST_MPI3_ENVIRONMENT
+#if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
 
 #include<iostream>
 #include<thread> // this_tread::sleep_for
