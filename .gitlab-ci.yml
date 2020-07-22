@@ -21,7 +21,7 @@ openmpi:
         - pwd
         - mpirun --version
         - make
-        - ctest --output-on-failure
+        - ctest -VV --output-on-failure
         
 openmpi-valgrind:
     stage: build
