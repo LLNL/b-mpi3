@@ -99,7 +99,7 @@ foreach(TEST_FILE ${TEST_SRCS})
       (TEST_FILE STREQUAL "communicator_scatter.cpp"))
     set(NPROC 6)
   endif()
-  add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} $ENV{VALGRIND_EXE} ./${TEST_EXE})
+  add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} string(CONCAT $ENV{VALGRIND_EXE} ./${TEST_EXE}))
 endforeach()
 
 set_tests_properties(communicator_abort.cppx PROPERTIES WILL_FAIL true)
