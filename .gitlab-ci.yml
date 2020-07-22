@@ -21,7 +21,7 @@ openmpi:
         - pwd
         - mpirun --version
         - make
-        - ctest
+        - ctest --output-on-failure
 
 mpich:
     stage: build
@@ -38,7 +38,7 @@ mpich:
         - pwd
         - mpirun --version
         - make
-        - ctest
+        - ctest --output-on-failure
 
 # -*- indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4;-*-
 
