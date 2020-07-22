@@ -69,7 +69,7 @@ mpich-valgrind:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE=""
-        - export VALGRIND_EXE="valgrind"
+        - export VALGRIND_EXE="valgrind --error-exitcode=911 "
         - cmake ..
         - pwd
         - mpirun --version

@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
+mpicxx.mpich -g $0 -o $0x -lboost_serialization&&mpirun.mpich -n 3 valgrind --error-exitcode=1345 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 

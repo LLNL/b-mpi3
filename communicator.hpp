@@ -207,6 +207,12 @@ public:
 	communicator(group const& g, int tag);
 	explicit operator group() const;
 
+	communicator duplicate(){
+		communicator ret;
+		MPI_(Comm_dup)(impl_, &ret.impl_);
+		return ret;
+	}
+
 	template<class T = void*>
 	struct keyval{
 		static int delete_fn_(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
@@ -2650,7 +2656,7 @@ public:
 		int posize = po.size();
 		std::vector<int> sizes(rank()==root?size():0);
 		gather_n(&posize, 1, sizes.begin(), 1, root);
-		std::vector<int> displs(rank()==root?size():0);
+		std::vector<int> displs(sizes.size()+1);
 		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
 		int total = std::accumulate(sizes.begin(), sizes.end(), 0);
