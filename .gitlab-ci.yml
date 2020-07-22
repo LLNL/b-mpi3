@@ -69,12 +69,12 @@ mpich-valgrind:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE=""
-        - export VALGRIND_EXE="valgrind --error-exitcode=1 "
+        - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"
         - cmake ..
         - pwd
         - mpirun --version
         - make -j 4
-        - ctest -VV --output-on-failure
+        - ctest --output-on-failure
 
 # -*- indent-tabs-mode: nil; c-basic-offset: 4; tab-width: 4;-*-
 
