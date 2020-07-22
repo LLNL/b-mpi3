@@ -2508,7 +2508,7 @@ public:
 	template<typename It1, typename Size, typename It2>
 	auto all_gatherv_n(It1 first, Size count, It2 d_first){
 		std::vector<int> counts(size());
-		std::vector<int> displs(size());
+		std::vector<int> displs(size()+1);
 		int c = count;
 		all_gather_n(&c, 1, counts.begin());
 		partial_sum(counts.begin(), counts.end(), displs.begin()+1);
