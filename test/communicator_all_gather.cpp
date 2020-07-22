@@ -11,6 +11,7 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
+	double* p = new double[1000]; (void)p;
 {
 	using T = std::tuple<double, double>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
