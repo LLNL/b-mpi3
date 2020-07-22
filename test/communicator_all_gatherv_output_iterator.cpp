@@ -10,7 +10,7 @@ using std::cout;
 int mpi3::main(int, char*[], mpi3::communicator world){
 	using T = double;
 	assert( world.size() > 2 );
-	auto p = new double[1000]; (void)p;
+
 // initialize local data ///////////////////////////////////////////////////////
 	std::vector<T> v_loc;
 	switch(world.rank()){
