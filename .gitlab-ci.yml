@@ -34,7 +34,7 @@ openmpi-valgrind:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE=--oversubscribe
-        - export VALGRIND_EXE="valgrind --suppressions=communicator_main.cpp.openmpi.supp"
+        - export VALGRIND_EXE=valgrind --suppressions=communicator_main.cpp.openmpi.supp
         - cmake ..
         - pwd
         - mpirun --version
