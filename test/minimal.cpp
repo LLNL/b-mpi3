@@ -1,7 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
 $CXX `mpic++ -showme:compile|sed 's/-pthread/ /g'` $0 -o $0x `mpic++ -showme:link|sed 's/-pthread/ /g'`&&
- (mpirun -n 3 valgrind --leak-check=full --show-reachable=yes --error-limit=no                                 --suppressions=$0.openmpi.supp $0x)&&
-#(mpirun -n 3 valgrind --leak-check=full --show-reachable=yes --error-limit=no --gen-suppressions=all $0x 2>&1|grep -v '==' > $0.openmpi.supp    )&&
+#(mpirun -n 3 valgrind --leak-check=full --show-reachable=yes --error-limit=no                                 --suppressions=$0.openmpi.supp $0x)&&
+ (mpirun -n 3 valgrind --leak-check=full --show-reachable=yes --error-limit=no --gen-suppressions=all $0x 2>&1|grep -v '==' > $0.openmpi.supp    )&&
 rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020

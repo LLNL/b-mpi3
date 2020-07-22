@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-lboost_serialization` && time mpirun -n 3 $0x&&rm $0x;exit
+mpic++ -g -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-lboost_serialization` && time mpirun -n 3 valgrind $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -22,6 +22,14 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert( mty2.size() == 0 );
 }
 {
+	std::vector<mpi3::communicator> comms;
+	comms.emplace_back(world);
+	comms.emplace_back(world);
+	comms.emplace_back(world);
+
+	std::vector<mpi3::communicator> comms2; for(auto& e:comms) comms2.emplace_back(e);
+}
+{
 	int const NTHREADS = 10;
 	std::vector<std::future<int>> fs;
 	for(int i=0; i != NTHREADS; ++i){
@@ -32,7 +40,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		}));
 #endif
 		fs.emplace_back(std::async([thread_comm=world](){
-			auto comm2 = thread_comm; // works, just to test
+		//	auto comm2 = thread_comm; // works, just to test
 			return 5;
 		}));
 #if 0 // more correct
