@@ -17,7 +17,6 @@ openmpi:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - export VALGRIND_EXE=""
         - cmake ..
         - pwd
         - mpirun --version
@@ -40,7 +39,7 @@ openmpi-valgrind:
         - pwd
         - mpirun --version
         - make
-        - ctest --output-on-failure
+        - ctest -VV --output-on-failure
 
 mpich:
     stage: build
@@ -53,7 +52,6 @@ mpich:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE=""
-        - export VALGRIND_EXE=""
         - cmake ..
         - pwd
         - mpirun --version
