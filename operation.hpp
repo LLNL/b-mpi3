@@ -90,8 +90,9 @@ template<> struct predefined_operation<CppoP>{ \
 }; \
 using NamE = predefined_operation<CppoP>
 
-BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::plus<>, MPI_SUM, sum);
-BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::multiplies<>, MPI_PROD, product);
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::plus<>       , MPI_SUM , sum        );
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::multiplies<> , MPI_PROD, product    );
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::logical_and<>, MPI_LAND, logical_and);
 
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(max<>, MPI_MAX, maximum);
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min<>, MPI_MIN, minimum);
