@@ -1790,6 +1790,10 @@ public:
 		all_reduce_value(t, ret, op); // if(rank() == root) return optional<T>(ret);
 		return ret;
 	}
+	template<class Op = std::logical_and<>>
+	bool all_reduce_value(bool t, Op op={}){
+		int ret; all_reduce_value(int{t}, ret, op); return ret;
+	}
 public:
 	template<
 		class It1, class Size, class It2, class Op = std::plus<>, 
@@ -2995,9 +2999,14 @@ inline std::string const& name(communicator::topology const& t){
 
 template<class T>
 friend T operator+=(communicator& comm, T const& t){
-	T val = comm.all_reduce_value(t, std::plus<>{});
-	return val;
+	return comm.all_reduce_value(t, std::plus<>{});
 }
+
+template<class T>
+friend T operator&=(communicator& comm, T const& t){
+	return comm.all_reduce_value(t, std::logical_and<>{});
+}
+
 template<class T>
 friend communicator& operator<<(communicator& comm, T const& t){
 	comm.send_value(t);
