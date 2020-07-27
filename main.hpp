@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -O3 -Wfatal-errors -D_TEST_BOOST_MPI3_MAIN $0.cpp -o $0x&&time mpirun -n 4 $0x&&rm $0x $0.cpp;exit
+#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
+mpic++ -O3 -Wfatal-errors -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -16,12 +16,17 @@
 namespace boost{
 namespace mpi3{
 
-// this definition forces the user to define boost::mpi3::main
-int main(int argc, char* argv[], boost::mpi3::communicator world);
+static int main(int, char*[], boost::mpi3::communicator);
 
 }}
 
-#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
+int main(int argc, char* argv[]){
+	boost::mpi3::environment env{argc, argv};
+	return boost::mpi3::main(argc, argv, env.get_world_instance());
+}
+
+#if 0
+//#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
 int main(int argc, char* argv[]){
 	boost::mpi3::environment env{argc, argv};
 	try{
@@ -46,15 +51,16 @@ int main(int argc, char* argv[]){
 		return 1;
 	}
 }
-#else
-int main(int argc, char* argv[]){
-	boost::mpi3::environment env(argc, argv);
-	return boost::mpi3::main(argc, argv, env);
-}
-#endif
 #endif
 
-#ifdef _TEST_BOOST_MPI3_MAIN
+//int main(int argc, char* argv[]){
+//	boost::mpi3::environment env(argc, argv);
+//	return boost::mpi3::main(argc, argv, env);
+//}
+#if 0
+#endif
+
+#if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_MAIN
 
 #include "../mpi3/version.hpp"
 #include<iostream>
@@ -62,12 +68,14 @@ int main(int argc, char* argv[]){
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
-	if(world.rank() == 0) cout << mpi3::version() << '\n';
+int boost::mpi3::main(int argc, char* argv[], mpi3::communicator world){
+	if(world.rank() == 0) cout<< mpi3::version() <<'\n';
 	mpi3::communicator duo = world < 2;
 	if(duo) cout <<"my rank in comm "<< duo.name() <<" is "<< duo.rank() <<'\n';
 	return 0;
 }
 
 #endif
+#endif
+
 
