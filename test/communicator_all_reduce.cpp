@@ -62,6 +62,24 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		assert(global[0] == true);
 		assert(global[1] == false);
 	}
+	{
+		int b = 1;
+		if(world.rank() == 2) b = 0;
+		int all = (world += b);
+		assert( all == world.size() - 1 );
+	}
+	{
+		int b = 1;
+		if(world.rank() == 2) b = 0;
+		int all = (world &= b);
+		assert( all == false );
+	}
+	{
+		bool b = true;
+		if(world.rank() == 2) b = false;
+		bool all = (world &= b);
+		assert( all == false );
+	}
 
 	return 0;
 }
