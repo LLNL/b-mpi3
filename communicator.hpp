@@ -518,7 +518,9 @@ public:
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	bool root() const{return (not empty()) and (rank() == 0);}
+	bool    root() const{return (not empty()) and (rank() == 0);}
+	bool is_root() const{return root();}
+
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 //	template<typename T>
@@ -1794,6 +1796,17 @@ public:
 	bool all_reduce_value(bool t, Op op={}){
 		int ret; all_reduce_value(int{t}, ret, op); return ret;
 	}
+	template<class T>
+	auto max(T const& t){
+		auto ret = std::numeric_limits<T>::lowest(); 
+		all_reduce_value(t, ret, mpi3::max<>{}); return ret;
+	}
+	template<class T>
+	auto min(T const& t){
+		auto ret = std::numeric_limits<T>::lowest();
+		all_reduce_value(t, ret, mpi3::max<>{}); return ret;
+	}
+
 public:
 	template<
 		class It1, class Size, class It2, class Op = std::plus<>, 
@@ -2286,7 +2299,7 @@ private:
 		);
 	}
 	template<class It1, class Size1, class It2>
-	auto gather_n(It1 first, Size1 count, It2 d_first, int root){
+	auto gather_n(It1 first, Size1 count, It2 d_first, int root = 0){
 		return gather_n(first, count, d_first, count, root);
 	}
 	template<class It2, class Size, class It1>
@@ -2324,16 +2337,16 @@ public:
 		return ret;
 	}
 
-//	template<class T> 
-//	std::vector<T> gather_value(T const& t, int root = 0){
-//		std::vector<T> ret((rank() == root)?size():0);
-//		gather_value(t, ret.begin(), root);
-//		return ret;
-//	}
-//	template<typename T, typename It> 
-//	void gather_value(T const& t, It first, int root){
-//		gather_n(std::addressof(t), 1, first, root);
-//	}
+	template<typename T, typename It> 
+	It gather_value(T const& t, It first, int root){
+		return gather_n(std::addressof(t), 1, first, root);
+	}
+	template<class T> 
+	std::vector<T> gather_value(T const& t, int root = 0){
+		std::vector<T> ret((rank() == root)?size():0);
+		gather_value(t, ret.begin(), root);
+		return ret;
+	}
 	protected:
 	template<class It, typename Size> 
 	void advance(It& it, Size count){std::advance(it, count);}
@@ -2518,6 +2531,15 @@ public:
 		partial_sum(counts.begin(), counts.end(), displs.begin()+1);
 		return all_gatherv_n(first, count, d_first, counts.begin(), displs.begin());
 	}
+	template<typename It1, typename Size, typename It2>
+	auto gatherv_n(It1 first, Size count, It2 d_first){
+		std::vector<int> counts(size());
+		std::vector<int> displs(size()+1);
+		int c = count;
+		all_gather_n(&c, 1, counts.begin());
+		partial_sum(counts.begin(), counts.end(), displs.begin()+1);
+		return gatherv_n(first, count, d_first, counts.begin(), displs.begin());
+	}		
 	template<class It1, typename Size1, class It2, class Size2>
 	auto all_gather_n(
 		It1 first,
@@ -2583,8 +2605,8 @@ public:
 	template<class It1, typename Size1, class It2, class Itc, class Itd>
 	auto gatherv_n(
 		It1 first, Size1 count,
-		It2 d_first, Itc counts, Itd displs,
-		int root
+		It2 d_first, Itc counts, Itd displs = 0,
+		int root = 0
 	){
 		return gatherv_n(
 			first, 
