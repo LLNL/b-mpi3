@@ -1803,8 +1803,8 @@ public:
 	}
 	template<class T>
 	auto min(T const& t){
-		auto ret = std::numeric_limits<T>::lowest();
-		all_reduce_value(t, ret, mpi3::max<>{}); return ret;
+		auto ret = std::numeric_limits<T>::max();
+		all_reduce_value(t, ret, mpi3::min<>{}); return ret;
 	}
 
 public:

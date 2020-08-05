@@ -1,5 +1,5 @@
 #if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-mpic++ -O3 -Wfatal-errors -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 

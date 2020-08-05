@@ -23,13 +23,13 @@ struct process{
 		if(rank_ != comm_.rank()) return {};
 		return optional<T>(val);
 	}
-	template<class T>
-	std::vector<T> operator|=(T const& t) &&{
-		std::vector<T> ret(comm_.size());
-		comm_.gather_n(&t, 1, ret.begin(), rank_);
+//	template<class T>
+//	std::vector<T> operator|=(T const& t) &&{
+//		std::vector<T> ret(comm_.size());
+//		comm_.gather_n(&t, 1, ret.begin(), rank_);
 	//	comm_.gather_value(t, ret.begin(), rank_);
-		return ret;
-	}
+//		return ret;
+//	}
 //	template<class T>
 //	process&& operator<<(T const& t) &&{
 //		comm_.send_value(t, rank_);
@@ -100,6 +100,11 @@ std::vector<T> operator|=(communicator& comm, T const& t){
 	return comm.all_gather_value(t);
 }
 
+template<class T>
+std::vector<T> operator|=(process&& self, T const& t){
+	return self.comm_.gather_value(t, self.rank_);
+}
+
 }}
 
 #ifdef _TEST_BOOST_MPI3_PROCESS
@@ -160,7 +165,12 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 		} break;
 	}
 	if(world.rank() == 0){
-		std::vector<double> v = {1,2,3,  4, 5, 6,  7,8,9, 10,11,12};
+		std::vector<double> v = {
+			1, 2, 3,
+			4, 5, 6,
+			7, 8, 9,
+			10, 11, 12
+		};
 		world[1] << v;
 	}else if(world.rank() == 1){
 		std::vector<double> v;
@@ -177,6 +187,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 			assert(( v == std::vector<bool>{false, true, false} ));
 		}
 	}
+#if 0
 	if(world.rank() == 0){
 		std::vector<double> v = {1,2,3,  4, 5, 6,  7,8,9,  10,11,12};
 		boost::multi_array<double, 2> ma(boost::extents[4][2]);
@@ -190,6 +201,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 		cout << ma.shape()[0] << " " << ma.shape()[1] << '\n';
 	//	assert( ma[2][2] == 8. );
 	}
+#endif
 	return 0;
 }
 #endif

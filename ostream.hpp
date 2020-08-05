@@ -38,10 +38,10 @@ struct ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/2251
 				for(auto& m : messages){
 					output << comm_.name();
 					if((int)size(m.first) < (int)comm_.size()){
-						if(size(m.first) == 1) output << "[" << lower(m.first) << "]";
-						else output << "[" << m.first << "]";
+						if(size(m.first) == 1) output<<"["<< lower(m.first) <<"]";
+						else output<<"["<< m.first <<"]";
 					}
-					output << ": " << m.second;
+					output<<"\t: "<< m.second;
 				}
 			}else comm_.send_n(str().begin(), str().size(), 0);
 			str("");
