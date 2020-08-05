@@ -65,6 +65,7 @@ using namespace std::chrono_literals; // 2s
 void f(bmpi3::communicator c){
 	bmpi3::wall_timer f_watch{c, "OptionalTitle"};
 	std::this_thread::sleep_for(std::chrono::seconds(c.rank()+1));
+// prints "# OptionalTitle timing 1.00007[2.50007]4.00006 sec"
 }
 
 int main(int argc, char* argv[]){
