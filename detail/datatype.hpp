@@ -1,6 +1,8 @@
-#if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++11 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_DATATYPE -lboost_serialization $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.cpp $0x.x; exit
+#if COMPILATION // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
+// © Alfredo A. Correa 2018-2020
+
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
 
@@ -22,12 +24,12 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
-using float_int       = std::pair<float, int>;
-using long_int        = std::pair<long, int>;
-using double_int      = std::pair<double, int>;
-using short_int       = std::pair<short, int>;
-using int_int         = std::pair<int, int>;
-using long_double_int = std::pair<long double, int>;
+using float_int               = std::pair<float, int>;
+using long_int                = std::pair<long, int>;
+using double_int              = std::pair<double, int>;
+using short_int               = std::pair<short, int>;
+using int_int                 = std::pair<int, int>;
+using long_double_int         = std::pair<long double, int>;
 
 using float_float             = std::pair<float, float>;
 using double_double           = std::pair<double, double>;
@@ -49,15 +51,15 @@ using byte = std::byte;
 #if 1
 struct packed{
 	unsigned char t;
-    explicit packed(unsigned char t_) : t{t_}{};
-    packed() = default;
-    packed(packed const&) = default;
-    packed& operator=(const packed& rhs) = default;
-    unsigned char& operator=(unsigned char const& rhs){t = rhs; return *this;}
-    operator const unsigned char&() const{return t;}
-    operator unsigned char&(){return t;}
-    bool operator==(packed const& rhs) const{return t == rhs.t;}
-    bool operator<(packed const& rhs) const{return t < rhs.t;}
+	explicit packed(unsigned char t_) : t{t_}{};
+	packed() = default;
+	packed(packed const&) = default;
+	packed& operator=(const packed& rhs) = default;
+	unsigned char& operator=(unsigned char const& rhs){t = rhs; return *this;}
+	operator const unsigned char&() const{return t;}
+	operator unsigned char&(){return t;}
+	bool operator==(packed const& rhs) const{return t == rhs.t;}
+	bool operator<(packed const& rhs) const{return t < rhs.t;}
 };
 #endif
 
@@ -78,19 +80,19 @@ MPI3_DECLARE_DATATYPE(byte, MPI_BYTE);
 #endif
 MPI3_DECLARE_DATATYPE(wchar, MPI_WCHAR);
 
-MPI3_DECLARE_DATATYPE(short, MPI_SHORT);
+MPI3_DECLARE_DATATYPE(         short, MPI_SHORT         );
 MPI3_DECLARE_DATATYPE(unsigned short, MPI_UNSIGNED_SHORT);
-MPI3_DECLARE_DATATYPE(int, MPI_INT);
-MPI3_DECLARE_DATATYPE(unsigned int, MPI_UNSIGNED);
-MPI3_DECLARE_DATATYPE(long, MPI_LONG);
-MPI3_DECLARE_DATATYPE(unsigned long, MPI_UNSIGNED_LONG);
-MPI3_DECLARE_DATATYPE(float, MPI_FLOAT);
-MPI3_DECLARE_DATATYPE(double, MPI_DOUBLE);
-MPI3_DECLARE_DATATYPE(long double, MPI_LONG_DOUBLE);
-MPI3_DECLARE_DATATYPE(long long int, MPI_LONG_LONG_INT);
+MPI3_DECLARE_DATATYPE(         int  , MPI_INT           );
+MPI3_DECLARE_DATATYPE(unsigned int  , MPI_UNSIGNED      );
+MPI3_DECLARE_DATATYPE(         long , MPI_LONG          );
+MPI3_DECLARE_DATATYPE(unsigned long , MPI_UNSIGNED_LONG );
+MPI3_DECLARE_DATATYPE(float         , MPI_FLOAT         );
+MPI3_DECLARE_DATATYPE(     double   , MPI_DOUBLE        );
+MPI3_DECLARE_DATATYPE(long double   , MPI_LONG_DOUBLE   );
+MPI3_DECLARE_DATATYPE(long long int , MPI_LONG_LONG_INT );
 
-MPI3_DECLARE_DATATYPE(cxx_float_complex, MPI_CXX_FLOAT_COMPLEX);
-MPI3_DECLARE_DATATYPE(cxx_double_complex, MPI_CXX_DOUBLE_COMPLEX);
+MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_CXX_FLOAT_COMPLEX );
+MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_CXX_DOUBLE_COMPLEX);
 
 MPI3_DECLARE_DATATYPE(float_float, MPI_CXX_FLOAT_COMPLEX);
@@ -102,14 +104,14 @@ MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX);
 	static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 #ifdef __CUDACC__
-  MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
+MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
 #endif
 
-MPI3_DECLARE_DATATYPE(float_int, MPI_FLOAT_INT);
-MPI3_DECLARE_DATATYPE(long_int, MPI_LONG_INT);
-MPI3_DECLARE_DATATYPE(double_int, MPI_DOUBLE_INT);
-MPI3_DECLARE_DATATYPE(short_int, MPI_SHORT_INT);
-MPI3_DECLARE_DATATYPE(int_int, MPI_2INT);
+MPI3_DECLARE_DATATYPE(float_int      , MPI_FLOAT_INT      );
+MPI3_DECLARE_DATATYPE(long_int       , MPI_LONG_INT       );
+MPI3_DECLARE_DATATYPE(double_int     , MPI_DOUBLE_INT     );
+MPI3_DECLARE_DATATYPE(short_int      , MPI_SHORT_INT      );
+MPI3_DECLARE_DATATYPE(int_int        , MPI_2INT           );
 MPI3_DECLARE_DATATYPE(long_double_int, MPI_LONG_DOUBLE_INT);
 
 //BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t, MPI_AINT);
@@ -135,7 +137,7 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
 
 }}}
 
-#if _TEST_BOOST_MPI3_DETAIL_DATATYPE
+#if not __INCLUDE_LEVEL__
 
 #include<cassert>
 #include<iostream>
