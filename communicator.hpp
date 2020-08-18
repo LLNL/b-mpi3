@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
+#if COMPILATION // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -89,10 +89,18 @@ mpic++ -D_TEST_MPI3_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -np 1 $0x&&rm $0x;exit
 #include<type_traits>
 #include<vector>
 #include<type_traits> // is_same
-		
+#include<experimental/tuple>
 
 namespace boost{
 namespace mpi3{
+
+inline bool check_mpi_(enum error e){
+	if(e!=mpi3::error::success) return true;
+	throw std::system_error{e, "cannot call function"};
+	return false;
+}
+
+#define SAFE_MPI_(F) check_mpi_(MPI_##F)
 
 #if !defined(OPEN_MPI) || (OMPI_MAJOR_VERSION < 2)
 #define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED
@@ -308,7 +316,11 @@ public:
 		while(count--) poa << *first++;
 		return isend_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
-	template<class It, typename Size>
+	template<class T, class = decltype(T::dimensionality)> static std::true_type  has_dimensionality_aux(T const&);
+	                                                       static std::false_type has_dimensionality_aux(...);
+	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})){};
+
+	template<class It, typename Size, class = std::enable_if_t<(not has_dimensionality<It>{})> >
 	void send_n(It first, Size count, int dest, int tag = 0){
 		return send_n(
 			first, 
@@ -358,6 +370,38 @@ public:
 		while(first!=last) poa << *first++;
 		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
+
+	template<class MultiIt>
+	auto send_n(MultiIt first, typename MultiIt::difference_type count, int dest, int tag = 0)
+	->decltype( MPI_Send (mpi3::base(first), count, mpi3::type{first}.commit(), dest, tag, impl_), first + count){
+		return MPI_(Send)(mpi3::base(first), count, mpi3::type{first}.commit(), dest, tag, impl_), first + count;}
+
+	template<class MultiIt>
+	auto receive_n(MultiIt first, typename MultiIt::difference_type count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG)
+	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, &std::declval<status&>().impl_), first + count){
+		status sta;
+		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, &sta.impl_), first + count;}
+
+#if 0
+	template<
+		class MultiIt, class Size = typename MultiIt::difference_type, class Stride = typename MultiIt::stride_type,
+			std::size_t D = MultiIt::dimensionality, std::enable_if_t<(D>=2), int> = 0,
+			typename Element = typename MultiIt::element, typename DataType = detail::basic_datatype<Element>,
+			std::enable_if_t<detail::is_basic<Element>{}, int> = 0
+	>
+	MultiIt receive_n(MultiIt first, decltype(Size{}) count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+		status sta;
+		auto e = static_cast<enum error>(
+			MPI_Recv(
+				mpi3::base(first), count, mpi3::type{first}.commit(),
+				source, tag, impl_, &sta.impl_
+			)
+		);
+		if(e != mpi3::error::success) throw std::system_error{e, "cannot receive"};
+		return first + count;
+	}
+#endif
+
 	template<class It>
 	auto isend(
 		It first, It last,
@@ -1048,7 +1092,9 @@ public:
 		while(count--) pia >> *dest++;
 		return dest;
 	}*/
-	template<class It, typename Size>
+	template<class It, typename Size
+		, std::enable_if_t<not has_dimensionality<It>{}, int> =0// or (not detail::is_basic<typename std::iterator_traits<It>::value_type>{}), int> =0 // needed by intel commpiler
+	>
 	auto receive_n(It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive_n(
 			dest, 
@@ -2260,6 +2306,13 @@ private:
 		);
 		return it2 + n;
 	}
+	template<class T> class id{using type = T;};
+	
+	template<class MultiIt, class Size, class MultiIt2, class=std::enable_if_t<(MultiIt::dimensionality>=1)> >
+	auto gather_n(MultiIt first, Size count, MultiIt2 d_first, int root = 0)
+	->decltype( MPI_Gather (mpi3::base(first), count, mpi3::type{first}.commit(), mpi3::base(d_first), count, mpi3::type{d_first}.commit(), root, impl_), d_first + count){
+		return MPI_(Gather)(mpi3::base(first), count, mpi3::type{first}.commit(), mpi3::base(d_first), count, mpi3::type{d_first}.commit(), root, impl_), d_first + count;}
+
 	template<class It1, typename Size1, class It2, typename Size2>
 	auto gather_n(
 		It1 first, 
@@ -2298,10 +2351,11 @@ private:
 			root
 		);
 	}
-	template<class It1, class Size1, class It2>
+	template<class It1, class Size1, class It2, class=std::enable_if_t<(not has_dimensionality<It1>{})>>
 	auto gather_n(It1 first, Size1 count, It2 d_first, int root = 0){
 		return gather_n(first, count, d_first, count, root);
 	}
+	
 	template<class It2, class Size, class It1>
 	auto scatterv_n_from(It2 d_first, Size n, It1 first, int root = 0){
 		std::vector<int> counts(size());//rank()==root?size():0);
@@ -3342,7 +3396,7 @@ void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive)
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive)
 
-#ifdef _TEST_MPI3_COMMUNICATOR
+#if not __INCLUDE_LEVEL__
 
 #include "../mpi3/main.hpp"
 #include "../mpi3/version.hpp"

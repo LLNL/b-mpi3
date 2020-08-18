@@ -6,6 +6,7 @@ $CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
 
+#include "./core.hpp"
 #include "./communicator.hpp"
 #include "./wall_clock.hpp"
 #include "./detail/call.hpp"
@@ -83,21 +84,11 @@ inline thread_level initialize_thread(
 	if(status != MPI_SUCCESS) throw std::runtime_error("cannot thread-initialize");
 	return static_cast<thread_level>(ret);
 }
-inline bool initialized(){
-	int flag = -1; 
-	int s = MPI_Initialized(&flag); 
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot probe initialization"};
-	return flag;
-}
-inline bool finalized(){
-	int flag = -1; 
-	int s = MPI_Finalized(&flag);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot probe finalization"};
-	return flag;
-}
+
 inline thread_level thread_support(){
 	int r; MPI_(Query_thread)(&r); return static_cast<thread_level>(r);
 }
+
 inline bool is_thread_main(){
 	int flag = -1;
 	int s = MPI_Is_thread_main(&flag);

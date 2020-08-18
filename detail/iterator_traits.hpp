@@ -66,7 +66,7 @@ contiguous_iterator_tag iterator_category_aux(T*);
  
 template<class It, typename = std::enable_if_t<has_data<It>{}>>
 contiguous_iterator_tag iterator_category_aux(It);
-template<class It, class = decltype(data(It{}.base())), class = decltype(It{}.stride())>
+template<class It, class = decltype(data(It{}.base())), class = decltype(It{}.stride()), class = std::enable_if_t<not has_data<It>{}>>
 strided_contiguous_iterator_tag iterator_category_aux(It);
 
 template<class It>
