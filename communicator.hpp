@@ -378,9 +378,8 @@ public:
 
 	template<class MultiIt>
 	auto receive_n(MultiIt first, typename MultiIt::difference_type count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG)
-	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, &std::declval<status&>().impl_), first + count){
-		status sta;
-		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, &sta.impl_), first + count;}
+	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, MPI_STATUS_IGNORE), first + count){
+		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, MPI_STATUS_IGNORE), first + count;}
 
 #if 0
 	template<
