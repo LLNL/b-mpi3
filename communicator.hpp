@@ -373,13 +373,13 @@ public:
 
 	template<class MultiIt>
 	auto send_n(MultiIt first, typename MultiIt::difference_type count, int dest, int tag = 0)
-	->decltype( MPI_Send (mpi3::base(first), count, mpi3::type{first}.commit(), dest, tag, impl_), first + count){
-		return MPI_(Send)(mpi3::base(first), count, mpi3::type{first}.commit(), dest, tag, impl_), first + count;}
+	->decltype( MPI_Send (mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count){
+		return MPI_(Send)(mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count;}
 
 	template<class MultiIt>
 	auto receive_n(MultiIt first, typename MultiIt::difference_type count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG)
-	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, MPI_STATUS_IGNORE), first + count){
-		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}.commit(), source, tag, impl_, MPI_STATUS_IGNORE), first + count;}
+	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count){
+		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count;}
 
 #if 0
 	template<
@@ -2308,9 +2308,9 @@ private:
 	template<class T> class id{using type = T;};
 	
 	template<class MultiIt, class Size, class MultiIt2, class=std::enable_if_t<(MultiIt::dimensionality>=1)> >
-	auto gather_n(MultiIt first, Size count, MultiIt2 d_first, int root = 0)
-	->decltype( MPI_Gather (mpi3::base(first), count, mpi3::type{first}.commit(), mpi3::base(d_first), count, mpi3::type{d_first}.commit(), root, impl_), d_first + count){
-		return MPI_(Gather)(mpi3::base(first), count, mpi3::type{first}.commit(), mpi3::base(d_first), count, mpi3::type{d_first}.commit(), root, impl_), d_first + count;}
+	auto gather_n(MultiIt first, Size count, MultiIt2 d_first, int root=0)
+	->decltype( MPI_Gather (mpi3::base(first), count, mpi3::type{first}, mpi3::base(d_first), count, mpi3::type{d_first}, root, impl_), d_first+count){
+		return MPI_(Gather)(mpi3::base(first), count, mpi3::type{first}, mpi3::base(d_first), count, mpi3::type{d_first}, root, impl_), d_first+count;}
 
 	template<class It1, typename Size1, class It2, typename Size2>
 	auto gather_n(
