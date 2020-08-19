@@ -45,7 +45,7 @@ public:
 };
 
 struct type{
-	explicit type(MPI_Datatype dt) : impl_{dt}{
+	explicit type(MPI_Datatype const& dt) : impl_{dt}{
 		if(mpi3::initialized()) MPI_Type_dup(dt, &impl_);
 	}
 	template<class T>
@@ -53,6 +53,13 @@ struct type{
 	
 	template<class T, typename = decltype(detail::basic_datatype<T>::value_f())>
 	type(T const*){MPI_Type_dup(detail::basic_datatype<T>::value_f(), &impl_);}
+	
+	template<
+		class T, 
+		std::enable_if_t<not std::is_same<T*, MPI_Datatype>{}, int> =0, 
+		std::enable_if_t<std::is_trivially_copy_assignable<T>{} and (not detail::is_basic<T>{}), int> =0
+	>
+	type(T const*) : type{type{MPI_BYTE}.contiguous(sizeof(T))}{}
 
 	template<
 		class MultiIt, class Size = typename MultiIt::difference_type, class Stride = typename MultiIt::stride_type, std::enable_if_t<MultiIt::dimensionality==1, int> =0,
@@ -85,7 +92,10 @@ struct type{
 		return *this;
 	}
 	void swap(type& other){std::swap(impl_, other.impl_);}
-	explicit operator MPI_Datatype() const{return impl_;}
+	operator MPI_Datatype() const&{
+		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));
+		return impl_;
+	}
 	committed_type commit()&&{
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));
 		return committed_type{std::exchange(impl_, MPI_DATATYPE_NULL)};
