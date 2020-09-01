@@ -2021,6 +2021,7 @@ private:
 		return ret;
 	}
 public:
+
 #if 0
 	template<class InputIt1, class Size, class InputIt2, 
 		class V1 = typename std::iterator_traits<InputIt1>::value_type, 
@@ -3035,11 +3036,17 @@ public:
 	}
 	void name(std::string const& s){set_name(s);}
 
-	communicator parent() const{
-		communicator ret;
-		MPI_Comm_get_parent(&ret.impl_);
-		return ret;
-	}
+//	communicator parent() const{
+//		communicator ret;
+//		MPI_Comm_get_parent(&ret.impl_);
+//		return ret;
+//	}
+	mpi3::communicator& parent() const{
+		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
+		MPI_Comm* p;
+		MPI_Comm_get_parent(p);
+		return reinterpret_cast<mpi3::communicator&>(*p);
+	}	
 	communicator spawn(std::string const& argv0, int np) const{
 		communicator intercomm;
 		MPI_Comm_spawn(argv0.data(), MPI_ARGV_NULL, np, MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm.impl_, MPI_ERRCODES_IGNORE );
