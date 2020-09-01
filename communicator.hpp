@@ -3041,7 +3041,7 @@ public:
 //		MPI_Comm_get_parent(&ret.impl_);
 //		return ret;
 //	}
-	mpi3::communicator& parent() const{
+	mpi3::communicator& parent(){
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
 		MPI_Comm* p;
 		MPI_Comm_get_parent(p);
