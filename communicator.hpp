@@ -3044,7 +3044,7 @@ public:
 	mpi3::communicator& parent(){
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
 		static_assert(std::is_same<decltype(impl_), MPI_Comm>{}, "!");
-		MPI_Comm* p; MPI_Comm_get_parent(p);
+		MPI_Comm* p{}; MPI_Comm_get_parent(p); assert(p);
 		return reinterpret_cast<mpi3::communicator&>(*p);
 	}
 	communicator spawn(std::string const& argv0, int np) const{
