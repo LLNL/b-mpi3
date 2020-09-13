@@ -1828,7 +1828,7 @@ public:
 public:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
-		auto e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op);
+		auto e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); (void)e;
 		assert( e = std::addressof(ret) + 1 );
 	}
 	template<class T, class Op = std::plus<>, typename = decltype(T{T(0)})>
