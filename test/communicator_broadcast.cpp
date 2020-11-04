@@ -1,7 +1,8 @@
 #if COMPILATION_INSTRUCTIONS
 mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Copyright Alfredo A. Correa 2018-2020
+
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
@@ -34,7 +35,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		//	world.broadcast(buf.begin(), buf.begin() + sizes[n], 0);
 
 			for(std::size_t i = 0; i != sizes[n]; ++i) 
-				assert( buf[i] == 1000000.*(n * NUM_REPS + reps) + i );
+				assert( fabs(buf[i] - (1000000.*(n * NUM_REPS + reps) + i)) < 1e-4 );
 		}
 	}
 
