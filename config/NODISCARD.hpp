@@ -10,6 +10,7 @@ $CXXX $CXXFLAGS $0 -o $0.$X &&$0.$X&&rm $0.$X;exit
 #define __has_cpp_attribute(name) 0
 #endif
 
+#ifndef NODISCARD
 #define MPI3_GET_MACRO(_1,NAME,...) NAME
 
 #if   (__has_cpp_attribute(nodiscard)>=201603L) and not defined(__NVCC__)
@@ -35,6 +36,7 @@ $CXXX $CXXFLAGS $0 -o $0.$X &&$0.$X&&rm $0.$X;exit
 #endif
 
 #define NODISCARD(...) MPI3_GET_MACRO(__VA_ARGS__, NODISCARD1, NODISCARD0)(__VA_ARGS__)
+#endif
 
 #if defined(__INCLUDE_LEVEL__)  and not __INCLUDE_LEVEL__
 
