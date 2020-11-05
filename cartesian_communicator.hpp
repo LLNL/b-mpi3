@@ -1,5 +1,5 @@
 #if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-OMPI_CXX=$CXX mpic++ $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
+OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
@@ -28,7 +28,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
 		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
-		assert(impl_ != MPI_COMM_NULL);
+	//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
 		// TODO try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
@@ -98,8 +98,8 @@ struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator(communicator& other, std::array<int, D> dims) try: 
 		cartesian_communicator<>(other, division(other.size(), dims))
 	{}catch(std::runtime_error& e){
-		std::ostringstream ss; 
-		std::copy(begin(dims), end(dims), std::ostream_iterator<int>{ss, " "});
+		std::ostringstream ss;
+		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
 	}
 	auto topology() const{
@@ -217,8 +217,20 @@ int mpi3::main(int, char*[], boost::mpi3::communicator world){
 {
 	assert(world.size() == 6);
 	mpi3::cartesian_communicator<2> cart_comm(world, {2, 3});
-	assert(cart_comm.dimensions()[0] == 2);
-	assert(cart_comm.dimensions()[1] == 3);
+	assert( cart_comm );
+	assert( cart_comm.dimensions()[0] == 2 );
+	assert( cart_comm.dimensions()[1] == 3 );
+	auto row = cart_comm.axis(0);
+	auto col = cart_comm.axis(1);
+	assert( row.size() == 2 );
+	assert( col.size() == 3 );
+}
+{
+	assert(world.size() == 6);
+	if(mpi3::cartesian_communicator<2> cart_comm{world, {2, 2}}){
+		auto row = cart_comm.axis(0);
+		auto col = cart_comm.axis(1);
+	}
 }
 try{
 	assert(world.size() == 6);
