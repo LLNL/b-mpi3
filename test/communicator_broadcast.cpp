@@ -13,7 +13,7 @@ using std::cout;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 
-	std::vector<std::size_t> sizes = {100, 64*1024};//, 128*1024};
+	std::vector<std::size_t> sizes = {100, 64*1024};//, 128*1024}; // TODO check larger number (fails with openmpi 4.0.5)
 	int NUM_REPS = 5;
 
 	using value_type = int;
