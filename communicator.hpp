@@ -176,7 +176,6 @@ struct request;
 struct send_request;
 struct receive_request;
 
-
 struct FILE;
 
 struct process;
@@ -2314,7 +2313,7 @@ private:
 		return MPI_(Gather)(mpi3::base(first), count, mpi3::type{first}, mpi3::base(d_first), count, mpi3::type{d_first}, root, impl_), d_first+count;}
 
 	template<class It1, typename Size1, class It2, typename Size2>
-	auto gather_n(
+	It2 gather_n(
 		It1 first, 
 			detail::contiguous_iterator_tag,
 			detail::basic_tag,
@@ -2325,17 +2324,14 @@ private:
 		Size2 d_count, 
 		int root
 	){
-		auto e = static_cast<enum error>(
-			MPI_Gather(
+		MPI_(Gather)(
 				detail::data(first), count, 
 				detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 				detail::data(d_first), d_count,
 				detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 				root, impl_
-			)
 		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot gather"};
-		return d_first += rank()==root?d_count*size():0;
+		return d_first + ((rank()==root)?d_count*size():0);
 	}
 	template<class It1, class Size1, class It2, class Size2>
 	auto gather_n(It1 first, Size1 count, It2 d_first, Size2 d_count, int root){

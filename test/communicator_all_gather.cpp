@@ -1,5 +1,5 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
+#if COMPILATION
+mpicxx $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
 // © Alfredo Correa 2018-2020
 
