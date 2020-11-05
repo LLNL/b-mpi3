@@ -34,8 +34,15 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 			world.broadcast_n(buf.begin(), sizes[n]);
 		//	world.broadcast(buf.begin(), buf.begin() + sizes[n], 0);
 
-			for(std::size_t i = 0; i != sizes[n]; ++i) 
+			for(std::size_t i = 0; i != sizes[n]; ++i){
+				std::cout
+					<< i <<' '
+					<< buf[i] <<' '
+					<< (1000000.*(n * NUM_REPS + reps) + i) <<' '
+					<< fabs(buf[i] - (1000000.*(n * NUM_REPS + reps) + i)) <<'\n'
+				;
 				assert( fabs(buf[i] - (1000000.*(n * NUM_REPS + reps) + i)) < 1e-4 );
+			}
 		}
 	}
 
