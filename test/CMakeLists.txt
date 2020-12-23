@@ -80,7 +80,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 
 foreach(TEST_FILE ${TEST_SRCS})
-  SET(TEST_EXE "${TEST_FILE}x")
+  SET(TEST_EXE "${TEST_FILE}.x")
   add_executable(${TEST_EXE} ${TEST_FILE})
   target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Wpedantic -Werror -Wfatal-errors)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
@@ -94,9 +94,9 @@ foreach(TEST_FILE ${TEST_SRCS})
   target_link_libraries(${TEST_EXE} pthread)
 
   set(NPROC 3)
-  if ((TEST_FILE STREQUAL "communicator_divide.cpp") OR
+  if ((TEST_FILE STREQUAL "communicator_divide.cpp"  ) OR
       (TEST_FILE STREQUAL "communicator_operator.cpp") OR
-      (TEST_FILE STREQUAL "communicator_scatter.cpp"))
+      (TEST_FILE STREQUAL "communicator_scatter.cpp" ))
     set(NPROC 6)
   endif()
   if(DEFINED ENV{VALGRIND_EXE})
@@ -106,9 +106,10 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 endforeach()
 
-set_tests_properties(communicator_abort.cppx PROPERTIES WILL_FAIL true)
+set_tests_properties(communicator_abort.cpp.x PROPERTIES WILL_FAIL true)
 
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)
-add_executable(library_main library_main.cpp)
-target_link_libraries(library_main library_check)
+add_executable(library_main.x library_main.cpp)
+target_link_libraries(library_main.x library_check)
+
