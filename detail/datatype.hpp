@@ -7,17 +7,15 @@ mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpi
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-//#include<boost/strong_typedef.hpp> // BOOST_STRONG_TYPEDEF
-//#include<boost/serialization/strong_typedef.hpp>
-
-#include<type_traits>
-#include<utility> // pair
-#include<tuple>
-#include<complex>
-
 #ifdef __CUDACC__
 #include <thrust/complex.h>
 #endif
+
+#include<complex>
+#include<cstddef> // std::byte
+#include<tuple>
+#include<type_traits>
+#include<utility> // pair
 
 namespace boost{
 namespace mpi3{
