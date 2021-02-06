@@ -21,7 +21,13 @@ mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
 #include<iostream>
 #include<vector>
 
+#if __cplusplus >= 201703L
 #include<experimental/tuple> //experimental apply
+using std::experimental::apply;
+#else
+#include <tuple>
+using std::apply;
+#endif
 
 namespace boost{
 namespace mpi3{
@@ -74,8 +80,8 @@ struct type{
 		typename E = typename MultiIt::element, typename = decltype(detail::basic_datatype<E>::value_f()),
 		std::enable_if_t<detail::is_basic<E>{}, int> =0
 	> type(MultiIt first) : type{first.base()}{
-		auto strides = std::experimental::apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->strides());
-		auto sizes   = std::experimental::apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->sizes()  );
+		auto strides = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->strides());
+		auto sizes   = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->sizes()  );
 		for(Stride i = 1; i != Stride{strides.size()}+1; ++i)
 			(*this) = this->vector(sizes[sizes.size()-i], 1, strides[strides.size()-i]).resize(0, strides[strides.size()-i]*sizeof(E));
 
