@@ -8,26 +8,12 @@ mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
-//#include "../mpi3/communicator.hpp"
-//#include "../mpi3/detail/datatype.hpp"
-
-#include<typeindex>
-#include<map>
 
 #include "./core.hpp"
 #include "detail/datatype.hpp"
 
-#include<cassert>
-#include<iostream>
-#include<vector>
-
-#if __cplusplus >= 201703L
-#include<experimental/tuple> //experimental apply
-using std::experimental::apply;
-#else
-#include <tuple>
-using std::apply;
-#endif
+#include <map>
+#include <typeindex>
 
 namespace boost{
 namespace mpi3{
@@ -74,14 +60,28 @@ struct type{
 	>
 	type(MultiIt first) : type{type{first.base()}.vector(1, 1, first.stride()*sizeof(E)).resize(0, first.stride()*sizeof(E))}{}
 
+private:
+	template <class F, class Tuple, std::size_t... I>
+	static decltype(auto) apply_impl(F&& f, Tuple const& t, std::index_sequence<I...>){
+		return std::forward<F>(f)(std::get<I>(t)...);
+	}
+	template <class F, class Tuple> 
+	static decltype(auto) apply(F&& f, Tuple const& t){
+		return apply_impl(
+			std::forward<F>(f), std::forward<Tuple>(t),
+			std::make_index_sequence<std::tuple_size<Tuple>{}>{}
+		);
+	}
+
+public:
 	template<
 		class MultiIt, class Stride = typename MultiIt::stride_type, 
 		std::size_t D = MultiIt::dimensionality, std::enable_if_t<(D>=2), int> =0,
 		typename E = typename MultiIt::element, typename = decltype(detail::basic_datatype<E>::value_f()),
 		std::enable_if_t<detail::is_basic<E>{}, int> =0
 	> type(MultiIt first) : type{first.base()}{
-		auto strides = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->strides());
-		auto sizes   = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->sizes()  );
+		auto const strides = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->strides());
+		auto const sizes   = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->sizes()  );
 		for(Stride i = 1; i != Stride{strides.size()}+1; ++i)
 			(*this) = this->vector(sizes[sizes.size()-i], 1, strides[strides.size()-i]).resize(0, strides[strides.size()-i]*sizeof(E));
 
@@ -154,11 +154,6 @@ struct type{
 		ret.name(new_name);
 		return ret;
 	}
-//  this is giving a problem with intel compiler, commenting for the moment
-//	template<class T, class... Ts>
-//	static auto struct_(T&& t, Ts&&... ts) -> decltype(struct_({std::forward<T>(t), std::forward<Ts>(ts)...})){
-//		return struct_({std::forward<T>(t), std::forward<Ts>(ts)...});
-//	}
 
 	type operator[](int count) const{return contiguous(count);}
 	type operator()(int stride) const{
