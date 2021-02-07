@@ -5,7 +5,9 @@
 #define BOOST_MPI3_PROCESS_HPP
 
 #include "../mpi3/communicator.hpp"
-#include<experimental/optional>
+
+#include <boost/optional.hpp>
+using boost::optional;
 
 #include "config/NODISCARD.hpp"
 
