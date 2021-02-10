@@ -109,7 +109,10 @@ class environment{
 		initialize(argc, argv); // initialize(argc, argv); // TODO have an environment_mt/st version?
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-	environment(int& argc, char**& argv, thread_level required){initialize(argc, argv, required);}
+	environment(int& argc, char**& argv, thread_level required){
+		initialize(argc, argv, required);
+		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;		
+	}
 	environment(environment const&) = delete;
 	environment& operator=(environment const&) = delete;
 	~environment(){
