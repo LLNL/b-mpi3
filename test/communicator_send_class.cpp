@@ -23,13 +23,13 @@ struct A{
 	explicit A(int n) : n_(n), data(new double[n]){}
 	A(A const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
 	A(A&&) = delete;
-	A& operator=(A&&) = delete;
-	A& operator=(A const& other){
-		if(this == &other) return *this;
+	auto operator=(A&&) -> A& = delete;
+	auto operator=(A const& other) -> A&{
+		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data; 
-		data = new double[other.n_];
+		data = new double[other.n_]; // NOLINT(cppcoreguidelines-owning-memory)
 		std::copy_n(other.data, n_, data);
 		return *this;
 	}
@@ -42,7 +42,7 @@ struct A{
 	template<class Archive>
 	void load(Archive & ar, const unsigned int /*version*/){
 		ar>> name_ >> n_;
-		delete[] data; data = new double[n_];
+		delete[] data; data = new double[n_]; // NOLINT(cppcoreguidelines-owning-memory)
 		ar>> boost::serialization::make_array(data, n_);
 	}
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -56,9 +56,9 @@ struct B{
 	explicit B(int n) : n_(n), data(new double[n]){}
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
 	B(B&&) = delete;
-	B& operator=(B&&) = delete;
-	B& operator=(B const& other){
-		if(this == &other) return *this;
+	auto operator=(B&&) -> B& = delete;
+	auto operator=(B const& other) -> B&{
+		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data; 
@@ -77,12 +77,12 @@ void save(Archive & ar, B const& b, const unsigned int /*version*/){
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int /*version*/){
 	ar>> b.name_ >> b.n_;
-	delete[] b.data; b.data = new double[b.n_];
+	delete[] b.data; b.data = new double[b.n_]; // NOLINT(cppcoreguidelines-owning-memory)
 	ar>> boost::serialization::make_array(b.data, b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-int mpi3::main(int, char**, mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 
 	assert( world.size() > 1 );
 
