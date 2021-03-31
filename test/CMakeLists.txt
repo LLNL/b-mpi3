@@ -1,7 +1,5 @@
 # Use cmake/ctest for building and testing boost mpi3 tests
-
-# Not sure of the actual required minimum.
-cmake_minimum_required(VERSION 3.6.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 enable_testing()
