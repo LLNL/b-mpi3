@@ -47,7 +47,6 @@ openmpi-clang:
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - mpic++ -v
         - CXX=clang++ cmake ..
         - pwd
         - mpirun --version
