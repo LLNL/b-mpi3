@@ -8,8 +8,8 @@ enable_testing()
 include(CTest)
 
 if (NOT ($ENV{CRAYPE_VERSION} MATCHES "."))
-  set(CMAKE_C_COMPILER mpicc)
-  set(CMAKE_CXX_COMPILER mpic++)
+#  set(CMAKE_C_COMPILER mpicc)
+#  set(CMAKE_CXX_COMPILER mpic++)
 endif()
 
 # Find the correct parallel program launcher
