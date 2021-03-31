@@ -2,10 +2,15 @@
 
 # Not sure of the actual required minimum.
 cmake_minimum_required(VERSION 3.6.0)
-project(boostmpi3_tests)
+project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 enable_testing()
 include(CTest)
+
+find_package(MPI REQUIRED)
+
+include_directories(${MPI_CXX_INCLUDE_DIRS})
+link_libraries(${MPI_CXX_LIBRARIES})
 
 if (NOT ($ENV{CRAYPE_VERSION} MATCHES "."))
 #  set(CMAKE_C_COMPILER mpicc)
