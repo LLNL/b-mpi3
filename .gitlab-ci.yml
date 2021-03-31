@@ -71,10 +71,8 @@ ompi-clang-tidy:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - export OMPI_CC=clang
-        - export OMPI_CXX=clang++
         - mpic++ -v
-        - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-isystem;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
+        - CXX=clang++ CXXFLAGS=`mpic++ --showme:compile` cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
         - pwd
         - mpirun --version
         - make VERBOSE=1
