@@ -1,15 +1,18 @@
 # Use cmake/ctest for building and testing boost mpi3 tests
-
-# Not sure of the actual required minimum.
-cmake_minimum_required(VERSION 3.6.0)
-project(boostmpi3_tests)
+cmake_minimum_required(VERSION 3.10.0) # for FindMPI
+project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 enable_testing()
 include(CTest)
 
+find_package(MPI REQUIRED)
+
+include_directories(${MPI_CXX_INCLUDE_DIRS})
+link_libraries(${MPI_CXX_LIBRARIES})
+
 if (NOT ($ENV{CRAYPE_VERSION} MATCHES "."))
-  set(CMAKE_C_COMPILER mpicc)
-  set(CMAKE_CXX_COMPILER mpic++)
+#  set(CMAKE_C_COMPILER mpicc)
+#  set(CMAKE_CXX_COMPILER mpic++)
 endif()
 
 # Find the correct parallel program launcher
@@ -83,7 +86,7 @@ set(CMAKE_CXX_STANDARD 14)
 foreach(TEST_FILE ${TEST_SRCS})
   SET(TEST_EXE "${TEST_FILE}.x")
   add_executable(${TEST_EXE} ${TEST_FILE})
-  target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Wpedantic -Werror -Wfatal-errors)
+  target_compile_options(${TEST_EXE} PUBLIC -Wall -Wextra -Werror -Wfatal-errors) #-Wpedantic
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
   list(FIND NEED_BOOST_SERIALIZATION_SRCS ${TEST_FILE} NEED_BOOST_SERIALIZATION)

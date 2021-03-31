@@ -1,62 +1,69 @@
 #if COMPILATION_INSTRUCTIONS
 mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
-//  (C) Copyright Alfredo A. Correa 2018.
+// © Copyright Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 //#include "../../mpi3/detail/package_archive.hpp"
 
-#include<boost/serialization/vector.hpp>
 #include<boost/serialization/utility.hpp> // serialize std::pair
+#include<boost/serialization/vector.hpp>
+
 #include<set>
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
 struct A{
-	std::string name_ = "unnamed"; 
-	int n_ = 0;
-	double* data = nullptr;
+	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for testing
+	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+
 	A() = default;
-	A(int n) : n_(n), data(new double[n]){}
+	explicit A(int n) : n_(n), data(new double[n]){}
 	A(A const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
-	A& operator=(A const& other){
+	A(A&&) = delete;
+	auto operator=(A&&) -> A& = delete;
+	auto operator=(A const& other) -> A&{
+		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data; 
-		data = new double[other.n_];
-		for(int i = 0; i != n_; ++i) data[i] = other.data[i];
+		data = new double[other.n_]; // NOLINT(cppcoreguidelines-owning-memory)
+		std::copy_n(other.data, n_, data);
 		return *this;
 	}
-	~A(){delete[] data;}
+	~A() noexcept{delete[] data;}
 	// intrusive serialization
-    template<class Archive>
-    void save(Archive & ar, const unsigned int) const{
-		ar << name_ << n_ << boost::serialization::make_array(data, n_);
-    }
-    template<class Archive>
-    void load(Archive & ar, const unsigned int){
-		ar >> name_ >> n_;
-		delete[] data; data = new double[n_];
-		ar >> boost::serialization::make_array(data, n_);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+	template<class Archive>
+	void save(Archive & ar, const unsigned int /*version*/) const{
+		ar<< name_ << n_ << boost::serialization::make_array(data, n_);
+	}
+	template<class Archive>
+	void load(Archive & ar, const unsigned int /*version*/){
+		ar>> name_ >> n_;
+		delete[] data; data = new double[n_]; // NOLINT(cppcoreguidelines-owning-memory)
+		ar>> boost::serialization::make_array(data, n_);
+	}
+	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 struct B{
-	std::string name_ = "unnamed"; 
-	int n_ = 0;
-	double* data = nullptr;
+	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
+	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes)
 	B() = default;
-	B(int n) : n_(n), data(new double[n]){}
+	explicit B(int n) : n_(n), data(new double[n]){}
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
-	B& operator=(B const& other){
+	B(B&&) = delete;
+	auto operator=(B&&) -> B& = delete;
+	auto operator=(B const& other) -> B&{
+		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data; 
 		data = new double[other.n_];
-		for(int i = 0; i != n_; ++i) data[i] = other.data[i];
+		std::copy_n(other.data, n_, data);
 		return *this;
 	}
 	~B(){delete[] data;}
@@ -64,18 +71,18 @@ struct B{
 
 // nonintrusive serialization
 template<class Archive>
-void save(Archive & ar, B const& b, const unsigned int){
-	ar << b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
+void save(Archive & ar, B const& b, const unsigned int /*version*/){
+	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int){
-	ar >> b.name_ >> b.n_;
-	delete[] b.data; b.data = new double[b.n_];
-	ar >> boost::serialization::make_array(b.data, b.n_);
+void load(Archive & ar, B& b, const unsigned int /*version*/){
+	ar>> b.name_ >> b.n_;
+	delete[] b.data; b.data = new double[b.n_]; // NOLINT(cppcoreguidelines-owning-memory)
+	ar>> boost::serialization::make_array(b.data, b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 
 	assert( world.size() > 1 );
 
