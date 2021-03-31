@@ -33,7 +33,6 @@ openmpi-icc:
         - . /opt/intel/bin/compilervars.sh intel64
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
-        - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - export OMPI_CC=icc
         - export OMPI_CXX=icpc
         - mpic++ -v
