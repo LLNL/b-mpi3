@@ -21,11 +21,13 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 		for(int reps = 0; reps != NUM_REPS; ++reps){
 			if(world.root()) 
-				for(std::size_t i = 0; i != sizes[n]; ++i) 
+				for(std::size_t i = 0; i != sizes[n]; ++i){
 					buf[i] = 1000000.*(n * NUM_REPS + reps) + i;
+				}
 			else
-				for(std::size_t i = 0; i != sizes[n]; ++i) 
-					buf[i] = -1 - (n * NUM_REPS + reps);
+				for(std::size_t i = 0; i != sizes[n]; ++i){
+					buf[i] = -(n * NUM_REPS + reps) - 1;
+				}
 
 			world.broadcast_n(buf.begin(), sizes[n]);
 		//	world.broadcast(buf.begin(), buf.begin() + sizes[n], 0);
