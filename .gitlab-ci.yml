@@ -18,10 +18,10 @@ openmpi:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - CXX=mpic++ cmake ..
+        - cmake ..
         - pwd
         - mpirun --version
-        - make
+        - make VERBOSE=1
         - ctest --output-on-failure
 
 openmpi-icc:
@@ -33,13 +33,10 @@ openmpi-icc:
         - . /opt/intel/bin/compilervars.sh intel64
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
-        - export OMPI_CC=icc
-        - export OMPI_CXX=icpc
-        - mpic++ -v
-        - CXX=mpic++ cmake ..
+        - cmake ..
         - pwd
         - mpirun --version
-        - make
+        - make VERBOSE=1
         - ctest --output-on-failure
 
 openmpi-clang:
@@ -50,10 +47,8 @@ openmpi-clang:
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - export OMPI_CC=clang
-        - export OMPI_CXX=clang++
         - mpic++ -v
-        - CXX=mpic++ cmake ..
+        - CXX=clang++ cmake ..
         - pwd
         - mpirun --version
         - make
