@@ -10,31 +10,24 @@ variables:
 openmpi:
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make g++ libboost-serialization-dev
-        - cd ..
-        - ln -s boost-mpi3 mpi3
-        - cd mpi3/test
-        - mkdir build
-        - cd build
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make g++ libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
+        - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - cmake ..
-        - pwd
-        - mpirun --version
-        - make VERBOSE=1
+        - make
         - ctest --output-on-failure
 
 openmpi-icc:
     image: meteocima/dkr-intel
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
         - . /opt/intel/bin/compilervars.sh intel64
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
-        - cmake ..
-        - pwd
+        - CXX=icpc cmake ..
         - mpirun --version
         - make VERBOSE=1
         - ctest --output-on-failure
@@ -42,36 +35,27 @@ openmpi-icc:
 openmpi-clang:
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
-        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - CXX=clang++ cmake ..
-        - pwd
         - mpirun --version
+        - CXX=clang++ cmake ..
         - make
         - ctest --output-on-failure
 
 ompi-clang-tidy:
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang clang-tidy cmake make libboost-serialization-dev
-        - mpirun --version
-        - cd ..
-        - ln -s boost-mpi3 mpi3
-        - cd mpi3/test
-        - mkdir build
-        - cd build
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang clang-tidy cmake make libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
+        - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - OMPI_CXX=clang++ mpic++ -v
-        - CXX=clang++ CXXFLAGS=`mpic++ --showme:compile` cmake .. -DCMAKE_EXE_LINKER_FLAGS="`mpic++ --showme:link`" -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
-        - pwd
-        - mpirun --version
-        - make VERBOSE=1
+        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
+        - make
         - ctest --output-on-failure
-        
 
 #        - export CC=mpicc
 #        - export CXX=mpic++
@@ -100,33 +84,25 @@ ompi-clang-tidy:
 mpich:
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev
-        - mpirun --version
-        - cd ..
-        - ln -s boost-mpi3 mpi3
-        - cd mpi3/test
-        - mkdir build
-        - cd build
+        - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
+        - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE=""
-        - CXX=mpic++ cmake ..
+        - cmake ..
         - make
         - ctest --output-on-failure
 
 mpich-valgrind:
     stage: build
     script:
-        - apt update  -qq
-        - apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev valgrind
+        - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev valgrind
         - mpirun --version
-        - cd ..
-        - ln -s boost-mpi3 mpi3
-        - cd mpi3/test
-        - mkdir build
-        - cd build
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
+        - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE=""
         - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"
-        - CXX=mpic++ cmake ..
+        - cmake ..
         - make
         - ctest --output-on-failure
 
