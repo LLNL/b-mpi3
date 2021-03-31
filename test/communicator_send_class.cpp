@@ -14,11 +14,11 @@ mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-
 
 namespace mpi3 = boost::mpi3;
 
-class A{
-	std::string name_ = "unnamed"; 
-	int n_ = 0;
-	double* data = nullptr;
-public:
+struct A{
+	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for testing
+	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+
 	A() = default;
 	explicit A(int n) : n_(n), data(new double[n]){}
 	A(A const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
