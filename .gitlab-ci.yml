@@ -18,7 +18,7 @@ openmpi:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - cmake ..
+        - CXX=mpic++ cmake ..
         - pwd
         - mpirun --version
         - make
@@ -37,7 +37,7 @@ openmpi-icc:
         - export OMPI_CC=icc
         - export OMPI_CXX=icpc
         - mpic++ -v
-        - cmake ..
+        - CXX=mpic++ cmake ..
         - pwd
         - mpirun --version
         - make
@@ -54,7 +54,7 @@ openmpi-clang:
         - export OMPI_CC=clang
         - export OMPI_CXX=clang++
         - mpic++ -v
-        - cmake ..
+        - CXX=mpic++ cmake ..
         - pwd
         - mpirun --version
         - make
@@ -116,7 +116,7 @@ mpich:
         - mkdir build
         - cd build
         - export MPI_OVERSUBSCRIBE=""
-        - cmake ..
+        - CXX=mpic++ cmake ..
         - make
         - ctest --output-on-failure
 
