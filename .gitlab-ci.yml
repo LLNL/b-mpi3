@@ -65,6 +65,7 @@ ompi-clang-tidy:
     script:
         - apt update  -qq
         - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang clang-tidy cmake make libboost-serialization-dev
+        - mpirun --version
         - cd ..
         - ln -s boost-mpi3 mpi3
         - cd mpi3/test
@@ -72,7 +73,7 @@ ompi-clang-tidy:
         - cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - OMPI_CXX=clang++ mpic++ -v
-        - CXX=clang++ CXXFLAGS=`mpic++ --showme:compile` LDFLAGS=`mpic++ --showme:link` cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
+        - CXX=clang++ CXXFLAGS=`mpic++ --showme:compile` -DCMAKE_EXE_LINKER_FLAGS=`mpic++ --showme:link` -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=-*"
         - pwd
         - mpirun --version
         - make VERBOSE=1
