@@ -7,7 +7,7 @@ $CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx
 #define BOOST_MPI3_CORE_HPP
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
-#include<mpi.h>
+#include<mpi.h> // if you get a compilation error here it means that 1) you need to compile or defined your CXX as mpic++ or 2) have not setup the compilation flags to find MPI headers, or 3) not installed an MPI implementation (e.g. `apt install libopenmpi-dev openmpi-bin`)
 
 #include<stdexcept>
 
