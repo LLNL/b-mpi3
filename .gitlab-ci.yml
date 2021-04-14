@@ -19,18 +19,18 @@ openmpi:
         - make
         - ctest --output-on-failure
 
-openmpi-icc:
-    image: meteocima/dkr-intel
-    stage: build
-    script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
-        - . /opt/intel/bin/compilervars.sh intel64
-        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
-        - mkdir build && cd build
-        - CXX=icpc cmake ..
-        - mpirun --version
-        - make VERBOSE=1
-        - ctest --output-on-failure
+#openmpi-icc:
+#    image: meteocima/dkr-intel
+#    stage: build
+#    script:
+#        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libboost-serialization-dev
+#        - . /opt/intel/bin/compilervars.sh intel64
+#        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
+#        - mkdir build && cd build
+#        - CXX=icpc cmake ..
+#        - mpirun --version
+#        - make VERBOSE=1
+#        - ctest --output-on-failure
 
 openmpi-clang:
     stage: build
