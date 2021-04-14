@@ -12,7 +12,7 @@ mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 	mpi3::communicator comm = (world < 2);
 #if 0
 	if(comm){
