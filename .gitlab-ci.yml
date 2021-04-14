@@ -186,7 +186,7 @@ openmpi-icc-runner:
     tags:
         - cuda_gpu
     script:
-        - . /opt/intel/bin/compilervars.sh intel64
+        - source /opt/intel/system_studio_2020/bin/compilervars.sh intel64
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
         - CXX=icpc cmake ..
