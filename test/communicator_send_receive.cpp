@@ -6,7 +6,9 @@ mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x -lboost_se
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int, char*[], mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+
+	assert(world.size() > 0);
 
 	auto right = (world.rank() + 1 + world.size()) % world.size();
 	auto left  = (world.rank() - 1 + world.size()) % world.size();
@@ -36,11 +38,11 @@ auto mpi3::main(int, char*[], mpi3::communicator world) -> int{
 		assert( c.front() == std::to_string(right) );
 	}
 	{
-		int buffer[10]; buffer[5] = world.rank();
-		int buffer2[10]; buffer2[5] = -1;
+		std::array<int, 10> buffer ; buffer [5] = world.rank();
+		std::array<int, 10> buffer2; buffer2[5] = -1;
 		world.send_receive_n(
-			buffer, 10, left, 
-			buffer2, 10, right
+			buffer .data(), 10, left , 
+			buffer2.data(), 10, right
 		);
 		assert(buffer2[5] == right);
 	}
@@ -48,7 +50,7 @@ auto mpi3::main(int, char*[], mpi3::communicator world) -> int{
 		std::vector<int> buffer(10);  buffer[5] = world.rank();
 		std::vector<int> buffer2(10); buffer2[5] = -1;
 		world.send_receive(
-			buffer.begin(), buffer.end(), left, 
+			buffer .begin(), buffer .end(), left , 
 			buffer2.begin(), buffer2.end(), right
 		);
 		assert(buffer2[5] == right);
