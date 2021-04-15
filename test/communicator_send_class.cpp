@@ -17,33 +17,33 @@ namespace mpi3 = boost::mpi3;
 struct A{
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for testing
 	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
+	std::unique_ptr<double[]> data;  // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
 
 	A() = default;
 	explicit A(int n) : n_(n), data(new double[n]){}
-	A(A const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
+	A(A const& other) : name_(other.name_), n_(other.n_), data{new double[other.n_]}{}
 	A(A&&) = delete;
-	auto operator=(A&&) -> A& = delete;
+	auto operator=(A&&) = delete;
 	auto operator=(A const& other) -> A&{
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		delete[] data; 
-		data = new double[other.n_]; // NOLINT(cppcoreguidelines-owning-memory)
-		std::copy_n(other.data, n_, data);
+		data.reset(new double[other.n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		std::copy_n(other.data.get(), n_, data.get());
 		return *this;
 	}
-	~A() noexcept{delete[] data;}
+	decltype(auto) operator[](std::ptrdiff_t i){return data.get()[i];}
+//	~A() noexcept{delete[] data;}
 	// intrusive serialization
 	template<class Archive>
 	void save(Archive & ar, const unsigned int /*version*/) const{
-		ar<< name_ << n_ << boost::serialization::make_array(data, n_);
+		ar<< name_ << n_ << boost::serialization::make_array(data.get(), n_);
 	}
 	template<class Archive>
 	void load(Archive & ar, const unsigned int /*version*/){
 		ar>> name_ >> n_;
-		delete[] data; data = new double[n_]; // NOLINT(cppcoreguidelines-owning-memory)
-		ar>> boost::serialization::make_array(data, n_);
+		data.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		ar>> boost::serialization::make_array(data.get(), n_);
 	}
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
@@ -56,7 +56,7 @@ struct B{
 	explicit B(int n) : n_(n), data(new double[n]){}
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
 	B(B&&) = delete;
-	auto operator=(B&&) -> B& = delete;
+	auto operator=(B&&) = delete;
 	auto operator=(B const& other) -> B&{
 		if(this == &other){return *this;}
 		name_ = other.name_;
@@ -66,6 +66,7 @@ struct B{
 		std::copy_n(other.data, n_, data);
 		return *this;
 	}
+	decltype(auto) operator[](std::ptrdiff_t i){return data[i];}
 	~B(){delete[] data;}
 };
 
@@ -75,14 +76,14 @@ void save(Archive & ar, B const& b, const unsigned int /*version*/){
 	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int /*version*/){
+void load(Archive & ar, B& b, const unsigned int /*version*/){ //NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
 	delete[] b.data; b.data = new double[b.n_]; // NOLINT(cppcoreguidelines-owning-memory)
 	ar>> boost::serialization::make_array(b.data, b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	assert( world.size() > 1 );
 
@@ -127,28 +128,30 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	switch(world.rank()){
 		case 0 : {
 			std::vector<A> v(5, A(3));
-			v[2].data[2] = 3.14;
+			v[2][2] = 3.14;
 			world.send(begin(v), end(v), 1, 123);
 		}; break;
 		case 1 : {
 			std::vector<A> v(5);
 			world.receive(begin(v), end(v), 0, 123);
-			assert(v[2].data[2] == 3.14);
+			assert(v[2][2] == 3.14);
 		}; break;
 	}
 	switch(world.rank()){
 		case 0 : {
 			std::vector<B> v(5, B(3));
-			v[2].data[2] = 3.14;
+			v[2][2] = 3.14;
 			world.send(begin(v), end(v), 1, 123);
 		}; break;
 		case 1 : {
 			std::vector<B> v(5);
 			world.receive(begin(v), end(v), 0, 123);
-			assert(v[2].data[2] == 3.14);
+			assert(v[2][2] == 3.14);
 		}; break;
 	}
 
 	return 0;
+}catch(...){
+	return 1;
 }
 
