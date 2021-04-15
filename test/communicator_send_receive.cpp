@@ -2,18 +2,11 @@
 mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x -lboost_serialization && time mpirun -n 1 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
-#include<iostream>
-
 #include "../../mpi3/main.hpp"
-#include "../../mpi3/communicator.hpp"
-
-#include<complex>
-#include<list>
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int, char*[], mpi3::communicator world) -> int{
 
 	auto right = (world.rank() + 1 + world.size()) % world.size();
 	auto left  = (world.rank() - 1 + world.size()) % world.size();
