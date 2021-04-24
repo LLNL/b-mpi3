@@ -15,35 +15,36 @@ mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-
 namespace mpi3 = boost::mpi3;
 
 struct A{
-	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for testing
-	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-	std::unique_ptr<double[]> data;  // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-
+private:
+	std::string name_ = "unnamed";
+	int n_ = 0;
+	std::unique_ptr<double[]> data_;  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) notation
+public:
 	A() = default;
-	explicit A(int n) : n_(n), data(new double[n]){}
-	A(A const& other) : name_(other.name_), n_(other.n_), data{new double[other.n_]}{}
+	explicit A(int n) : n_(n), data_{new double[n]}{}
+	A(A const& other) : name_(other.name_), n_(other.n_), data_{new double[other.n_]}{}
+	~A() = default;
 	A(A&&) = delete;
 	auto operator=(A&&) = delete;
-	auto operator=(A const& other) -> A&{
+	decltype(auto) operator=(A const& other){
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		data.reset(new double[other.n_]); // NOLINT(cppcoreguidelines-owning-memory)
-		std::copy_n(other.data.get(), n_, data.get());
+		data_.reset(new double[other.n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	decltype(auto) operator[](std::ptrdiff_t i){return data.get()[i];}
-//	~A() noexcept{delete[] data;}
+	decltype(auto) operator[](std::ptrdiff_t i) const{return data_.get()[i];}
 	// intrusive serialization
 	template<class Archive>
 	void save(Archive & ar, const unsigned int /*version*/) const{
-		ar<< name_ << n_ << boost::serialization::make_array(data.get(), n_);
+		ar<< name_ << n_ << boost::serialization::make_array(data_.get(), n_);
 	}
 	template<class Archive>
 	void load(Archive & ar, const unsigned int /*version*/){
 		ar>> name_ >> n_;
-		data.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
-		ar>> boost::serialization::make_array(data.get(), n_);
+		data_.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		ar>> boost::serialization::make_array(data_.get(), n_);
 	}
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
@@ -57,7 +58,7 @@ struct B{
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
 	B(B&&) = delete;
 	auto operator=(B&&) = delete;
-	auto operator=(B const& other) -> B&{
+	decltype(auto) operator=(B const& other){
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
