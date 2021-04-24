@@ -26,7 +26,7 @@ struct shared_window;
 struct shared_communicator : communicator{
 	shared_communicator() = default;
 	shared_communicator(shared_communicator&&) = default;
-	shared_communicator(shared_communicator const&) = default;
+	shared_communicator(shared_communicator const&) = delete;
 	shared_communicator(mpi3::group const& g) : communicator(g){}
 	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag){}
 private:
