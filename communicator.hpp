@@ -430,7 +430,7 @@ public:
 	communicator(communicator const&) = delete;//default;
 //	communicator(communicator&) = default;
 // intel need this:
-	communication(communication& other) : basic_communicator{other}{}
+	communicator(communicator& other) : basic_communicator{other}{}
 	communicator(communicator&&) = default;
 	communicator() = default;
 /*	communicator& operator=(communicator const& other){
