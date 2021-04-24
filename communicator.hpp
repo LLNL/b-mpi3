@@ -428,7 +428,9 @@ public:
 	}
 	using detail::basic_communicator::basic_communicator;
 	communicator(communicator const&) = delete;//default;
-	communicator(communicator&) = default;
+//	communicator(communicator&) = default;
+// intel need this:
+	communication(communication& other) : basic_communicator{other}{}
 	communicator(communicator&&) = default;
 	communicator() = default;
 /*	communicator& operator=(communicator const& other){
