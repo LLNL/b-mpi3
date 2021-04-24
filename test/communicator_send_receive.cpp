@@ -8,7 +8,7 @@ namespace mpi3 = boost::mpi3;
 
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 
-	assert(world.size() > 0);
+	assert(not world.is_empty() );
 
 	auto right = (world.rank() + 1 + world.size()) % world.size();
 	auto left  = (world.rank() - 1 + world.size()) % world.size();
@@ -38,8 +38,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 		assert( c.front() == std::to_string(right) );
 	}
 	{
-		std::array<int, 10> buffer ; buffer [5] = world.rank();
-		std::array<int, 10> buffer2; buffer2[5] = -1;
+		std::array<int, 10> buffer {}; buffer [5] = world.rank();
+		std::array<int, 10> buffer2{}; buffer2[5] = -1;
 		world.send_receive_n(
 			buffer .data(), 10, left , 
 			buffer2.data(), 10, right

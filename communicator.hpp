@@ -464,7 +464,10 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
 		return size;
 	}
-	bool empty() const{return size() == 0;}
+	bool is_empty() const{return size() == 0;}
+	NODISCARD("empty is not an action")
+	bool empty() const{return is_empty();}
+
 	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
 	bool is_intercommunicator() const{
 		int flag = false;
