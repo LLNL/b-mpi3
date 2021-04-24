@@ -31,13 +31,13 @@ protected:
 	basic_communicator(MPI_Comm impl) noexcept : impl_(impl){}
 public:
 	basic_communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
-	[[deprecated("communicators are not values, they are not copiable, only duplicable; they cannot be elements of std::vector")]] 
-	basic_communicator(basic_communicator const& other){// = delete;/*{
-		if(MPI_COMM_NULL != other.impl_){
-			int s = MPI_Comm_dup(other.impl_, &impl_);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
-		}
-	}
+//	[[deprecated("communicators are not values, they are not copiable, only duplicable; they cannot be elements of std::vector")]] 
+	basic_communicator(basic_communicator const& other) = delete; // communicators are not copyable, only duplicable, if you know what you are doing use `mutable`
+//		if(MPI_COMM_NULL != other.impl_){
+//			int s = MPI_Comm_dup(other.impl_, &impl_);
+//			if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
+//		}
+//	}
 	basic_communicator(basic_communicator& other){
 		if(MPI_COMM_NULL != other.impl_){
 			int s = MPI_Comm_dup(other.impl_, &impl_);
