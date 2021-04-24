@@ -427,7 +427,7 @@ public:
 		);
 	}
 	using detail::basic_communicator::basic_communicator;
-	communicator(communicator const&) = default;
+	communicator(communicator const&) = delete;//default;
 	communicator(communicator&) = default;
 	communicator(communicator&&) = default;
 	communicator() = default;
