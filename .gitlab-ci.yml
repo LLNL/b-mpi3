@@ -189,8 +189,21 @@ openmpi-icpc-runner:
         - . /opt/intel/oneapi/setvars.sh
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
-        - CXX=icpc cmake ..
+        - CXX=/opt/intel/oneapi/compiler/2021.2.0/linux/bin/intel64/icpc cmake ..
         - mpirun --version
         - make VERBOSE=1
         - ctest --output-on-failure
+
+#oneapimpi-icpc-runner:
+#    stage: build
+#    tags:
+#        - cuda_gpu
+#    script:
+#        - . /opt/intel/oneapi/setvars.sh
+#        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
+#        - mkdir build && cd build
+#        - CXX=icpc cmake ..
+#        - mpirun --version
+#        - make VERBOSE=1
+#        - ctest --output-on-failure
 
