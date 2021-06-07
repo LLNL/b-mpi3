@@ -192,7 +192,7 @@ openmpi-icpc-runner:
         - CXX=/opt/intel/oneapi/compiler/2021.2.0/linux/bin/intel64/icpc cmake ..
         - mpirun --version
         - make VERBOSE=1
-        - ctest --output-on-failure
+        - ctest --output-on-failure --timeout 120
 
 #oneapimpi-icpc-runner:
 #    stage: build
