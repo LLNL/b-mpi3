@@ -182,7 +182,7 @@ inq-nvcc-ompi:
         - rm -rf $PREFIX
 
 openmpi-icpc-runner:
-    stage: build
+    stage: test
     tags:
         - cuda_gpu
     script:
