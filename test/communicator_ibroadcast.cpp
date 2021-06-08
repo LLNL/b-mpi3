@@ -26,6 +26,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		auto req = world.ibroadcast(large.begin(), large.end(), 0);
 		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(5s);
+		req.complete();
 		req.wait();
 	}
 
