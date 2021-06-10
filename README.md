@@ -3,21 +3,23 @@
 --->
 [comment]: # (Comment)
 
-# [Boost].MPI3
+# B.MPI3
 *Alfredo A. Correa*  
-<alfredo.correa@gmail.com>
+<correaa@llnl.gov>
 
-[Boost].MPI3 is a C++ library wrapper for standard MPI3.
+[//]: <> (<alfredo.correa@gmail.com>)
 
-[Boost].MPI3 is not an official Boost library.
-However Boost.MPI3 is designed following the principles of Boost and the STL.
+B.MPI3 is a C++ library wrapper for standard MPI3.
 
-[Boost].MPI3 is not a derivative of Boost.MPI and it is unrelated to the, now deprecated, official MPI-C++ interface.
+B.MPI3 is not an official Boost library, but is designed following the principles of Boost and the STL.
+
+B.MPI3 is not a derivative of Boost.MPI and it is unrelated to the, now deprecated, official MPI-C++ interface.
 It adds features which were missing in Boost.MPI (which only covers MPI-1), with an iterator-based interface and MPI-3 features (RMA and Shared memory).
-[Boost].MPI3 is written from scratch in C++14.
+B.MPI3 is written from scratch in C++14.
 
-[Boost].MPI3 depends and has been compiled against Boost +1.53 and one of the MPI library implementations, OpenMPI +1.9, MPICH +3.2.1 or MVAPICH, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04. 
-The current version of the library (wrapper) is `0.71`, (programmatically accesible from `./version.hpp`).
+B.MPI3 depends and has been compiled against Boost +1.53 and one of the MPI library implementations, OpenMPI +1.9, MPICH +3.2.1 or MVAPICH, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04. 
+
+The current version of the library (wrapper) is tagged as `0.73`.
 
 ## Introduction
 
@@ -67,9 +69,9 @@ For other examples, see here: [http://mpitutorial.com/tutorials/mpi-send-and-rec
 MPI used to ship with a C++-style interfaces.
 It turns out that this interface was a very minimal change over the C version, and for good reasons it was dropped.
 
-The Boost.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI. 
+The B.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI. 
 In this way, changes to existing code can be made incrementally.
-Mixing the standard C interface with the Boost.MPI3 is not complicated but requires more knowledge of the library internals than the one provided in this document.
+Mixing the standard C interface with the B.MPI3 is not complicated but requires more knowledge of the library internals than the one provided in this document.
 
 ## Installation
 
@@ -103,8 +105,8 @@ cmake .. && make && ctest
 
 ## Initialization
 
-Like MPI, Boost.MPI3 requires some global library initialization.
-The library includes `mpi3/main.hpp` which wraps around this initialization steps and *simulates* a main function. 
+Like MPI, B.MPI3 requires some global library initialization.
+The library includes a convenience `mpi3/main.hpp` which wraps around this initialization steps and *simulates* a main function. 
 In this way, a parallel program looks very much like normal programs, except that the main function has a third argument with the default global communicator passed in.
 
 ```c++
@@ -210,7 +212,7 @@ Contiguous iterators (to built-in types) are particularity efficient because the
 The interface for other type of iterators or contiguous iterators to non-build-in type are simulated, mainly via buffers and serialization.
 The idea behind this is that generic message passing function calls can be made to work with arbitrary data types.
 
-The main interface for message passing in Boost.MPI3 are member functions of the communicator.
+The main interface for message passing in B.MPI3 are member functions of the communicator.
 For example `communicator::send`, `::receive` and `::barrier`. 
 The functions `::rank` and `::size` allows each process to determine their unique identity inside the communicator.
 
