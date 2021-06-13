@@ -11,6 +11,7 @@ mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpi
 #include <thrust/complex.h>
 #endif
 
+#include<cassert>
 #include<complex>
 #include<cstddef> // std::byte
 #include<tuple>
@@ -61,7 +62,10 @@ template<class T> struct basic_datatype;
 
 #define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
 template<> struct basic_datatype<TypE>{ \
-/*	constexpr*/ operator MPI_Datatype() const{return MpiiD;} \
+/*	constexpr*/ operator MPI_Datatype() const{ \
+		assert( MpiiD != MPI_DATATYPE_NULL ); /*this system doesn't support this type*/ \
+		return MpiiD; \
+	} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
 

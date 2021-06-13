@@ -37,6 +37,17 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 		}
 	}
+	
+	{
+		bool b = world.root()?true:false;
+		world.broadcast_n(&b, 1);
+		assert( b == true );
+	}
+	{
+		bool b = world.root()?true:false;
+		world.broadcast_n(&b, 1);
+		assert( b == true );
+	}
 
 	return 0;
 }
