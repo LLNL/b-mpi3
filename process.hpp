@@ -92,6 +92,11 @@ auto operator&(communicator& comm, T const& t)
 }
 
 template<class T>
+auto operator||(process&& self, T& t){
+	self.comm_.broadcast_value(t, self.rank_);
+}
+
+template<class T>
 communicator& operator>>(communicator& comm, T& t){
 	comm.receive_n(&t, 1);
 //	comm.receive_value(t);

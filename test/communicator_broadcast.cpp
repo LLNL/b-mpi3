@@ -1,10 +1,11 @@
 #if COMPILATION_INSTRUCTIONS
 mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
-// © Copyright Alfredo A. Correa 2018-2020
+// © Copyright Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
+#include "../../mpi3/process.hpp"
 
 namespace mpi3 = boost::mpi3;
 
@@ -36,6 +37,21 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 				assert( fabs(buf[i] - (1000000.*(n * NUM_REPS + reps) + i)) < 1e-4 );
 
 		}
+	}
+	{
+		bool b = world.root()?true:false;
+		world.broadcast_value(b);
+		assert( b == true );
+	}
+	{
+		bool b = world.root()?true:false;
+		world.broadcast_n(&b, 1);
+		assert( b == true );
+	}
+	{
+		bool b = world.root()?true:false;
+		world[0] || b;
+		assert( b == true );
 	}
 
 	return 0;

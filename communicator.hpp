@@ -1688,6 +1688,7 @@ private:
 public:
 	template<class T>
 	auto broadcast_value(T& t, int root = 0){return broadcast_n(std::addressof(t), 1, root);}
+
 	template<class It, typename Size>
 	auto ibroadcast_n(
 		It first, 
