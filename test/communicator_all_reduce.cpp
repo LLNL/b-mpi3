@@ -7,7 +7,7 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	assert( world.size() > 1);
 

@@ -1,7 +1,7 @@
 #if COMPILATION_INSTRUCTIONS
 mpic++  -Wall -Wextra $0 -o $0x &&mpirun -n 6 valgrind --suppressions=communicator_main.cpp.openmpi.supp $0x&&rm $0x;exit
 #endif
-// © Alfredo Correa 2018-2020
+// © Alfredo Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
@@ -9,7 +9,7 @@ mpic++  -Wall -Wextra $0 -o $0x &&mpirun -n 6 valgrind --suppressions=communicat
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 
 	assert( world.size() == 6 );
 
@@ -17,8 +17,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	cout << "I am rank " << world.rank() << " in " << world.name() << ", ";
 
-	if(fifth) cout <<"I am also "   << fifth.rank() << " in " << fifth.name() << '\n';
-	else      cout <<"I am not in " << fifth.name() << '\n';
+	if(fifth){cout<<"I am also   "<< fifth.rank() <<" in "<< fifth.name() <<'\n';}
+	else     {cout<<"I am not in "<< fifth.name() <<'\n';}
 
 	return 0;
 }
