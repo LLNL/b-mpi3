@@ -53,6 +53,7 @@ gather2.cpp
 communicator_ibroadcast.cpp
 communicator_igather.cpp
 communicator_list.cpp
+communicator_mutable.cpp
 communicator_operator.cpp
 communicator_reduce.cpp
 communicator_reduce_in_place.cpp

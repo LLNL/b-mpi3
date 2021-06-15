@@ -37,6 +37,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		v[1] = v[0];
 		assert( v[1] == v[0] );
 		v[1] = std::move(v[0]);
+		assert( v[0] == v[0] );
 		assert( v[0].get_comm().size() == 0 );
 		v[1] = static_cast<projector const&>(v[2]);
 		assert( v[2].get_comm() == world );
