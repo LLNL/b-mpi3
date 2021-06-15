@@ -9,7 +9,7 @@ mpic++  -Wall -Wextra $0 -o $0x &&mpirun -n 6 valgrind --suppressions=communicat
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)-> int{
 
 	assert( world.size() == 6 );
 
