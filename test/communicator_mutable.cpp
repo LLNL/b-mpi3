@@ -12,13 +12,13 @@ namespace mpi3 = boost::mpi3;
 
 struct projector{
 	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}{}
-	friend auto operator==(projector const& a, projector const& b) -> bool{return a.comm_ == b.comm_;}
-	auto get_comm() const -> mpi3::communicator&{return comm_;}
+	friend auto operator==(projector const& a, projector const& b){return a.comm_ == b.comm_;}
+	auto& get_comm() const{return comm_;}
 private:
 	mutable mpi3::communicator comm_;
 };
 
-auto mpi3::main(int, char*[], mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int try{
 	{
 		std::list<mpi3::communicator> v;
 		v.emplace_back(world);
