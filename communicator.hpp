@@ -2161,6 +2161,7 @@ private:
 	){
 		auto const s = size();
 		if(s == 0) throw std::runtime_error{"invalid empty communicator"};
+		assert( n%s == 0 );
 		auto e = static_cast<enum error>( MPI_Scatter(
 			detail::data(first  ), n/s, detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
 			detail::data(d_first), n/s, detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},

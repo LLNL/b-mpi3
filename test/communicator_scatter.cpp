@@ -6,11 +6,10 @@ mpic++ $0 -o $0x&&mpirun -n 6 $0x&&rm $0x;exit
 #include "../../mpi3/environment.hpp"
 #include "../../mpi3/communicator.hpp"
 
-#include<numeric> // iota
 #include<list>
+#include<numeric> // iota
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
 int main() try{
 

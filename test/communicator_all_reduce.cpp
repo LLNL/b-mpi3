@@ -6,9 +6,8 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 #include "../../mpi3/communicator.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
 
 	assert( world.size() > 1);
 
@@ -20,10 +19,12 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 	assert(last == global.end());
 
-	for(std::size_t i = 0; i != global.size(); ++i) 
+	for(std::size_t i = 0; i != global.size(); ++i){
 		assert(global[i] == local[i]*world.size());
+	}
 
-	assert( (world += world.rank()) == world.size()*(world.size()-1)/2 );
+	auto sum_of_ranks = (world += world.rank());
+	assert( sum_of_ranks == world.size()*(world.size()-1)/2 );
 
 	auto rank = world.rank();
 	auto sum_rank = 0;
