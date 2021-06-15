@@ -24,6 +24,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	private:
 	cartesian_communicator() : communicator(){}
 	public:
+	cartesian_communicator(cartesian_communicator&&) = default;
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
