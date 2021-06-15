@@ -42,7 +42,8 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	[[deprecated("use dimensionality() instead of dimension")]] 
 	int dimension() const{int ret; MPI_Cartdim_get(impl_, &ret); return ret;}
-	
+
+	cartesian_communicator& operator=(cartesian_communicator&&) = default;
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 
 	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}
@@ -116,6 +117,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return ret;
 	}
 	auto dimensions() const{return topology().dimensions;}
+	cartesian_communicator& operator=(cartesian_communicator&&) = default;
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
