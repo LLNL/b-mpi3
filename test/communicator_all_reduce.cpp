@@ -23,7 +23,7 @@ auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
 		assert(global[i] == local[i]*world.size());
 	}
 
-	auto sum_of_ranks = (world += world.rank());
+	auto const sum_of_ranks = (world += world.rank());
 	assert( sum_of_ranks == world.size()*(world.size()-1)/2 );
 
 	auto rank = world.rank();

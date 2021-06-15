@@ -18,7 +18,7 @@ private:
 	mutable mpi3::communicator comm_;
 };
 
-auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	{
 		std::list<mpi3::communicator> v;
 		v.emplace_back(world);

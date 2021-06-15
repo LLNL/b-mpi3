@@ -12,7 +12,7 @@ using std::cout;
 
 template<class T> void f(int);
 
-auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	assert( world.size() > 2 );
 {
 	using T = std::tuple<double, double>;

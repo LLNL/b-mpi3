@@ -2160,7 +2160,7 @@ private:
 		int root
 	){
 		auto const s = size();
-		if(s == 0) throw std::runtime_error{"invalid empty communicator"};
+		if(s == 0) throw std::runtime_error{"invalid empty communicator for scatter_n"};
 		assert( n%s == 0 );
 		auto e = static_cast<enum error>( MPI_Scatter(
 			detail::data(first  ), n/s, detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
@@ -2177,12 +2177,14 @@ private:
 		It2 d_first,       Any2                      , Any3,
 		int root
 	){
+		auto const s = size();
+		if(s == 0) throw std::runtime_error{"invalid empty communicator for scatter_n"};
+		assert( n%s == 0 );
 		vector<typename std::iterator_traits<In1>::value_type> buff; buff.reserve(n);
 		using std::copy_n;
 		copy_n(first, n, std::back_inserter(buff));
-	//	auto e = 
 		scatter_n(buff.begin(), n, d_first, root);
-		std::advance(d_first, n/size());
+		std::advance(d_first, n/s);
 		return d_first;
 	}
 	template<class It1, class Size, class It2, class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type>
