@@ -55,7 +55,7 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try{
 	}
 	{
 		std::vector<int> local(20, 1);
-		if(world.rank() == 2) local[1] = 9;
+		if(world.rank() == 2){local[1] = 9;}
 
 		std::vector<int> global(local.size());
 		world.all_reduce_n(local.begin(), local.size(), global.begin(), std::logical_and<>{});
@@ -70,14 +70,13 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try{
 		assert( all == world.size() - 1 );
 	}
 	{
-		int b = 1;
-		if(world.rank() == 2) b = 0;
-		int all = (world &= b);
+		int const b = world.rank() == 2 ?0:1;
+		int const all = (world &= b);
 		assert( all == false );
 	}
 	{
-		bool b = world.rank()==2?false:true;
-		bool all = (world &= b);
+		bool const b = not(world.rank() == 2);
+		bool const all = (world &= b);
 		assert( all == false );
 	}
 

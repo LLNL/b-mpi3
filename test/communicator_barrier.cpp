@@ -8,7 +8,7 @@ mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)-> int{
 	cout <<"Before barrier, I am "<< world.rank() <<" of "<< world.size() << std::endl;
 	world.barrier();
 	cout <<"After barrier, I am "<< world.rank() <<" of "<< world.size() << std::endl;

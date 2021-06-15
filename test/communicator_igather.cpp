@@ -14,7 +14,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	{
 		std::vector<double> small(10, 5.); iota(begin(small), end(small), world.rank());
 		std::vector<double> large;
-		if(world.rank() == 0) large.resize(small.size()*world.size(), -1.);
+		if(world.rank() == 0){large.resize(small.size()*world.size(), -1.);}
 		{
 			auto req = world.igather_n(small.begin(), small.size(), large.begin(), 0);
 			using namespace std::chrono_literals;
