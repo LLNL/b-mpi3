@@ -2159,10 +2159,11 @@ private:
 		CIt2 d_first,       detail::contiguous_iterator_tag, detail::basic_tag,
 		int root
 	){
-		if(size() == 0) throw std::runtime_error{"invalid empty communicator"};
+		auto const s = size();
+		if(s == 0) throw std::runtime_error{"invalid empty communicator"};
 		auto e = static_cast<enum error>( MPI_Scatter(
-			detail::data(first  ), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
-			detail::data(d_first), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
+			detail::data(first  ), n/s, detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
+			detail::data(d_first), n/s, detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
 			root, impl_
 		) );
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot scatter"};
