@@ -2159,6 +2159,7 @@ private:
 		CIt2 d_first,       detail::contiguous_iterator_tag, detail::basic_tag,
 		int root
 	){
+		assert(size() != 0);
 		auto e = static_cast<enum error>( MPI_Scatter(
 			detail::data(first  ), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
 			detail::data(d_first), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
