@@ -16,7 +16,7 @@ mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 namespace boost{
 namespace mpi3{
 
-static int main(int, char*[], boost::mpi3::communicator); // if you include this file you should define `::boost::mpi3::main`
+static int main(int, char**, boost::mpi3::communicator); // if you include this file you should define `::boost::mpi3::main`
 
 }}
 

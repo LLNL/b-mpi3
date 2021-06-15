@@ -11,7 +11,7 @@ mpic++ $0 -o $0x&&mpirun -n 6 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-int main() try{
+auto main() -> int try{
 
 	mpi3::environment env;
 	mpi3::communicator world = env.world();

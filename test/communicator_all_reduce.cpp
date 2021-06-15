@@ -7,7 +7,7 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try{
 
 	assert( world.size() > 1);
 
@@ -44,8 +44,8 @@ auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
 
 
 	{
-		std::vector<int> local(20, true);
-		if(world.rank() == 2) local[1] = false;
+		std::vector<int> local(20, 1);
+		if(world.rank() == 2){local[1] = 0;}
 
 		std::vector<int> global(local.size());
 		world.all_reduce_n(local.begin(), local.size(), global.begin());
@@ -54,18 +54,18 @@ auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
 		assert(global[1] == world.size() - 1);
 	}
 	{
-		std::vector<int> local(20, true);
-		if(world.rank() == 2) local[1] = false;
+		std::vector<int> local(20, 1);
+		if(world.rank() == 2) local[1] = 9;
 
 		std::vector<int> global(local.size());
 		world.all_reduce_n(local.begin(), local.size(), global.begin(), std::logical_and<>{});
 
-		assert(global[0] == true);
-		assert(global[1] == false);
+		assert(global[0] != 0);
+		assert(global[1] == 1);
 	}
 	{
 		int b = 1;
-		if(world.rank() == 2) b = 0;
+		if(world.rank() == 2){b = 0;}
 		int all = (world += b);
 		assert( all == world.size() - 1 );
 	}
@@ -76,12 +76,13 @@ auto mpi3::main(int/*argc*/, char*/*argv*/[], mpi3::communicator world) -> int {
 		assert( all == false );
 	}
 	{
-		bool b = true;
-		if(world.rank() == 2) b = false;
+		bool b = world.rank()==2?false:true;
 		bool all = (world &= b);
 		assert( all == false );
 	}
 
 	return 0;
+}catch(...){
+	return 1;
 }
 
