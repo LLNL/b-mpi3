@@ -12,38 +12,44 @@ namespace mpi3 = boost::mpi3;
 // nontrivial nonpod class
 class B{
 	std::string name_ = "unnamed";
-public:
-	std::string&       name()      &{return name_;}
-	std::string const& name() const&{return name_;}
 	int n_ = 0;
-	double* data = nullptr;
+	template<class Archive> friend void save(Archive & ar, B const& b, const unsigned int/*version*/);
+	template<class Archive> friend void load(Archive & ar, B      & b, const unsigned int/*version*/);
+	double* data_ = nullptr;
+public:
+	auto data()      & -> double      *{return data_;}
+	auto data() const& -> double const*{return data_;}
+	auto name()      & -> std::string      & {return name_;}
+	auto name() const& -> std::string const& {return name_;}
 	B() = default;
-	B(int n) : n_(n), data(new double[n]){std::fill_n(data, n_, 0.);}
-	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
+	explicit B(int n) : n_{n}, data_{new double[n]}{std::fill_n(data_, n_, 0.);}
+	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{new double[other.n_]}{
+		std::copy_n(other.data_, n_, data_);
+	}
 	B(B&&) = delete;
 	auto operator=(B const& other) -> B&{
-		if(data == other.data) return *this;
+		if(data_ == other.data_) return *this;
 		name_ = other.name_;
 		n_ = other.n_; 
-		delete[] data; 
-		data = new double[other.n_];
-		std::copy_n(data, n_, other.data);
+		delete[] data_; 
+		data_ = new double[other.n_];
+		std::copy_n(data_, n_, other.data_);
 		return *this;
 	}
 	auto operator=(B&&) = delete;
-	~B(){delete[] data;}
+	~B(){delete[] data_;}
 };
 
 // nonintrusive serialization
 template<class Archive>
 void save(Archive & ar, B const& b, const unsigned int){
-	ar << b.name() << b.n_ << boost::serialization::make_array(b.data, b.n_);
+	ar << b.name() << b.n_ << boost::serialization::make_array(b.data_, b.n_);
 }
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int){
 	ar >> b.name() >> b.n_;
-	delete[] b.data; b.data = new double[b.n_];
-	ar >> boost::serialization::make_array(b.data, b.n_);
+	delete[] b.data_; b.data_ = new double[b.n_];
+	ar >> boost::serialization::make_array(b.data_, b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
@@ -53,24 +59,24 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	switch(world.rank()){
 		case 0 : {
 			std::vector<B> v(5, B(3));
-			v[2].data[2] = 3.14;
+			v[2].data()[2] = 3.14;
 			world.send(v.begin(), v.end(), 1, 123);
 		}; break;
 		case 1 : {
 			std::vector<B> v(5);
 			world.receive(v.begin(), v.end(), 0, 123);
-			assert(v[2].data[2] == 3.14);
+			assert(v[2].data()[2] == 3.14);
 		}; break;
 	}
 	switch(world.rank()){
 		case 0 : {
-			B b1(4); b1.data[2] = 4.5;
+			B b1(4); b1.data()[2] = 4.5;
 			world[1] << b1;
 		}; break;
 		case 1 : {
 			B b2;
 			world[0] >> b2;
-			assert( b2.data[2] == 4.5 );
+			assert( b2.data()[2] == 4.5 );
 		}; break;
 	}
 	
