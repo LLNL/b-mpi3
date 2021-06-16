@@ -94,6 +94,7 @@ enum fill_t{fill = 0};
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator() = default;
+	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) = default;
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
 		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
