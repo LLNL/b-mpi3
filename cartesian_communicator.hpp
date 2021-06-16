@@ -126,6 +126,8 @@ struct cartesian_communicator : cartesian_communicator<>{
 	}
 	auto dimensions() const{return topology().dimensions;}
 	cartesian_communicator& operator=(cartesian_communicator&&) = default;
+	cartesian_communicator& operator=(cartesian_communicator&) = default;
+
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
