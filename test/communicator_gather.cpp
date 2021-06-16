@@ -17,7 +17,7 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 using std::list;
 
-int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 mpi3::vector<double> v;
 
@@ -55,7 +55,7 @@ assert( world.size() > 2);
 	world.gather(small.begin(), small.end(), large.begin(), 0);
 	if(world.root()){
 		cout << "large: ";
-		for(auto& e : large) cout << e << " ";
+		for(auto& e : large){cout<< e <<" ";}
 		cout << '\n';
 	}
 	if(world.root()){
@@ -70,8 +70,9 @@ assert( world.size() > 2);
 	vector<T> small(10, val);
 	vector<T> large(world.root()?small.size()*world.size():0);
 	world.gather(small.begin(), small.end(), large.begin(), 0);
-	if(world.rank() == 0)
+	if(world.rank() == 0){
 		assert(all_of(large.begin(), large.end(), [val](auto& e){return val == e;}) );
+	}
 }
 {
 	auto Lval = std::to_string(world.rank() + 1000);
@@ -84,5 +85,8 @@ assert( world.size() > 2);
 
 return 0;
 
+}catch(...){
+return 1;
 }
+
 
