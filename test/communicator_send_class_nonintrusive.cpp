@@ -8,7 +8,6 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-l
 
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
 // nontrivial nonpod class
 struct B{
@@ -16,16 +15,15 @@ struct B{
 	int n_ = 0;
 	double* data = nullptr;
 	B() = default;
-	B(int n) : n_(n), data(new double[n]){
-		for(int i = 0; i != n_; ++i) data[i] = 0.;
-	}
+	B(int n) : n_(n), data(new double[n]){std::fill_n(data, n_, 0.);}
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
-	B& operator=(B const& other){
+	auto operator=(B const& other) -> B&{
+		if(data == other.data) return *this;
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data; 
 		data = new double[other.n_];
-		for(int i = 0; i != n_; ++i) data[i] = other.data[i];
+		std::copy_n(data, n_, other.data);
 		return *this;
 	}
 	~B(){delete[] data;}
