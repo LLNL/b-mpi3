@@ -2724,7 +2724,10 @@ public:
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot Iallgather");
+		if(s != MPI_SUCCESS){
+			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
+			throw std::runtime_error("cannot Iallgather");
+		}
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, class Size2>

@@ -10,13 +10,17 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-l
 namespace mpi3 = boost::mpi3;
 
 // nontrivial nonpod class
-struct B{
-	std::string name_ = "unnamed"; 
+class B{
+	std::string name_ = "unnamed";
+public:
+	std::string&       name()      &{return name_;}
+	std::string const& name() const&{return name_;}
 	int n_ = 0;
 	double* data = nullptr;
 	B() = default;
 	B(int n) : n_(n), data(new double[n]){std::fill_n(data, n_, 0.);}
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
+	B(B&&) = delete;
 	auto operator=(B const& other) -> B&{
 		if(data == other.data) return *this;
 		name_ = other.name_;
@@ -26,17 +30,18 @@ struct B{
 		std::copy_n(data, n_, other.data);
 		return *this;
 	}
+	auto operator=(B&&) = delete;
 	~B(){delete[] data;}
 };
 
 // nonintrusive serialization
 template<class Archive>
 void save(Archive & ar, B const& b, const unsigned int){
-	ar << b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
+	ar << b.name() << b.n_ << boost::serialization::make_array(b.data, b.n_);
 }
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int){
-	ar >> b.name_ >> b.n_;
+	ar >> b.name() >> b.n_;
 	delete[] b.data; b.data = new double[b.n_];
 	ar >> boost::serialization::make_array(b.data, b.n_);
 }
