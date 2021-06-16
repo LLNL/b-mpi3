@@ -212,7 +212,7 @@ public:
 	communicator(group const& g);
 	communicator(group const& g, int tag);
 	
-	impl_t get(){return this->impl_;}
+	impl_t& get(){return this->impl_;}
 
 	explicit operator group() const;
 
