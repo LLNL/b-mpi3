@@ -102,7 +102,9 @@ foreach(TEST_FILE ${TEST_SRCS})
   set(NPROC 3)
   if ((TEST_FILE STREQUAL "communicator_divide.cpp"  ) OR
       (TEST_FILE STREQUAL "communicator_operator.cpp") OR
-      (TEST_FILE STREQUAL "communicator_scatter.cpp" ))
+      (TEST_FILE STREQUAL "communicator_scatter.cpp" ) OR
+      (TEST_FILE STREQUAL "cartesian.cpp"            )
+  )
     set(NPROC 6)
   endif()
   if(DEFINED ENV{VALGRIND_EXE})
