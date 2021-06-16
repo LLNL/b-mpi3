@@ -97,10 +97,12 @@ enum fill_t{fill = 0};
 
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
+
 	cartesian_communicator() = default;
 	cartesian_communicator(cartesian_communicator&) = default;
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) = default;
+
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
 		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
 	}
@@ -137,7 +139,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator<1> axis(int d) const{
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains = {}; remains[d] = true;
-		MPI_(Cart_sub)(impl_, remains.data(), &ret.impl_);
+		MPI_(Cart_sub)(impl_, remains.data(), ret.get());
 		return ret;
 	//	return cartesian_communicator<>::sub(remains);
 	//	auto comm_sub = cartesian_communicator<>::sub(remains);
