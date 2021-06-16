@@ -211,6 +211,9 @@ public:
 	communicator(communicator const& o, group const& g);
 	communicator(group const& g);
 	communicator(group const& g, int tag);
+	
+	impl_t get(){return this->impl_;}
+
 	explicit operator group() const;
 
 	communicator duplicate(){
