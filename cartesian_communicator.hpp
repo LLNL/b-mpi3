@@ -45,9 +45,9 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	[[deprecated("use dimensionality() instead of dimension")]] 
 	int dimension() const{int ret; MPI_Cartdim_get(impl_, &ret); return ret;}
 
-	cartesian_communicator& operator=(cartesian_communicator&&) = default;
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
-	cartesian_communicator& operator=(cartesian_communicator&) = default;
+	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
+	cartesian_communicator& operator=(cartesian_communicator      &) = default;
 
 	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}
 	std::vector<int> coordinates() const{

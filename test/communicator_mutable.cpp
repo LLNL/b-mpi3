@@ -11,14 +11,27 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 namespace mpi3 = boost::mpi3;
 
 struct projector{
-	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}{}
+	projector() = default;
+	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}, n_{5}{}
+	projector(projector&&) = default;
+	projector(projector const&) = default;
+	projector& operator=(projector const&) = default;
+	projector& operator=(projector&&) = default;
+	projector& operator=(projector&) = default;
 	friend auto operator==(projector const& a, projector const& b){return a.comm_ == b.comm_;}
 	decltype(auto) get_comm() const {return comm_;}
+	int get_n() const{return n_;}
 private:
 	mutable mpi3::communicator comm_;
+	int n_ = 0;
 };
 
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+//	{
+//		projector const p{world};
+//		projector p2;
+//		p2 = p;
+//	}
 	{
 		std::list<mpi3::communicator> v;
 		v.emplace_back(world);
