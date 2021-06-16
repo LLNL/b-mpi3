@@ -2700,8 +2700,11 @@ public:
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			root, impl_, &ret.impl_
 		);
-		assert( s == MPI_SUCCESS );
-	//	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot Igather"};
+	//	assert( s == MPI_SUCCESS );
+		if(s != MPI_SUCCESS){
+			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
+			throw std::runtime_error{"cannot Igather"};
+		}
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, typename Size2>
