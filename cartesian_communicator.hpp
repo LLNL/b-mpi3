@@ -25,7 +25,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator() = default;
 	cartesian_communicator(cartesian_communicator&) = default;
 	cartesian_communicator(cartesian_communicator&&) = default;
-	cartesian_communicator(cartesian_communicator const&) = default;
+	cartesian_communicator(cartesian_communicator const&) = delete;
 
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
