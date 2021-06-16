@@ -27,7 +27,9 @@ namespace detail{
 class basic_communicator{// : public detail::caller<communicator, MPI_Comm>{
 protected:
 	using impl_t = MPI_Comm;
+public:
 	impl_t impl_ = MPI_COMM_NULL;
+protected:
 	basic_communicator(MPI_Comm impl) noexcept : impl_(impl){}
 public:
 	basic_communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
