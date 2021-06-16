@@ -124,10 +124,18 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
 //		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
+	cartesian_communicator sub(std::vector<int> const& remain_dims) const{
+		assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
+		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
+	}
 	cartesian_communicator<1> axis(int d) const{
-		std::vector<int> remains(D, false); remains[d] = true;
-		auto comm_sub = cartesian_communicator<>::sub(remains);
-		return static_cast<cartesian_communicator<1>&>(comm_sub);
+		cartesian_communicator<1> ret;
+		std::array<int, D> remains = {}; remains[d] = true;
+		MPI_(Cart_sub)(impl_, remain.data(), &ret.impl_);
+		return ret;
+	//	return cartesian_communicator<>::sub(remains);
+	//	auto comm_sub = cartesian_communicator<>::sub(remains);
+	//	return static_cast<cartesian_communicator<1>&>(comm_sub);
 //		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
 	}
 };
