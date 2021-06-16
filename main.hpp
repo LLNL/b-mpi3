@@ -20,9 +20,11 @@ static int main(int, char**, boost::mpi3::communicator); // if you include this 
 
 }}
 
-int main(int argc, char* argv[]){ // if you include this file you shouldn't have your own `::main`
+int main(int argc, char* argv[]) try{ // if you include this file you shouldn't have your own `::main`
 	boost::mpi3::environment env{argc, argv};
 	return boost::mpi3::main(argc, argv, env.get_world_instance());
+}catch(...){
+	return 1;
 }
 
 #if 0
