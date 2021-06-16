@@ -21,8 +21,12 @@ template<dimensionality_type D = dynamic_extent> struct cartesian_communicator;
 
 template<>
 struct cartesian_communicator<dynamic_extent> : communicator{
+
 	cartesian_communicator() = default;
+	cartesian_communicator(cartesian_communicator&) = default;
 	cartesian_communicator(cartesian_communicator&&) = default;
+	cartesian_communicator(cartesian_communicator const&) = default;
+
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
@@ -94,6 +98,7 @@ enum fill_t{fill = 0};
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator() = default;
+	cartesian_communicator(cartesian_communicator&) = default;
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) = default;
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
