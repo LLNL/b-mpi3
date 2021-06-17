@@ -1720,7 +1720,10 @@ public:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot ibroadcast"};
+		if(s != MPI_SUCCESS){
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
+			throw std::runtime_error{"cannot ibroadcast"};
+		}
 		return r;
 	}
 	template<class It, typename Size>

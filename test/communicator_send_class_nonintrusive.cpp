@@ -53,7 +53,7 @@ void load(Archive & ar, B& b, const unsigned int/*version*/){
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	assert( world.size() > 1 );
 
 	switch(world.rank()){
@@ -81,5 +81,5 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	}
 	
 	return 0;
-}
+}catch(...){throw;}
 

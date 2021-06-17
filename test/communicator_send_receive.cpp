@@ -9,10 +9,11 @@ namespace mpi3 = boost::mpi3;
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	assert( not world.is_empty() );
-	assert( world.size() != 0 );
+	auto const s = world.size();
+	assert( s != 0 );
 
-	auto right = (world.rank() + 1 + world.size()) % world.size();
-	auto left  = (world.rank() - 1 + world.size()) % world.size();
+	auto right = (world.rank() + 1 + s ) % s;
+	auto left  = (world.rank() - 1 + s ) % s;
 
 	{
 		using Container = std::vector<double>;

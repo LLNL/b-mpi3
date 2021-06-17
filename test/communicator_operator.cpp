@@ -13,7 +13,7 @@ using std::cout;
 using namespace std::chrono_literals;
 
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	std::vector<double> inbuf(100);
 	std::vector<double> outbuf(100);
@@ -33,12 +33,15 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 			r = world.ireceive_n(inbuf.begin(), inbuf.size(), 0);
 			cout <<"comm["<< world.rank() <<"] ireceived"<< std::endl;
 			r.wait();
-		}
+		}; break;
+		default: break;
 	}
 	cout <<"comm["<< world.rank() <<"] completed op"<< std::endl;
 
 	if(world.rank() == 1){assert( inbuf[9] == 9. );}
 
 	return 0;
+}catch(...){
+	throw;
 }
 

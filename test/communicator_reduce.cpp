@@ -9,7 +9,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	assert( world.size() > 1);
 	
 	{
@@ -31,12 +31,12 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 		double total = 0;
 		double const* const it = world.reduce_n(&v, 1, &total, std::plus<>{}, 0);
 		if(world.rank() == 0){
-			assert( total == world.size()*(world.size()-1)/2 );
+			assert( total == static_cast<double>(world.size()*(world.size()-1))/2 );
 		}else{
 			assert( total == 0 );
 		}
 		if(world.rank() == 0){
-			assert(it == &total + 1);
+			assert(it != &total);
 		}else{
 			assert(it == &total);
 		}
@@ -49,5 +49,5 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	}
 
 	return 0;
-}
+}catch(...){throw;}
 

@@ -58,7 +58,7 @@ struct B{
 	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
 	B(B&&) = delete;
 	auto operator=(B&&) = delete;
-	decltype(auto) operator=(B const& other){
+	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
@@ -67,7 +67,7 @@ struct B{
 		std::copy_n(other.data, n_, data);
 		return *this;
 	}
-	decltype(auto) operator[](std::ptrdiff_t i){return data[i];}
+	auto operator[](std::ptrdiff_t i) const -> double& {return data[i];}
 	~B(){delete[] data;}
 };
 

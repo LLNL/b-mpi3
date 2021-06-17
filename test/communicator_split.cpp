@@ -9,7 +9,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	mpi3::ostream wout(world);
 	
@@ -30,5 +30,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	wout << std::endl;
 
 	return 0;
+}catch(...){
+	throw;
 }
 

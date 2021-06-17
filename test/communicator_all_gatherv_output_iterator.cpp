@@ -7,7 +7,7 @@ mpicxx.mpich -g -std=c++14 -O3 -Wall -Wextra -Wpedantic $0 -o $0x -lboost_serial
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	using T = double;
 	assert( world.size() > 2 );
 
@@ -28,5 +28,5 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 // check communication /////////////////////////////////////////////////////////
 	assert((v==std::vector<T>{0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 2.}));
 	return 0;
-}
+}catch(...){throw;}
 
