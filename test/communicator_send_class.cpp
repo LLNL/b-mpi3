@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 // © Copyright Alfredo A. Correa 2018-2021
@@ -52,17 +52,17 @@ public:
 struct B{
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
 	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
-	std::unique_ptr<double[]> data;        // NOLINT(misc-non-private-member-variables-in-classes)
+	std::unique_ptr<double[]> data;// NOLINT(misc-non-private-member-variables-in-classes, cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B() = default;
-	explicit B(int n) : n_(n), data(std::make_unique<double[]>(n)){}
-	B(B const& other) : name_(other.name_), n_(other.n_), data(std::make_unique<double[]>(other.n_)){}
+	explicit B(int n) : n_(n), data(std::make_unique<double[]>(n)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+	B(B const& other) : name_(other.name_), n_(other.n_), data(std::make_unique<double[]>(other.n_)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B(B&&) = delete;
 	auto operator=(B&&) = delete;
 	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		data = std::make_unique<double[]>(other.n_);
+		data = std::make_unique<double[]>(other.n_); // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 		std::copy_n(other.data.get(), n_, data.get());
 		return *this;
 	}
@@ -78,7 +78,7 @@ void save(Archive & ar, B const& b, const unsigned int /*version*/){
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int /*version*/){ //NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
-	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory)
+	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	ar>> boost::serialization::make_array(b.data.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
