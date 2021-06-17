@@ -1,11 +1,11 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
+#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 (echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_REQUEST $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
 #endif
 #ifndef BOOST_MPI3_REQUEST_HPP
 #define BOOST_MPI3_REQUEST_HPP
 
-//#include "../mpi3/communicator.hpp"
 #include "../mpi3/detail/iterator.hpp" // detail::data
+#include "../mpi3/detail/call.hpp"
 #include "../mpi3/status.hpp"
 
 #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
