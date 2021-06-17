@@ -8,19 +8,20 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	assert(world.size() > 2);
 
 
 	mpi3::ostream wout(world);
 
 	std::vector<int> large(10);
-	if(world.root())
+	if(world.root()){
 		iota(large.begin(), large.end(), 0);
+	}
 
-	wout << "before:" << std::endl;
-	for(auto& e : large) wout << e << " ";
-	wout << std::endl;
+	wout<<"before:"<<std::endl;
+	for(auto& e : large){wout << e <<" ";}
+	wout<<std::endl;
 
 	{
 		auto req = world.ibroadcast(large.begin(), large.end(), 0);
@@ -28,9 +29,9 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		std::this_thread::sleep_for(5s);
 	}
 
-	wout << "after:" << std::endl;
-	for(auto& e : large) wout << e << " ";
-	wout << std::endl;
+	wout<<"after:"<<std::endl;
+	for(auto& e : large){wout<< e <<" ";}
+	wout<<std::endl;
 
 	return 0;
 }

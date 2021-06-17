@@ -278,7 +278,10 @@ public:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send");
+		if(s != MPI_SUCCESS){
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
+			throw std::runtime_error("cannot send");
+		}
 		return r;
 	}
 	template<class It, typename Size>
