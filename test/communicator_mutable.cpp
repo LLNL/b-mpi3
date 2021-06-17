@@ -15,12 +15,13 @@ struct projector{
 	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}, n_{5}{}
 	projector(projector&&) = default;
 	projector(projector const&) = default;
-	projector& operator=(projector const&) = default;
-	projector& operator=(projector&&) = default;
-	projector& operator=(projector&) = default;
+	auto operator=(projector const&) -> projector& = default;
+	auto operator=(projector     &&) -> projector& = default;
+	auto operator=(projector      &) -> projector& = default;
 	friend auto operator==(projector const& a, projector const& b){return a.comm_ == b.comm_;}
 	decltype(auto) get_comm() const {return comm_;}
-	int get_n() const{return n_;}
+	auto get_n() const -> int{return n_;}
+	~projector() = default;
 private:
 	mutable mpi3::communicator comm_;
 	int n_ = 0;

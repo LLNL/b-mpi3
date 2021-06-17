@@ -22,7 +22,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 		for(int reps = 0; reps != NUM_REPS; ++reps){
 			if(world.root()){
 				for(std::size_t i = 0; i != sizes[n]; ++i){
-					buf[i] = 1000000.*(n * NUM_REPS + reps) + i;
+					buf[i] = 1000000.*static_cast<double>(n * NUM_REPS + reps) + static_cast<double>(i);
 				}
 			}else{
 				for(std::size_t i = 0; i != sizes[n]; ++i){

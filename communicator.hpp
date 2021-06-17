@@ -542,10 +542,14 @@ public:
 		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
 		return rank;
 	}
-	int right() const{return (rank() + 1) % size();}
+	int right() const{
+		int const s = size(); assert(s != 0);
+		return (rank() + 1) % s;
+	}
 	int left() const{
+		int const s = size(); assert(s != 0);
 		int left = rank() - 1;
-		if(left < 0) left = size() - 1;
+		if(left < 0) left = s - 1;
 		return left;
 	}
 	int next(int n = 1) const{
@@ -1051,7 +1055,10 @@ public:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("receive_n");
+		if(s != MPI_SUCCESS){
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
+			throw std::runtime_error("receive_n");
+		}
 		return r;
 	//	return dest + count;
 	}
