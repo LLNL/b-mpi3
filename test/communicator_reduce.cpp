@@ -45,7 +45,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 		mpi3::optional<int> total = (world[0] += world.rank());
 		if(world.rank() == 0){assert(total);}
 		if(world.rank() != 0){assert(not total);}
-		if(total){assert( *total == static_cast<double>(world.size()*(world.size()-1)/2) );}
+		if(total){assert( *total == static_cast<double>(world.size()*(world.size()-1))/2 );}
 	}
 
 	return 0;
