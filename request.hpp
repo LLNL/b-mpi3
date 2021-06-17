@@ -20,15 +20,9 @@ namespace mpi3{
 struct request{
 	MPI_Request impl_ = MPI_REQUEST_NULL;
 	request() = default;
-	request(request const& other) = delete;// : impl_(other.impl_), owner_(false){}
-//private:
-//	template<
-//		class ContIt,
-//		class value_type = typename std::iterator_traits<ContIt>::value_type,
-//		class datatype = detail::datatype<value_type>
-//	>
+	request(request const& other) = delete;
 public:
-	request(request&& other) : impl_(other.impl_){other.impl_ = MPI_REQUEST_NULL;}// = default;
+	request(request&& other) : impl_{std::exchange(other.impl_, MPI_REQUEST_NULL)}{}
 	request& operator=(request const&) = delete;
 	request& operator=(request&& other){
 		request(std::move(other)).swap(*this);
@@ -48,7 +42,7 @@ public:
 	void swap(request& other){std::swap(impl_, other.impl_);}
 	void cancel(){MPI_Cancel(&impl_);}
 	bool valid() const{return impl_ != MPI_REQUEST_NULL;}
-	~request(){
+	~request() noexcept{
 		wait();
 		if(impl_ != MPI_REQUEST_NULL) MPI_Request_free(&impl_);
 	}
@@ -64,10 +58,7 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
 		return ret;
 	}
-	void start(){
-		int status = MPI_Start(&impl_);
-		if(status != MPI_SUCCESS) throw std::runtime_error("cannot start request");
-	}
+	void start(){MPI_(Start)(&impl_);}
 	status test() const{return get_status();}
 };
 
