@@ -53,8 +53,10 @@ public:
 		if(impl_ != MPI_REQUEST_NULL) MPI_Request_free(&impl_);
 	}
 	void wait(){
-		int s = MPI_Wait(&impl_, MPI_STATUS_IGNORE);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
+		if(impl_ != MPI_REQUEST_NULL){
+			int s = MPI_Wait(&impl_, MPI_STATUS_IGNORE);
+			if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait on request");
+		}
 	}
 	status get(){
 		status ret;

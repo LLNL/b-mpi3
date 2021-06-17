@@ -8,7 +8,7 @@ mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 2 $0x.x
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 
 	std::vector<std::size_t> sizes = {100, 64*1024};//, 128*1024}; // TODO check larger number (fails with openmpi 4.0.5)
 	int NUM_REPS = 5;
@@ -40,5 +40,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	}
 
 	return 0;
+}catch(...){
+	return 1;
 }
+
 

@@ -28,5 +28,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 // check communication /////////////////////////////////////////////////////////
 	assert((v==std::vector<T>{0., 0., 0., 1., 1., 1., 1., 2., 2., 2., 2., 2.}));
 	return 0;
-}catch(...){throw;}
+}catch(...){
+	return 1;
+}
 

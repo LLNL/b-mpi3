@@ -30,5 +30,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert( std::equal(cbuffer.begin(), cbuffer.end(), buffer.begin()) );
 
 	return 0;
-}catch(...){throw;}
+}catch(...){
+	return 1;
+}
 

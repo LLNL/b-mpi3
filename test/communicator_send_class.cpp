@@ -52,35 +52,34 @@ public:
 struct B{
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
 	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
-	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes)
+	std::unique_ptr<double[]> data;        // NOLINT(misc-non-private-member-variables-in-classes)
 	B() = default;
-	explicit B(int n) : n_(n), data(new double[n]){}
-	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
+	explicit B(int n) : n_(n), data(std::make_unique<double[]>(n)){}
+	B(B const& other) : name_(other.name_), n_(other.n_), data(std::make_unique<double[]>(other.n_)){}
 	B(B&&) = delete;
 	auto operator=(B&&) = delete;
 	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		delete[] data; 
-		data = new double[other.n_];
-		std::copy_n(other.data, n_, data);
+		data = std::make_unique<double[]>(other.n_);
+		std::copy_n(other.data.get(), n_, data.get());
 		return *this;
 	}
-	auto operator[](std::ptrdiff_t i) const -> double& {return data[i];}
-	~B(){delete[] data;}
+	auto operator[](std::ptrdiff_t i) const -> double& {return data.get()[i];}
+	~B() = default;
 };
 
 // nonintrusive serialization
 template<class Archive>
 void save(Archive & ar, B const& b, const unsigned int /*version*/){
-	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
+	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data.get(), b.n_);
 }
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int /*version*/){ //NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
-	delete[] b.data; b.data = new double[b.n_]; // NOLINT(cppcoreguidelines-owning-memory)
-	ar>> boost::serialization::make_array(b.data, b.n_);
+	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory)
+	ar>> boost::serialization::make_array(b.data.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 

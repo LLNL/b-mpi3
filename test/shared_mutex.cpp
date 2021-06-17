@@ -9,6 +9,6 @@ mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator/*world*/){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator/*world*/)->int{
 	return 0;
 }

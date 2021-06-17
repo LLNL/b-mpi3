@@ -15,41 +15,42 @@ class B{
 	int n_ = 0;
 	template<class Archive> friend void save(Archive & ar, B const& b, unsigned int/*version*/);
 	template<class Archive> friend void load(Archive & ar, B      & b, unsigned int/*version*/);
-	double* data_ = nullptr;
+	std::unique_ptr<double[]> data_;
 public:
-	auto data()      & -> double      *{return data_;}
-	auto data() const& -> double const*{return data_;}
+	auto data()      & -> double      *{return data_.get();}
+	auto data() const& -> double const*{return data_.get();}
 	auto name()      & -> std::string      & {return name_;}
 	auto name() const& -> std::string const& {return name_;}
 	B() = default;
-	explicit B(int n) : n_{n}, data_{new double[n]}{std::fill_n(data_, n_, 0.);}
-	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{new double[other.n_]}{
-		std::copy_n(other.data_, n_, data_);
+	explicit B(int n) : n_{n}, data_{std::make_unique<double[]>(n)}{
+		std::fill_n(data_.get(), n_, 0.);
+	}
+	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{std::make_unique<double[]>(other.n_)}{
+		std::copy_n(other.data_.get(), n_, data_.get());
 	}
 	B(B&&) = delete;
 	auto operator=(B const& other) -> B&{
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		delete[] data_; 
-		data_ = new double[other.n_];
-		std::copy_n(data_, n_, other.data_);
+		data_ = std::make_unique<double[]>(other.n_);
+		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
 	auto operator=(B&&) = delete;
-	~B(){delete[] data_;}
+	~B() = default;
 };
 
 // nonintrusive serialization
 template<class Archive>
 void save(Archive & ar, B const& b, const unsigned int/*version*/){
-	ar << b.name() << b.n_ << boost::serialization::make_array(b.data_, b.n_);
+	ar << b.name() << b.n_ << boost::serialization::make_array(b.data_.get(), b.n_);
 }
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int/*version*/){
 	ar >> b.name() >> b.n_;
-	delete[] b.data_; b.data_ = new double[b.n_];
-	ar >> boost::serialization::make_array(b.data_, b.n_);
+	b.data_ = std::make_unique<double[]>(b.n_);
+	ar >> boost::serialization::make_array(b.data_.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
