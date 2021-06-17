@@ -9,7 +9,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 
 	world.set_error_handler(mpi3::error_handler::code); // default, internal function returns codes
 	double d = 5.;
@@ -24,5 +24,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 //	world.send(&d, &d + 1, 100);
 
 	return 1;
+}catch(...){
+	return 911;
 }
 

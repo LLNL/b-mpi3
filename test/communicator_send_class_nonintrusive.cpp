@@ -19,6 +19,7 @@ class B{
 public:
 	auto data()      & -> double      *{return data_.get();}
 	auto data() const& -> double const*{return data_.get();}
+	auto operator[](std::size_t i)&->double &{return data()[i];}
 	auto name()      & -> std::string      & {return name_;}
 	auto name() const& -> std::string const& {return name_;}
 	B() = default;
@@ -60,24 +61,24 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	switch(world.rank()){
 		case 0 : {
 			std::vector<B> v(5, B(3));
-			v[2].data()[2] = 3.14;
+			v[2][2] = 3.14;
 			world.send(v.begin(), v.end(), 1, 123);
 		}; break;
 		case 1 : {
 			std::vector<B> v(5);
 			world.receive(v.begin(), v.end(), 0, 123);
-			assert(v[2].data()[2] == 3.14);
+			assert(v[2][2] == 3.14);
 		}; break;
 	}
 	switch(world.rank()){
 		case 0 : {
-			B b1(4); b1.data()[2] = 4.5;
+			B b1(4); b1[2] = 4.5;
 			world[1] << b1;
 		}; break;
 		case 1 : {
 			B b2;
 			world[0] >> b2;
-			assert( b2.data()[2] == 4.5 );
+			assert( b2[2] == 4.5 );
 		}; break;
 	}
 	
