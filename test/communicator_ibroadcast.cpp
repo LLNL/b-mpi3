@@ -8,7 +8,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(world.size() > 2);
 
 
@@ -34,5 +34,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	wout<<std::endl;
 
 	return 0;
+}catch(...){
+	return 1;
 }
 

@@ -19,7 +19,7 @@ class B{
 public:
 	auto data()      & -> double      *{return data_.get();}
 	auto data() const& -> double const*{return data_.get();}
-	auto operator[](std::size_t i)&->double &{return data()[i];}
+	auto operator[](std::size_t i)&->double &{return data_.get()[i];}
 	auto name()      & -> std::string      & {return name_;}
 	auto name() const& -> std::string const& {return name_;}
 	B() = default;
