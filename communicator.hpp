@@ -273,15 +273,11 @@ public:
 		int dest, int tag
 	){
 		mpi3::request r;
-		int s = MPI_Isend(
+		MPI_(Isend)(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS){
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
-			throw std::runtime_error("cannot send");
-		}
 		return r;
 	}
 	template<class It, typename Size>
@@ -1053,17 +1049,12 @@ public:
 		int source, int tag
 	){
 		mpi3::request r;
-		int s = MPI_Irecv(
+		MPI_(Irecv)(
 			detail::data(dest), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS){
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
-			throw std::runtime_error("receive_n");
-		}
 		return r;
-	//	return dest + count;
 	}
 	template<class It, typename Size>
 	auto receive_n(
@@ -2711,16 +2702,11 @@ public:
 		int root
 	){
 		request ret;
-		int s = MPI_Igather(
+		MPI_(Igather)(
 			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			root, impl_, &ret.impl_
 		);
-	//	assert( s == MPI_SUCCESS );
-		if(s != MPI_SUCCESS){
-			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
-			throw std::runtime_error{"cannot Igather"};
-		}
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, typename Size2>
@@ -2735,15 +2721,11 @@ public:
 		Size2 d_count
 	){
 		request ret;
-		int s = MPI_Iallgather(
+		MPI_(Iallgather)(
 			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS){
-			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
-			throw std::runtime_error("cannot Iallgather");
-		}
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, class Size2>
