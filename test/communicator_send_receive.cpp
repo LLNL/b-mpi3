@@ -6,9 +6,10 @@ mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x -lboost_se
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
-	assert(not world.is_empty() );
+	assert( not world.is_empty() );
+	assert( world.size() != 0 );
 
 	auto right = (world.rank() + 1 + world.size()) % world.size();
 	auto left  = (world.rank() - 1 + world.size()) % world.size();
@@ -61,5 +62,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	//	assert( *b.begin() == std::to_string(1.*right) );
 	}
 	return 0;
+}catch(...){
+	throw;
 }
 

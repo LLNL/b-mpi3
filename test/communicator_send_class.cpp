@@ -26,7 +26,7 @@ public:
 	~A() = default;
 	A(A&&) = delete;
 	auto operator=(A&&) = delete;
-	decltype(auto) operator=(A const& other){
+	auto operator=(A const& other) -> A&{
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
@@ -34,7 +34,7 @@ public:
 		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	decltype(auto) operator[](std::ptrdiff_t i) const{return data_.get()[i];}
+	auto operator[](std::ptrdiff_t i) -> double&{return data_.get()[i];}
 	// intrusive serialization
 	template<class Archive>
 	void save(Archive & ar, const unsigned int /*version*/) const{
