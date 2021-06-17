@@ -24,7 +24,7 @@ namespace mpi3 = boost::mpi3;
 // defined in library_check.cpp
 void do_broadcast(mpi3::communicator& c);
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	int b = 1;
 	world.broadcast_value(b);
 	do_broadcast(world);

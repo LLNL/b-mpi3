@@ -1,19 +1,18 @@
 #if COMPILATION_INSTRUCTIONS
 mpic++ -g -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-lboost_serialization`&&mpirun -n 3 valgrind --leak-check=full --show-reachable=yes --error-limit=no                                 --suppressions=communicator_main.cpp.openmpi.supp $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/main.hpp"
 
 #include<complex>
-#include<string>
 #include<list>
+#include<string>
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	assert( world.size() > 1 );
 
 	switch(world.rank()){
@@ -52,5 +51,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	}
 
 	return 0;
+}catch(...){
+	return 1;
 }
 

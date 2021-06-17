@@ -80,7 +80,9 @@ assert( world.size() > 2);
 	if(world.rank() == 0){
 		assert( vals0.size() - world.size() == 0);
 		assert( vals0[2] == "1002" );
-	}else assert( vals0.size() == 0);
+	}else{
+		assert( vals0.empty() );
+	}
 }
 
 return 0;

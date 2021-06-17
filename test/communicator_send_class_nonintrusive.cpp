@@ -13,8 +13,8 @@ namespace mpi3 = boost::mpi3;
 class B{
 	std::string name_ = "unnamed";
 	int n_ = 0;
-	template<class Archive> friend void save(Archive & ar, B const& b, const unsigned int/*version*/);
-	template<class Archive> friend void load(Archive & ar, B      & b, const unsigned int/*version*/);
+	template<class Archive> friend void save(Archive & ar, B const& b, unsigned int/*version*/);
+	template<class Archive> friend void load(Archive & ar, B      & b, unsigned int/*version*/);
 	double* data_ = nullptr;
 public:
 	auto data()      & -> double      *{return data_;}
@@ -28,7 +28,7 @@ public:
 	}
 	B(B&&) = delete;
 	auto operator=(B const& other) -> B&{
-		if(data_ == other.data_) return *this;
+		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
 		delete[] data_; 
@@ -42,18 +42,18 @@ public:
 
 // nonintrusive serialization
 template<class Archive>
-void save(Archive & ar, B const& b, const unsigned int){
+void save(Archive & ar, B const& b, const unsigned int/*version*/){
 	ar << b.name() << b.n_ << boost::serialization::make_array(b.data_, b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int){
+void load(Archive & ar, B& b, const unsigned int/*version*/){
 	ar >> b.name() >> b.n_;
 	delete[] b.data_; b.data_ = new double[b.n_];
 	ar >> boost::serialization::make_array(b.data_, b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	assert( world.size() > 1 );
 
 	switch(world.rank()){
