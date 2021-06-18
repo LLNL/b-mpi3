@@ -1055,7 +1055,7 @@ public:
 			source, tag, impl_, &r.impl_
 		);
 		return r;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	auto receive_n(
 		It dest, 
