@@ -23,7 +23,7 @@ template<>
 struct cartesian_communicator<dynamic_extent> : communicator{
 
 	cartesian_communicator() = default;
-	cartesian_communicator(cartesian_communicator&) = default;
+	cartesian_communicator(cartesian_communicator& other) : communicator{other}{}
 	cartesian_communicator(cartesian_communicator&&) = default;
 	cartesian_communicator(cartesian_communicator const&) = delete;
 
