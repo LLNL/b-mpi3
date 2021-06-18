@@ -1706,11 +1706,15 @@ public:
 		int root
 	){
 		request r;
-		MPI_(Ibcast)(
-			detail::data(first), count, 
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			root, impl_, &r.impl_
-		);
+		try{
+			MPI_(Ibcast)(
+				detail::data(first), count, 
+				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+				root, impl_, &r.impl_
+			);
+		}catch(...){
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
+		}
 		return r;
 	}
 	template<class It, typename Size>
