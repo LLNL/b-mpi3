@@ -82,7 +82,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	//	return operator[](rank);
 	}
 	// int MPI_Cart_map not implemented
-	cartesian_communicator sub(std::vector<int> const& remain_dims) const{
+	cartesian_communicator sub(std::vector<int> const& remain_dims){
 		assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
 		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
 	}
@@ -142,8 +142,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
 //		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
-	cartesian_communicator sub(std::vector<int> const& remain_dims){
-	//	assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
+	cartesian_communicator sub(std::array<int, D> const& remain_dims){
 		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
 	}
 	cartesian_communicator<1> axis(int d) const{
