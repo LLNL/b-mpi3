@@ -2698,17 +2698,13 @@ public:
 		int root
 	){
 		request ret;
-		try{
-			MPI_(Igather)(
-				detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-				detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
-				root, impl_, &ret.impl_
-			);
-		}catch(...){
-			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
-		}
+		MPI_(Igather)(
+			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
+			root, impl_, &ret.impl_
+		);
 		return ret;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It1, typename Size1, class It2, typename Size2>
 	auto iall_gather_n(
 		It1 first, 
