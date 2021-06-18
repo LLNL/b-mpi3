@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
 #endif
 // © Copyright Alfredo A. Correa 2018-2021
@@ -15,35 +15,36 @@ mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-
 namespace mpi3 = boost::mpi3;
 
 struct A{
-	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for testing
-	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-	std::unique_ptr<double[]> data;  // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-
+private:
+	std::string name_ = "unnamed";
+	int n_ = 0;
+	std::unique_ptr<double[]> data_;  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) notation
+public:
 	A() = default;
-	explicit A(int n) : n_(n), data(new double[n]){}
-	A(A const& other) : name_(other.name_), n_(other.n_), data{new double[other.n_]}{}
+	explicit A(int n) : n_(n), data_{new double[n]}{}
+	A(A const& other) : name_(other.name_), n_(other.n_), data_{new double[other.n_]}{}
+	~A() = default;
 	A(A&&) = delete;
 	auto operator=(A&&) = delete;
 	auto operator=(A const& other) -> A&{
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		data.reset(new double[other.n_]); // NOLINT(cppcoreguidelines-owning-memory)
-		std::copy_n(other.data.get(), n_, data.get());
+		data_.reset(new double[other.n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	decltype(auto) operator[](std::ptrdiff_t i){return data.get()[i];}
-//	~A() noexcept{delete[] data;}
+	auto operator[](std::ptrdiff_t i) -> double&{return data_.get()[i];}
 	// intrusive serialization
 	template<class Archive>
 	void save(Archive & ar, const unsigned int /*version*/) const{
-		ar<< name_ << n_ << boost::serialization::make_array(data.get(), n_);
+		ar<< name_ << n_ << boost::serialization::make_array(data_.get(), n_);
 	}
 	template<class Archive>
 	void load(Archive & ar, const unsigned int /*version*/){
 		ar>> name_ >> n_;
-		data.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
-		ar>> boost::serialization::make_array(data.get(), n_);
+		data_.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
+		ar>> boost::serialization::make_array(data_.get(), n_);
 	}
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
@@ -51,35 +52,34 @@ struct A{
 struct B{
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
 	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
-	double* data = nullptr;        // NOLINT(misc-non-private-member-variables-in-classes)
+	std::unique_ptr<double[]> data;// NOLINT(misc-non-private-member-variables-in-classes, cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B() = default;
-	explicit B(int n) : n_(n), data(new double[n]){}
-	B(B const& other) : name_(other.name_), n_(other.n_), data(new double[other.n_]){}
+	explicit B(int n) : n_(n), data(std::make_unique<double[]>(n)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+	B(B const& other) : name_(other.name_), n_(other.n_), data(std::make_unique<double[]>(other.n_)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B(B&&) = delete;
 	auto operator=(B&&) = delete;
-	auto operator=(B const& other) -> B&{
+	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		delete[] data; 
-		data = new double[other.n_];
-		std::copy_n(other.data, n_, data);
+		data = std::make_unique<double[]>(other.n_); // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+		std::copy_n(other.data.get(), n_, data.get());
 		return *this;
 	}
-	decltype(auto) operator[](std::ptrdiff_t i){return data[i];}
-	~B(){delete[] data;}
+	auto operator[](std::ptrdiff_t i) const -> double& {return data.get()[i];}
+	~B() = default;
 };
 
 // nonintrusive serialization
 template<class Archive>
 void save(Archive & ar, B const& b, const unsigned int /*version*/){
-	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data, b.n_);
+	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data.get(), b.n_);
 }
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int /*version*/){ //NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
-	delete[] b.data; b.data = new double[b.n_]; // NOLINT(cppcoreguidelines-owning-memory)
-	ar>> boost::serialization::make_array(b.data, b.n_);
+	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+	ar>> boost::serialization::make_array(b.data.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 

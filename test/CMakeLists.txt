@@ -41,6 +41,7 @@ endif()
 # This list is only a subset of files.  It might be useful to divide some of the tests into
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
+cartesian.cpp
 communicator_abort.cpp
 communicator_all_gather.cpp
 communicator_all_gatherv.cpp
@@ -53,6 +54,7 @@ gather2.cpp
 communicator_ibroadcast.cpp
 communicator_igather.cpp
 communicator_list.cpp
+communicator_mutable.cpp
 communicator_operator.cpp
 communicator_reduce.cpp
 communicator_reduce_in_place.cpp
@@ -100,7 +102,9 @@ foreach(TEST_FILE ${TEST_SRCS})
   set(NPROC 3)
   if ((TEST_FILE STREQUAL "communicator_divide.cpp"  ) OR
       (TEST_FILE STREQUAL "communicator_operator.cpp") OR
-      (TEST_FILE STREQUAL "communicator_scatter.cpp" ))
+      (TEST_FILE STREQUAL "communicator_scatter.cpp" ) OR
+      (TEST_FILE STREQUAL "cartesian.cpp"            )
+  )
     set(NPROC 6)
   endif()
   if(DEFINED ENV{VALGRIND_EXE})

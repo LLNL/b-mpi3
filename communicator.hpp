@@ -1,4 +1,4 @@
-#if COMPILATION // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+#if COMPILATION // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
@@ -211,6 +211,9 @@ public:
 	communicator(communicator const& o, group const& g);
 	communicator(group const& g);
 	communicator(group const& g, int tag);
+	
+	impl_t& get(){return this->impl_;}
+
 	explicit operator group() const;
 
 	communicator duplicate(){
@@ -270,14 +273,13 @@ public:
 		int dest, int tag
 	){
 		mpi3::request r;
-		int s = MPI_Isend(
+		MPI_(Isend)(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send");
 		return r;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	void send_n(
 		It first, 
@@ -427,8 +429,10 @@ public:
 		);
 	}
 	using detail::basic_communicator::basic_communicator;
-	communicator(communicator const&) = default;
-	communicator(communicator&) = default;
+	communicator(communicator const&) = delete;//default;
+//	communicator(communicator&) = default;
+// intel need this:
+	communicator(communicator& other) : basic_communicator{other}{}
 	communicator(communicator&&) = default;
 	communicator() = default;
 /*	communicator& operator=(communicator const& other){
@@ -464,7 +468,10 @@ public:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
 		return size;
 	}
-	bool empty() const{return size() == 0;}
+	bool is_empty() const{return size() == 0;}
+	NODISCARD("empty is not an action")
+	bool empty() const{return is_empty();}
+
 	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
 	bool is_intercommunicator() const{
 		int flag = false;
@@ -534,10 +541,14 @@ public:
 		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
 		return rank;
 	}
-	int right() const{return (rank() + 1) % size();}
+	int right() const{
+		int const s = size(); assert(s != 0);
+		return (rank() + 1) % s;
+	}
 	int left() const{
+		int const s = size(); assert(s != 0);
 		int left = rank() - 1;
-		if(left < 0) left = size() - 1;
+		if(left < 0) left = s - 1;
 		return left;
 	}
 	int next(int n = 1) const{
@@ -1038,15 +1049,13 @@ public:
 		int source, int tag
 	){
 		mpi3::request r;
-		int s = MPI_Irecv(
+		MPI_(Irecv)(
 			detail::data(dest), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, tag, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("receive_n");
 		return r;
-	//	return dest + count;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	auto receive_n(
 		It dest, 
@@ -1698,14 +1707,13 @@ public:
 		int root
 	){
 		request r;
-		int s = MPI_Ibcast(
+		MPI_(Ibcast)(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot ibroadcast"};
 		return r;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	void broadcast_n(
 		It first, 
@@ -2155,9 +2163,12 @@ private:
 		CIt2 d_first,       detail::contiguous_iterator_tag, detail::basic_tag,
 		int root
 	){
+		auto const s = size();
+		if(s == 0) throw std::runtime_error{"invalid empty communicator for scatter_n"};
+		assert( n%s == 0 );
 		auto e = static_cast<enum error>( MPI_Scatter(
-			detail::data(first  ), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
-			detail::data(d_first), n/size(), detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
+			detail::data(first  ), n/s, detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
+			detail::data(d_first), n/s, detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
 			root, impl_
 		) );
 		if(e != mpi3::error::success) throw std::system_error{e, "cannot scatter"};
@@ -2170,12 +2181,14 @@ private:
 		It2 d_first,       Any2                      , Any3,
 		int root
 	){
+		auto const s = size();
+		if(s == 0) throw std::runtime_error{"invalid empty communicator for scatter_n"};
+		assert( n%s == 0 );
 		vector<typename std::iterator_traits<In1>::value_type> buff; buff.reserve(n);
 		using std::copy_n;
 		copy_n(first, n, std::back_inserter(buff));
-	//	auto e = 
 		scatter_n(buff.begin(), n, d_first, root);
-		std::advance(d_first, n/size());
+		std::advance(d_first, n/s);
 		return d_first;
 	}
 	template<class It1, class Size, class It2, class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type>
@@ -2686,14 +2699,13 @@ public:
 		int root
 	){
 		request ret;
-		int s = MPI_Igather(
+		MPI_(Igather)(
 			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			root, impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot Igather"};
 		return ret;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It1, typename Size1, class It2, typename Size2>
 	auto iall_gather_n(
 		It1 first, 
@@ -2706,14 +2718,13 @@ public:
 		Size2 d_count
 	){
 		request ret;
-		int s = MPI_Iallgather(
+		MPI_(Iallgather)(
 			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
 			impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot Iallgather");
 		return ret;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // wait is in request destructor
 	template<class It1, typename Size1, class It2, class Size2>
 	auto gather_n(
 		It1 first,

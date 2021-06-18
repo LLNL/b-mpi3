@@ -7,9 +7,8 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n
 #include "../../mpi3/detail/iterator.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	using dd = std::tuple<double, double>;
 
@@ -25,5 +24,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		assert( last == begin(v) );
 	}
 	return 0;
+}catch(...){
+	return 1;
 }
 

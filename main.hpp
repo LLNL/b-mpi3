@@ -16,13 +16,22 @@ mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 namespace boost{
 namespace mpi3{
 
-static int main(int, char*[], boost::mpi3::communicator); // if you include this file you should define `::boost::mpi3::main`
+static int main(int, char**, boost::mpi3::communicator); // if you include this file you should define `::boost::mpi3::main`
 
 }}
 
-int main(int argc, char* argv[]){ // if you include this file you shouldn't have your own `::main`
+int main(int argc, char* argv[]) try{ // if you include this file you shouldn't have your own `::main`
 	boost::mpi3::environment env{argc, argv};
-	return boost::mpi3::main(argc, argv, env.get_world_instance());
+	
+	int ret;
+	try{
+		ret = boost::mpi3::main(argc, argv, env.get_world_instance());
+	}catch(...){
+		ret = 1;
+	}
+	return ret;
+}catch(...){
+	return 1;
 }
 
 #if 0

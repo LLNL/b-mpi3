@@ -6,12 +6,14 @@ mpic++ -O3 -std=c++14 -O3 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x -lboost_se
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
-	assert(world.size() > 0);
+	assert( not world.is_empty() );
+	auto const s = world.size();
+	assert( s != 0 );
 
-	auto right = (world.rank() + 1 + world.size()) % world.size();
-	auto left  = (world.rank() - 1 + world.size()) % world.size();
+	auto right = (world.rank() + 1 + s ) % s;
+	auto left  = (world.rank() - 1 + s ) % s;
 
 	{
 		using Container = std::vector<double>;
@@ -38,8 +40,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 		assert( c.front() == std::to_string(right) );
 	}
 	{
-		std::array<int, 10> buffer ; buffer [5] = world.rank();
-		std::array<int, 10> buffer2; buffer2[5] = -1;
+		std::array<int, 10> buffer {}; buffer [5] = world.rank();
+		std::array<int, 10> buffer2{}; buffer2[5] = -1;
 		world.send_receive_n(
 			buffer .data(), 10, left , 
 			buffer2.data(), 10, right
@@ -61,5 +63,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 	//	assert( *b.begin() == std::to_string(1.*right) );
 	}
 	return 0;
+}catch(...){
+	return 1;
 }
 

@@ -1,16 +1,15 @@
 #if COMPILATION
 mpicxx $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
-// © Alfredo Correa 2018-2020
+// © Alfredo Correa 2018-2021
 
 #include "../main.hpp"
 #include "../communicator.hpp"
 #include "../detail/iterator.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 {
 	using T = std::tuple<double, double>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
@@ -83,5 +82,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	assert(( v[ 5] == 2. ));
 }
 	return 0;
+}catch(...){
+	return 1;
 }
+
 

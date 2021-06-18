@@ -21,9 +21,12 @@ template<dimensionality_type D = dynamic_extent> struct cartesian_communicator;
 
 template<>
 struct cartesian_communicator<dynamic_extent> : communicator{
-	private:
-	cartesian_communicator() : communicator(){}
-	public:
+
+	cartesian_communicator() = default;
+	cartesian_communicator(cartesian_communicator& other) : communicator{other}{}
+	cartesian_communicator(cartesian_communicator&&) = default;
+	cartesian_communicator(cartesian_communicator const&) = delete;
+
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
@@ -41,6 +44,13 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	[[deprecated("use dimensionality() instead of dimension")]] 
 	int dimension() const{int ret; MPI_Cartdim_get(impl_, &ret); return ret;}
+
+	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
+	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
+	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
+		communicator::operator=(other);
+		return *this;
+	}
 
 	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}
 	std::vector<int> coordinates() const{
@@ -91,6 +101,12 @@ enum fill_t{fill = 0};
 
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
+
+	cartesian_communicator() = default;
+	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
+	cartesian_communicator(cartesian_communicator const&) = delete;
+	cartesian_communicator(cartesian_communicator&&) = default;
+
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
 		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
 	}
@@ -113,16 +129,31 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return ret;
 	}
 	auto dimensions() const{return topology().dimensions;}
+	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
+	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
+	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
+		cartesian_communicator<>::operator=(other);
+		return *this;
+	}
+
 	cartesian_communicator<D-1> sub() const{
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
 //		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
+	cartesian_communicator sub(std::vector<int> const& remain_dims) const{
+	//	assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
+		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
+	}
 	cartesian_communicator<1> axis(int d) const{
-		std::vector<int> remains(D, false); remains[d] = true;
-		auto comm_sub = cartesian_communicator<>::sub(remains);
-		return static_cast<cartesian_communicator<1>&>(comm_sub);
+		cartesian_communicator<1> ret;
+		std::array<int, D> remains = {}; remains[d] = true;
+		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
+		return ret;
+	//	return cartesian_communicator<>::sub(remains);
+	//	auto comm_sub = cartesian_communicator<>::sub(remains);
+	//	return static_cast<cartesian_communicator<1>&>(comm_sub);
 //		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
 	}
 };

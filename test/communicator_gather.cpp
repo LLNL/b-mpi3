@@ -1,12 +1,12 @@
 #if COMPILATION_INSTRUCTIONS
 mpicxx.mpich -g $0 -o $0x -lboost_serialization&&mpirun.mpich -n 3 valgrind --error-exitcode=1345 $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
-#include "../../mpi3/process.hpp"
 #include "../../mpi3/ostream.hpp"
+#include "../../mpi3/process.hpp"
 
 #include<boost/serialization/utility.hpp>
 
@@ -15,10 +15,11 @@ mpicxx.mpich -g $0 -o $0x -lboost_serialization&&mpirun.mpich -n 3 valgrind --er
 namespace mpi3 = boost::mpi3;
 
 using std::cout;
-using std::vector;
 using std::list;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+
+mpi3::vector<double> v;
 
 assert( world.size() > 2);
 {
@@ -54,7 +55,7 @@ assert( world.size() > 2);
 	world.gather(small.begin(), small.end(), large.begin(), 0);
 	if(world.root()){
 		cout << "large: ";
-		for(auto& e : large) cout << e << " ";
+		for(auto& e : large){cout<< e <<" ";}
 		cout << '\n';
 	}
 	if(world.root()){
@@ -69,8 +70,9 @@ assert( world.size() > 2);
 	vector<T> small(10, val);
 	vector<T> large(world.root()?small.size()*world.size():0);
 	world.gather(small.begin(), small.end(), large.begin(), 0);
-	if(world.rank() == 0)
+	if(world.rank() == 0){
 		assert(all_of(large.begin(), large.end(), [val](auto& e){return val == e;}) );
+	}
 }
 {
 	auto Lval = std::to_string(world.rank() + 1000);
@@ -78,28 +80,15 @@ assert( world.size() > 2);
 	if(world.rank() == 0){
 		assert( vals0.size() - world.size() == 0);
 		assert( vals0[2] == "1002" );
-	}else assert( vals0.size() == 0);
+	}else{
+		assert( vals0.empty() );
+	}
 }
-/*
-{
-	std::vector<int> rs(world.size());
-	int r = world.rank();
-	world.gather_value(r, rs.begin(), 0);
-	if(world.rank() == 0) assert( rs[2] == 2 );
-}
-{
-	int r = world.rank() + 1;
-	std::vector<int> rs = world.gather_value(r, 0);
-	if(world.rank() == 0) assert( rs[2] == 3 );
-}
-{
-	int r = world.rank() + 1;
-	std::vector<int> rs = (world[0] |= r);
-	if(world.rank() == 0) assert( rs[2] == 3 );
-}
-*/
 
 return 0;
 
+}catch(...){
+return 1;
 }
+
 

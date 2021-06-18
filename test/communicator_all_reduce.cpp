@@ -6,9 +6,8 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 #include "../../mpi3/communicator.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 
 	assert( world.size() > 1);
 
@@ -20,10 +19,12 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 	assert(last == global.end());
 
-	for(std::size_t i = 0; i != global.size(); ++i) 
+	for(std::size_t i = 0; i != global.size(); ++i){
 		assert(global[i] == local[i]*world.size());
+	}
 
-	assert( (world += world.rank()) == world.size()*(world.size()-1)/2 );
+	auto const sum_of_ranks = (world += world.rank());
+	assert( sum_of_ranks == world.size()*(world.size()-1)/2 );
 
 	auto rank = world.rank();
 	auto sum_rank = 0;
@@ -43,8 +44,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 
 	{
-		std::vector<int> local(20, true);
-		if(world.rank() == 2) local[1] = false;
+		std::vector<int> local(20, 1);
+		if(world.rank() == 2){local[1] = 0;}
 
 		std::vector<int> global(local.size());
 		world.all_reduce_n(local.begin(), local.size(), global.begin());
@@ -53,34 +54,34 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		assert(global[1] == world.size() - 1);
 	}
 	{
-		std::vector<int> local(20, true);
-		if(world.rank() == 2) local[1] = false;
+		std::vector<int> local(20, 1);
+		if(world.rank() == 2){local[1] = 9;}
 
 		std::vector<int> global(local.size());
 		world.all_reduce_n(local.begin(), local.size(), global.begin(), std::logical_and<>{});
 
-		assert(global[0] == true);
-		assert(global[1] == false);
+		assert(global[0] != 0);
+		assert(global[1] == 1);
 	}
 	{
 		int b = 1;
-		if(world.rank() == 2) b = 0;
+		if(world.rank() == 2){b = 0;}
 		int all = (world += b);
 		assert( all == world.size() - 1 );
 	}
 	{
-		int b = 1;
-		if(world.rank() == 2) b = 0;
-		int all = (world &= b);
+		int const b = world.rank() == 2 ?0:1;
+		int const all = (world &= b);
 		assert( all == false );
 	}
 	{
-		bool b = true;
-		if(world.rank() == 2) b = false;
-		bool all = (world &= b);
+		bool const b = not(world.rank() == 2);
+		bool const all = (world &= b);
 		assert( all == false );
 	}
 
 	return 0;
+}catch(...){
+	return 1;
 }
 
