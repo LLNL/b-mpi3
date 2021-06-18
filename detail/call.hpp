@@ -42,7 +42,7 @@ template<int(*F)(char*, int*)> std::string call(){
 
 template<class FT, FT* F, class... Args>
 void call(Args... args){
-	auto e = static_cast<enum error>(F(args...));
+	auto const e = static_cast<enum error>(F(args...)); // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
 	if(e != mpi3::error::success) throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};
 }
 

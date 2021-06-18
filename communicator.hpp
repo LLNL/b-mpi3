@@ -2723,7 +2723,7 @@ public:
 			impl_, &ret.impl_
 		);
 		return ret;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // wait is in request destructor
 	template<class It1, typename Size1, class It2, class Size2>
 	auto gather_n(
 		It1 first,
