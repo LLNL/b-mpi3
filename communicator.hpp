@@ -2698,11 +2698,15 @@ public:
 		int root
 	){
 		request ret;
-		MPI_(Igather)(
-			detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
-			root, impl_, &ret.impl_
-		);
+		try{
+			MPI_(Igather)(
+				detail::data(first)  , count  , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+				detail::data(d_first), d_count, detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
+				root, impl_, &ret.impl_
+			);
+		}catch(...){
+			MPI_Wait(&ret.impl_, MPI_STATUS_IGNORE);
+		}
 		return ret;
 	}
 	template<class It1, typename Size1, class It2, typename Size2>
