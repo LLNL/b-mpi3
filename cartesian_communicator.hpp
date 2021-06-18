@@ -100,7 +100,7 @@ template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 
 	cartesian_communicator() = default;
-	cartesian_communicator(cartesian_communicator&) = default;
+	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) = default;
 
