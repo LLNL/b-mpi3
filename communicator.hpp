@@ -1,4 +1,4 @@
-#if COMPILATION // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+#if COMPILATION // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
@@ -1706,15 +1706,11 @@ public:
 		int root
 	){
 		request r;
-		int s = MPI_Ibcast(
+		MPI_(Ibcast)(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			root, impl_, &r.impl_
 		);
-		if(s != MPI_SUCCESS){
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
-			throw std::runtime_error{"cannot ibroadcast"};
-		}
 		return r;
 	}
 	template<class It, typename Size>

@@ -1,4 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
+#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpic++ -O3 -std=c++14 -Wall -Wextra -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 3 $0x.x $@ && rm -f $0x.x; exit
 #endif
 
@@ -15,7 +15,7 @@ class B{
 	int n_ = 0;
 	template<class Archive> friend void save(Archive & ar, B const& b, unsigned int/*version*/);
 	template<class Archive> friend void load(Archive & ar, B      & b, unsigned int/*version*/);
-	std::unique_ptr<double[]> data_;
+	std::unique_ptr<double[]> data_; // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 public:
 	auto data()      & -> double      *{return data_.get();}
 	auto data() const& -> double const*{return data_.get();}
@@ -23,10 +23,10 @@ public:
 	auto name()      & -> std::string      & {return name_;}
 	auto name() const& -> std::string const& {return name_;}
 	B() = default;
-	explicit B(int n) : n_{n}, data_{std::make_unique<double[]>(n)}{
+	explicit B(int n) : n_{n}, data_{std::make_unique<double[]>(n)}{// NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::fill_n(data_.get(), n_, 0.);
 	}
-	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{std::make_unique<double[]>(other.n_)}{
+	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{std::make_unique<double[]>(other.n_)}{ // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 	}
 	B(B&&) = delete;
@@ -34,7 +34,7 @@ public:
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
-		data_ = std::make_unique<double[]>(other.n_);
+		data_ = std::make_unique<double[]>(other.n_);// NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
@@ -50,7 +50,7 @@ void save(Archive & ar, B const& b, const unsigned int/*version*/){
 template<class Archive>
 void load(Archive & ar, B& b, const unsigned int/*version*/){
 	ar >> b.name() >> b.n_;
-	b.data_ = std::make_unique<double[]>(b.n_);
+	b.data_ = std::make_unique<double[]>(b.n_);// NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 	ar >> boost::serialization::make_array(b.data_.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
@@ -83,5 +83,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 	
 	return 0;
-}catch(...){throw;}
+}catch(...){
+	return 1;
+}
+
 
