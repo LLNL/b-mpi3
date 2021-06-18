@@ -47,7 +47,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
-	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc workaround, needs explicit definition of duplicate assigment
+	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
 		communicator::operator=(other);
 		return *this;
 	}
@@ -131,7 +131,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 	auto dimensions() const{return topology().dimensions;}
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
-	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc workaround, needs explicit definition of duplicate assigment
+	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
 		cartesian_communicator<>::operator=(other);
 		return *this;
 	}
