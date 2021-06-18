@@ -1706,17 +1706,13 @@ public:
 		int root
 	){
 		request r;
-		try{
-			MPI_(Ibcast)(
-				detail::data(first), count, 
-				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-				root, impl_, &r.impl_
-			);
-		}catch(...){
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
-		}
+		MPI_(Ibcast)(
+			detail::data(first), count, 
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			root, impl_, &r.impl_
+		);
 		return r;
-	}
+	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	void broadcast_n(
 		It first, 
