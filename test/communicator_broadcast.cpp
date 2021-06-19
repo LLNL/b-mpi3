@@ -40,17 +40,17 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 		}
 	}
 	{
-		bool b = world.root()?true:false;
+		bool b = world.root();
 		world.broadcast_value(b);
 		assert( b == true );
 	}
 	{
-		bool b = world.root()?true:false;
+		bool b = world.root();
 		world.broadcast_n(&b, 1);
 		assert( b == true );
 	}
 	{
-		bool b = world.root()?true:false;
+		bool b = world.root();
 		world[0] || b;
 		assert( b == true );
 	}
