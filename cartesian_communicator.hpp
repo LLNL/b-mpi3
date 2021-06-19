@@ -143,7 +143,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 //		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
 	cartesian_communicator sub(std::array<int, D> const& remain_dims){
-		cartesian_communicator ret; MPI_Cart_sub(impl_, remain_dims.data(), &ret.impl_); return ret;
+		cartesian_communicator ret; MPI_Cart_sub(impl_, remain_dims.data(), &ret.get()); return ret;
 	}
 	cartesian_communicator<1> axis(int d) const{
 		cartesian_communicator<1> ret;
