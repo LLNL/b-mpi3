@@ -107,7 +107,9 @@ public:
 		return committed_type{std::exchange(impl_, MPI_DATATYPE_NULL)};
 	}
 	template<class T> void commit_as(T const&){return commit_as<T>();}
-	~type() noexcept{if(not mpi3::finalized()) if(impl_ != MPI_DATATYPE_NULL) MPI_Type_free(&impl_);}
+	~type() noexcept{
+		if(mpi3::initialized() and not mpi3::finalized()) if(impl_ != MPI_DATATYPE_NULL) MPI_Type_free(&impl_);
+	}
 
 	type contiguous(int count) const{
 		type ret;
