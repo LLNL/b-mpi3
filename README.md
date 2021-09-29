@@ -9,22 +9,23 @@
 
 [//]: <> (<alfredo.correa@gmail.com>)
 
-B-MPI3 is a C++ library wrapper for version 3.1 of the MPI standard interface that simplifies the its utilization and maintenance of MPI code, without compromising performance.
+B-MPI3 is a C++ library wrapper for version 3.1 of the MPI standard interface that simplifies the utilization and maintenance of MPI code without compromising performance.
 The B-MPI3 C++ aims to provide a more convenient, powerful and less error proine interface more the standard C-based MPI interface.
 
 B-MPI3 simplifies the ultilization of MPI without completely changing the communication model, allowing for a seamless transtion from C-MPI.
-For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular arrays and complex objects are serialized automatically into messages by the library. 
+B-MPI3 also provides allocators and facilities to manipulate MPI-mediated Remote Access and shared memory.
 
+For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular arrays and complex objects are serialized automatically into messages by the library. 
 B-MPI3 interacts well with the C++ standard library, containers and custom data types (classes).
-B-MPI3 also provides allocators and facilities to manipular MPI-mediated Remote Access and shared memory.
+
+B.MPI3 is written from scratch in C++14 and it has been tested with many MPI library implementations and compilers, OpenMPI +1.9, MPICH +3.2.1, MVAPICH or Spectrum MPI, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04.
+(Any standard compliant MPI library can be used.)
 
 B.MPI3 is not an official Boost library, but is designed following the principles of Boost and the STL.
 B.MPI3 is not a derivative of Boost.MPI and it is unrelated to the, now deprecated, official MPI-C++ interface.
 It adds features which were missing in Boost.MPI (which only covers MPI-1), with an iterator-based interface and MPI-3 features (RMA and Shared memory).
-B.MPI3 is written from scratch in C++14.
 
-B.MPI3 depends and has been compiled against Boost +1.53 and one of the MPI library implementations, OpenMPI +1.9, MPICH +3.2.1, MVAPICH or Spectrum MPI, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04.
-(Any standard compliant MPI library can be used.)
+B.MPI3 optionally depends on Boost +1.53 for automatic serialization.
 
 ## Introduction
 
