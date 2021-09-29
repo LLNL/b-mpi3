@@ -10,9 +10,9 @@
 [//]: <> (<alfredo.correa@gmail.com>)
 
 B-MPI3 is a C++ library wrapper for version 3.1 of the MPI standard interface that simplifies the utilization and maintenance of MPI code without compromising performance.
-B-MPI3 C++ aims to provide a more convenient, powerful and less error proine interface more the standard C-based MPI interface.
+B-MPI3 C++ aims to provide a more convenient, powerful and an interface less prone to error than the standard C-based MPI interface.
 
-B-MPI3 simplifies the ultilization of MPI without completely changing the communication model, allowing for a seamless transition from C-MPI.
+B-MPI3 simplifies the utilization of MPI without completely changing the communication model, allowing for a seamless transition from C-MPI.
 B-MPI3 also provides allocators and facilities to manipulate MPI-mediated Remote Access and shared memory.
 
 For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular arrays and complex objects are serialized automatically into messages by the library. 
