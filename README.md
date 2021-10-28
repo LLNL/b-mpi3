@@ -4,18 +4,18 @@
 [comment]: # (Comment)
 
 # B.MPI3
-*Alfredo A. Correa*  
+*Alfredo A. Correa*
 <correaa@llnl.gov>
 
 [//]: <> (<alfredo.correa@gmail.com>)
 
-B-MPI3 is a C++ library wrapper for version 3.1 of the MPI standard interface that simplifies the utilization and maintenance of MPI code without compromising performance.
-B-MPI3 C++ aims to provide a more convenient, powerful and an interface less prone to error than the standard C-based MPI interface.
+B-MPI3 is a C++ library wrapper for version 3.1 of the MPI standard interface that simplifies the utilization and maintenance of MPI code.
+B-MPI3 C++ aims to provide a more convenient, powerful and an interface less prone to errors than the standard C-based MPI interface.
 
 B-MPI3 simplifies the utilization of MPI without completely changing the communication model, allowing for a seamless transition from C-MPI.
 B-MPI3 also provides allocators and facilities to manipulate MPI-mediated Remote Access and shared memory.
 
-For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular arrays and complex objects are serialized automatically into messages by the library. 
+For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular custom type objects are serialized automatically into messages by the library.
 B-MPI3 interacts well with the C++ standard library, containers and custom data types (classes).
 
 B.MPI3 is written from scratch in C++14 and it has been tested with many MPI library implementations and compilers, OpenMPI +1.9, MPICH +3.2.1, MVAPICH or Spectrum MPI, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04.
@@ -35,7 +35,7 @@ It was is originally designed as standardized and portable message-passing syste
 The last standard, MPI-3, uses a combination of techniques to achieve parallelism, Message Passing (MP), (Remote Memory Access (RMA) and Shared Memory (SM).
 We try here to give a uniform interface and abstractions for these features by means of wrapper function calls and concepts brought familiar to C++ and the STL.
 
-## Motivation: The problem with the standard interface 
+## Motivation: The problem with the standard interface
 
 A typical C-call for MP looks like this,
 
@@ -47,15 +47,15 @@ int status_recv = MPI_Recv(&numbers, 10, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STAT
 assert(status_recv == MPI_SUCCESS);
 ```
 
-In principle this call can be made from a C++ program. 
+In principle this call can be made from a C++ program.
 However there are obvious drawbacks from using this standard interface.
 
 Here we enumerate some of problems,
 
 * Function calls have many arguments (e.g. 6 or 7 arguments in average)
-* Many mandatory arguments are redundant or could easily have a default natural value ( e.g. message tags are not always necessary).
+* Many mandatory arguments are redundant or could easily have a default natural value (e.g. message tags are not always necessary).
 * Use of raw pointers and sizes, (e.g. `&number` and `1`)
-* Argument is type-erased by `void*`.
+* Data argument are type-erased into `void*`.
 * Only primitive types (e.g. `MPI_INT`) can be passed.
 * Consistency between pointer types and data-types is responsibility of the user.
 * Only contiguous memory blocks can be used with this interface.
@@ -75,9 +75,8 @@ For other examples, see here: [http://mpitutorial.com/tutorials/mpi-send-and-rec
 MPI used to ship with a C++-style interfaces.
 It turns out that this interface was a very minimal change over the C version, and for good reasons it was dropped.
 
-The B.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI. 
+The B.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI.
 In this way, changes to existing code can be made incrementally.
-Mixing the standard C interface with the B.MPI3 is not complicated but requires more knowledge of the library internals than the one provided in this document.
 
 ## Installation
 
