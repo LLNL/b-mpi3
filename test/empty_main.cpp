@@ -1,5 +1,5 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx $0 -o $0x&&mpirun -n 1 $0x $@&&rm $0x;exit
+mpicxx $0 -o $0x&&mpirun -n 2 $0x $@&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2021
 
