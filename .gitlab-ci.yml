@@ -29,8 +29,8 @@ openmpi-clang:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - mpirun --version
-        - CXX=clang++-9 cmake ..
-        - make VERBOSE=1
+        - CXX=clang++ cmake ..
+        - make
         - ctest --output-on-failure
 
 ompi-clang-tidy:
@@ -42,7 +42,7 @@ ompi-clang-tidy:
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
-        - CXX=clang++-9 cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
+        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
         - make
         - ctest --output-on-failure
 
