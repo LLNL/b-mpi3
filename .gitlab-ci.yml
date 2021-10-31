@@ -22,7 +22,7 @@ openmpi:
 openmpi-clang:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libc++-dev libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang g++-9 libc++-dev libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
@@ -30,13 +30,13 @@ openmpi-clang:
         - clang++ --version
         - mpirun --version
         - CXX=clang++ cmake ..
-        - make
+        - make VERBOSE=1
         - ctest --output-on-failure
 
 ompi-clang-tidy:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang libc++-dev clang-tidy cmake make libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang g++-9 libc++-dev clang-tidy cmake make libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
