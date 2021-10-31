@@ -22,27 +22,27 @@ openmpi:
 openmpi-clang:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang g++-9 libc++-dev libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang-9 g++ libc++-dev libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - clang++ --version
+        - clang++-9 --version
         - mpirun --version
-        - CXX=clang++ cmake ..
+        - CXX=clang++-9 cmake ..
         - make VERBOSE=1
         - ctest --output-on-failure
 
 ompi-clang-tidy:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang g++-9 libc++-dev clang-tidy cmake make libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang-9 g++ libc++-dev clang-tidy cmake make libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - clang++ --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
+        - clang++-9 --version
+        - CXX=clang++-9 cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
         - make
         - ctest --output-on-failure
 
