@@ -82,15 +82,19 @@ template<class Archive>
 class basic_package_iarchive : public boost::archive::detail::common_iarchive<Archive>{
 	friend class boost::archive::detail::interface_iarchive<Archive>;
 	typedef boost::archive::detail::common_iarchive<Archive> detail_common_iarchive;
+
 	template<class T>
-	void load_override(T& t, /*BOOST_PFTO*/ int = 0){
+	void load_override(T& t, /*BOOST_PFTO*/ int /*unused*/) {
 #if(BOOST_VERSION < 105900)
 		this->detail_common_iarchive::load_override(t, 0);
 #else
 		this->detail_common_iarchive::load_override(t);//, 0);
 #endif
 	}
-	protected:
+	template<class T>
+	void load_override(T& t) {load_override(t, 0);}
+
+ protected:
 	basic_package_iarchive(unsigned int flags) : boost::archive::detail::common_iarchive<Archive>(flags){}
 };
 
@@ -98,15 +102,19 @@ template<class Archive>
 class basic_package_oarchive : public boost::archive::detail::common_oarchive<Archive>{
 	friend class boost::archive::detail::interface_oarchive<Archive>;
 	typedef boost::archive::detail::common_oarchive<Archive> detail_common_oarchive;
-protected:
+
+ protected:
 	template<class T>
-	void save_override(T& t, /*BOOST_PFTO*/ int = 0){
+	void save_override(T& t, /*BOOST_PFTO*/ int /*unused*/) {
 #if(BOOST_VERSION < 105900)
 	  this->detail_common_oarchive::save_override(t, 0);//, 0);
 #else
 	  this->detail_common_oarchive::save_override(t);
 #endif
 	}
+	template<class T>
+	void save_override(T& t) {save_override(t, 0);}
+
 #if 0
 	void save_override(const object_id_type&, int){/* this->This()->newline(); this->detail_common_oarchive::save_override(t, 0);*/}
 	void save_override(const class_id_optional_type&, int){}
