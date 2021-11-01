@@ -3019,17 +3019,17 @@ private:
 		int len;
 		char comm_name[MPI_MAX_OBJECT_NAME];
 		int status = MPI_Comm_get_name(impl_, comm_name, &len);
-		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot set name"}};
+		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot set name"};}
 		return std::string(comm_name, len);
 	}
 	void set_name(std::string const& s){
 		int status = MPI_Comm_set_name(impl_, s.c_str());
-		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"}};
+		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
 	}
 	std::string name() const{
 		return get_name();
 	}
-	void name(std::string const& s){set_name(s);}
+	void name(std::string const& s) {set_name(s);}
 
 	static mpi3::communicator& parent() {
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
@@ -3160,9 +3160,9 @@ class strided_range{
 	strided_range(int f, int l) : first_{f}, last_{l} {}
 	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}
 
-	int front() const{return first;}
-	int back() const{return last - 1;}
-	int size() const{return (last - first) / stride;}
+	int front() const{return first_;}
+	int back()  const{return last_ - 1;}
+	int size()  const{return (last_ - first_) / stride_;}
 };
 
 #if 0
