@@ -29,7 +29,7 @@ inline void free(void* ptr){
 }
 
 template<class T>
-struct __attribute__((aligned(0))) allocator{
+struct /*__attribute__((aligned(0)))*/ allocator{
 	using size_type = mpi3::size_t;
 	using value_type = T;
 	using pointer = T*;
