@@ -1,31 +1,31 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
+// #if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
+// mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+// #endif
 // © Alfredo A. Correa 2018-2020
-
 #ifndef BOOST_MPI3_MAIN_HPP
 #define BOOST_MPI3_MAIN_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
-#include<mpi.h>
+//#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+//#include<mpi.h>
 
-#include "../mpi3/environment.hpp"
 #include "../mpi3/communicator.hpp"
+#include "../mpi3/environment.hpp"
 #include "../mpi3/exception.hpp"
 
 namespace boost{
 namespace mpi3{
 
-static int main(int, char**, boost::mpi3::communicator); // if you include this file you should define `::boost::mpi3::main`
+static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world*/); // if you include this file you should define `::boost::mpi3::main`
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
-int main(int argc, char* argv[]) try{ // if you include this file you shouldn't have your own `::main`
+int main(int argc, char* argv[]) try{  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`
 	boost::mpi3::environment env{argc, argv};
-	
-	int ret;
+
+	int ret = -1;
 	try{
-		ret = boost::mpi3::main(argc, argv, env.get_world_instance());
+		ret = boost::mpi3::main(argc, argv, /*env.*/ boost::mpi3::environment::get_world_instance());  // TODO(correaa) : use return
 	}catch(...){
 		ret = 1;
 	}

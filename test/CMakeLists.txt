@@ -7,7 +7,7 @@ include(CTest)
 
 find_package(MPI REQUIRED)
 
-include_directories(${MPI_CXX_INCLUDE_DIRS})
+include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
 link_libraries(${MPI_CXX_LIBRARIES})
 
 if (NOT ($ENV{CRAYPE_VERSION} MATCHES "."))
@@ -34,7 +34,7 @@ endif()
 find_package(Boost REQUIRED)
 if(Boost_FOUND)
   set(HAVE_LIBBOOST 1)
-  include_directories(${Boost_INCLUDE_DIRS})
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
   message(STATUS "Setting Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
 endif()
 
