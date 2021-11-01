@@ -31,12 +31,10 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 
 #include "../mpi3/config/NODISCARD.hpp"
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+//#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-#include <boost/optional.hpp> // TODO replace by std::optional (c++17)
-//#include <boost/static_assert.hpp>
-//#include <boost/type_traits/is_array.hpp> 
+#include <boost/optional.hpp> // TODO(correaa) replace by std::optional (c++17)
 
 #define BOOST_PACKAGE_ARCHIVE_SOURCE
 

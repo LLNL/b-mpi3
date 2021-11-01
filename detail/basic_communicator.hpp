@@ -24,15 +24,20 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
-class basic_communicator{// : public detail::caller<communicator, MPI_Comm>{
-protected:
+class basic_communicator{
+ protected:
 	using impl_t = MPI_Comm;
-public:
 	impl_t impl_ = MPI_COMM_NULL;
-protected:
-	basic_communicator(MPI_Comm impl) noexcept : impl_(impl){}
-public:
+
+	explicit basic_communicator(MPI_Comm impl) noexcept : impl_(impl){}
+
+ public:
 	basic_communicator() noexcept = default; //: impl_(MPI_COMM_NULL){}
+	~basic_communicator() = default;
+
+	auto operator=(basic_communicator const&) -> basic_communicator& = delete;
+	auto operator=(basic_communicator&&)      -> basic_communicator& = delete;
+
 //	[[deprecated("communicators are not values, they are not copiable, only duplicable; they cannot be elements of std::vector")]] 
 	basic_communicator(basic_communicator const& other) = delete; // communicators are not copyable, only duplicable, if you know what you are doing use `mutable`
 //		if(MPI_COMM_NULL != other.impl_){

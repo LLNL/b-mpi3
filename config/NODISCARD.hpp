@@ -17,7 +17,7 @@
 		#define NODISCARD(MsG) [[nodiscard]]
 	#endif
 #elif __has_cpp_attribute(gnu::warn_unused_result)
-	#define NODISCARD(MsG) [[gnu::warn_unused_result]]
+	#define NODISCARD(MsG) [[gnu::warn_unused_result]]  // NOLINT(cppcoreguidelines-macro-usage) : replaced by `nodiscard` in C++17
 #else
 	#define NODISCARD(MsG)
 #endif
