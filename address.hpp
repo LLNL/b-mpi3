@@ -1,7 +1,7 @@
 #if COMPILATION/* -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*- */
 mpic++ -D_TEST_BOOST_MPI3_ADDRESS -x c++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 
 #ifndef BOOST_MPI3_ADDRESS_HPP
 #define BOOST_MPI3_ADDRESS_HPP
@@ -9,16 +9,14 @@ mpic++ -D_TEST_BOOST_MPI3_ADDRESS -x c++ $0 -o $0x -lboost_serialization&&mpirun
 #include "../mpi3/detail/call.hpp"
 #include "../mpi3/types.hpp"
 
-#define OMPI_SKIP_MPICXX 1 // https://github.com/open-mpi/ompi/issues/5157
-#include<mpi.h>
-
-#include<stdexcept>
+// #define OMPI_SKIP_MPICXX 1 // https://github.com/open-mpi/ompi/issues/5157
+// #include<mpi.h>
 
 namespace boost{
 namespace mpi3{
 
 inline address get_address(void const* location){
-	address ret; 
+	address ret{};
 	// this function requires an initialized environment, TODO should be a (static?) member of environment?
 	MPI_(Get_address)(location, &ret); // MPI_Address is deprecated
 	return ret;
@@ -27,7 +25,8 @@ inline address get_address(void const* location){
 template<class T>
 address addressof(T const& t){return get_address(std::addressof(t));}
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_ADDRESS
 

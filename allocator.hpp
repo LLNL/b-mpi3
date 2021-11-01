@@ -14,35 +14,37 @@
 namespace boost{
 namespace mpi3{
 
-struct bad_alloc : std::bad_alloc{using std::bad_alloc::bad_alloc;};
+struct /*__attribute__((aligned(0)))*/ bad_alloc : std::bad_alloc{using std::bad_alloc::bad_alloc;};
 
-inline void* malloc(mpi3::size_t size){
-	void* ret;
+inline void* malloc(mpi3::size_t size) {
+	void* ret;  // NOLINT(cppcoreguidelines-init-variables) : read var
 	int s = MPI_Alloc_mem(size, MPI_INFO_NULL, &ret);
-	if(s != MPI_SUCCESS) return nullptr;//s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
+	if(s != MPI_SUCCESS) {return nullptr;}//s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
 	return ret;
 }
 
 inline void free(void* ptr){
 	int s = MPI_Free_mem(ptr);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot free");
+	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot free");}
 }
 
 template<class T>
-struct allocator{
+struct /*__attribute__((aligned(0)))*/ allocator{
 	using size_type = mpi3::size_t;
 	using value_type = T;
 	using pointer = T*;
 
 	allocator() = default;
-	template<class U> allocator(allocator<U> const&){}
-	pointer allocate(size_type n){
-		if(n <= max_size())
-			if(void* ptr = mpi3::malloc(n*sizeof(T)))
-				return static_cast<T*>(ptr);
+
+	template<class U> allocator(allocator<U> const&/*other*/) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) : allocator convention is explicit
+
+	pointer allocate(size_type n) {
+		if(n <= max_size()) {
+			if(void* ptr = mpi3::malloc(n*sizeof(T))) {return static_cast<T*>(ptr);}
+		}
 		throw bad_alloc();
 	}
-	void deallocate(pointer p, std::size_t){mpi3::free(p);}
+	void deallocate(pointer p, std::size_t /*size*/){mpi3::free(p);}
 	static size_type max_size(){return std::numeric_limits<size_type>::max();}
 };
 

@@ -3014,71 +3014,57 @@ private:
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
 	}
 
-//	template<class IContiguousIterator, class OContiguousIterator>
-//	void gather_n(IContiguousIterator first, std::ptrdiff_t send_count, OContiguousIterator result, int root = 0){
-//		gather_n(first, send_count, result, send_count, root);
-//	}
-//	template<class IContiguousIterator, class OContiguousIterator>
-//	void scatter(IContiguousIterator first, IContiguousIterator last, OContiguousIterator result, int root = 0){
-//		scatter_n(first, std::distance(first, last), result, root);
-//	}
-//	template<class IContiguousIterator, class OContiguousIterator>
-//	void gather (IContiguousIterator first, IContiguousIterator last, OContiguousIterator result, int root = 0){
-//		gather_n(first, std::distance(first, last), result, root);
-//	}
-public:
+ public:
 	std::string get_name() const{
 		int len;
 		char comm_name[MPI_MAX_OBJECT_NAME];
 		int status = MPI_Comm_get_name(impl_, comm_name, &len);
-		if(status != MPI_SUCCESS) throw std::runtime_error("cannot set name");
+		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot set name"};}
 		return std::string(comm_name, len);
 	}
 	void set_name(std::string const& s){
 		int status = MPI_Comm_set_name(impl_, s.c_str());
-		if(status != MPI_SUCCESS) throw std::runtime_error("cannot get name");
+		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
 	}
 	std::string name() const{
 		return get_name();
 	}
-	void name(std::string const& s){set_name(s);}
+	void name(std::string const& s) {set_name(s);}
 
-//	communicator parent() const{
-//		communicator ret;
-//		MPI_Comm_get_parent(&ret.impl_);
-//		return ret;
-//	}
-	mpi3::communicator& parent(){
+	static mpi3::communicator& parent() {
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
 		static_assert(std::is_same<decltype(impl_), MPI_Comm>{}, "!");
 		MPI_Comm* p{}; MPI_Comm_get_parent(p); assert(p);
-		return reinterpret_cast<mpi3::communicator&>(*p);
+		return reinterpret_cast<mpi3::communicator&>(*p);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) : TODO(correaa) avoid reinterpret_cast
 	}
-	communicator spawn(std::string const& argv0, int np) const{
+	static communicator spawn(std::string const& argv0, int np) {
 		communicator intercomm;
 		MPI_Comm_spawn(argv0.data(), MPI_ARGV_NULL, np, MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm.impl_, MPI_ERRCODES_IGNORE );
 		return intercomm;
 	}
+
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
 		int s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create intercommunicator");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot create intercommunicator");}
 		return ret;
 	}
+
 	communicator create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		return intercommunicator_create(local_leader, peer, remote_leader, tag);
 	}
+
 	communicator create(group const& g) const;
 	communicator create_group(group const& g, int tag) const;
-	FILE* fopen(const char* filename, int amode = MPI_MODE_RDWR | MPI_MODE_CREATE);
+	FILE* fopen(const char* filename, int amode = unsigned{MPI_MODE_RDWR} | unsigned{MPI_MODE_CREATE});
 
-inline std::string const& name(communicator::topology const& t){
-	static std::map<communicator::topology, std::string> const names = {
-		{communicator::topology::undefined, "undefined"}, 
-		{communicator::topology::graph, "graph"},
-		{communicator::topology::cartesian, "cartesian"}};
-	return names.find(t)->second;
-}
+	inline static auto name(communicator::topology const& t) -> std::string const& {
+		static std::map<communicator::topology, std::string> const names = {
+			{communicator::topology::undefined, "undefined"}, 
+			{communicator::topology::graph, "graph"},
+			{communicator::topology::cartesian, "cartesian"}};
+		return names.find(t)->second;
+	}
 
 //template<class T>
 //friend auto operator,(communicator& comm, T const& t){
@@ -3087,17 +3073,17 @@ inline std::string const& name(communicator::topology const& t){
 //}
 
 template<class T>
-friend T operator+=(communicator& comm, T const& t){
+friend T operator+=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
 	return comm.all_reduce_value(t, std::plus<>{});
 }
 
 template<class T>
-friend T operator&=(communicator& comm, T const& t){
+friend T operator&=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
 	return comm.all_reduce_value(t, std::logical_and<>{});
 }
 
 template<class T>
-friend communicator& operator<<(communicator& comm, T const& t){
+friend communicator& operator<<(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
 	comm.send_value(t);
 	return comm;
 }
@@ -3108,17 +3094,17 @@ friend communicator& operator<<(communicator& comm, T const& t){
 inline void barrier(communicator const& self){self.barrier();}
 
 inline communicator::communicator(group const& g, int tag){
-	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);
+	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 }
 
 inline communicator::communicator(group const& g){
-	MPI_(Comm_create)(MPI_COMM_WORLD, &const_cast<group&>(g), &impl_);
+	MPI_(Comm_create)(MPI_COMM_WORLD, &const_cast<group&>(g), &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 }
 // https://www.open-mpi.org/doc/v3.0/man3/MPI_Comm_create_group.3.php
 // MPI_Comm_create_group is similar to MPI_Comm_create; however, MPI_Comm_create must be called by all processes in the group of comm, whereas MPI_Comm_create_group must be called by all processes in group, which is a subgroup of the group of comm. In addition, MPI_Comm_create_group requires that comm is an intracommunicator. MPI_Comm_create_group returns a new intracommunicator, newcomm, for which the group argument defines the communication group. No cached information propagates from comm to newcomm. 
 
 inline communicator::communicator(communicator const& o, group const& g){
-	MPI_(Comm_create)(o.impl_, &const_cast<group&>(g), &impl_);
+	MPI_(Comm_create)(o.impl_, &const_cast<group&>(g), &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 }
 
 inline communicator::operator group() const{
@@ -3128,24 +3114,24 @@ inline communicator::operator group() const{
 
 inline communicator communicator::create(group const& g) const{
 	communicator ret;
-	int s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot crate group"};
+	int s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot crate group"};}
 	return ret;
 }
 
 inline communicator communicator::create_group(class group const& g, int tag = 0) const{
 	communicator ret;
-	MPI_(Comm_create_group)(impl_, &const_cast<group&>(g), tag, &ret.impl_);
+	MPI_(Comm_create_group)(impl_, &const_cast<group&>(g), tag, &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 	return ret;
 }
 
 template<class T>
-inline void communicator::deallocate_shared(pointer<T>){
+inline void communicator::deallocate_shared(pointer<T> /*unused*/){
 //	MPI_Free_mem(p.base_ptr(rank()));
 }
 
 template<class T>
-inline void communicator::deallocate(pointer<T>&, MPI_Aint){
+inline void communicator::deallocate(pointer<T>& /*p*/, MPI_Aint /*size*/) {  // TODO(correaa) should be called free?
 //	p.pimpl_->fence();
 //	MPI_Free_mem(p.local_ptr());
 //	MPI_Win_free(&p.pimpl_->impl_);
@@ -3165,13 +3151,18 @@ inline window<T> communicator::make_window(mpi3::size_t size){
 }
 #endif
 
-struct strided_range{
-	int first;
-	int last;
-	int stride = 1;
-	int front() const{return first;}
-	int back() const{return last - 1;}
-	int size() const{return (last - first) / stride;}
+class strided_range{
+	int first_;
+	int last_;
+	int stride_ = 1;
+
+ public:
+	strided_range(int f, int l) : first_{f}, last_{l} {}
+	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}
+
+	int front() const{return first_;}
+	int back()  const{return last_ - 1;}
+	int size()  const{return (last_ - first_) / stride_;}
 };
 
 #if 0
@@ -3334,7 +3325,7 @@ public:
 #endif
 
 template<class Range>
-auto operator/(Range const& r, communicator& self)
+auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading
 	->decltype(self.scatter(begin(r), end(r))){
 		return self.scatter(begin(r), end(r));}
 
@@ -3403,7 +3394,8 @@ void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt
 }
 */
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 //BOOST_SERIALIZATION_REGISTER_ARCHIVE(boost::mpi3::package_oarchive)
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive)
