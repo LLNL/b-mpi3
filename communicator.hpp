@@ -3165,10 +3165,15 @@ inline window<T> communicator::make_window(mpi3::size_t size){
 }
 #endif
 
-struct strided_range{
-	int first;
-	int last;
-	int stride = 1;
+class strided_range{
+	int first_;
+	int last_;
+	int stride_ = 1;
+
+ public:
+	strided_range(int f, int l) : first_{f}, last_{l} {}
+	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}
+
 	int front() const{return first;}
 	int back() const{return last - 1;}
 	int size() const{return (last - first) / stride;}
@@ -3334,7 +3339,7 @@ public:
 #endif
 
 template<class Range>
-auto operator/(Range const& r, communicator& self)
+auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading
 	->decltype(self.scatter(begin(r), end(r))){
 		return self.scatter(begin(r), end(r));}
 
@@ -3403,7 +3408,8 @@ void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt
 }
 */
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 //BOOST_SERIALIZATION_REGISTER_ARCHIVE(boost::mpi3::package_oarchive)
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive)
