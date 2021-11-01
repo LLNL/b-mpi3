@@ -1,12 +1,12 @@
 #if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
 mpic++ -D_TEST_BOOST_MPI3_DETAIL_EQUALITY -xc++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 
 #ifndef BOOST_MPI3_DETAIL_EQUALITY_HPP
 #define BOOST_MPI3_DETAIL_EQUALITY_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #include<type_traits> // underglying_type
@@ -24,7 +24,9 @@ enum equality : int{
 	unequal   = MPI_UNEQUAL    // not equal in any sense
 };
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_EQUALITY
 
