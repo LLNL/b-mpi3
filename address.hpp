@@ -16,7 +16,7 @@ namespace boost{
 namespace mpi3{
 
 inline address get_address(void const* location){
-	address ret{};
+	address ret;  // NOLINT(cppcoreguidelines-init-variables) : delayed init
 	// this function requires an initialized environment, TODO should be a (static?) member of environment?
 	MPI_(Get_address)(location, &ret); // MPI_Address is deprecated
 	return ret;
