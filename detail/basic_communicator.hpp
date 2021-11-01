@@ -27,7 +27,7 @@ namespace detail{
 class basic_communicator{
  protected:
 	using impl_t = MPI_Comm;
-	impl_t impl_ = MPI_COMM_NULL;
+	impl_t impl_ = MPI_COMM_NULL;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes) : TODO(correaa) make private
 
 	explicit basic_communicator(MPI_Comm impl) noexcept : impl_(impl){}
 
@@ -48,7 +48,7 @@ class basic_communicator{
 	basic_communicator(basic_communicator& other){
 		if(MPI_COMM_NULL != other.impl_){
 			int s = MPI_Comm_dup(other.impl_, &impl_);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
+			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot duplicate communicator");}
 		}
 	}
 	basic_communicator(basic_communicator&& other) noexcept : 
@@ -58,10 +58,10 @@ class basic_communicator{
 		std::swap(impl_, other.impl_);
 	}
 	template<class T>
-	int pack_size(int count, detail::basic_tag){
+	int pack_size(int count, detail::basic_tag /*tag*/) {
 		int size = -1;
 		int s = MPI_Pack_size(count, detail::basic_datatype<T>{}, impl_, &size);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot pack size");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot pack size");}
 		return size;
 	}
 	template<class T>
@@ -71,8 +71,8 @@ class basic_communicator{
 	template<class It, typename Size>
 	auto pack_n(
 		It first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*contiguous*/,
+			detail::basic_tag /*basic*/,
 		Size count,
 		uvector<detail::packed>& p, int pos
 	){
@@ -83,7 +83,7 @@ class basic_communicator{
 			p.data(), p.size(), 
 			&pos, impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot pack_n");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot pack_n");}
 		return pos;
 	}
 	template<class It, typename Size>
@@ -101,24 +101,24 @@ class basic_communicator{
 	}
 	template<class It, typename Size>
 	auto pack_n(It first, Size count, uvector<detail::packed>& p){
-		int pos = p.size();
+		assert( p.size() < std::numeric_limits<int>::max() );
+		int pos = static_cast<int>(p.size());
 		p.resize(p.size() + pack_size<typename std::iterator_traits<It>::value_type>(count));
 		return pack_n(first, count, p, pos);
 	}
 	template<class It>
 	auto pack(
-		It first, It second, 
-			detail::random_access_iterator_tag,
-			detail::value_unspecified_tag,
+		It first, It second,
+			detail::random_access_iterator_tag /*random_access*/,
+			detail::value_unspecified_tag /*value_unspecified*/,
 		uvector<detail::packed>& b
 	){
 		return pack_n(first, std::distance(first, second), b);
 	}
 	template<class It>
 	auto pack(
-		It first, It second, 
-			detail::input_iterator_tag,
-			detail::value_unspecified_tag,
+		It first, It second,
+			detail::input_iterator_tag /*input*/,
 		uvector<detail::packed>& b
 	){
 		while(first != second){
@@ -140,8 +140,8 @@ class basic_communicator{
 	auto unpack_n(
 		uvector<detail::packed>& b, int pos,
 		It first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*contiguous*/,
+			detail::basic_tag /*basic*/,
 		Size count
 	){
 		using value_type = typename std::iterator_traits<It>::value_type;
@@ -151,7 +151,7 @@ class basic_communicator{
 			detail::basic_datatype<value_type>{}, 
 			impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot unpack_n");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot unpack_n");}
 		return pos;
 	}
 	template<class It>
@@ -165,8 +165,8 @@ class basic_communicator{
 	template<class It>
 	auto unpack(
 		uvector<detail::packed>& b, int pos,
-		It first, It last, 
-			detail::forward_iterator_tag
+		It first, It last,
+			detail::forward_iterator_tag /*forward*/
 	){
 		while(first != last){
 			pos = unpack_n(b, pos, std::addressof(*first), 1);
@@ -233,8 +233,8 @@ class basic_communicator{
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::random_access_iterator_tag, 
-			detail::value_unspecified_tag,
+			detail::random_access_iterator_tag /*random_access*/,
+			detail::value_unspecified_tag /*value_unspecified*/,
 		int dest, int tag
 	){
 		return send_n(first, std::distance(first, last), dest, tag);
@@ -242,7 +242,7 @@ class basic_communicator{
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::input_iterator_tag, 
+			detail::input_iterator_tag /*input*/,
 			detail::basic_tag,
 		int dest, int tag
 	){
@@ -264,15 +264,15 @@ class basic_communicator{
 	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		match m;
 		int s = MPI_Mprobe(source, tag, impl_, &m.message::impl_, &m.status::impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot mprobe");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot mprobe");}
 		return m;
 	}
 	template<class It, typename Size>
 	auto receive_n(
-		It dest, 
-			detail::forward_iterator_tag,
-			detail::basic_tag,
-		Size n, 
+		It dest,
+			detail::forward_iterator_tag /*forward*/,
+			detail::basic_tag /*basic*/,
+		Size n,
 		int source, int tag
 	){
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(n);
@@ -284,7 +284,7 @@ class basic_communicator{
 		auto count = m.count<detail::packed>();
 		auto size = b.size();
 		b.resize(b.size() + count);
-		return m.receive_n(b.data() + size, count);
+		return m.receive_n(std::next(b.data(), size), count);
 	}
 	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(static_cast<uvector<detail::packed>&>(b), source, tag);
