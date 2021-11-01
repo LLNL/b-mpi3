@@ -99,7 +99,7 @@ inline bool check_mpi_(enum error e){
 	return false;
 }
 
-#define SAFE_MPI_(F) check_mpi_(MPI_##F)
+#define SAFE_MPI_(F) check_mpi_(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage) : name concatenation
 
 #if !defined(OPEN_MPI) || (OMPI_MAJOR_VERSION < 2)
 #define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED
@@ -1918,7 +1918,7 @@ public:
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO check why op is not used 
+	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
 		int s = MPI_Allreduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot all reduce n");
 	}

@@ -50,7 +50,7 @@ struct /*__attribute__((aligned(0)))*/ allocator{
 
 template<typename T>
 struct uallocator : allocator<T>{
-	template<class U> void construct(U*){
+	template<class U> void construct(U* /*unused*/){
 		static_assert(
 			std::is_trivially_destructible<T>{}, 
 			"uallocator cannot be used with non trivial types"
@@ -58,16 +58,21 @@ struct uallocator : allocator<T>{
 	}
 };
 
-template< class T1, class T2 > constexpr 
-bool operator==(allocator<T1> const&, uallocator<T2> const&){return true;}
+template< class T1, class T2 > constexpr
+bool operator==(allocator<T1> const&/*self*/, uallocator<T2> const&/*other*/) {  // TODO(correaa) check that both(?) are trivial?
+	return true;
+}
 
-template< class T1, class T2 > constexpr 
-bool operator==(uallocator<T1> const&, allocator<T2> const&){return true;}
+template< class T1, class T2 > constexpr
+bool operator==(uallocator<T1> const&/*self*/, allocator<T2> const&/*other*/) {
+	return true;
+}
 
 template <class T>
 constexpr std::add_const_t<T>& as_const(T& t) noexcept{return t;}
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_ALLOCATOR
 

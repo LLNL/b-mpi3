@@ -2,7 +2,7 @@
 #ifndef MPI3_DETAIL_COMMUNICATION_MODE
 #define MPI3_DETAIL_COMMUNICATION_MODE
 
-#define OMPI_SKIP_MPICXX 1//https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1//https://github.com/open-mpi/ompi/issues/5157
 #include <mpi.h> // if you get an error here probably you need to compile with and MPI compiler wrapper
 
 #include<utility> // forward
@@ -13,74 +13,44 @@ namespace mpi3{
 struct blocking_mode{};
 struct nonblocking_mode{};
 
-struct standard_communication_mode{
-	template<class... Args>
-	int Send(Args&&... args) const{return MPI_Send(std::forward<Args>(args)...);}
-	template<class... Args>
-	int Recv(Args&&... args) const{return MPI_Recv(std::forward<Args>(args)...);}
-	template<class... Args>
-	int ISend(Args&&... args) const{return MPI_Isend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int IRecv(Args&&... args) const{return MPI_Irecv(std::forward<Args>(args)...);}
-};
-struct buffered_communication_mode{
-	template<class... Args>
-	int Send(Args&&... args) const{return MPI_Bsend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int Recv(Args&&... args) const{return MPI_Brecv(std::forward<Args>(args)...);}
-	template<class... Args>
-	int ISend(Args&&... args) const{return MPI_Ibsend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int IRecv(Args&&... args) const{return MPI_Ibrecv(std::forward<Args>(args)...);}
-};
-struct synchronous_communication_mode{
-	template<class... Args>
-	int Send(Args&&... args) const{return MPI_Ssend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int Recv(Args&&... args) const{return MPI_Srecv(std::forward<Args>(args)...);}
-	template<class... Args>
-	int ISend(Args&&... args) const{return MPI_Issend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int IRecv(Args&&... args) const{return MPI_Isrecv(std::forward<Args>(args)...);}
-};
-struct ready_communication_mode{
-	template<class... Args>
-	int Send(Args&&... args) const{return MPI_Rsend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int Recv(Args&&... args) const{return MPI_Rrecv(std::forward<Args>(args)...);}
-	template<class... Args>
-	int ISend(Args&&... args) const{return MPI_Irsend(std::forward<Args>(args)...);}
-	template<class... Args>
-	int IRecv(Args&&... args) const{return MPI_Irrecv(std::forward<Args>(args)...);}
+struct standard_communication_mode {
+	template<class... As> static int  Send(As... as) {return MPI_Send  (as...);}
+	template<class... As> static int  Recv(As... as) {return MPI_Recv  (as...);}
+	template<class... As> static int ISend(As... as) {return MPI_Isend (as...);}
+	template<class... As> static int IRecv(As... as) {return MPI_Irecv (as...);}
 };
 
-struct gather_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Gather(std::forward<Args>(args)...);}
-};
-struct igather_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Igather(std::forward<Args>(args)...);}
-};
-struct all_gather_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Allgather(std::forward<Args>(args)...);}
+struct buffered_communication_mode {
+	template<class... As> static int  Send(As... as) {return MPI_Bsend (as...);}
+	template<class... As> static int  Recv(As... as) {return MPI_Brecv (as...);}
+	template<class... As> static int ISend(As... as) {return MPI_Ibsend(as...);}
+	template<class... As> static int IRecv(As... as) {return MPI_Ibrecv(as...);}
 };
 
-struct reduce_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Reduce(std::forward<Args>(args)...);}
-};
-struct ireduce_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Ireduce(std::forward<Args>(args)...);}
-};
-struct all_reduce_mode{
-	template<class... Args>
-	int operator()(Args&&... args) const{return MPI_Allreduce(std::forward<Args>(args)...);}
+struct synchronous_communication_mode {
+	template<class... As> static int  Send(As... as) {return MPI_Ssend (as...);}
+	template<class... As> static int  Recv(As... as) {return MPI_Srecv (as...);}
+	template<class... As> static int ISend(As... as) {return MPI_Issend(as...);}
+	template<class... As> static int IRecv(As... as) {return MPI_Isrecv(as...);}
 };
 
-}}
+struct ready_communication_mode {
+	template<class... As> static int  Send(As... as) {return MPI_Rsend (as...);}
+	template<class... As> static int  Recv(As... as) {return MPI_Rrecv (as...);}
+	template<class... As> static int ISend(As... as) {return MPI_Irsend(as...);}
+	template<class... As> static int IRecv(As... as) {return MPI_Irrecv(as...);}
+};
+
+struct  gather_mode {template<class... As> static int operator()(As... as) {return MPI_Gather (as...);}};
+struct igather_mode {template<class... As> static int operator()(As... as) {return MPI_Igather(as...);}};
+
+struct all_gather_mode {template<class... As> static int operator()(As... as) {return MPI_Allgather(as...);}};
+
+struct  reduce_mode {template<class... As> static int operator()(As... as) {return MPI_Reduce (as...);}};
+struct ireduce_mode {template<class... As> static int operator()(As... as) {return MPI_Ireduce(as...);}};
+
+struct all_reduce_mode {template<class... As> static int operator()(As... as) {return MPI_Allreduce(as...);}};
+
+}  // end namespace mpi3
+}  // end namespace boost
 #endif
-
-
