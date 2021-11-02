@@ -3,26 +3,19 @@
 
 #include<stdexcept>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-struct exception : std::runtime_error{
+struct exception : std::runtime_error {
 	using runtime_error::runtime_error;
-//	std::string what_;
-//public:
-/*	exception(const char* what) : what_(what){}
-	virtual const char* what() const noexcept{
-		return what_.c_str();
-	}*/
-	virtual ~exception(){}
+//	~exception() override = default;
 };
 
-struct invalid_communicator : exception{
+struct invalid_communicator : exception {
 	using exception::exception;
-	virtual ~invalid_communicator(){}
+//	~invalid_communicator() override = default;
 };
 
-}}
-
+}  // end namespace mpi3
+}  // end namespace boost
 #endif
-

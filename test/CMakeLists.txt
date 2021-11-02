@@ -51,6 +51,7 @@ communicator_barrier.cpp
 communicator_broadcast.cpp
 communicator_divide.cpp
 gather2.cpp
+group.cpp
 communicator_ibroadcast.cpp
 communicator_igather.cpp
 communicator_list.cpp

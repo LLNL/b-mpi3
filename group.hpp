@@ -10,40 +10,57 @@ OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 
 
 #include "../mpi3/error.hpp"
 
-#include "../mpi3/detail/iterator_traits.hpp"
 #include "../mpi3/detail/call.hpp"
+#include "../mpi3/detail/iterator_traits.hpp"
 
 #include<cassert>
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 //class communicator;
 //template<class T = void> struct window;
 
-class group{
+using ptr = MPI_Group;
+
+class group {
 	MPI_Group impl_ = MPI_GROUP_EMPTY;
-public:
+
+ public:
 	friend class communicator;
 	template<class T> friend struct window;
-	MPI_Group operator&(){return impl_;}
+
 	MPI_Group& get(){return impl_;}
-//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not a pointer type
+	MPI_Group operator&() {return get();}  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions,google-runtime-operator) access implementation as pointer
+
+//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not really pointer type
+
 	group() = default;
 	group(group&& other) noexcept : impl_{std::exchange(other.impl_, MPI_GROUP_EMPTY)}{}
 	group(group const& other){MPI_(Group_excl)(other.impl_, 0, nullptr, &impl_);}
-//	explicit group(communicator const& c);//{MPI_Comm_group(c.impl_, &impl_);}
-//	explicit group(window<> const& w);
+
 	void swap(group& other) noexcept{std::swap(impl_, other.impl_);}
-	group& operator=(group other) noexcept{swap(other); return *this;}
+//	group& operator=(group other) noexcept{swap(other); return *this;}
+	group& operator=(group const& other) {group tmp(other); swap(tmp)  ; return *this;}
+	group& operator=(group     && other) noexcept {         swap(other); return *this;}
+
 	void clear(){
-		if(impl_ != MPI_GROUP_EMPTY) MPI_(Group_free)(&impl_);
+		if(impl_ != MPI_GROUP_EMPTY) {
+			try {
+				MPI_(Group_free)(&impl_);
+			} catch(...) {}
+		}
 		impl_ = MPI_GROUP_EMPTY;
 	}
-	~group(){if(impl_ != MPI_GROUP_EMPTY) MPI_(Group_free)(&impl_);}
+	~group(){
+		if(impl_ != MPI_GROUP_EMPTY) {
+			try {MPI_(Group_free)(&impl_);} catch(...) {}
+		}
+	}
+
 	group include(std::initializer_list<int> il){
 		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
 	}
@@ -53,13 +70,16 @@ public:
 	int rank() const{int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
 	bool root() const{assert(not empty()); return rank() == 0;}
 	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
+
 	group sliced(int first, int last, int stride = 1) const{
-		int ranges[][3] = {{first, last - 1, stride}};
+		int ranges[][3] = {{first, last - 1, stride}};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &ret.impl_); return ret;
 	}
-	bool empty() const{return size()==0;}
+
+	bool empty() const {return size()==0;}
 	friend auto compare(group const& self, group const& other){
-		int result; MPI_(Group_compare)(self.impl_, other.impl_, &result);
+		int result;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Group_compare)(self.impl_, other.impl_, &result);
 		return static_cast<mpi3::detail::equality>(result);
 	}
 	bool operator==(group const& other) const{
@@ -80,11 +100,14 @@ public:
 		group ret; MPI_(Group_union)(self.impl_, other.impl_, &ret.impl_); return ret;
 	}
 	int translate_rank(int rank, group const& other) const{
-		int out; MPI_(Group_translate_ranks)(impl_, 1, &rank, other.impl_, &out); return out;
+		int out;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Group_translate_ranks)(impl_, 1, &rank, other.impl_, &out); 
+		return out;
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

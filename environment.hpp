@@ -26,10 +26,10 @@ enum thread_level : int{
 	multiple   = MPI_THREAD_MULTIPLE
 };
 
-inline void finalize(){
+inline void finalize() noexcept {
 	std::set_terminate(&std::abort);
 	int s = MPI_Finalize();
-	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot finalize"};}
+	if(s != MPI_SUCCESS) {std::terminate();}//{throw std::runtime_error{"cannot finalize"};}
 }
 inline void myterminate() {
 	std::cerr << "myterminate handler called" << '\n';
@@ -60,14 +60,14 @@ inline thread_level initialize(thread_level required = thread_level::single) {
 	return initialize_thread(required);
 }
 
-inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...) {
-	char name[MPI_MAX_OBJECT_NAME];
-	int rlen;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
-	int status = MPI_Comm_get_name(*comm, name, &rlen);
-	if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
-	std::string sname(name, rlen);
-	throw std::runtime_error{"error code "+ std::to_string(*errorcode) +" from comm "+ sname};
-}
+//inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...) {
+//	char name[MPI_MAX_OBJECT_NAME];
+//	int rlen;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
+//	int status = MPI_Comm_get_name(*comm, name, &rlen);
+//	if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
+//	std::string sname(name, rlen);
+//	throw std::runtime_error{"error code "+ std::to_string(*errorcode) +" from comm "+ sname};
+//}
 
 inline thread_level initialize_thread(
 	int& argc, char**& argv, thread_level required
@@ -88,45 +88,49 @@ inline bool is_thread_main() {
 	int flag;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 	int s = MPI_Is_thread_main(&flag);
 	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot determine is thread main"};}
-	return flag;
+	return flag != 0;
 }
 
 inline std::string processor_name(){return detail::call<&MPI_Get_processor_name>();}
 
 inline std::string get_processor_name(){return detail::call<&MPI_Get_processor_name>();}
 
-class environment{
-	public:
-	environment(){
+class environment {
+ public:
+	environment() {
 		initialize_thread(thread_level::multiple);
-		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-	explicit environment(thread_level required){
+	explicit environment(thread_level required) {
 		initialize_thread(required);
-		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-
 	explicit environment(int& argc, char**& argv){
 		initialize(argc, argv); // initialize(argc, argv); // TODO have an environment_mt/st version?
-		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
+		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
 	explicit environment(int& argc, char**& argv, thread_level required){
 		initialize(argc, argv, required);
-		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;		
+		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
 
 	environment(environment const&) = delete;
+	environment(environment     &&) = delete;
+
 	environment& operator=(environment const&) = delete;
-	~environment(){
-		delete named_attributes_key_f();
+	environment& operator=(environment     &&) = delete;
+
+	~environment() noexcept {
+		named_attributes_key_f().reset();
 		finalize();
 	}
+
 	inline static thread_level thread_support(){return mpi3::thread_support();}
 //	static /*inline*/ communicator::keyval<int> const* color_key_p;
 //	static communicator::keyval<int> const& color_key(){return *color_key_p;}
 //	static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
-	static communicator::keyval<std::map<std::string, mpi3::any>> const*& named_attributes_key_f(){
-		static communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
+	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f(){
+		static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const> named_attributes_key_p;
 		return named_attributes_key_p;
 	}
 	static communicator::keyval<std::map<std::string, mpi3::any>> const& named_attributes_key(){
@@ -140,13 +144,14 @@ class environment{
 	static inline void initialize(int argc, char** argv){mpi3::initialize(argc, argv);}
 	static inline void initialize(int argc, char** argv, thread_level req){mpi3::initialize_thread(argc, argv, req);}
 
-	static inline void finalize(){mpi3::finalize();}
+	static inline void finalize() noexcept {mpi3::finalize();}
 
 	static inline bool is_initialized(){return mpi3::initialized();}
 	static inline bool is_finalized(){return mpi3::finalized();}
 	using wall_clock = mpi3::wall_clock;
-	operator bool() const{return initialized();}
-	bool is_thread_main() const{return mpi3::is_thread_main();}
+	explicit operator bool() const {return initialized();}
+
+	static bool is_thread_main() {return mpi3::is_thread_main();}
 
 	static inline communicator& get_self_instance(){
 		assert(initialized());
@@ -175,15 +180,18 @@ class environment{
 		}();
 		return instance;
 	}
-	communicator world(){// const{ // returns a copy!
+
+	NODISCARD("") communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
 		communicator ret{get_world_instance()}; ret.name("world");
 		return ret;
 	}
-	std::string processor_name() const{return get_processor_name();}
-	std::string get_processor_name() const{return mpi3::get_processor_name();}
+
+	static std::string     processor_name() {return       get_processor_name();}
+	static std::string get_processor_name() {return mpi3::get_processor_name();}
 
 	inline static auto wall_time(){return mpi3::wall_time();}
 	inline static auto wall_tick(){return mpi3::wall_tick();}
+
 	template<class Duration = wall_clock::duration>
 	static auto wall_sleep_for(Duration d){return mpi3::wall_sleep_for(d);}
 };
@@ -192,7 +200,8 @@ inline mpi3::any& communicator::attribute(std::string const& s){
 	return attribute(environment::named_attributes_key())[s];
 }
 
-}}
+} // end namespace mpi3
+} // end namespace boost
 
 #if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
 
