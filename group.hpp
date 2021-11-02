@@ -10,12 +10,12 @@ OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 
 
 #include "../mpi3/error.hpp"
 
-#include "../mpi3/detail/iterator_traits.hpp"
 #include "../mpi3/detail/call.hpp"
+#include "../mpi3/detail/iterator_traits.hpp"
 
 #include<cassert>
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 namespace boost{
@@ -24,26 +24,36 @@ namespace mpi3{
 //class communicator;
 //template<class T = void> struct window;
 
-class group{
+using ptr = MPI_Group;
+
+class group {
 	MPI_Group impl_ = MPI_GROUP_EMPTY;
-public:
+
+ public:
 	friend class communicator;
 	template<class T> friend struct window;
-	MPI_Group operator&(){return impl_;}
+
 	MPI_Group& get(){return impl_;}
-//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not a pointer type
+	MPI_Group operator&() {return get();}  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions,google-runtime-operator) access implementation as pointer
+
+//	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not really pointer type
+
 	group() = default;
 	group(group&& other) noexcept : impl_{std::exchange(other.impl_, MPI_GROUP_EMPTY)}{}
 	group(group const& other){MPI_(Group_excl)(other.impl_, 0, nullptr, &impl_);}
-//	explicit group(communicator const& c);//{MPI_Comm_group(c.impl_, &impl_);}
-//	explicit group(window<> const& w);
+
 	void swap(group& other) noexcept{std::swap(impl_, other.impl_);}
 	group& operator=(group other) noexcept{swap(other); return *this;}
 	void clear(){
-		if(impl_ != MPI_GROUP_EMPTY) MPI_(Group_free)(&impl_);
+		if(impl_ != MPI_GROUP_EMPTY) {
+			try {
+				MPI_(Group_free)(&impl_);
+			} catch(...) {}
+		}
 		impl_ = MPI_GROUP_EMPTY;
 	}
-	~group(){if(impl_ != MPI_GROUP_EMPTY) MPI_(Group_free)(&impl_);}
+	~group(){if(impl_ != MPI_GROUP_EMPTY) {MPI_(Group_free)(&impl_);}}
+
 	group include(std::initializer_list<int> il){
 		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
 	}

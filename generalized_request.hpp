@@ -4,56 +4,55 @@
 #ifndef BOOST_MPI3_GENERALIZED_REQUEST_HPP
 #define BOOST_MPI3_GENERALIZED_REQUEST_HPP
 
-#include "../mpi3/status.hpp"
 #include "../mpi3/request.hpp"
-
+#include "../mpi3/status.hpp"
 
 #include<mpi.h>
 
 #include<stdexcept>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-struct default_request{
-	status query(){
-		status ret;
+struct default_request {
+	static status query() {
+		status ret{};
 		ret.set_source(MPI_UNDEFINED);
 		ret.set_tag(MPI_UNDEFINED);
 		ret.set_cancelled();
 		ret.set_elements<char>(0);
 		return ret;
 	}
-	void free(){}
-	void cancel(int /*complete*/){}
+	void free() {}
+	void cancel(int /*complete*/) {}
 };
 
 struct generalized_request : request{
 	template<class F>
-	static int query_fn(void *extra_state, MPI_Status *status){
-		try{
-			*status = reinterpret_cast<F*>(extra_state)->query().impl_;
-		}catch(...){
+	static int query_fn(void *extra_state, MPI_Status *status) {
+		try {
+			*status = reinterpret_cast<F*>(extra_state)->query().impl_;  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
+		} catch(...) {
 			return MPI_ERR_UNKNOWN;
 		}
 		return MPI_SUCCESS;
 	}
 	template<class F>
-	static int free_fn(void* extra_state){
-		try{
-			reinterpret_cast<F*>(extra_state)->free();
-		}catch(...){return MPI_ERR_UNKNOWN;}
+	static int free_fn(void* extra_state) {
+		try {
+			reinterpret_cast<F*>(extra_state)->free();  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
+		} catch(...) {return MPI_ERR_UNKNOWN;}
 		return MPI_SUCCESS;
 	}
 	template<class F>
-	static int cancel_fn(void* extra_state, int complete){
-		try{
-			reinterpret_cast<F*>(extra_state)->cancel(complete);
-		}catch(...){return MPI_ERR_UNKNOWN;}
+	static int cancel_fn(void* extra_state, int complete) {
+		try {
+			reinterpret_cast<F*>(extra_state)->cancel(complete);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
+		} catch(...) {return MPI_ERR_UNKNOWN;}
 		return MPI_SUCCESS;
 	}
 	template<class F>
-	generalized_request(F& f){
+	explicit generalized_request(F& f){
 		int s = MPI_Grequest_start(
 			&query_fn<F>, //MPI_Grequest_query_function *query_fn,
   			&free_fn<F>, //MPI_Grequest_free_function *free_fn,
@@ -61,15 +60,16 @@ struct generalized_request : request{
   			std::addressof(f),	//	void *extra_state,
   			&impl_ //MPI_Request *request
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create generalized request");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot create generalized request");}
 	}
-	void complete(){
+	void complete() {
 		int s = MPI_Grequest_complete(impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot complete");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot complete");}
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_GENERALIZED_REQUEST
 

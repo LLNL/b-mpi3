@@ -122,6 +122,7 @@ template<class Self, class Impl, int(*FreeFunction)(Impl*)>
 struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, Impl>{
 	using impl_t = Impl;
 	impl_t impl_;
+
 	bool predefined_ = false;
 	nondefault_handle(Impl code) : impl_(code), predefined_(true){}
 	nondefault_handle() = delete;

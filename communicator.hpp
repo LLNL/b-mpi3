@@ -241,8 +241,9 @@ public:
 			MPI_Comm_create_keyval(copy_fn_, delete_fn_, &impl_, (void *)0);
 		}
 		keyval(keyval const&) = delete;
-		~keyval(){MPI_Comm_free_keyval(&impl_);}
+		~keyval() noexcept {MPI_Comm_free_keyval(&impl_);}
 	};
+
 	using detail::basic_communicator::send_receive_n;
 	using detail::basic_communicator::matched_probe;
 	template<class It, typename Size>

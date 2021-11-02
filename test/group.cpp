@@ -15,9 +15,10 @@ using std::cout;
 namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
-	
+
 	mpi3::group wg{world};
 	mpi3::communicator w2 = wg;
+
 	assert( w2.rank() == world.rank() );
 	assert( w2.size() == world.size() );
 
@@ -27,6 +28,13 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	mpi3::communicator h2 = hg;
 	assert(half.rank() == h2.rank());
+
+	static_assert( std::is_same<decltype(&wg), MPI_Group>{}, "!" );
+
+	mpi3::group const& wgc = wg;
+	static_assert( std::is_same<decltype(&wgc), mpi3::group const*>{}, "!" );
+
+//	static_assert( std::is_same<decltype(*&wg), mpi3::group&>{}, "!" );
 
 	return 0;
 }
