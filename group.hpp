@@ -18,8 +18,8 @@ OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 
 // #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 //class communicator;
 //template<class T = void> struct window;
@@ -71,11 +71,9 @@ class group {
 	bool root() const{assert(not empty()); return rank() == 0;}
 	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
 
-	group sliced(int first, int last, int stride = 1) const {
-		std::array<std::array<int, 3>, 1> ranges{ {{first, last - 1, stride}} };
-		group ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Group_range_incl)(impl_, 1, reinterpret_cast<int(*)[3]>(&ranges[0][0]), &ret.impl_); 
-		return ret;
+	group sliced(int first, int last, int stride = 1) const{
+		int ranges[][3] = {{first, last - 1, stride}};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &ret.impl_); return ret;
 	}
 
 	bool empty() const {return size()==0;}
@@ -108,7 +106,8 @@ class group {
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
