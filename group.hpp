@@ -72,8 +72,9 @@ class group {
 	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
 
 	group sliced(int first, int last, int stride = 1) const {
-		std::array<std::array<int, 3>, 1> ranges = {{first, last - 1, stride}};
-		group ret; MPI_(Group_range_incl)(impl_, 1, reinterpret_cast<int(*)[3]>(&ranges[0][0]), &ret.impl_); 
+		std::array<std::array<int, 3>, 1> ranges{ {{first, last - 1, stride}} };
+		group ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Group_range_incl)(impl_, 1, reinterpret_cast<int(*)[3]>(&ranges[0][0]), &ret.impl_); 
 		return ret;
 	}
 
