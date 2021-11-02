@@ -3004,13 +3004,13 @@ private:
 		class V1 = typename std::iterator_traits<It1>::value_type, 
 		class V2 = typename std::iterator_traits<It2>::value_type 
 	>
-	auto gather_n_dispatch(all_gather_mode g, std::true_type, It1 first, Size count, It2 d_first, int /*root*/= 0){
+	auto gather_n_dispatch(all_gather_mode g, std::true_type /*true*/, It1 first, Size count, It2 d_first, int /*root*/= 0) {
 		int s = g(
 			detail::data(first)  , count, detail::basic_datatype<V1>{},
 			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
 	}
 
  public:
