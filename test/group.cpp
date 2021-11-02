@@ -3,9 +3,9 @@ mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2020
 
+#include "../../mpi3/communicator.hpp"
 #include "../../mpi3/environment.hpp"
 #include "../../mpi3/group.hpp"
-#include "../../mpi3/communicator.hpp"
 
 #include "../../mpi3/main.hpp"
 
@@ -14,7 +14,7 @@ mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 using std::cout;
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 
 	mpi3::group wg{world};
 	mpi3::communicator w2 = wg;
