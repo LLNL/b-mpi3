@@ -35,11 +35,11 @@ template<> struct priority<0>{};
 
 template<class It, typename = decltype(std::declval<It>().base())> 
 typename std::iterator_traits<It>::pointer
-data(It it, priority<5>){return it.base();}
+data(It it, priority<5> /*priority*/){return it.base();}
 
 template<class It, typename = decltype(std::declval<It>().get_ptr())> 
 typename std::iterator_traits<It>::pointer
-data(It it, priority<0>){return it.get_ptr();}
+data(It it, priority<0> /*priority*/){return it.get_ptr();}
 
 template<class It> auto data(It it) -> decltype(data(it, priority<>{})){
 	return data(it, priority<>{});
@@ -51,7 +51,9 @@ template<class It>
 typename std::iterator_traits<It>::value_type const*
 cdata(It it){return data(it);}
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_DETAIL_ITERATOR
 

@@ -5,7 +5,7 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 
 #ifndef MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
 #define MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
-#define OMPI_SKIP_MPICXX 1 // workaround for https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1 // workaround for https://github.com/open-mpi/ompi/issues/5157
 
 #include "../../mpi3/vector.hpp"
 
@@ -158,10 +158,11 @@ class basic_communicator{
 	auto unpack(
 		uvector<detail::packed>& b, int pos,
 		It first, It last,
-			detail::random_access_iterator_tag
-	){
+			detail::random_access_iterator_tag /*random_access*/
+	) {
 		return unpack_n(b, pos, first, std::distance(first, last));
 	}
+
 	template<class It>
 	auto unpack(
 		uvector<detail::packed>& b, int pos,
@@ -207,9 +208,9 @@ class basic_communicator{
 	}
 	template<class It, typename Size>
 	auto send_n(
-		It first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		It first,
+			detail::contiguous_iterator_tag /*contiguous*/,
+			detail::basic_tag /*basic*/,
 		Size count,
 		int dest, int tag
 	){
@@ -243,7 +244,7 @@ class basic_communicator{
 	auto send(
 		It first, It last,
 			detail::input_iterator_tag /*input*/,
-			detail::basic_tag,
+			detail::basic_tag /*basic*/,
 		int dest, int tag
 	){
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(first, last);
@@ -279,53 +280,55 @@ class basic_communicator{
 		receive_n(buffer.data(), buffer.size(), source, tag);
 		return std::copy_n(buffer.begin(), n, dest);
 	}
-	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		match m = matched_probe(source, tag);
 		auto count = m.count<detail::packed>();
-		auto size = b.size();
+		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);
 	}
-	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(static_cast<uvector<detail::packed>&>(b), source, tag);
 	}
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
-		It first, 
-			detail::forward_iterator_tag,
-			detail::basic_tag,
+		It first,
+			detail::forward_iterator_tag /*forward*/,
+			detail::basic_tag /*basic*/,
 		Size size, Meta... meta
-	){
+	) {
 		using value_type = typename std::iterator_traits<It>::value_type;
 		mpi3::uvector<value_type> buffer(size);
 		std::copy_n(first, buffer.size(), buffer.begin());
 		send_receive_replace_n(buffer.begin(), buffer.size(), meta...);
 		return std::copy_n(buffer.begin(), buffer.size(), first);
 	}
+
 	template<class It, typename Size>
 	auto send_receive_replace_n(
 		It first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*contiguous*/,
+			detail::basic_tag /*basic*/,
 		Size size,
-		int dest, int source, 
+		int dest, int source,
 		int sendtag, int recvtag
-	){
+	) {
 		using value_type = typename std::iterator_traits<It>::value_type;
-		status ret;
+		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 		int s = MPI_Sendrecv_replace(
 			detail::data(first), size, detail::basic_datatype<value_type>{}, 
 			dest, sendtag, source, recvtag, impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send_receive");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot send_receive");}
 		return first + size;
 	}
+
 	template<class It, class Size>
 	auto send_receive_replace_n(
-		It first, Size size, 
-		int dest, int source, // = MPI_ANY_SOURCE, 
+		It first, Size size,
+		int dest, int source, // = MPI_ANY_SOURCE,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
-	){
+	) {
 		return send_receive_replace_n(
 			first, 
 				detail::iterator_category_t<It>{}, 
@@ -344,7 +347,9 @@ class basic_communicator{
 	}
 };
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__ // def _TEST_MPI3_DETAIL_BASIC_COMMUNICATOR
 

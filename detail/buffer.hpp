@@ -15,13 +15,19 @@ namespace mpi3{
 namespace detail{
 
 struct buffer : mpi3::uvector<detail::packed>{
-	int pos = 0;
+	int pos = 0;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa) : make private
 	buffer() = default;
-	buffer(std::size_t r){ reserve(r); }
+	explicit buffer(std::size_t r) {reserve(r);}
 	buffer(buffer const&) = delete;
+	buffer(buffer&&) = delete;
+	buffer& operator=(buffer const&) = delete;
+	buffer& operator=(buffer&&) = delete;
+	~buffer() = default;
 };
 
-}}}
+} // end namespace detail
+} // end namespace mpi3
+} // end namespace boost
 
 #ifdef _TEST_MPI3_BUFFER
 

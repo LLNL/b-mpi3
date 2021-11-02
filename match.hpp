@@ -12,7 +12,7 @@
 namespace boost{
 namespace mpi3{
 
-struct match : public message, public status{
+struct match : public message, public status {  // NOLINT(fuchsia-multiple-inheritance)
 	friend class communicator;
 	template<class It>
 	auto receive(It dest){
@@ -23,7 +23,8 @@ struct match : public message, public status{
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_MATCH
 
@@ -31,9 +32,7 @@ struct match : public message, public status{
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-}
+int mpi3::main(int, char*[], mpi3::communicator world) {}
 
 #endif
 #endif
-

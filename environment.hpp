@@ -6,9 +6,10 @@ $CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
 
-#include "./core.hpp"
 #include "./communicator.hpp"
+#include "./core.hpp"
 #include "./wall_clock.hpp"
+
 #include "./detail/call.hpp"
 
 #include<mpi.h>
@@ -28,45 +29,42 @@ enum thread_level : int{
 inline void finalize(){
 	std::set_terminate(&std::abort);
 	int s = MPI_Finalize();
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot finalize"};
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot finalize"};}
 }
-inline void myterminate(){
+inline void myterminate() {
 	std::cerr << "myterminate handler called" << '\n';
 	finalize();
 	std::abort();
-//	exit(1);  // forces abnormal termination
 }
 
-inline void initialize(int& argc, char**& argv){
+inline void initialize(int& argc, char**& argv) {
 	int s = MPI_Init(&argc, &argv);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot initialize"};
-//	std::set_terminate(&finalize);
-//	std::set_terminate(myterminate);
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot initialize"};}
 }
 
-inline thread_level initialize(int& argc, char**& argv, thread_level required){
-	int provided;
+inline thread_level initialize(int& argc, char**& argv, thread_level required) {
+	int provided;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot thread-initialize"};}
 	return static_cast<thread_level>(provided);
 }
 
-inline thread_level initialize_thread(thread_level required){
-	int provided;
+inline thread_level initialize_thread(thread_level required) {
+	int provided;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 	int s = MPI_Init_thread(nullptr, nullptr, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot thread-initialize"};
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot thread-initialize"};}
 	return static_cast<thread_level>(provided);
 }
 
-inline thread_level initialize(thread_level required = thread_level::single){
+inline thread_level initialize(thread_level required = thread_level::single) {
 	return initialize_thread(required);
 }
 
-inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
+inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...) {
 	char name[MPI_MAX_OBJECT_NAME];
-	int rlen;
+	int rlen;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	int status = MPI_Comm_get_name(*comm, name, &rlen);
-	if(status != MPI_SUCCESS) throw std::runtime_error{"cannot get name"};
+	if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
 	std::string sname(name, rlen);
 	throw std::runtime_error{"error code "+ std::to_string(*errorcode) +" from comm "+ sname};
 }
@@ -74,20 +72,22 @@ inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...){
 inline thread_level initialize_thread(
 	int& argc, char**& argv, thread_level required
 ){
-	int ret;
+	int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	int status = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &ret);
-	if(status != MPI_SUCCESS) throw std::runtime_error("cannot thread-initialize");
+	if(status != MPI_SUCCESS) {throw std::runtime_error("cannot thread-initialize");}
 	return static_cast<thread_level>(ret);
 }
 
-inline thread_level thread_support(){
-	int r; MPI_(Query_thread)(&r); return static_cast<thread_level>(r);
+inline thread_level thread_support() {
+	int r;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
+	MPI_(Query_thread)(&r); 
+	return static_cast<thread_level>(r);
 }
 
-inline bool is_thread_main(){
-	int flag = -1;
+inline bool is_thread_main() {
+	int flag;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 	int s = MPI_Is_thread_main(&flag);
-	if(s != MPI_SUCCESS) throw std::runtime_error{"cannot determine is thread main"};
+	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot determine is thread main"};}
 	return flag;
 }
 
@@ -101,18 +101,20 @@ class environment{
 		initialize_thread(thread_level::multiple);
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-	environment(thread_level required){
+	explicit environment(thread_level required){
 		initialize_thread(required);
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-	environment(int& argc, char**& argv){
+
+	explicit environment(int& argc, char**& argv){
 		initialize(argc, argv); // initialize(argc, argv); // TODO have an environment_mt/st version?
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;
 	}
-	environment(int& argc, char**& argv, thread_level required){
+	explicit environment(int& argc, char**& argv, thread_level required){
 		initialize(argc, argv, required);
 		named_attributes_key_f() = new communicator::keyval<std::map<std::string, mpi3::any>>;		
 	}
+
 	environment(environment const&) = delete;
 	environment& operator=(environment const&) = delete;
 	~environment(){

@@ -14,9 +14,9 @@
 #include<iterator>
 #include<type_traits>
 
-namespace boost{
-namespace mpi3{
-namespace detail{
+namespace boost {
+namespace mpi3 {
+namespace detail {
 
 /*
 template<class T> 
@@ -62,10 +62,10 @@ struct basic_tag : memcopyable_tag{using base = memcopyable_tag;};
 //memcopyable_tag value_category_aux(V&&);
 template<class V, typename = std::enable_if_t<is_basic<V>{}>>
 basic_tag value_category_aux(V const&);
-template<class V, std::size_t N>
-value_unspecified_tag value_category_aux(V[N]);
-value_unspecified_tag value_category_aux(...);
 
+template<class V, std::size_t N>
+value_unspecified_tag value_category_aux(V[N]);  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) : legacy compatibility
+value_unspecified_tag value_category_aux(... );
 
 template<class V>
 struct value_category{using type = decltype(value_category_aux(std::declval<V>()));};
@@ -73,7 +73,9 @@ struct value_category{using type = decltype(value_category_aux(std::declval<V>()
 template<class V>
 using value_category_t = typename value_category<V>::type;
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_VALUE_TRAITS
 

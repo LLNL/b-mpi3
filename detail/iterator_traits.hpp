@@ -87,17 +87,17 @@ template<class It> struct contiguous_iterator    : random_access_iterator<It>{
 };
 
 template<class It>
-forward_iterator<It&&> category_iterator_aux(It&& it, forward_iterator_tag){
+forward_iterator<It&&> category_iterator_aux(It&& it, forward_iterator_tag /*forward*/) {
 	return {std::forward<It>(it)};
 }
 
 template<class It>
-random_access_iterator<It&&> category_iterator_aux(It&& it, random_access_iterator_tag){
+random_access_iterator<It&&> category_iterator_aux(It&& it, random_access_iterator_tag /*random_access*/) {
 	return {std::forward<It>(it)};
 }
 
 template<class It>
-contiguous_iterator<It&&> category_iterator_aux(It&& it, contiguous_iterator_tag){
+contiguous_iterator<It&&> category_iterator_aux(It&& it, contiguous_iterator_tag /*contiguous*/) {
 	return {std::forward<It>(it)};
 }
 
@@ -106,7 +106,9 @@ auto category_iterator(It&& it){
 	return category_iterator_aux(std::forward<It>(it), typename iterator_category<It>::type{});
 }
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_DETAIL_ITERATOR_TRAITS
 
