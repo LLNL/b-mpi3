@@ -43,7 +43,10 @@ class group {
 	group(group const& other){MPI_(Group_excl)(other.impl_, 0, nullptr, &impl_);}
 
 	void swap(group& other) noexcept{std::swap(impl_, other.impl_);}
-	group& operator=(group other) noexcept{swap(other); return *this;}
+//	group& operator=(group other) noexcept{swap(other); return *this;}
+	group& operator=(group const& other) {group tmp(other); swap(tmp)  ; return *this;}
+	group& operator=(group     && other) noexcept {         swap(other); return *this;}
+
 	void clear(){
 		if(impl_ != MPI_GROUP_EMPTY) {
 			try {
@@ -52,7 +55,11 @@ class group {
 		}
 		impl_ = MPI_GROUP_EMPTY;
 	}
-	~group(){if(impl_ != MPI_GROUP_EMPTY) {MPI_(Group_free)(&impl_);}}
+	~group(){
+		if(impl_ != MPI_GROUP_EMPTY) {
+			try {MPI_(Group_free)(&impl_);} catch(...) {}
+		}
+	}
 
 	group include(std::initializer_list<int> il){
 		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
@@ -63,13 +70,16 @@ class group {
 	int rank() const{int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
 	bool root() const{assert(not empty()); return rank() == 0;}
 	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
-	group sliced(int first, int last, int stride = 1) const{
-		int ranges[][3] = {{first, last - 1, stride}};
-		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &ret.impl_); return ret;
+
+	group sliced(int first, int last, int stride = 1) const {
+		std::array<std::array<3, int>, 1> ranges = {{first, last - 1, stride}};
+		group ret; MPI_(Group_range_incl)(impl_, 1, ranges.data(), &ret.impl_); return ret;
 	}
-	bool empty() const{return size()==0;}
+
+	bool empty() const {return size()==0;}
 	friend auto compare(group const& self, group const& other){
-		int result; MPI_(Group_compare)(self.impl_, other.impl_, &result);
+		int result;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Group_compare)(self.impl_, other.impl_, &result);
 		return static_cast<mpi3::detail::equality>(result);
 	}
 	bool operator==(group const& other) const{
@@ -90,7 +100,9 @@ class group {
 		group ret; MPI_(Group_union)(self.impl_, other.impl_, &ret.impl_); return ret;
 	}
 	int translate_rank(int rank, group const& other) const{
-		int out; MPI_(Group_translate_ranks)(impl_, 1, &rank, other.impl_, &out); return out;
+		int out;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Group_translate_ranks)(impl_, 1, &rank, other.impl_, &out); 
+		return out;
 	}
 };
 

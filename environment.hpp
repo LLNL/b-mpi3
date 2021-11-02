@@ -181,7 +181,7 @@ class environment {
 		return instance;
 	}
 
-	static communicator world(){ // returns a copy!
+	NODISCARD("") communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
 		communicator ret{get_world_instance()}; ret.name("world");
 		return ret;
 	}
