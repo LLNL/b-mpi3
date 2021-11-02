@@ -11,11 +11,9 @@ mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 
 #include<iostream>
 
-using std::cout;
 namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
-
 	mpi3::group wg{world};
 	mpi3::communicator w2 = wg;
 
