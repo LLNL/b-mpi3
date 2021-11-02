@@ -8,14 +8,14 @@
 
 #include "../error.hpp"
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h> // MPI_MAX_PROCESSOR_NAME
 
 #include<string>
 
-namespace boost{
-namespace mpi3{
-namespace detail{
+namespace boost {
+namespace mpi3 {
+namespace detail {
 
 template< class ...Args> struct back;
 template< class A> struct back<A> { using type = A; };
@@ -54,19 +54,12 @@ void call(Args... args){
 }
 #endif
 
-#define MPI3_CALL(F) detail::call<decltype(F), F>
-#define MPI_(F) MPI3_CALL(MPI_##F)
+#define MPI3_CALL(F) detail::call<decltype(F), F>  // NOLINT(cppcoreguidelines-macro-usage)
+#define MPI_(F) MPI3_CALL(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage): name concatenation
 
-//template<class R, class T, class... Args>
-//R last_argument_aux(R(*pp)(Args..., T));
-
-//template<class F>
-//struct last_argument{
-//	using type = decltype(last_argument_aux(std::declval<F*>()));
-//};
-
-}}}
-
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_DETAIL_CALL
 

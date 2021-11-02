@@ -4,7 +4,7 @@ mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpi
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #ifdef __CUDACC__
@@ -22,11 +22,12 @@ namespace boost{
 namespace mpi3{
 namespace detail{
 
-using float_int       = std::pair<float, int>;
-using long_int        = std::pair<long, int>;
-using double_int      = std::pair<double, int>;
-using short_int       = std::pair<short, int>;
-using int_int         = std::pair<int, int>;
+using float_int       = std::pair<float      , int>;
+using long_int        = std::pair<long       , int>;  // NOLINT(google-runtime-int) : long <-> int64
+using double_int      = std::pair<double     , int>;
+using short_int       = std::pair<short      , int>;  // NOLINT(google-runtime-int) : short <-> int16
+using int_int         = std::pair<int        , int>;
+
 using long_double_int = std::pair<long double, int>;
 
 using float_float             = std::pair<float, float>;
@@ -45,25 +46,32 @@ using wchar = wchar_t;
 using byte = std::byte;
 #endif
 
-struct packed{
+class packed {
 	unsigned char t;
+
+ public:
     explicit packed(unsigned char t_) : t{t_}{};
     packed() = default;
-    packed(packed const&) = default;
-    packed& operator=(const packed& rhs) = default;
-    unsigned char& operator=(unsigned char const& rhs){t = rhs; return *this;}
-    operator const unsigned char&() const{return t;}
-    operator unsigned char&(){return t;}
+//    packed(packed const&) = default;
+
+ //   packed& operator=(const packed& rhs) = default;
+//	packet& operator=(
+	packed& operator=(unsigned char const& rhs) {t = rhs; return *this;}
+
+    explicit operator const unsigned char&() const {return t;}
+    explicit operator       unsigned char&()       {return t;}
+
     bool operator==(packed const& rhs) const{return t == rhs.t;}
-    bool operator<(packed const& rhs) const{return t < rhs.t;}
+    bool operator< (packed const& rhs) const{return t < rhs.t;}
 };
 
 template<class T> struct basic_datatype;
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
 template<> struct basic_datatype<TypE>{ \
 /*	constexpr*/ operator MPI_Datatype() const{ \
-		assert( MpiiD != MPI_DATATYPE_NULL ); /*this system doesn't support this type*/ \
+		assert( (MpiiD) != MPI_DATATYPE_NULL ); /*this system doesn't support this type*/ \
 		return MpiiD; \
 	} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
@@ -133,7 +141,9 @@ std::false_type is_basic_aux(...);
 template<class T> 
 struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__ //_TEST_BOOST_MPI3_DETAIL_DATATYPE
 
@@ -146,7 +156,6 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 
 int main(){
-
 	using mpi3::detail::is_basic;
 
 	static_assert( is_basic<int>{}, "");
@@ -154,11 +163,9 @@ int main(){
 	static_assert( is_basic<mpi3::detail::float_int>{}, "");
 
 	static_assert( not is_basic<std::string>{}, "");
-	
-	assert( mpi3::detail::basic_datatype<double>{} == MPI_DOUBLE );
 
+	assert( mpi3::detail::basic_datatype<double>{} == MPI_DOUBLE );
 }
 
 #endif
 #endif
-

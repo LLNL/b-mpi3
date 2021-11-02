@@ -4,31 +4,40 @@
 #ifndef MPI3_DETAIL_PACKAGE_HPP
 #define MPI3_DETAIL_PACKAGE_HPP
 
-//TODO move from detail to root
+// TODO(correaa) move from detail to root
 
 #include "../../mpi3/vector.hpp"
 
 #include "../../mpi3/detail/basic_communicator.hpp"
 #include "../../mpi3/detail/buffer.hpp"
+#include "../../mpi3/detail/iterator.hpp"
 #include "../../mpi3/detail/iterator_traits.hpp"
 #include "../../mpi3/detail/value_traits.hpp"
-#include "../../mpi3/detail/iterator.hpp"
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 class communicator;
 
 namespace detail{
 
-struct package : buffer{
+struct package : buffer {
+ private:
 	basic_communicator& bcomm_;
-	package(communicator& comm, buffer::size_type n = 0) 
-		: buffer(n), bcomm_(reinterpret_cast<basic_communicator&>(comm))
-	{
+
+ public:
+	explicit package(communicator& comm, buffer::size_type n = 0)
+	: buffer{n}, bcomm_{reinterpret_cast<basic_communicator&>(comm)} {  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa) break cyclic dependency of classes
 		reserve(n);
 	}
 	package(package const&) = delete;
+	package(package     &&) = delete;
+
+	package& operator=(package const&) = delete;
+	package& operator=(package     &&) = delete;
+
+	~package() noexcept = default;
+
 	template<class It, typename Size>
 	void pack_n(It first, Size count){
 		bcomm_.pack_n(first, count, static_cast<buffer&>(*this));
@@ -45,18 +54,20 @@ struct package : buffer{
 	void unpack(It first, It last){
 		bcomm_.unpack(static_cast<buffer&>(*this), first, last);
 	}
-	operator bool() const{return pos < static_cast<std::ptrdiff_t>(size());}
+	explicit operator bool() const {return pos < static_cast<std::ptrdiff_t>(size());}
+
 	template<class T>
 	package& operator>>(T& t){
 		unpack_n(std::addressof(t), 1);
 		return *this;
 	}
-	auto send(int dest, int tag = 0){
+	auto send(int dest, int tag = 0) {
 		return bcomm_.send(static_cast<buffer&>(*this), dest, tag);
 	}
-	auto receive(int dest, int tag = 0){
+	auto receive(int dest, int tag = 0) {
 		return bcomm_.receive(static_cast<buffer&>(*this), dest, tag);
 	}
+
 //	package const& send(int dest, int tag = 0) const;
 /*	package const& send(int dest, int tag = 0) const{
 		comm_.send_packed_n(buffer_.data(), in_, dest, tag);
@@ -90,7 +101,9 @@ struct package : buffer{
 
 };
 
-}}}
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_PACKAGE
 

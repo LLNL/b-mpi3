@@ -42,7 +42,8 @@ struct uvector : std::vector<T, mpi3::uallocator<T>>{
 	
 };*/
 
-}}
+}  // namespace mpi3
+}  // namespace boost
 
 #ifdef _TEST_BOOST_MPI3_VECTOR
 
@@ -73,7 +74,7 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 	using boost::timer::cpu_timer;
 	using boost::timer::cpu_times;
-	
+
 	auto test_size = 100000000; // 100MB
 	cout << "test size " << test_size << " chars \n";
 	using vector = std::vector<char, mpi3::allocator<char>>;

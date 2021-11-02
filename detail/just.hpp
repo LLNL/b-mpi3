@@ -4,48 +4,34 @@
 
 #ifndef BOOST_JUST_HPP
 #define BOOST_JUST_HPP
-//#include<boost/ref.hpp>
-#include<utility> // std::forward
+
 #include<array>
+#include<utility> // std::forward
 
 namespace boost{
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) : 
 #define BOOST_JUST_REPRODUCE_OPERATOR(OperatoR) \
 	template<class T...> \
 	auto OperatorR(T&&... t)
 
 template<class T>
 struct wrapper /*: T*/{
-	typedef T type;
-	T value;
+	using type = T;
+	T value;  // NOLINT(misc-non-private-member-variables-in-classes) : wrapper
+
 	template<class... Args, typename = decltype(T(std::forward<Args>(std::declval<Args>()...)...))>
-	wrapper(Args&&... args) : value(std::forward<Args>(args)...){}
-	
-	
-/*	template<class Args>
-	auto operator+=(Args&& args) 
-	-> decltype(
-		//	just<decltype(value+=(std::forward<Args>(args)))>(
-				value+=(std::forward<Args>(args))
-		//	)
-	){
-		return 
-		//	just<decltype(value+=(std::forward<Args>(args)))>(
-				value+=(std::forward<Args>(args))
-		//	)
-		;
-	}*/
-	template<class Args>
-	auto operator=(Args&& args) -> decltype(value = std::forward<Args>(args)){
-		return value = std::forward<Args>(args);
+	explicit wrapper(Args&&... args) : value(std::forward<Args>(args)...) {}
+
+	template<class Args, class = decltype(std::declval<T&>() = std::declval<Args&&>())>
+	wrapper& operator=(Args&& args) {
+		value = std::forward<Args>(args);
+		return *this;
 	}
-	operator T&(){return value;}
-	operator T const&() const{return value;}
-	decltype(auto) operator&() const{return &value;}
-//	operator T&() const{return *t_;}
-//	operator T const&() const{return *t_;}
-//	auto operator&() -> decltype(&value){return &value;}
-//	auto operator&() const -> decltype(&value){return &value;}
+
+	explicit operator T      &()       {return value;}
+	explicit operator T const&() const {return value;}
+
 	template<class Arg>
 	auto operator[](Arg&& arg) const
 	->decltype(value[std::forward<Arg>(arg)]){
@@ -53,9 +39,7 @@ struct wrapper /*: T*/{
 	}
 
 	auto operator*()->decltype(*std::declval<T>()){return *value;} 
-//	auto operator*() const->decltype(*value){return *value;}
 };
-
 
 template<class T>
 using reference = wrapper<T&>;
@@ -80,19 +64,14 @@ using just_t = typename just<T>::type;
 #undef BOOST_JUST_REPRODUCE_OPERATOR
 
 //template<class T>
-//just<T> _(T const& t){
-//	return just<T>(t);
+//typename just<T>::type& _(T&& t){
+//	return reinterpret_cast<typename just<T>::type&>(std::forward<T>(t));
 //}
 
-template<class T>
-typename just<T>::type& _(T&& t){
-	return reinterpret_cast<typename just<T>::type&>(std::forward<T>(t));
-}
-
-template<class T>
-typename just<T>::type& wrap(T&& t){
-	return reinterpret_cast<typename just<T>::type&>(std::forward<T>(t));
-}
+//template<class T>
+//typename just<T>::type& wrap(T&& t){
+//	return reinterpret_cast<typename just<T>::type&>(std::forward<T>(t));
+//}
 
 
 /*
@@ -125,11 +104,11 @@ struct just<bool>{
 };
 */
 
-}
-
+}  // end namespace boost
 
 #endif
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) : TODO(correaa) : check if this is necessary
 #define BOOST_INHERIT_UNARY_CONSTRUCTOR(MyclasS, MybaseclasS) \
 	template<typename A> MyclasS(A& arg) : MybaseclasS(arg) {}
 

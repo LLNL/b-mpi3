@@ -1,12 +1,10 @@
 #if COMPILATION// -*- indent-tabs-mode: t -*-
 OMPI_CXX=$CXX mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2017-2020
-
+// © Alfredo A. Correa 2017-2021
 #ifndef BOOST_MPI3_ERROR_HPP
 #define BOOST_MPI3_ERROR_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #include<system_error>

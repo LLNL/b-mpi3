@@ -2898,9 +2898,9 @@ public:
 	}
 	template<class It1, class It2>
 	auto gather(
-		It1 first, It1 last, 
-			detail::forward_iterator_tag,
-			detail::basic_tag,
+		It1 first, It1 last,
+			detail::forward_iterator_tag /*forward*/,
+			detail::basic_tag /*basic*/,
 		It2 d_first, It2 d_last,
 			detail::random_access_iterator_tag,
 			detail::value_unspecified_tag,
@@ -2983,7 +2983,7 @@ private:
 			detail::data(d_first), count, detail::basic_datatype<V2>{},
 			root, impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot scatter");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
 	}
 	template<class It1, class Size, class It2,
 		class V1 = typename std::iterator_traits<It1>::value_type, 
@@ -3014,7 +3014,7 @@ private:
 
  public:
 	std::string get_name() const{
-		int len;
+		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 		char comm_name[MPI_MAX_OBJECT_NAME];
 		int status = MPI_Comm_get_name(impl_, comm_name, &len);
 		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot set name"};}
