@@ -85,6 +85,7 @@ struct regular_handle : caller<regular_handle<Self, Impl, CreateFunction, DupFun
 	impl_t impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
 	regular_handle() {CreateFunction(&impl_);}
+	regular_handle(regular_handle&&) = delete;  // TODO(correaa) : introspect if "null state" is valid
 	regular_handle(regular_handle const& other) {  // TODO(correaa) : revise in what cases a regular const& is correct
 		int status = DupFunction(other.impl_, &impl_);
 		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot copy handle"};}
@@ -100,6 +101,7 @@ struct regular_handle : caller<regular_handle<Self, Impl, CreateFunction, DupFun
 		swap(tmp);
 		return *this;
 	}
+	regular_handle operator=(regular_handle&&) = delete;
 };
 
 //template<class Self, class Impl, int(*CreateFunction)(Impl*), int(*FreeFunction)(Impl*)>
@@ -124,31 +126,40 @@ struct uninitialized{};
 
 template<class Self, class Impl, int(*FreeFunction)(Impl*)>
 struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, Impl>{
+private:
 	using impl_t = Impl;
 	impl_t impl_;
 
+ public:
 	bool predefined_ = false;
-	nondefault_handle(Impl code) : impl_(code), predefined_(true){}
+	explicit nondefault_handle(Impl code) : impl_(code), predefined_(true){}
 	nondefault_handle() = delete;
-	nondefault_handle(uninitialized){};
+	nondefault_handle(uninitialized /*unused*/){};
 	nondefault_handle(nondefault_handle const&) = delete;
-	~nondefault_handle(){if(not predefined_) FreeFunction(&impl_);}
+	nondefault_handle(nondefault_handle&&) = delete;
+	~nondefault_handle(){if(not predefined_) {FreeFunction(&impl_);}}
 	void swap(nondefault_handle& other){std::swap(impl_, other.impl_);}
-	Self& operator=(nondefault_handle const& other) = delete;
+	nondefault_handle& operator=(nondefault_handle const& other) = delete;
+	nondefault_handle& operator=(nondefault_handle&& other) = delete;
 };
 
-template<class Self, class Impl>
-struct persistent_handle : caller<persistent_handle<Self, Impl>, Impl>{
-	using impl_t = Impl;
-	impl_t impl_;
-	persistent_handle() = delete;
-	persistent_handle(uninitialized){};
-	persistent_handle(Impl code) : impl_(code){}
-	persistent_handle(persistent_handle const&) = delete;
-	~persistent_handle() = default;
-};
+//template<class Self, class Impl>
+//struct persistent_handle : caller<persistent_handle<Self, Impl>, Impl>{
+//private:
+//	using impl_t = Impl;
+//	impl_t impl_;
 
-}}}
+//public:
+//	persistent_handle() = delete;
+//	persistent_handle(uninitialized){};
+//	persistent_handle(Impl code) : impl_(code){}
+//	persistent_handle(persistent_handle const&) = delete;
+//	~persistent_handle() = default;
+//};
+
+}  // end namespace detail
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_DETAIL_HANDLE
 int main(){

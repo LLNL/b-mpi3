@@ -74,13 +74,13 @@ class basic_communicator{
 			detail::contiguous_iterator_tag /*contiguous*/,
 			detail::basic_tag /*basic*/,
 		Size count,
-		uvector<detail::packed>& p, int pos
-	){
+		uvector<detail::packed>& p, int pos  // NOLINT(misc-unused-parameters) bug in clang-tidy 12
+	) {
 		using value_type = typename std::iterator_traits<It>::value_type;
 		int s = MPI_Pack(
-			detail::data(first), count, 
-			detail::basic_datatype<value_type>{}, 
-			p.data(), p.size(), 
+			detail::data(first), count,
+			detail::basic_datatype<value_type>{},
+			p.data(), p.size(),
 			&pos, impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot pack_n");}
