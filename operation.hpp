@@ -21,17 +21,18 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 	using detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>::nondefault_handle;
 	public:
 	template<class F, typename = std::enable_if_t<not std::is_same<std::decay_t<F>, operation>{}> >
-	operation(F&& f, bool commutative) : operation(detail::uninitialized{}){
+	operation(F&& f, bool commutative) : operation(detail::uninitialized{}) {
 		MPI_Op_create(
 			&f,
 		//	reinterpret_cast<void (*)(void*, void*, int*, int*)>(&f),
-			commutative, 
+			commutative,
 			&impl_
 		);
 	}
 
 	operation() = delete;
 	operation(operation const&) = delete;
+	operation(operation     &&) = delete;
 	operation& operator=(operation const&) = delete;
 	~operation() = default;
 
@@ -83,12 +84,13 @@ template<> struct max<void>{
 
 template<class Op> struct predefined_operation;
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(CppoP, MpinamE, NamE) \
 template<> struct predefined_operation<CppoP>{ \
 /*	constexpr*/ operator MPI_Op() const{return MpinamE;} \
 /*	static constexpr MPI_Op value = MpinamE;*/ \
 }; \
-using NamE = predefined_operation<CppoP>
+using NamE = predefined_operation<CppoP>  // NOLINT(bugprone-macro-parentheses)
 
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::plus<>       , MPI_SUM , sum        );
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::multiplies<> , MPI_PROD, product    );
