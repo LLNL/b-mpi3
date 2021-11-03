@@ -126,15 +126,16 @@ struct uninitialized{};
 
 template<class Self, class Impl, int(*FreeFunction)(Impl*)>
 struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, Impl>{
-private:
+ private:
 	using impl_t = Impl;
-	impl_t impl_;
 
  public:
-	bool predefined_ = false;
+	impl_t impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
+	bool predefined_ = false;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
+
 	explicit nondefault_handle(Impl code) : impl_(code), predefined_(true){}
 	nondefault_handle() = delete;
-	nondefault_handle(uninitialized /*unused*/){};
+	explicit nondefault_handle(uninitialized /*unused*/){};
 	nondefault_handle(nondefault_handle const&) = delete;
 	nondefault_handle(nondefault_handle&&) = delete;
 	~nondefault_handle(){if(not predefined_) {FreeFunction(&impl_);}}

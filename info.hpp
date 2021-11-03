@@ -6,11 +6,11 @@
 
 #include "../mpi3/handle.hpp"
 
-#include <tuple> // tie
 #include<iostream>
+#include <tuple> // tie
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 struct info : 
 	detail::regular_handle<
@@ -25,11 +25,11 @@ struct info :
 	info& operator=(info const&) = default;
 	~info() = default;
 
-	info(std::initializer_list<std::pair<std::string, std::string>> il) : info(){
-		for(auto& e : il) set(e.first, e.second);
+	info(std::initializer_list<std::pair<std::string, std::string>> il) {
+		for(auto const& e : il) {set(e.first, e.second);}
 	}
 
-	void                        delete_(std::string const& key){call<&MPI_Info_delete>(key);}
+//  void                        delete_(std::string const& key) {call<&MPI_Info_delete>(key);}
 	std::pair<std::string, int> get(std::string const& key, int valuelen) const{return base::call<&MPI_Info_get>(key, valuelen);}
 	int                         get_nkeys() const{return call<&MPI_Info_get_nkeys>();}
 	std::string                 get_nthkey(int n) const{return call<&MPI_Info_get_nthkey>(n);}
@@ -37,13 +37,13 @@ struct info :
 	void                        set(std::string const& key, std::string const& value){call<&MPI_Info_set>(key, value);}
 
 	void insert(std::string const& key, std::string const& value){return set(key, value);}
-	void erase(std::string const& key){delete_(key);}
+	void erase(std::string const& key) {call<&MPI_Info_delete>(key);}
 	int size() const{return get_nkeys();}
 	std::string operator[](std::string const& key) const{
 		int valuelen = MPI_MAX_INFO_VAL;
-		int flag;
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		std::tie(valuelen, flag) = get_valuelen(key);
-		if(flag == false) throw std::logic_error("key `" + key + "' not found in info set");
+		if(flag == 0) {throw std::logic_error{"key `" + key + "' not found in info set"};}
 		return get(key, valuelen).first;
 	};
 	std::pair<std::string, std::string> operator[](int n) const{
@@ -59,7 +59,8 @@ struct info :
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_INFO
 
