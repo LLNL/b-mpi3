@@ -17,10 +17,10 @@
 
 #include <sstream>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-namespace detail{
+namespace detail {
 
 class basic_package_iprimitive{
  protected:
@@ -185,20 +185,23 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 };
 
 template<class Archive>
-class package_oarchive_impl : public basic_package_oprimitive, public basic_package_oarchive<Archive>{
-public:
+class package_oarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boost.Serialization design
+: public basic_package_oprimitive, public basic_package_oarchive<Archive> {
+ public:
 	template<class T>
-	void save(const T& t){basic_package_oprimitive::save(t);}
+	void save(const T& t) {basic_package_oprimitive::save(t);}
+
 #if(BOOST_VERSION < 106100)
-	void save(boost::serialization::array<double>&){
+	void save(boost::serialization::array<double>& /*arr*/) {
 #else
-	void save(boost::serialization::array_wrapper<double>&){
+	void save(boost::serialization::array_wrapper<double>& /*arr*/) {
 #endif
 		assert(0);
 	}
+
     void save(const boost::archive::version_type& /*version*/) {}
 //	void save(const boost::serialization::item_version_type&){/*save(static_cast<const unsigned int>(t));*/}
-    void save(const boost::archive::tracking_type&) {/*save(static_cast<const unsigned int>(t));*/}
+    void save(const boost::archive::tracking_type& /*tracking*/) {/*save(static_cast<const unsigned int>(t));*/}
 	void save(const boost::archive::object_id_type& /*object_id*/) {}
 	void save(const boost::archive::object_reference_type& /*object_reference*/) {}
 	void save(const boost::archive::class_id_type& /*class_id*/) {}
@@ -206,15 +209,15 @@ public:
 	void save(const boost::archive::class_id_reference_type& /*class_id_reference*/) {}
 	void save(const boost::archive::class_name_type& /*class_name*/) {}
 
-	void save(const boost::serialization::collection_size_type& t){
+	void save(const boost::serialization::collection_size_type& t) {
 		save(static_cast<      unsigned int>(t));
 //		save(static_cast<const unsigned int>(t));
 	}
-	void save(const boost::serialization::item_version_type&){}
+	void save(const boost::serialization::item_version_type& /*item_version*/) {}
 
 	// string types (like char*, string, etc) have special handling
 	// types that need special handling
-	void save(const char * s){
+	void save(const char* s) {
 		assert(0);
 		const std::size_t len = std::ostream::traits_type::length(s);
 		*this->This() << len;
@@ -222,14 +225,14 @@ public:
 	//	os_ += len*sizeof(char);//	os << s;
 		p_.pack_n(s, len);
 	}
-	void save(const wchar_t * ws){
+	void save(const wchar_t* ws) {
 		const std::size_t l = std::wcslen(ws);
 		*this->This() << l;
 		assert(0);
 	//	++tokens_; // this->This()->newtoken();
 	//	os_ += l*sizeof(wchar_t);//	os.write((const char *)ws, l * sizeof(wchar_t)/sizeof(char));
 	}
-	void save(std::string const& s){
+	void save(std::string const& s) {
     	const std::size_t size = s.size();
 	//	*this->This() << size;
 		p_.pack_n(&size, 1);
@@ -238,7 +241,7 @@ public:
 	//	os_ += s.size()*sizeof(char);//	os << s;
 		p_.pack_n(s.c_str(), size);
 	}
-	void save(const std::wstring &ws){
+	void save(const std::wstring &ws) {
     	const std::size_t size = ws.size();
 		*this->This() << size;
 	//	++tokens_; //	this->This()->newtoken();
@@ -246,48 +249,50 @@ public:
 		assert(0);
 	}
 //	using package_oarchive_impl<package_oarchive>::save_override;
+
 #if 1
 	// Save all supported datatypes directly
 	template<class T>
 #if(BOOST_VERSION < 106100)
-	void save(boost::serialization::array<T> const& t, unsigned int){
+	void save(boost::serialization::array<T>         const& t, unsigned int /*version*/) {
 #else
-	void save(boost::serialization::array_wrapper<T> const& t, unsigned int){
+	void save(boost::serialization::array_wrapper<T> const& t, unsigned int /*version*/) {
 #endif
 		assert(0);
 		save_override(t, boost::mpl::bool_<true>{});//std::true_type{});
 	}
 #endif
-	public:
-    package_oarchive_impl(mpi3::detail::package& p, unsigned int flags) : // size_t& os, size_t& tokens, unsigned int flags) :
-		basic_package_oprimitive(p),
-		basic_package_oarchive<Archive>(flags)
-	{}
+
+	package_oarchive_impl(mpi3::detail::package& p, unsigned int flags) // size_t& os, size_t& tokens, unsigned int flags) :
+	: basic_package_oprimitive(p)
+	, basic_package_oarchive<Archive>(flags) {}
 };
 
-} // boost::mpi3::detail
+}  // end namespace detail
 
-struct package_iarchive : public detail::package_iarchive_impl<package_iarchive>{
-    package_iarchive(mpi3::detail::package& p, unsigned int flags = 0) 
-    : package_iarchive_impl<package_iarchive>(p, flags){}
+struct package_iarchive
+: public detail::package_iarchive_impl<package_iarchive> {
+	explicit package_iarchive(mpi3::detail::package& p, unsigned int flags = 0)
+    : package_iarchive_impl<package_iarchive>(p, flags) {}
 };
 
-struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>{
-	package_oarchive(mpi3::detail::package& p, unsigned int flags = 0) : 
-		package_oarchive_impl<package_oarchive>(p, flags)
-	{}
+struct package_oarchive : public detail::package_oarchive_impl<package_oarchive> {
+	explicit package_oarchive(mpi3::detail::package& p, unsigned int flags = 0)
+	: package_oarchive_impl<package_oarchive>(p, flags) {}
 	using package_oarchive_impl<package_oarchive>::operator&;
+
 #if(BOOST_VERSION < 106100)
-	package_oarchive& operator & (boost::serialization::array<double>&){
+	package_oarchive& operator& (boost::serialization::array<double>& /*arr*/) {
 #else
-	package_oarchive& operator & (boost::serialization::array_wrapper<double>&){
+	package_oarchive& operator& (boost::serialization::array_wrapper<double>& /*arr*/) {
 #endif
 		assert(0);
 		return *this;
 	}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 // maybe needed for optimization to take effect?
 // BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::archive::package_oarchive)
@@ -303,7 +308,7 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 namespace mpi3 = boost::mpi3;
 using std::cout; 
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+int mpi3::main(int, char*[], mpi3::communicator world) {
 	assert(world.size() > 1);
 	switch(world.rank()){
 		case 0: {
