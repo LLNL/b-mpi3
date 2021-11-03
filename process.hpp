@@ -11,68 +11,61 @@ using boost::optional;
 
 #include "config/NODISCARD.hpp"
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 struct process{
+ private:
 	communicator& comm_;
 	int rank_;
-	communicator& comm() const{return comm_;}
+	friend boost::mpi3::communicator;
+
+	process(communicator& comm, int rank) : comm_{comm}, rank_{rank} {}
+ public:
+	communicator& comm() const {return comm_;}
+
 	int rank() const{return rank_;}
 	template<class T>
-	optional<T> operator+=(T const& t) &&{
+	optional<T> operator+=(T const& t) && {
 		T val = comm_.reduce_value(t, std::plus<>{}, rank_);
-		if(rank_ != comm_.rank()) return {};
+		if(rank_ != comm_.rank()) {return {};}
 		return optional<T>(val);
 	}
-//	template<class T>
-//	std::vector<T> operator|=(T const& t) &&{
-//		std::vector<T> ret(comm_.size());
-//		comm_.gather_n(&t, 1, ret.begin(), rank_);
-	//	comm_.gather_value(t, ret.begin(), rank_);
-//		return ret;
-//	}
-//	template<class T>
-//	process&& operator<<(T const& t) &&{
-//		comm_.send_value(t, rank_);
-//		return std::move(*this);
-//	}
+
 	template<class T>
-	process&& operator>>(T& t) &&{
+	process&& operator>>(T& t) && {
 		comm_.receive_n(&t, 1, rank_);
 	//	comm_.receive_value(t, rank_);
-		return std::move(*this);
+		return std::move(*this);  // NOLINT(hicpp-move-const-arg,performance-move-const-arg) TODO(correaa)
 	}
 	template<class T>
-	process&& operator&(T& t) &&{
+	process&& operator&(T& t) && {
 		comm_.broadcast_value(t, rank_);
-		return std::move(*this);
+		return std::move(*this);  // NOLINT(hicpp-move-const-arg,performance-move-const-arg) TODO(correaa)
 	}
 };
 
 template<class T>
-auto operator<<(process&& p, const T& value) -> decltype(std::move(p << value)){
+auto operator<<(process&& p, const T& value) -> decltype(std::move(p << value)) {
 	return std::move(p << value);
 }
 
 template<class T>
-auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> value){
+auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> value) {
 	return p >> value;
 }
 
 template<class T> 
-process& operator<<(process& self, T const& t){
-	self.comm_.send_value(t, self.rank_);
+process& operator<<(process& self, T const& t) {
+	self.comm().send_value(t, self.rank());
 	return self;
 }
 
-inline process communicator::operator[](int rank){
-	return {*this, rank};
-}
+inline auto communicator::operator[](int rank) -> process {return {*this, rank};}
 
 template<class T>
 auto operator&(communicator& comm, T&& t)
-->decltype(comm.all_to_all(begin(std::forward<T>(t))), std::forward<T>(t)){
+->decltype(comm.all_to_all(begin(std::forward<T>(t))), std::forward<T>(t)) {
 	assert(t.size() == comm.size());
 //	using std::begin;
 	auto e = comm.all_to_all(begin(std::forward<T>(t)));
@@ -84,7 +77,7 @@ auto operator&(communicator& comm, T&& t)
 template<class T> 
 //NODISCARD("do not ignore result when second argument is const")
 auto operator&(communicator& comm, T const& t)
-->decltype(comm.all_to_all(t.begin(), std::declval<T>().begin()), T(comm.size())){
+->decltype(comm.all_to_all(t.begin(), std::declval<T>().begin()), T(comm.size())) {
 	assert(t.size() == comm.size());
 	T ret(comm.size()); 
 	comm.all_to_all(t.begin(), ret.begin());
@@ -92,27 +85,26 @@ auto operator&(communicator& comm, T const& t)
 }
 
 template<class T>
-auto operator||(process&& self, T& t){
-	self.comm_.broadcast_value(t, self.rank_);
-}
+auto operator||(process&& self, T& t) {self.comm().broadcast_value(t, self.rank());}
 
 template<class T>
-communicator& operator>>(communicator& comm, T& t){
+communicator& operator>>(communicator& comm, T& t) {
 	comm.receive_n(&t, 1);
 //	comm.receive_value(t);
 	return comm;
 }
 template<class T>
-std::vector<T> operator|=(communicator& comm, T const& t){
+std::vector<T> operator|=(communicator& comm, T const& t) {
 	return comm.all_gather_value(t);
 }
 
 template<class T>
-std::vector<T> operator|=(process&& self, T const& t){
-	return self.comm_.gather_value(t, self.rank_);
+std::vector<T> operator|=(process&& self, T const& t) {
+	return self.comm().gather_value(t, self.rank());
 }
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_PROCESS
 

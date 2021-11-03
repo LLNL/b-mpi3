@@ -558,19 +558,19 @@ public:
 		assert(rank() - n > 0);
 		return rank() - n;
 	}
-	communicator accept(port const& p, int root = 0) const{
+	communicator accept(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const{MPI3_CALL(MPI_Barrier)(impl_);}
-	communicator connect(port const& p, int root = 0) const{
+	void barrier() const {MPI3_CALL(MPI_Barrier)(impl_);}
+	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	bool    root() const{return (not empty()) and (rank() == 0);}
-	bool is_root() const{return root();}
+	bool    root() const {return (not empty()) and (rank() == 0);}
+	bool is_root() const {return root();}
 
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
@@ -583,7 +583,7 @@ public:
 //	T const& get_attribute_as(keyval const& kv, int idx);
 //	bool has_attribute(keyval const& kv, int idx);
 
-	process operator[](int i);
+	auto operator[](int i) -> process;
 protected:
 	template<class T> void set_attribute(int kv_idx, T const& t){
 		MPI_Comm_set_attr(impl_, kv_idx, new T{t});
