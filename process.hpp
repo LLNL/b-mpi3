@@ -7,12 +7,13 @@
 #include "../mpi3/communicator.hpp"
 
 #include <boost/optional.hpp>
-using boost::optional;
 
 #include "config/NODISCARD.hpp"
 
 namespace boost {
 namespace mpi3 {
+
+using boost::optional;  // TODO(correaa) use std::optional in C++17
 
 struct process{
  private:
