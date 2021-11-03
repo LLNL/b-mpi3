@@ -12,7 +12,7 @@
 namespace boost {
 namespace mpi3 {
 
-struct info : 
+struct info :
 	detail::regular_handle<
 		info, MPI_Info, MPI_Info_create, MPI_Info_dup, MPI_Info_free
 	>
@@ -21,8 +21,12 @@ struct info :
 	using detail::regular_handle<info, MPI_Info, MPI_Info_create, MPI_Info_dup, MPI_Info_free>::call;
 
 	info() = default;
-	info(info const& other) = default;
+	info(info const&) = default;
+	info(info     &&) = delete;  // TODO(correaa) consider relation with default constructor
+
 	info& operator=(info const&) = default;
+	info& operator=(info     &&) = delete;  // TODO(correaa) consider relation with default constructor
+
 	~info() = default;
 
 	info(std::initializer_list<std::pair<std::string, std::string>> il) {

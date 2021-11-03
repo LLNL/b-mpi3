@@ -23,12 +23,13 @@ namespace mpi3{
 namespace detail{
 
 class basic_package_iprimitive{
-protected:
-	package& p_;
-public:
+ protected:
+	package& p_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes) TODO(correaa)
+
+ public:
 	// we provide an optimized save for all basic (and fundamental) types
 	// this note is taken from boost serialization:
-	// typedef serialization::is_bitwise_serializable<mpl::_1> 
+	// typedef serialization::is_bitwise_serializable<mpl::_1>
 	// use_array_optimization;
 	// workaround without using mpl lambdas
 	struct use_array_optimization {
@@ -39,34 +40,35 @@ public:
 	};
 	template<class T>
 #if(BOOST_VERSION < 106100)
-	void load_array(boost::serialization::array<T>& t, unsigned int = 0){ // for boost pre 1.63
+	void load_array(boost::serialization::array<T>& t, unsigned int /*version*/ = 0){ // for boost pre 1.63
 #else
-	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int = 0){
+	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int /*version*/ = 0){
 #endif
 		p_.unpack_n(t.address(), t.count()); 
 	}
     template<class T>
     void load(T& t){p_ >> t;}
-	basic_package_iprimitive(mpi3::detail::package& p) : p_(p){}
+	explicit basic_package_iprimitive(mpi3::detail::package& p) : p_(p){}
 };
 
 class basic_package_oprimitive{
-protected:
-	package& p_;
-public:
+ protected:
+	package& p_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes) TODO(correaa)
+
+ public:
 	struct use_array_optimization {
 		template <class T>
 		struct apply : public boost::serialization::is_bitwise_serializable<T>{};  
 	};
 	template<class T>
-	void save(const T& t, unsigned int = 0){p_.pack_n(std::addressof(t), 1);}//p_ << t;}
+	void save(const T& t, unsigned int /*version*/ = 0){p_.pack_n(std::addressof(t), 1);}//p_ << t;}
 	template<class T>
 #if(BOOST_VERSION < 106100)
-	void save_array(boost::serialization::array<T> const& t, unsigned int = 0){
+	void save_array(boost::serialization::array<T> const& t, unsigned int /*version*/ = 0) {
 #else
-	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int = 0){
+	void save_array(boost::serialization::array_wrapper<T> const& t, unsigned int /*version*/ = 0) {
 #endif
-		p_.pack_n(t.address(), t.count()); 
+		p_.pack_n(t.address(), t.count());
 	}
 #if 0
 	void save(const boost::archive::object_id_type&){}
@@ -75,13 +77,13 @@ public:
 	void save(const boost::archive::class_id_optional_type&){}
 	basic_memory_oprimitive(size_t& os) : os_(os){}
 #endif
-	basic_package_oprimitive(mpi3::detail::package& p) : p_(p){}
+	explicit basic_package_oprimitive(mpi3::detail::package& p) : p_(p){}
 };
 
 template<class Archive>
 class basic_package_iarchive : public boost::archive::detail::common_iarchive<Archive>{
 	friend class boost::archive::detail::interface_iarchive<Archive>;
-	typedef boost::archive::detail::common_iarchive<Archive> detail_common_iarchive;
+	using detail_common_iarchive = boost::archive::detail::common_iarchive<Archive>;
 
 	template<class T>
 	void load_override(T& t, /*BOOST_PFTO*/ int /*unused*/) {
@@ -95,13 +97,14 @@ class basic_package_iarchive : public boost::archive::detail::common_iarchive<Ar
 	void load_override(T& t) {load_override(t, 0);}
 
  protected:
-	basic_package_iarchive(unsigned int flags) : boost::archive::detail::common_iarchive<Archive>(flags){}
+	explicit basic_package_iarchive(unsigned int flags)
+	: boost::archive::detail::common_iarchive<Archive>(flags) {}
 };
 
 template<class Archive>
 class basic_package_oarchive : public boost::archive::detail::common_oarchive<Archive>{
 	friend class boost::archive::detail::interface_oarchive<Archive>;
-	typedef boost::archive::detail::common_oarchive<Archive> detail_common_oarchive;
+	using detail_common_oarchive = boost::archive::detail::common_oarchive<Archive>;
 
  protected:
 	template<class T>
@@ -114,60 +117,58 @@ class basic_package_oarchive : public boost::archive::detail::common_oarchive<Ar
 	}
 	template<class T>
 	void save_override(T& t) {save_override(t, 0);}
-
 #if 0
 	void save_override(const object_id_type&, int){/* this->This()->newline(); this->detail_common_oarchive::save_override(t, 0);*/}
 	void save_override(const class_id_optional_type&, int){}
 	void save_override(const class_name_type&, int){/*  const std::string s(t); * this->This() << s;*/}
 #endif
-	protected:
-	basic_package_oarchive(unsigned int flags) : 
-		boost::archive::detail::common_oarchive<Archive>(flags)
-	{}
+
+	explicit basic_package_oarchive(unsigned int flags)
+	: boost::archive::detail::common_oarchive<Archive>(flags) {}
 };
 
 template<class Archive>
-class package_iarchive_impl : 
-	public basic_package_iprimitive, 
-	public basic_package_iarchive<Archive>
-{
-	public:
+class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boost Serialization design
+: public basic_package_iprimitive
+, public basic_package_iarchive<Archive> {
+ public:
 	template<class T>
 	void load(T& t){basic_package_iprimitive::load(t);}
 // empty functions follow, so that metadata is communicated
-	void load(boost::archive::version_type&){}
+	void load(boost::archive::version_type& /*version*/) {}
 //	void save(const boost::serialization::item_version_type&){/*save(static_cast<const unsigned int>(t));*/}
-	void load(boost::archive::tracking_type&){/*save(static_cast<const unsigned int>(t));*/}
-	void load(boost::archive::object_id_type&){}
-	void load(boost::archive::object_reference_type&){}
-	void load(boost::archive::class_id_type&){}
-	void load(boost::archive::class_id_optional_type&){}
-	void load(boost::archive::class_id_reference_type&){}
-	void load(boost::archive::class_name_type&){}
+	void load(boost::archive::tracking_type& /*tracking*/) {/*save(static_cast<const unsigned int>(t));*/}
+	void load(boost::archive::object_id_type& /*object_id*/) {}
+	void load(boost::archive::object_reference_type& /*object_reference*/) {}
+	void load(boost::archive::class_id_type& /*class_id*/) {}
+	void load(boost::archive::class_id_optional_type& /*class_id_optional*/) {}
+	void load(boost::archive::class_id_reference_type& /*class_id_reference*/) {}
+	void load(boost::archive::class_name_type& /*class_name*/) {}
 
 	void load(boost::serialization::collection_size_type& t){
 		unsigned int x = 0;
 		load(x);
 		t = serialization::collection_size_type(x);
 	}
-	void load(boost::serialization::item_version_type&){}
+	void load(boost::serialization::item_version_type& /*item_version*/) {}
 
-	void load(char* s){
+	void load(char* s) {
 		assert(0);
 		const std::size_t len = std::ostream::traits_type::length(s);
 		*this->This() << len;
 		p_.pack_n(s, len);
 	}
-	void load(wchar_t * ws){
+	void load(wchar_t * ws) {
 		const std::size_t l = std::wcslen(ws);
 		*this->This() << l;
 		assert(0);
 	}
-	void load(std::string &s){
+	void load(std::string &s) {
+		// NOLINTNEXTLINE(cppcoreguidelines-init-variables) delayed initialization
 		std::size_t size; //  *this->This() >> size;
 		p_.unpack_n(&size, 1);
 		s.resize(size);
-		p_.unpack_n(const_cast<char*>(s.c_str()), size);
+		p_.unpack_n(&s[0], size);  // TODO(correaa) use s.data() in C++17
 	}
 	void load(std::wstring &ws){
     	const std::size_t size = ws.size();
@@ -176,7 +177,7 @@ class package_iarchive_impl :
 	//	os_ += ws.size()*sizeof(wchar_t);//	os << s;
 		assert(0);
 	}
-	public:
+
 	package_iarchive_impl(mpi3::detail::package& p, unsigned int flags) : // size_t& os, size_t& tokens, unsigned int flags) :
 		basic_package_iprimitive(p),
 		basic_package_iarchive<Archive>(flags)
@@ -195,15 +196,15 @@ public:
 #endif
 		assert(0);
 	}
-    void save(const boost::archive::version_type&){}
+    void save(const boost::archive::version_type& /*version*/) {}
 //	void save(const boost::serialization::item_version_type&){/*save(static_cast<const unsigned int>(t));*/}
-    void save(const boost::archive::tracking_type&){/*save(static_cast<const unsigned int>(t));*/}
-	void save(const boost::archive::object_id_type&){}
-	void save(const boost::archive::object_reference_type&){}
-	void save(const boost::archive::class_id_type&){}
-	void save(const boost::archive::class_id_optional_type&){}
-	void save(const boost::archive::class_id_reference_type&){}
-	void save(const boost::archive::class_name_type&){}
+    void save(const boost::archive::tracking_type&) {/*save(static_cast<const unsigned int>(t));*/}
+	void save(const boost::archive::object_id_type& /*object_id*/) {}
+	void save(const boost::archive::object_reference_type& /*object_reference*/) {}
+	void save(const boost::archive::class_id_type& /*class_id*/) {}
+	void save(const boost::archive::class_id_optional_type& /*class_id_optional*/) {}
+	void save(const boost::archive::class_id_reference_type& /*class_id_reference*/) {}
+	void save(const boost::archive::class_name_type& /*class_name*/) {}
 
 	void save(const boost::serialization::collection_size_type& t){
 		save(static_cast<      unsigned int>(t));

@@ -13,13 +13,16 @@
 namespace boost{
 namespace mpi3{
 
-struct port{
-	std::string name_ = ""; // typically this will be tag#0$description#inspiron$port#47425$ifname#172.17.5.240$
+struct port {
+	std::string name_ = "";  // typically this will be something like tag#0$description#inspiron$port#47425$ifname#172.17.5.240$
+
 	port(){open();}
 	port(port const&) = delete;
 	port& operator=(port const& other) = delete;
 	port(std::string const& name) : name_(name){};// open(name);}
+
 	~port(){ if(is_open()) close(); }
+
 	void open(){
 		char name[MPI_MAX_PORT_NAME];
 		int status = MPI_Open_port(MPI_INFO_NULL, name);
@@ -27,7 +30,9 @@ struct port{
 		if(status != 0) throw std::runtime_error("can't open port " + name_);
 	}
 	void open(std::string const& name){name_ = name;}
+
 	std::string const& name() const{return name_;}
+
 	bool is_open() const{return (name_ != "");}
 	void close(){
 		int status = MPI_Close_port(name_.c_str());
