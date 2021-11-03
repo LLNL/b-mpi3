@@ -4,14 +4,14 @@
 #ifndef BOOST_MPI3_OPERATION_HPP
 #define BOOST_MPI3_OPERATION_HPP
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include "../mpi3/detail/datatype.hpp"
 #include "../mpi3/handle.hpp"
 
 #include<utility> // forward
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 struct commutative_operation;
 struct builtin_operation;
@@ -33,7 +33,10 @@ struct operation : detail::nondefault_handle<operation, MPI_Op, MPI_Op_free>{ //
 	operation() = delete;
 	operation(operation const&) = delete;
 	operation(operation     &&) = delete;
+
 	operation& operator=(operation const&) = delete;
+	operation& operator=(operation     &&) = delete;
+
 	~operation() = default;
 
 #if 0
@@ -103,15 +106,16 @@ BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min<>, MPI_MIN, minimum);
 
 struct commutative_operation : operation{
 	template<class F,  typename = std::enable_if_t<not std::is_same<std::decay_t<F>, operation>{}> >
-	commutative_operation(F&& f) : operation(std::forward<F>(f), true){}
+	explicit commutative_operation(F&& f) : operation(std::forward<F>(f), true){}
 };
 
 struct non_commutative_operation : operation{
 	template<class F,  typename = std::enable_if_t<not std::is_same<std::decay_t<F>, operation>{}>>
-	non_commutative_operation(F&& f) : operation(std::forward<F>(f), false){}
+	explicit non_commutative_operation(F&& f) : operation(std::forward<F>(f), false){}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_OPERATION
 
