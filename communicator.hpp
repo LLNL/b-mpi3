@@ -37,8 +37,9 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 
 #define BOOST_PACKAGE_ARCHIVE_SOURCE
 
-#include <boost/archive/detail/common_oarchive.hpp>
 #include <boost/archive/detail/common_iarchive.hpp>
+#include <boost/archive/detail/common_oarchive.hpp>
+
 #include <boost/archive/basic_streambuf_locale_saver.hpp>
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/detail/auto_link_archive.hpp>
@@ -82,9 +83,9 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #include<map>
 #include<numeric> // std::accumulate
 #include<string>
-#include<vector>
 #include<thread>
 #include<type_traits> // is_same
+#include<vector>
 
 namespace boost {
 namespace mpi3 {
@@ -193,9 +194,9 @@ class communicator : protected detail::basic_communicator {
 	bool is_null() const {return MPI_COMM_NULL == impl_;}  // TODO(correaa) reconsider the meaning of null
 	friend class mpi3::environment;
 	detail::equality compare(communicator const& other) const {
-		detail::equality ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_compare)(impl_, other.impl_, reinterpret_cast<int*>(&ret));
-		return ret;
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Comm_compare)(impl_, other.impl_, &ret);
+		return static_cast<detail::equality>(ret);
 	}
 
  public:
