@@ -35,15 +35,15 @@ template<class F> using back_arg_t = typename back_arg<F>::type;
 
 template<int(*F)(char*, int*)> std::string call(){
 	int len = -1;
-	char name[MPI_MAX_PROCESSOR_NAME];
-	F(name, &len);
-	return std::string(name, name + len);
+	std::array<char, MPI_MAX_PROCESSOR_NAME> name{};
+	F(name.data(), &len);
+	return std::string(name.data(), len);
 }
 
 template<class FT, FT* F, class... Args>
 void call(Args... args){
 	auto const e = static_cast<enum error>(F(args...)); // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
-	if(e != mpi3::error::success) throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
 }
 
 #if __cpp_nontype_template_parameter_auto >= 201606
