@@ -40,9 +40,9 @@ struct committed_type{
 };
 
 struct type {
-	explicit type(MPI_Datatype const& dt) noexcept try : impl_{dt} {
+	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {
 		if(mpi3::initialized()) {MPI_Type_dup(dt, &impl_);}
-	}catch(...){}
+	}
 
 	template<class T>
 	explicit type(detail::basic_datatype<T> bd) : impl_(bd) {}

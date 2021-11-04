@@ -262,9 +262,9 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class It, typename Size>
 	auto isend_n(
-		It first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		It first,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count,
 		int dest, int tag
 	){
@@ -278,9 +278,9 @@ class communicator : protected detail::basic_communicator {
 	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	void send_n(
-		It first, 
-			detail::forward_iterator_tag,
-			detail::value_unspecified_tag,
+		It first,
+			detail::forward_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		Size count,
 		int dest, int tag
 	){
@@ -1727,9 +1727,9 @@ public:
 	}
 	template<class It1, class Size, class It2, class Op, class PredefinedOp>
 	It2 reduce_n(
-		It1 first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		It1 first,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count, 
 		It2 d_first,
 			detail::contiguous_iterator_tag,
@@ -1767,7 +1767,7 @@ public:
  public:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
-		auto e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); (void)e;
+		auto* e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); (void)e;
 		assert( e == std::next(std::addressof(ret)) );
 	}
 	template<class T, class Op = std::plus<>, typename = decltype(T{T(0)})>
@@ -1805,24 +1805,24 @@ public:
 	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
 		using detail::data;
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot reduce n");
+		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot reduce n");}
 	}
 	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp>
 	auto all_reduce_n(
 		It1 first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Size count, 
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Size count,
 		It2 d_first,
 			detail::contiguous_iterator_tag,
 			detail::basic_tag,
 		Op,
 			PredefinedOp
-	){
+	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
 		using detail::data;
 		int s = MPI_Allreduce(detail::data(first), detail::data(d_first), count, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{}, PredefinedOp{}/*op*/, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot reduce n"};
+		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 		return d_first + count;
 	}
 	template<class It1, class Size, class It2, class Op = std::plus<>>
