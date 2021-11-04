@@ -49,7 +49,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
 	// vvv nvcc 11 workaround, needs explicit definition of duplicate assigment
-	cartesian_communicator& operator=(cartesian_communicator      & other){  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
+	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
 		if(this == &other) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
 		communicator::operator=(other);
 		return *this;
@@ -122,9 +122,12 @@ template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 
 	cartesian_communicator() = default;
+
 	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) noexcept = default;
+
+	~cartesian_communicator() = default;
 
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
 		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;

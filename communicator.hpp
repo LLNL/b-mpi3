@@ -40,15 +40,15 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #include <boost/archive/detail/common_iarchive.hpp>
 #include <boost/archive/detail/common_oarchive.hpp>
 
-#include <boost/archive/basic_streambuf_locale_saver.hpp>
 #include <boost/archive/archive_exception.hpp>
+#include <boost/archive/basic_streambuf_locale_saver.hpp>
 #include <boost/archive/detail/auto_link_archive.hpp>
 //#include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
-#include <boost/serialization/item_version_type.hpp>
-#include <boost/serialization/string.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/is_bitwise_serializable.hpp>
+#include <boost/serialization/item_version_type.hpp>
+#include <boost/serialization/string.hpp>
 
 #include <boost/mpl/placeholders.hpp>
 
@@ -419,7 +419,19 @@ class communicator : protected detail::basic_communicator {
 //		swap(tmp);
 //		return *this;
 //	}
-	communicator& operator=(communicator other){return swap(other), *this;}
+//	communicator& operator=(communicator other) {return swap(other), *this;}
+	communicator& operator=(communicator const&) = delete;
+	communicator& operator=(communicator&& other) {
+		communicator tmp{std::move(other)};
+		swap(tmp);
+		return *this;
+	}
+	communicator& operator=(communicator& other) {
+		communicator tmp{other};
+		swap(tmp);
+		return *this;
+	}
+
 	bool operator==(communicator const& other) const{
 		return &*this==&other or compare(other)==detail::equality::congruent;
 	//	auto eq = compare(other);
