@@ -1574,7 +1574,6 @@ private:
 	->decltype(all_to_all_n(first, size())){
 		return all_to_all_n(first, size());}
 
- public:
 	template<class T>
 	auto operator()(T&& t)
 	->decltype(communicator::all_to_all(begin(std::forward<T>(t))), void()){
@@ -1596,7 +1595,7 @@ private:
 
  private:
 	template<class It1, class It2>
-	auto scatter_builtinQ(
+	auto scatter_builtin_q(
 		std::true_type /*true*/,
 		It1 first, It1 last, It2 d_first, int root
 	) {
@@ -1605,12 +1604,14 @@ private:
 			detail::iterator_category<It2>{}, first, last, d_first, root
 		);
 	}
-	template<class It1, class It2, 
-		class sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
-		class recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
+	template<
+		class It1, class It2,
+			class sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
+			class recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
 	>
 	auto scatter_builtin(
-		detail::contiguous_iterator_tag, detail::contiguous_iterator_tag, 
+		detail::contiguous_iterator_tag /*tag*/,
+		detail::contiguous_iterator_tag /*tag*/,
 		It1 first, It1 last, It2 d_first, int root
 	) {
 		int s = MPI_Scatter( detail::data(first), std::distance(first, last), 
@@ -1623,21 +1624,22 @@ private:
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
 	}
 	template<class Iterator1, class Iterator2>
-	auto scatter_builtinQ(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first, int root)
+	auto scatter_builtin_q(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first, int root)
 //	{ TODO implement }
 	;
-public:
+
+ public:
 	template<class T>
 	auto broadcast_value(T& t, int root = 0){return broadcast_n(std::addressof(t), 1, root);}
 
 	template<class It, typename Size>
 	auto ibroadcast_n(
 		It first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count,
 		int root
-	){
+	) {
 		request r;
 		MPI_(Ibcast)(
 			detail::data(first), count, 
@@ -1665,7 +1667,7 @@ public:
 	template<class It>
 	auto ibroadcast(
 		It first, It last, 
-			detail::random_access_iterator_tag,
+			detail::random_access_iterator_tag /*tag*/,
 		int root
 	) {
 		return ibroadcast_n(
@@ -1675,10 +1677,11 @@ public:
 	template<class It>
 	void broadcast(
 		It first, It last, 
-			detail::random_access_iterator_tag,
+			detail::random_access_iterator_tag /*tag*/,
 		int root
 	){broadcast_n(first, std::distance(first, last), root);}
-public:
+
+ public:
 	template<class It, typename Size>
 	auto ibroadcast_n(It first, Size count, int root = 0){
 		return ibroadcast_n(
@@ -1732,10 +1735,10 @@ public:
 			detail::basic_tag /*tag*/,
 		Size count, 
 		It2 d_first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Op,
-		PredefinedOp,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Op /*operation*/,  // TODO(correaa) why value is not used?
+		PredefinedOp /*operation*/,  // TODO(correaa) why value is not used?
 		int root
 	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
@@ -1764,7 +1767,6 @@ public:
 		);
 	}
 
- public:
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
 		auto* e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); (void)e;
@@ -1793,7 +1795,6 @@ public:
 		all_reduce_value(t, ret, mpi3::min<>{}); return ret;
 	}
 
- public:
 	template<
 		class It1, class Size, class It2, class Op = std::plus<>, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type,
@@ -1814,10 +1815,10 @@ public:
 			detail::basic_tag /*tag*/,
 		Size count,
 		It2 d_first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Op,
-			PredefinedOp
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Op /*operation*/,  // TODO(correaa) why is not used?
+			PredefinedOp /*unused*/  // TODO(correaa) why is this not used?
 	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
 		using detail::data;
@@ -1843,17 +1844,22 @@ public:
 	It2 all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
-	template<class T> static auto data_(T&& t){
+
+ private:
+	template<class T> static auto data_adl(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
+
+ public:
 	template<
 		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
-		int s = MPI_Allreduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		int s = MPI_Allreduce(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot all reduce n");}
 	}
 	template<
@@ -1865,20 +1871,21 @@ public:
 	void all_reduce_n(It1 first, Size count, Op op){
 		return all_reduce_in_place_n(first, count, op);
 	}
+
 	template<
-		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class It1, class Size, class Op,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
-		int s = MPI_SUCCESS;
-		if (rank() == root) {
-			s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
-		} else {
-			s = MPI_Reduce(data_(first), NULL, count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
-		}
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		int s =
+			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
+			                 MPI_Reduce(data_adl(first), NULL        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+		;
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 	}
+
 	template<
 		class It1, class Size, class Op = std::plus<>, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
@@ -3150,71 +3157,6 @@ template<class Range>
 auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading
 	->decltype(self.scatter(begin(r), end(r))){
 		return self.scatter(begin(r), end(r));}
-
-//inline communicator::communicator(communicator const& other, struct group const& g, int tag) : communicator(){
-//	MPI_Comm_create_group(other.impl_, g.impl_, tag, &impl_);
-//}
-
-//package communicator::make_package(int n){return package(*this, n);}
-
-/*
-inline void communicator::send_value(package const& p, int dest, int tag){
-	int s = MPI_Send(p.data(), p.buffer_.size(), MPI_PACKED, dest, tag, impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannotsend_value package");
-}*/
-
-
-/*
-template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type>
-void communicator::send_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::false_type, ContiguousIterator first, Size n, int dest, int tag){
-	package p(*this);
-	detail::package_oarchive poa(p);
-	while( n ){
-		poa << *first;
-		++first;
-		--n;
-	}
-	p.send(dest, tag);
-//	return first
-}*/
-
-/*
-template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type>
-void communicator::receive_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::false_type, ContiguousIterator first, Size n, int dest, int tag){
-//	assert(0);
-	package p(*this);
-	p.receive(dest, tag);
-	detail::package_iarchive pia(p);
-	while(n){
-		pia >> *first;
-		++first;
-		--n;
-	}
-}*/
-
-/*
-template<class ContiguousIt, typename Size>
-void communicator::broadcast_n_contiguous_builtinQ(std::false_type, ContiguousIt first, Size count, int root){
-	package p(*this);
-	if(rank() == root){
-		detail::package_oarchive poa(p);
-		while(count){
-			poa << *first;
-			++first;
-			--count;
-		}
-	}
-	p.broadcast(root);
-	if(rank() != root){
-		detail::package_iarchive pia(p);
-		while(count){
-			pia >> *first;
-			++first;
-			--count;
-		}
-	}
-}
-*/
 
 }  // end namespace mpi3
 }  // end namespace boost
