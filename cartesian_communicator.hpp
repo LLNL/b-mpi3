@@ -98,19 +98,21 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	//	return operator[](rank);
 	}
 	// int MPI_Cart_map not implemented
-	cartesian_communicator sub(std::vector<int> const& remain_dims){
+	cartesian_communicator sub_aux(std::vector<int> const& remain_dims) {
 		assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
-		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
+		cartesian_communicator ret; 
+		MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); 
+		return ret;
 	}
 
 	template<class RemainDim = std::initializer_list<bool>>
-	cartesian_communicator sub(RemainDim const& remain_dims) const{
-		return sub(std::vector<int>(remain_dims.begin(), remain_dims.end()));
+	cartesian_communicator sub(RemainDim const& remain_dims) {
+		return sub_aux(std::vector<int>(remain_dims.begin(), remain_dims.end()));
 	}
-	cartesian_communicator sub() const{
+	cartesian_communicator sub() {
 		assert( dimensionality()>1 );
 		std::vector<int> remain(dimensionality(), 1 /*true*/); remain[0] = 0/*false*/;
-		return sub(remain);
+		return sub_aux(remain);
 	}
 };
 
@@ -156,24 +158,20 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return *this;
 	}
 
-	cartesian_communicator<D-1> sub() const{
+	cartesian_communicator<D-1> sub() {
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
-//		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
-	cartesian_communicator sub(std::array<int, D> const& remain_dims){
+	cartesian_communicator sub(std::array<int, D> const& remain_dims) {
 		cartesian_communicator ret; MPI_Cart_sub(impl_, remain_dims.data(), &ret.get()); return ret;
 	}
-	cartesian_communicator<1> axis(int d) const{
+	cartesian_communicator<1> axis(int d) const {
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains = {}; remains[d] = true;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
-	//	return cartesian_communicator<>::sub(remains);
-	//	auto comm_sub = cartesian_communicator<>::sub(remains);
-	//	return static_cast<cartesian_communicator<1>&>(comm_sub);
-//		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
+
 	}
 };
 
