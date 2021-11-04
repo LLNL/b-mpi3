@@ -1814,9 +1814,9 @@ public:
 			detail::basic_tag /*tag*/,
 		Size count,
 		It2 d_first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Op,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Op /*operation*/,  // TODO(correaa) why is not used?
 			PredefinedOp
 	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{}, "!");
@@ -1843,17 +1843,22 @@ public:
 	It2 all_reduce(It1 first, It1 last, It2 d_first, Op op = {}){
 		return all_reduce_n(first, std::distance(first, last), d_first, op);
 	}
-	template<class T> static auto data_(T&& t){
+
+ private:
+	template<class T> static auto data_adl(T&& t){
 		using detail::data;
 		return data(std::forward<T>(t));
 	}
+
+ public:
 	template<
 		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
-		int s = MPI_Allreduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		int s = MPI_Allreduce(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot all reduce n");}
 	}
 	template<
@@ -1865,20 +1870,21 @@ public:
 	void all_reduce_n(It1 first, Size count, Op op){
 		return all_reduce_in_place_n(first, count, op);
 	}
+
 	template<
-		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_(It1{})), 
+		class It1, class Size, class Op,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
-		int s = MPI_SUCCESS;
-		if (rank() == root) {
-			s = MPI_Reduce(MPI_IN_PLACE, data_(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
-		} else {
-			s = MPI_Reduce(data_(first), NULL, count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_);
-		}
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		int s =
+			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
+			                 MPI_Reduce(data_adl(first), NULL        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+		;
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 	}
+
 	template<
 		class It1, class Size, class Op = std::plus<>, 
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
