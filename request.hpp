@@ -20,10 +20,9 @@ namespace mpi3 {
 
 struct request {
 	MPI_Request impl_ = MPI_REQUEST_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
+
 	request() = default;
 	request(request const& other) = delete;
-
- public:
 	request(request&& other) noexcept : impl_{std::exchange(other.impl_, MPI_REQUEST_NULL)}{}
 
 	request& operator=(request const&) = delete;
@@ -54,9 +53,7 @@ struct request {
 		}
 	}
 	void wait() {
-		if(impl_ != MPI_REQUEST_NULL) {
-			MPI_(Wait)(&impl_, MPI_STATUS_IGNORE);
-		}
+		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_, MPI_STATUS_IGNORE);}
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
@@ -71,8 +68,14 @@ struct request {
 inline std::vector<status> test_some(std::vector<request> const& requests) {
 	int outcount = -1;
 	std::vector<int> ignore(requests.size());
-	std::vector<status> ret(requests.size()); 
-	int s = MPI_Testsome(requests.size(), const_cast<MPI_Request*>(&(requests.data()->impl_)), &outcount, ignore.data(), &(ret.data()->impl_));
+	std::vector<status> ret(requests.size());
+	int s = MPI_Testsome(
+		static_cast<int>(requests.size()),
+		const_cast<MPI_Request*>(&(requests.data()->impl_)),  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		&outcount,
+		ignore.data(),
+		&(ret.data()->impl_)
+	);
 	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot test some"};}
 	return ret;
 }
@@ -80,7 +83,13 @@ inline std::vector<status> test_some(std::vector<request> const& requests) {
 inline std::vector<int> completed_some(std::vector<request> const& requests) {
 	int outcount = -1;
 	std::vector<int> ret(requests.size());
-	int s = MPI_Testsome(requests.size(), const_cast<MPI_Request*>(&(requests.data()->impl_)), &outcount, ret.data(), MPI_STATUSES_IGNORE);
+	int s = MPI_Testsome(
+		static_cast<int>(requests.size()),
+		const_cast<MPI_Request*>(&(requests.data()->impl_)),  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		&outcount,
+		ret.data(),
+		MPI_STATUSES_IGNORE
+	);
 	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot completed some");}
 	ret.resize(outcount);
 	return ret;
@@ -103,14 +112,14 @@ void wait(Args&&... args){
 		return ret;
 	};
 	std::vector<MPI_Request> v{move_impl(std::move(args))...};
-	MPI_Waitall(v.size(), v.data(), MPI_STATUSES_IGNORE);
+	MPI_Waitall(static_cast<int>(v.size()), v.data(), MPI_STATUSES_IGNORE);
 }
 
 template<class ContiguousIterator, class Size>
 ContiguousIterator wait_any_n(ContiguousIterator it, Size n){
 	int index = -1;
 	int s = MPI_Waitany(n, &detail::data(it)->impl_, &index, MPI_STATUS_IGNORE);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait any");
+	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait any");}
 	return it + index;
 }
 
@@ -124,7 +133,7 @@ std::vector<int> wait_some_n(ContiguousIterator it, Size n){
 	int outcount = -1;
 	std::vector<int> indices(n);
 	int s = MPI_Waitsome(n, &detail::data(it)->impl_, &outcount, indices.data(), MPI_STATUSES_IGNORE);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot wait some");
+	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait some");}
 	indices.resize(outcount);
 	return indices;
 }
