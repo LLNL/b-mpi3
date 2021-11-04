@@ -24,7 +24,7 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 	mpi3::communicator half = world/2;
 	mpi3::group hg{half};
 
-	mpi3::communicator h2 = hg;
+	mpi3::communicator h2{hg};
 	assert(half.rank() == h2.rank());
 
 	static_assert( std::is_same<decltype(&wg), MPI_Group>{}, "!" );
