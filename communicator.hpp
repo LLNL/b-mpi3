@@ -7,7 +7,9 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #define MPI3_COMMUNICATOR_HPP
 
 #include "../mpi3/communication_mode.hpp"
+#include "../mpi3/error.hpp"
 #include "../mpi3/generalized_request.hpp"
+#include "../mpi3/group.hpp"
 #include "../mpi3/handle.hpp"
 #include "../mpi3/info.hpp"
 #include "../mpi3/message.hpp"
@@ -16,17 +18,14 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #include "../mpi3/request.hpp"
 #include "../mpi3/status.hpp"
 #include "../mpi3/type.hpp"
-#include "../mpi3/error.hpp"
-#include "../mpi3/group.hpp"
-//#include "../mpi3/window.hpp"
 
-#include "../mpi3/detail/equality.hpp"
 #include "../mpi3/detail/basic_communicator.hpp"
 #include "../mpi3/detail/buffer.hpp"
 #include "../mpi3/detail/datatype.hpp"
+#include "../mpi3/detail/equality.hpp"
 #include "../mpi3/detail/iterator.hpp"
 #include "../mpi3/detail/value_traits.hpp"
-//#include "../mpi3/detail/strided.hpp"
+
 #include "../mpi3/detail/package.hpp"
 
 #include "../mpi3/config/NODISCARD.hpp"
@@ -83,19 +82,12 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #include<map>
 #include<numeric> // std::accumulate
 #include<string>
-#include<thread>
-#include<type_traits>
 #include<vector>
+#include<thread>
 #include<type_traits> // is_same
 
-namespace boost{
-namespace mpi3{
-
-inline bool check_mpi_(enum error e){
-	if(e!=mpi3::error::success) return true;
-	throw std::system_error{e, "cannot call function"};
-	return false;
-}
+namespace boost {
+namespace mpi3 {
 
 #define SAFE_MPI_(F) check_mpi_(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage) : name concatenation
 
@@ -115,7 +107,7 @@ inline bool check_mpi_(enum error e){
 #endif
 
 // https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
-enum class communicator_type : int{
+enum class communicator_type : int {
 	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
 	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
 	core      = OMPI_COMM_TYPE_CORE    ,
@@ -130,14 +122,14 @@ enum class communicator_type : int{
 	cluster   = OMPI_COMM_TYPE_CLUSTER 
 };
 
-enum constant{
+enum constant {
 	undefined    = MPI_UNDEFINED ,
 	process_null = MPI_PROC_NULL ,
 	any_source   = MPI_ANY_SOURCE
 };
 
-enum key{ // for attributes
-	tag_ub             = MPI_TAG_UB, 
+enum key { // for attributes
+	tag_ub             = MPI_TAG_UB,
 	host               = MPI_HOST,
 	io                 = MPI_IO,
 	wtime_is_global    = MPI_WTIME_IS_GLOBAL,
@@ -181,7 +173,6 @@ struct ostream;
 
 struct message_header{
 	int tag;
-	
 };
 
 struct graph_communicator;
@@ -194,34 +185,37 @@ using boost::any_cast;
 
 template<class T> struct window;
 
-class communicator : protected detail::basic_communicator{
+class communicator : protected detail::basic_communicator {
 	friend struct detail::package;
 	friend struct window<void>;
-protected:
-	bool is_null() const{return MPI_COMM_NULL == impl_;}
+
+ protected:
+	bool is_null() const {return MPI_COMM_NULL == impl_;}  // TODO(correaa) reconsider the meaning of null
 	friend class mpi3::environment;
-	detail::equality compare(communicator const& other) const{
-		detail::equality ret;// = boost::mpi3::detail::unequal;
+	detail::equality compare(communicator const& other) const {
+		detail::equality ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Comm_compare)(impl_, other.impl_, reinterpret_cast<int*>(&ret));
 		return ret;
 	}
-public:
+
+ public:
 	communicator(communicator const& o, group const& g);
-	communicator(group const& g);
 	communicator(group const& g, int tag);
-	
-	impl_t& get(){return this->impl_;}
+
+	explicit communicator(group const& g);
+
+	impl_t& get() {return this->impl_;}
 
 	explicit operator group() const;
 
-	communicator duplicate(){
+	communicator duplicate() {  // note that this function is non-const
 		communicator ret;
 		MPI_(Comm_dup)(impl_, &ret.impl_);
 		return ret;
 	}
 
 	template<class T = void*>
-	struct keyval{
+	struct keyval {
 		static int delete_fn_(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
 			delete (T*)attr_val; attr_val = nullptr;
 			return MPI_SUCCESS;
@@ -230,14 +224,14 @@ public:
 			MPI_Comm /*oldcomm*/, int /*keyval*/,
 			void * /*extra_state*/, void *attribute_val_in,
 			void *attribute_val_out, int *flag
-		){
-			*(void**)attribute_val_out = (void*)new T{*((T const*)attribute_val_in)};
+		) {
+			*static_cast<void**>(attribute_val_out) = static_cast<void*>(new T{*((T const*)attribute_val_in)});
 			assert(flag); *flag = 1;
 			return MPI_SUCCESS;
 		}
 		using mapped_type = T;
 		int impl_;
-		keyval(){
+		keyval() {  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 			MPI_Comm_create_keyval(copy_fn_, delete_fn_, &impl_, (void *)0);
 		}
 		keyval(keyval const&) = delete;
@@ -372,33 +366,13 @@ public:
 
 	template<class MultiIt>
 	auto send_n(MultiIt first, typename MultiIt::difference_type count, int dest, int tag = 0)
-	->decltype( MPI_Send (mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count){
-		return MPI_(Send)(mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count;}
+	->decltype( MPI_Send (mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count) {
+		return MPI_(Send)(mpi3::base(first), count, mpi3::type{first}, dest, tag, impl_), first + count; }
 
 	template<class MultiIt>
 	auto receive_n(MultiIt first, typename MultiIt::difference_type count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG)
-	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count){
-		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count;}
-
-#if 0
-	template<
-		class MultiIt, class Size = typename MultiIt::difference_type, class Stride = typename MultiIt::stride_type,
-			std::size_t D = MultiIt::dimensionality, std::enable_if_t<(D>=2), int> = 0,
-			typename Element = typename MultiIt::element, typename DataType = detail::basic_datatype<Element>,
-			std::enable_if_t<detail::is_basic<Element>{}, int> = 0
-	>
-	MultiIt receive_n(MultiIt first, decltype(Size{}) count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		status sta;
-		auto e = static_cast<enum error>(
-			MPI_Recv(
-				mpi3::base(first), count, mpi3::type{first}.commit(),
-				source, tag, impl_, &sta.impl_
-			)
-		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot receive"};
-		return first + count;
-	}
-#endif
+	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count) {
+		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count; }
 
 	template<class It>
 	auto isend(
@@ -461,13 +435,13 @@ public:
 		}
 	}
 	int size() const{
-		if(is_null()) return 0;//throw std::runtime_error("size called on null communicator");
-		int size = -1; 
+		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
+		int size;  // NOLINT()
 		int s = MPI_Comm_size(impl_, &size);
 		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
 		return size;
 	}
-	bool is_empty() const{return size() == 0;}
+	bool is_empty() const {return is_null();}
 	NODISCARD("empty is not an action")
 	bool empty() const{return is_empty();}
 
