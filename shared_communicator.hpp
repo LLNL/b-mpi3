@@ -75,9 +75,12 @@ private:
 		else if(communicator_type::cluster  ==t) set_name(base+":cluster"  +Tag);
 	}
 	friend class communicator;
-public:
-	shared_communicator& operator=(shared_communicator const& other) = default;
-	shared_communicator& operator=(shared_communicator&& other) = default;
+
+ public:
+	shared_communicator& operator=(shared_communicator const&) = delete;
+	shared_communicator& operator=(shared_communicator     &&) = default;
+	shared_communicator& operator=(shared_communicator      &) = default;
+
 	inline shared_communicator split(int key) const{return split_shared(key);}
 	auto split(int color, int key) const{
 		return shared_communicator{communicator::split(color, key)};
@@ -89,11 +92,11 @@ public:
 	shared_window<T> make_shared_window();
 };
 
-inline shared_communicator communicator::split_shared(int key /*= 0*/) const{
+inline shared_communicator communicator::split_shared(int key /*= 0*/) const {  // TODO(correaa) remove const
 	return shared_communicator(*this, key);
 }
 
-inline shared_communicator communicator::split_shared(communicator_type t, int key /*= 0*/) const{
+inline shared_communicator communicator::split_shared(communicator_type t, int key /*= 0*/) const {  // TODO(correaa) remove const
 	return shared_communicator(*this, t, key);
 }
 

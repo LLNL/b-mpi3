@@ -14,11 +14,14 @@ mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
 #include <map>
 #include <typeindex>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 template<
-	class MultiIt, class Size = typename MultiIt::difference_type, class Stride = typename MultiIt::stride_type, std::enable_if_t<(MultiIt::dimensionality>=1), int> = 0,
+	class MultiIt,
+	class Size = typename MultiIt::difference_type,
+	class Stride = typename MultiIt::stride_type,
+	std::enable_if_t<(MultiIt::dimensionality>=1), int> = 0,
 	typename Element = typename MultiIt::element, typename DataType = detail::basic_datatype<Element>,
 	std::enable_if_t<detail::is_basic<Element>{}, int> =0
 >
@@ -37,9 +40,9 @@ struct committed_type{
 };
 
 struct type {
-	explicit type(MPI_Datatype const& dt) try : impl_{dt} {
+	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {
 		if(mpi3::initialized()) {MPI_Type_dup(dt, &impl_);}
-	}catch(...){}
+	}
 
 	template<class T>
 	explicit type(detail::basic_datatype<T> bd) : impl_(bd) {}
@@ -135,7 +138,7 @@ struct type {
 		ret.set_name("(" + name() + ")[" + std::to_string(count) + "]");
 		return ret;
 	}
-	type vector(int count, int block_length, MPI_Aint stride) const{ // element units, hvector for bytes
+	type vector(int count, int block_length, int stride) const{ // element units, hvector for bytes
 		type ret;
 		MPI_Type_vector(count, block_length, stride, impl_, &ret.impl_);
 		using std::to_string;
@@ -194,19 +197,22 @@ struct type {
 	void set_name(std::string const& s) {MPI_Type_set_name(impl_, s.c_str());}
 
 	MPI_Aint extent() const {
-		MPI_Aint lb, ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int s = MPI_Type_get_extent(impl_, &lb, &ext);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot extent"};}
 		return ext;
 	}
 	MPI_Aint lower_bound() const {
-		MPI_Aint lb, ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int s = MPI_Type_get_extent(impl_, &lb, &ext);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot lower bound"};}
 		return lb;
 	}
 	MPI_Aint upper_bound() const {
-		MPI_Aint lb, ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int s = MPI_Type_get_extent(impl_, &lb, &ext);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot lower bound"};}
 		return lb + ext;
@@ -222,27 +228,31 @@ struct type {
 		MPI_Type_set_name(ret.impl_, newname.c_str());
 		return ret;
 	}
-	static std::map<std::type_index, type const&> registered;
+//	static std::map<std::type_index, type const&> registered;
 };
 
-static type const          char_ {MPI_CHAR           };
-static type const unsigned_char  {MPI_UNSIGNED_CHAR  }; static type const& unsigned_char_ = unsigned_char;
-static type const          short_{MPI_SHORT          };
-static type const unsigned_short {MPI_UNSIGNED_SHORT }; static type const& unsigned_short_ = unsigned_short;
-static type const          int_  {MPI_INT            };
-static type const unsigned_int_  {MPI_UNSIGNED       }; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;
-static type const          long_ {MPI_LONG           };
-static type const unsigned_long  {MPI_UNSIGNED_LONG  }; static type const& unsigned_long_ = unsigned_long;
-static type const float_         {MPI_FLOAT          };
-static type const      double_   {MPI_DOUBLE         };
-static type const long_double_   {MPI_LONG_DOUBLE    }; static type const& long_double = long_double_;
-static type const long_long_int  {MPI_LONG_DOUBLE_INT};
-static type const float_int      {MPI_FLOAT_INT      };
-static type const long_int       {MPI_LONG_INT       };
-static type const double_int     {MPI_DOUBLE_INT     };
-static type const short_int      {MPI_SHORT_INT      };
-static type const int_int        {MPI_2INT           }; static type const& _2int = int_int;
-static type const long_double_int{MPI_LONG_DOUBLE_INT};
+// vvv TODO(correaa)
+// vvv this will work in clang-tidy 14 https://clang.llvm.org/extra/clang-tidy/
+// NOLINTBEGIN(fuchsia-statically-constructed-objects)
+static type const          char_ {MPI_CHAR           };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const unsigned_char  {MPI_UNSIGNED_CHAR  }; static type const& unsigned_char_ = unsigned_char;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const          short_{MPI_SHORT          };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const unsigned_short {MPI_UNSIGNED_SHORT }; static type const& unsigned_short_ = unsigned_short;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const          int_  {MPI_INT            };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const unsigned_int_  {MPI_UNSIGNED       }; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const          long_ {MPI_LONG           };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const unsigned_long  {MPI_UNSIGNED_LONG  }; static type const& unsigned_long_ = unsigned_long;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const float_         {MPI_FLOAT          };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const      double_   {MPI_DOUBLE         };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_double_   {MPI_LONG_DOUBLE    }; static type const& long_double = long_double_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_long_int  {MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const float_int      {MPI_FLOAT_INT      };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_int       {MPI_LONG_INT       };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const double_int     {MPI_DOUBLE_INT     };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const short_int      {MPI_SHORT_INT      };  // NOLINT(fuchsia-statically-constructed-objects)
+static type const int_int        {MPI_2INT           }; static type const& _2int = int_int;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_double_int{MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-statically-constructed-objects)
+// NOLINTEND(fuchsia-statically-constructed-objects)
 
 template<class T>
 type make_type();
@@ -250,7 +260,8 @@ type make_type();
 template<> inline type make_type<double>(){return mpi3::double_;}
 template<> inline type make_type<int>(){return mpi3::int_;}
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__
 
