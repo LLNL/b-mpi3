@@ -26,7 +26,8 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator     &&) = default;
-	cartesian_communicator(cartesian_communicator      &) = default;  // this is an unusual "duplicate" constructor
+	// vvv---  this is an unusual "duplicate" constructor
+	cartesian_communicator(cartesian_communicator& other) : communicator{other} {} // = default; // cannot be defaulted because bug in nvcc 11
 
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
