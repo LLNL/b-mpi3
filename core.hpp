@@ -13,10 +13,13 @@ $CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx
 namespace boost {
 namespace mpi3 {
 
-inline bool initialized() {
+inline bool initialized() noexcept {
 	int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 	int s = MPI_Initialized(&flag);
-	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot probe initialization"};}
+	if(s != MPI_SUCCESS) {
+		return false;
+	//	throw std::runtime_error{"cannot probe initialization"};
+	}
 	return flag != 0;
 }
 
