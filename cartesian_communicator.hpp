@@ -1,4 +1,4 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
+#if COMPILATION //  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
 #endif
 // © Alfredo A. Correa 2018-2021
@@ -27,7 +27,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator     &&) = default;
 	// vvv---  this is an unusual "duplicate" constructor
-	cartesian_communicator(cartesian_communicator& other) : communicator{other} {} // = default; // cannot be defaulted because bug in nvcc 11
+	cartesian_communicator(cartesian_communicator& other) : communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) cannot be defaulted because bug in nvcc 11
 
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){

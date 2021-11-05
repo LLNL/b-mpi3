@@ -90,8 +90,6 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 namespace boost {
 namespace mpi3 {
 
-//constexpr auto in_place = MPI_IN_PLACE;
-
 #define SAFE_MPI_(F) check_mpi_(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage) : name concatenation
 
 #if !defined(OPEN_MPI) || (OMPI_MAJOR_VERSION < 2)
@@ -1194,13 +1192,13 @@ public:
 		}
 	};
 	template<class It>
-	struct receive_args{ 
-		communicator* commP; 
+	struct receive_args {
+		communicator* commP;
 		It d_first;
 	//	It d_last;
 		int source;
 		int tag; 
-		MPI_Request* requestP; 
+		MPI_Request* requestP;
 	};
 	struct receive_state{
 		int cancelled = 0;
@@ -1208,7 +1206,7 @@ public:
 		int tag = MPI_UNDEFINED;
 	};
 	template<class It>
-	inline static void* receive_thread(void* ptr){
+	inline static void* receive_thread(void* ptr) {
 		receive_args<It>* args = (receive_args<It>*)ptr;
 		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
 		MPI_Grequest_complete(*args->requestP);
@@ -1226,52 +1224,51 @@ public:
 		/* tag has not meaning for this generalized request */ 
 		status->MPI_TAG = rs->tag; 
 		/* this generalized request never fails */ 
-		return MPI_SUCCESS; 
-	}
-	inline static int free_fn(void* extra_state){ 
-		/* this generalized request does not need to do any freeing */ 
-		/* as a result it never fails here */
-		::free(extra_state);
-		return MPI_SUCCESS; 
-	}
-	inline static int cancel_fn(void* /*extra_state*/, int complete) 
-	{ 
-		/* This generalized request does not support cancelling. 
-		   Abort if not already done.  If done then treat as if cancel failed. */ 
-		if(!complete){
-			fprintf(stderr, "Cannot cancel generalized request - aborting program\n"); 
-			MPI_Abort(MPI_COMM_WORLD, 99); 
-		} 
 		return MPI_SUCCESS;
 	}
-	template<class It>
-	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
-		mpi3::request ret; /*	receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>)); args->commP = this; args->d_first = d_first; //	args->d_last = d_last; args->source = source; args->tag = tag; args->requestP = &ret.impl_;*/
-		receive_state* rs = (receive_state*)::malloc(sizeof(receive_state));
-		rs->cancelled = 0;
-		rs->source = source;
-		rs->tag = tag;
-		MPI_Grequest_start(query_fn, free_fn, cancel_fn, rs, &ret.impl_);//args->requestP);
-		std::thread( //	static_cast<void*(*)(void*)>(receive_thread<It>), args
-			[this, d_first, source, tag, &ret](){
-				this->receive(d_first, source, tag); //	receive_args<It>* args = (receive_args<It>*)ptr; //	args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
-				MPI_Grequest_complete(ret.impl_); //	MPI_Grequest_complete(*args->requestP); //	::free(ptr);
-			}
-		).detach();	//	t.detach(); //	pthread_t thread; //	pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args); //	pthread_detach(thread);
-		return ret;		
+//	inline static int free_fn(void* extra_state) {
+//		/* this generalized request does not need to do any freeing */ 
+//		/* as a result it never fails here */
+//		::free(extra_state);
+//		return MPI_SUCCESS;
+//	}
+	inline static int cancel_fn(void* /*extra_state*/, int complete) {
+		/* This generalized request does not support cancelling. 
+		   Abort if not already done.  If done then treat as if cancel failed. */
+		if(not (complete == 0)) {
+			std::cerr<< "Cannot cancel generalized request - aborting program" <<std::endl;
+			MPI_Abort(MPI_COMM_WORLD, 99); 
+		}
+		return MPI_SUCCESS;
 	}
+//	template<class It>
+//	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+//		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
+//		mpi3::request ret; /*	receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>)); args->commP = this; args->d_first = d_first; //	args->d_last = d_last; args->source = source; args->tag = tag; args->requestP = &ret.impl_;*/
+//		receive_state* rs = (receive_state*)::malloc(sizeof(receive_state));
+//		rs->cancelled = 0;
+//		rs->source = source;
+//		rs->tag = tag;
+//		MPI_Grequest_start(query_fn, free_fn, cancel_fn, rs, &ret.impl_);//args->requestP);
+//		std::thread( //	static_cast<void*(*)(void*)>(receive_thread<It>), args
+//			[this, d_first, source, tag, &ret](){
+//				this->receive(d_first, source, tag); //	receive_args<It>* args = (receive_args<It>*)ptr; //	args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+//				MPI_Grequest_complete(ret.impl_); //	MPI_Grequest_complete(*args->requestP); //	::free(ptr);
+//			}
+//		).detach();	//	t.detach(); //	pthread_t thread; //	pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args); //	pthread_detach(thread);
+//		return ret;
+//	}
 	template<class It>
 	auto ireceive(
 		It d_first, It d_last, 
-			detail::random_access_iterator_tag,
-			detail::value_unspecified_tag,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int source, int tag
-	){
+	) {
 		return ireceive_n(d_first, std::distance(d_first, d_last), source, tag);
 	}
 	template<class It>
-	auto receive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	auto receive(It d_first, It d_last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(
 			d_first, d_last,
 				detail::iterator_category_t<It>{},
@@ -1281,17 +1278,17 @@ public:
 	}
 	template<typename InputIt, typename Size, class V = typename std::iterator_traits<InputIt>::value_type>
 	auto bsend_init_n(
-		InputIt first, Size count, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		InputIt first, Size count,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		request ret;
 		int s = MPI_Bsend_init(
 			std::addressof(*first), count, detail::basic_datatype<V>{},
 			dest, tag, impl_, &ret.impl_
 		);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot bsend init"};
+		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot bsend init"};}
 		return ret;
 	}
 	template<typename It, typename Size>
@@ -1301,13 +1298,13 @@ public:
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			dest, tag
-		);				
+		);
 	}
 	template<class It>
 	auto bsend_init(
-		It first, It last, 
-			detail::random_access_iterator_tag,
-			detail::value_unspecified_tag,
+		It first, It last,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int dest, int tag
 	){
 		return bsend_init_n(first, std::distance(first, last), dest, tag);
@@ -1319,64 +1316,58 @@ public:
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			dest, tag
-		);				
+		);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto bsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
 	}
 	template<class InputIt, class V = typename std::iterator_traits<InputIt>::value_type>
-	auto dynamic_receive(InputIt first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	auto dynamic_receive(InputIt first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 	//	auto count = probe(source, tag).count<V>();
 	//	return receive(first, first + count, source, tag);
 		MPI_Status status;
-	    MPI_Message msg;
+	    MPI_Message msg;  // NOLINT(cppcoreguidelines-init-variables) delayed init
     	int count = -1;
     	MPI_Mprobe(source, tag, impl_, &msg, &status);
     	MPI_Get_count(&status, detail::basic_datatype<V>{}, &count);
-    //	int* buffer = (int*)malloc(sizeof(int) * count);
     	using detail::data;
     	MPI_Mrecv(data(first), count, detail::basic_datatype<V>{}, &msg, MPI_STATUS_IGNORE);
 	}
 
-/*	template<class InputIterator>
-	auto receive(InputIterator first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
-		return dynamic_receive(first, source, tag);
-	}*/ 
-
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
 	auto breceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(buffered_communication_mode{}, blocking_mode{}, It1, It2, source, tag);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto ibsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
 	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
 	auto ibreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(buffered_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
 	}
 
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto ssend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(synchronous_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
 	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
 	auto sreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
 		return receive(synchronous_communication_mode{}, blocking_mode{}, It1, It2, source, tag);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
 	auto issend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(synchronous_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
 	}
 	template<class CommunicationMode, class It1, class Size>
 	auto isend_n(
-		CommunicationMode, 
-		It1 first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		CommunicationMode /*mode*/,
+		It1 first,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count, int dest, int tag
-	){
+	) {
 		mpi3::request ret;
 		CommunicationMode{}.ISend(
 			std::addressof(*first), count, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{}, dest, tag, impl_, &ret.impl_
@@ -1384,123 +1375,92 @@ public:
 		return ret;
 	}
 	template<class It1, class Size>
-	auto issend_n(It1 first, Size count, int dest, int tag = 0){
+	auto issend_n(It1 first, Size count, int dest, int tag = 0) {
 		return isend_n(
 			synchronous_communication_mode{}, 
-			first, 
+			first,
 				detail::iterator_category_t<It1>{},
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			count, 
+			count,
 			dest, tag
 		);
 	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
-	auto isreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
+	auto isreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(synchronous_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
 	}
 
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
-	auto rsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
+	auto rsend(InputIterator It1, InputIterator It2, int dest, int tag = 0) {
 		return send(ready_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
 	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
-	auto rreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
+	auto rreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(ready_communication_mode{}, blocking_mode{}, It1, It2, source, tag);
 	}
-	template<class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
-	auto irsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
+	template<class InputIterator, class /*Category*/ = typename std::iterator_traits<InputIterator>::iterator_category>
+	auto irsend(InputIterator It1, InputIterator It2, int dest, int tag = 0) {
 		return send(ready_communication_mode{}, nonblocking_mode{}, It1, It2, dest, tag);
 	}
-	template<class Iterator, class category = typename std::iterator_traits<Iterator>::iterator_category>
-	auto irreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
+	auto irreceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(ready_communication_mode{}, nonblocking_mode{}, It1, It2, source, tag);
 	}
 	template<class CommunicationMode, class BlockingMode, class InputIterator>
-	auto send_category(CommunicationMode cm, BlockingMode bm, std::input_iterator_tag, 
+	auto send_category(CommunicationMode cm, BlockingMode bm, std::input_iterator_tag,
 		InputIterator first, InputIterator last, int dest, int tag
 	);
-	template<class CommunicationMode, class BlockingMode, class InputIterator, class category = typename std::iterator_traits<InputIterator>::iterator_category>
-	auto send(CommunicationMode cm, BlockingMode bm, InputIterator It1, InputIterator It2, int dest, int tag = 0){
-		return send_category(cm, bm, category{}, It1, It2, dest, tag);
+	template<
+		class CommunicationMode, class BlockingMode, class InputIterator, 
+		class Category = typename std::iterator_traits<InputIterator>::iterator_category
+	>
+	auto send(CommunicationMode cm, BlockingMode bm, InputIterator It1, InputIterator It2, int dest, int tag = 0) {
+		return send_category(cm, bm, Category{}, It1, It2, dest, tag);
 	}
-	
-private:
-/*	{
-		auto it = mpi3::type::registered.find(typeid(V)); assert(it != boost::mpi3::type::registered.end());
-		int s = cm.Send(detail::data(first), n, it->second.impl_, dest, tag, impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-	}*/
-//	{
-//		auto p = make_package();
-//		assert(0);
-#if 0
-		auto it = boost::mpi3::type::registered.find(typeid(ValueType));
-		if(it != boost::mpi3::type::registered.end()){
-			int s = cm.Send(detail::data(first), n, it->second.impl_, dest, tag, impl_);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-		}else if(std::is_pod<ValueType>{}){
-#ifdef BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
-			throw std::logic_error("cannot send unregistered type " + std::string(typeid(ValueType).name()) + " (pod comm disallowed)");
-#endif
-			// allow seamless receive of pod types
-			int s = cm.Send(detail::data(first), n*sizeof(ValueType), MPI_BYTE, dest, tag, impl_);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-		}else throw std::logic_error("cannot send unregistered non pod type " + std::string(typeid(ValueType).name()));
-#endif
-//	}
 
-//	template<class CommunicationMode, class ContiguousIterator, class Size, class V = typename std::iterator_traits<ContiguousIterator>::value_type>
-//	void receive_n_randomaccess_contiguous_builtin(CommunicationMode cm, blocking_mode, std::false_type, ContiguousIterator first, Size n, int dest, int tag);
-/*	{
-		status stts;
-		auto it = mpi3::type::registered.find(typeid(V)); assert(it != boost::mpi3::type::registered.end());
-		int s = cm.Recv(detail::data(first), n, it->second.impl_, dest, tag, impl_, &stts.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-	}*/
-#if 0
-{
-		auto it = boost::mpi3::type::registered.find(typeid(ValueType));
-		if(it != boost::mpi3::type::registered.end()){
-			int s = cm.Recv(detail::data(first), n, it->second.impl_, dest, tag, impl_, MPI_STATUS_IGNORE);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-		}else if(std::is_pod<ValueType>{}){
-#ifdef BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
-			throw std::logic_error("cannot receive not registered type " + std::string(typeid(ValueType).name()) + " (pod comm disallowed)");
-#endif
-			// allow seamless receive of pod types
-			int s = cm.Recv(detail::data(first), sizeof(ValueType)*n, MPI_BYTE, dest, tag, impl_, MPI_STATUS_IGNORE);
-			if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
-		}else throw std::logic_error("cannot receive not registered non pod type " + std::string(typeid(ValueType).name()));
-	}
-#endif
-
-	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
-	request send_n_randomaccess_contiguous_builtin(CommunicationMode cm, nonblocking_mode, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
+ private:
+	template<
+		class CommunicationMode, class ContiguousIterator, 
+		class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type,
+		class Datatype = typename detail::basic_datatype<ValueType>
+	>
+	request send_n_randomaccess_contiguous_builtin(
+		CommunicationMode cm, nonblocking_mode /*mode*/,
+		std::true_type /*true*/,
+		ContiguousIterator first, Size n, int dest, int tag
+	) {
 		request r;
-		int s = cm.ISend(detail::data(first), n, datatype{}, dest, tag, impl_, &r.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot send random access iterators"};
+		int s = cm.ISend(detail::data(first), n, Datatype{}, dest, tag, impl_, &r.impl_);
+		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot send random access iterators"};}
 		return r;
 	}
-	template<class CommunicationMode, class ContiguousIterator, class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, class datatype = typename detail::basic_datatype<ValueType> >
-	request receive_n_randomaccess_contiguous_builtin(CommunicationMode cm, nonblocking_mode, std::true_type, ContiguousIterator first, Size n, int dest, int tag){
+	template<
+		class CommunicationMode, class ContiguousIterator,
+		class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, 
+		class Datatype = typename detail::basic_datatype<ValueType>
+	>
+	request receive_n_randomaccess_contiguous_builtin(
+		CommunicationMode cm, nonblocking_mode /*mode*/, std::true_type /*true*/, 
+		ContiguousIterator first, Size n, int dest, int tag
+	) {
 		request r;
-		int s = cm.IRecv(detail::data(first), n, datatype{}, dest, tag, impl_, &r.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot send random access iterators");
+		int s = cm.IRecv(detail::data(first), n, Datatype{}, dest, tag, impl_, &r.impl_);
+		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot send random access iterators"};}
 		return r;
 	}
-private:
+
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(
 		It1 first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag, 
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count, 
 		It2 d_first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/
 	){
 		assert( count % size() == 0 );
-		MPI_(Alltoall)( 
+		MPI_(Alltoall)(
 			detail::data(first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(d_first), count/size(),
@@ -1509,23 +1469,27 @@ private:
 		);
 		return d_first + count;
 	}
+
+	using in_place_type = decltype(MPI_IN_PLACE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) openmpi #defines this as (void*)1, it may not be a pointer in general
+
 	template<class It1, typename Size>
 	auto all_to_all_n(
 		It1 first,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count
 	)
 	->decltype(MPI_(Alltoall)(
-			MPI_IN_PLACE, 0*count/size(),
+			std::declval<in_place_type>(), 0*count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
 		), first + count) {
 		assert( count % size() == 0 );
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
 		MPI_(Alltoall)(
-			MPI_IN_PLACE, 0*count/size(),
+			in_place, 0*count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			detail::data(first), count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
@@ -1536,18 +1500,19 @@ private:
 
  public:
 	template<class It1, typename Size, class It2>
-	auto all_to_all_n(It1 first, Size count, It2 d_first){
+	auto all_to_all_n(It1 first, Size count, It2 d_first) {
 		assert( count % size() == 0 );
-		return 
+		return
 			all_to_all_n(
-				first, 
+				first,
 					detail::iterator_category_t<It1>{},
 					detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 				count,
 				d_first,
 					detail::iterator_category_t<It2>{},
 					detail::value_category_t<typename std::iterator_traits<It2>::value_type>{}
-			);
+			)
+		;
 	}
 	template<class It1, typename Size>
 	auto all_to_all_n(It1 first, Size count)
@@ -1606,22 +1571,22 @@ private:
 	}
 	template<
 		class It1, class It2,
-			class sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
-			class recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
+			class Sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
+			class Recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
 	>
 	auto scatter_builtin(
 		detail::contiguous_iterator_tag /*tag*/,
 		detail::contiguous_iterator_tag /*tag*/,
 		It1 first, It1 last, It2 d_first, int root
 	) {
-		int s = MPI_Scatter( detail::data(first), std::distance(first, last), 
-			sendtype::value,
+		MPI_(Scatter)(
+			detail::data(  first), std::distance(first, last),
+			Sendtype::value,
 			detail::data(d_first), std::distance(first, last),
-			recvtype::value,
+			Recvtype::value,
 			root,
 			impl_
 		);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
 	}
 	template<class Iterator1, class Iterator2>
 	auto scatter_builtin_q(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first, int root)
@@ -1681,7 +1646,6 @@ private:
 		int root
 	){broadcast_n(first, std::distance(first, last), root);}
 
- public:
 	template<class It, typename Size>
 	auto ibroadcast_n(It first, Size count, int root = 0){
 		return ibroadcast_n(
