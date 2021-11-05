@@ -1232,15 +1232,15 @@ public:
 //		::free(extra_state);
 //		return MPI_SUCCESS;
 //	}
-	inline static int cancel_fn(void* /*extra_state*/, int complete) {
-		/* This generalized request does not support cancelling. 
-		   Abort if not already done.  If done then treat as if cancel failed. */
-		if(not (complete == 0)) {
-			std::cerr<< "Cannot cancel generalized request - aborting program" <<std::endl;
-			MPI_Abort(MPI_COMM_WORLD, 99); 
-		}
-		return MPI_SUCCESS;
-	}
+//	inline static int cancel_fn(void* /*extra_state*/, int complete) {
+//		/* This generalized request does not support cancelling. 
+//		   Abort if not already done.  If done then treat as if cancel failed. */
+//		if(not (complete == 0)) {
+//			std::cerr<< "Cannot cancel generalized request - aborting program" <<std::endl;
+//			MPI_Abort(MPI_COMM_WORLD, 99); 
+//		}
+//		return MPI_SUCCESS;
+//	}
 //	template<class It>
 //	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 //		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
