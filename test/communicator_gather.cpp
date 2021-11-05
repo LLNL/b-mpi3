@@ -17,12 +17,7 @@ namespace mpi3 = boost::mpi3;
 using std::cout;
 using std::list;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
-
-mpi3::vector<double> v;
-
-assert( world.size() > 2);
-{
+void par1(mpi3::communicator& world) {
 	vector<std::pair<double, int>> small(10, {0., world.rank()});
 	vector<std::pair<double, int>> large(world.root()?small.size()*world.size():0, std::pair<double, int>(0.,-1));
 	auto it = world.gather_n(small.begin(), small.size(), large.begin(), 0);
@@ -35,7 +30,8 @@ assert( world.size() > 2);
 		assert( it == large.begin() );
 	}
 }
-{
+
+void part2(mpi3::communicator& world) {
 	vector<std::pair<double, int>> small(10, {0., world.rank()});
 	vector<std::pair<double, int>> large(world.root()?small.size()*world.size():0, std::pair<double, int>(0.,-1));
 	auto it = world.gather_n(small.begin(), small.size(), large.begin());
@@ -48,10 +44,11 @@ assert( world.size() > 2);
 		assert( it == large.begin() );
 	}
 }
-{
+
+void part3(mpi3::communicator& world) {
 	list<double> small(10, world.rank());
 	vector<double> large(world.root()?small.size()*world.size():0, -1.);
-	
+
 	world.gather(small.begin(), small.end(), large.begin(), 0);
 	if(world.root()){
 		cout << "large: ";
@@ -64,7 +61,8 @@ assert( world.size() > 2);
 		assert(large[21] == 2);
 	}
 }
-{
+
+void part4(mpi3::communicator& world) {
 	auto val = std::string("5.1 opa");//{5.1, 12};
 	using T = decltype(val);
 	vector<T> small(10, val);
@@ -74,7 +72,8 @@ assert( world.size() > 2);
 		assert(all_of(large.begin(), large.end(), [val](auto& e){return val == e;}) );
 	}
 }
-{
+
+void part5(mpi3::communicator& world) {
 	auto Lval = std::to_string(world.rank() + 1000);
 	auto vals0 = (world[0] |= Lval);
 	if(world.rank() == 0){
@@ -85,10 +84,21 @@ assert( world.size() > 2);
 	}
 }
 
-return 0;
+
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+
+	mpi3::vector<double> v;
+
+	assert( world.size() > 2);
+
+	part1();
+	part2();
+	part3();
+	part4();
+	part5();
+
+	return 0;
 
 }catch(...){
-return 1;
+	return 1;
 }
-
-
