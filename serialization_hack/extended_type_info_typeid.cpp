@@ -10,10 +10,10 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <algorithm>
-#include <set>
-#include <boost/assert.hpp>
-#include <typeinfo>
 #include <cstddef> // NULL
+#include <set>
+#include <typeinfo>
+#include <boost/assert.hpp>
 
 #include <boost/core/no_exceptions_support.hpp>
 
@@ -22,14 +22,14 @@
 // is being included.
 #define BOOST_SERIALIZATION_SOURCE
 #include <boost/serialization/config.hpp>
-#include <boost/serialization/singleton.hpp>
 #include <boost/serialization/extended_type_info_typeid.hpp>
+#include <boost/serialization/singleton.hpp>
 
 namespace boost { 
 namespace serialization { 
 namespace typeid_system {
 
-#define EXTENDED_TYPE_INFO_TYPE_KEY 1
+#define EXTENDED_TYPE_INFO_TYPE_KEY 1  // NOLINT(cppcoreguidelines-macro-usage) external code
 
 struct type_compare
 {
@@ -42,7 +42,7 @@ struct type_compare
     }
 };
 
-typedef std::multiset<
+typedef std::multiset<  // NOLINT(modernize-use-using) external code
     const extended_type_info_typeid_0 *,
     type_compare
 > tkmap;
@@ -52,10 +52,10 @@ extended_type_info_typeid_0::is_less_than(
     const boost::serialization::extended_type_info & rhs
 ) const {
     // shortcut for common case
-    if(this == & rhs)
-        return false;
-    return 0 != m_ti->before(
-        *(static_cast<const extended_type_info_typeid_0 &>(rhs).m_ti)
+    if(this == & rhs) {
+        return false; }
+    return 0 != m_ti->before(  // NOLINT(readability-implicit-bool-conversion)
+        *(static_cast<const extended_type_info_typeid_0 &>(rhs).m_ti)  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) external code
     );
 }
 
@@ -68,7 +68,7 @@ extended_type_info_typeid_0::is_equal(
         // the following permits conversion to bool without a warning.
         ! (
         * m_ti 
-        != *(static_cast<const extended_type_info_typeid_0 &>(rhs).m_ti)
+        != *(static_cast<const extended_type_info_typeid_0 &>(rhs).m_ti)  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) external code
         )
     ;
 }
@@ -78,11 +78,11 @@ extended_type_info_typeid_0::extended_type_info_typeid_0(
     const char * key
 ) :
     extended_type_info(EXTENDED_TYPE_INFO_TYPE_KEY, key),
-    m_ti(NULL)
+    m_ti(nullptr)
 {}
 
 BOOST_SERIALIZATION_DECL
-extended_type_info_typeid_0::~extended_type_info_typeid_0()
+extended_type_info_typeid_0::~extended_type_info_typeid_0()  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
 {}
 
 BOOST_SERIALIZATION_DECL void 
@@ -94,23 +94,23 @@ extended_type_info_typeid_0::type_register(const std::type_info & ti){
 BOOST_SERIALIZATION_DECL void 
 extended_type_info_typeid_0::type_unregister()
 {
-    if(NULL != m_ti){
+    if(nullptr != m_ti){
         if(! singleton<tkmap>::is_destroyed()){
             tkmap & x = singleton<tkmap>::get_mutable_instance();
-            tkmap::iterator start = x.lower_bound(this);
-            tkmap::iterator end = x.upper_bound(this);
+            tkmap::iterator start = x.lower_bound(this);  // NOLINT(hicpp-use-auto,modernize-use-auto) external code
+            tkmap::iterator end = x.upper_bound(this);  // NOLINT(hicpp-use-auto,modernize-use-auto) external code
             BOOST_ASSERT(start != end);
 
             // remove entry in map which corresponds to this type
             do{
-            if(this == *start)
+            if(this == *start) {
                 x.erase(start++);
-            else
+            } else {
                 ++start;
-            }while(start != end);
+            }}while(start != end);
         }
     }
-    m_ti = NULL;
+    m_ti = nullptr;
 }
 
 #ifdef BOOST_MSVC
@@ -119,26 +119,27 @@ extended_type_info_typeid_0::type_unregister()
 #endif
 
 // this derivation is used for creating search arguments
-class extended_type_info_typeid_arg : 
+class extended_type_info_typeid_arg :
     public extended_type_info_typeid_0
 {
-    virtual void * construct(unsigned int /*count*/, ...) const{
+    /*virtual*/ void * construct(unsigned int /*count*/, ...) const override {  // NOLINT(cert-dcl50-cpp) external code
         BOOST_ASSERT(false);
-        return NULL;
+        return nullptr;
     }
-    virtual void destroy(void const * const /*p*/) const {
+    /*virtual*/ void destroy(void const * const /*p*/) const override {
         BOOST_ASSERT(false);
     }
 public:
-    extended_type_info_typeid_arg(const std::type_info & ti) :
-        extended_type_info_typeid_0(NULL)
+    explicit  // lints google-explicit-constructor,hicpp-explicit-conversions
+	extended_type_info_typeid_arg(const std::type_info & ti) :
+        extended_type_info_typeid_0(nullptr)
     {
         // note absense of self register and key as this is used only as
         // search argument given a type_info reference and is not to 
         // be added to the map.
         m_ti = & ti;
     }
-    ~extended_type_info_typeid_arg(){
+    ~extended_type_info_typeid_arg() override {
         m_ti = nullptr;
     }
 };
@@ -148,7 +149,7 @@ public:
 #endif
 
 BOOST_SERIALIZATION_DECL const extended_type_info *
-extended_type_info_typeid_0::get_extended_type_info(
+extended_type_info_typeid_0::get_extended_type_info(  // NOLINT(readability-convert-member-functions-to-static)
     const std::type_info & ti
 ) const {
     typeid_system::extended_type_info_typeid_arg etia(ti);

@@ -15,8 +15,8 @@
 namespace boost {
 namespace mpi3 {
 
-struct ostream : public std::ostream {  // http://stackoverflow.com/a/2212940/225186
-	class streambuf : public std::stringbuf {
+struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) bug in clang-tidy 12?
+	class streambuf : public std::stringbuf {  // http://stackoverflow.com/a/2212940/225186
 		communicator& comm_;
 		std::ostream& output;
 		std::string msg_;
