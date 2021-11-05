@@ -6,13 +6,13 @@
 #ifndef BOOST_MPI3_WINDOW_HPP
 #define BOOST_MPI3_WINDOW_HPP
 
+#include "../mpi3/communicator.hpp"
 #include "../mpi3/error.hpp"
 #include "../mpi3/type.hpp"
-#include "../mpi3/detail/datatype.hpp"
-#include "../mpi3/detail/call.hpp"
-#include "../mpi3/communicator.hpp"
 
-#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
+#include "../mpi3/detail/call.hpp"
+#include "../mpi3/detail/datatype.hpp"
+
 #include<mpi.h>
 
 namespace boost{
@@ -25,16 +25,13 @@ struct target{
 
 template<class T = void> class panel;
 
-template<class T = void> struct window;
+template<class T = void> class window;
 
 template<>
-struct window<void>{
-protected:
-	MPI_Win impl_ = MPI_WIN_NULL;
-
+class window<void> {
  public:
-	MPI_Win      & operator&()      {return impl_;}
-	MPI_Win const& operator&() const{return impl_;}
+	MPI_Win impl_ = MPI_WIN_NULL;  // NOLINT(misc-non-private-member-variables-in-classes,-warnings-as-errors) TODO(correaa)
+
 	void clear() {
 		try{if(impl_ != MPI_WIN_NULL) {MPI_(Win_free)(&impl_);}} catch(...) {}
 		assert(impl_ == MPI_WIN_NULL);
@@ -45,12 +42,12 @@ protected:
 
  public:
 	template<class T, class Size = mpi3::size_t>
-	window(communicator const& c, T* b, Size n = 0){
+	window(communicator const& c, T* b, Size n = 0) {
 		MPI3_CALL(MPI_Win_create)(b, n*sizeof(T), alignof(T), MPI_INFO_NULL, c.get(), &impl_);
 		assert( alignof(T) == sizeof(T) ); // to see in what type it is different
 	}
 	window(window const&) = delete;// see text before §4.5 in Using Adv. MPI
-	window(window&& o) noexcept : impl_{std::exchange(o.impl_, MPI_WIN_NULL)}{}
+	window(window&& o) noexcept : impl_{std::exchange(o.impl_, MPI_WIN_NULL)} {}
 	window& operator=(window const&) = delete; // see cctor
 	window& operator=(window&& other) noexcept {// self assignment is undefined
 		clear(); swap(*this, other); return *this;
@@ -59,7 +56,7 @@ protected:
 	~window(){clear();}
 
 	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
-	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
+	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0) {
 		using detail::data;
 		int target_count = count;
 		MPI_(Accumulate)(data(first), count, detail::basic_datatype<V>{}, target_rank, target_disp, target_count, detail::basic_datatype<V>{}, MPI_SUM, impl_);
@@ -70,17 +67,17 @@ protected:
 //	void create_errhandler(...);
 //	void create_keyval(...);
 //	void delete_attr(...);
-	void fence(int assert_mode = 0 /*MPI_MODE_NOCHECK*/){
+	void fence(int assert_mode = 0 /*MPI_MODE_NOCHECK*/) {  // NOLINT(readability-make-member-function-const) TODO(correaa)
 		MPI_Win_fence(assert_mode, impl_);
 	}
 //	void free_keyval(...);
 
-	void flush(int rank){MPI_Win_flush(rank, impl_);}
-	void flush_all(){MPI_Win_flush_all(impl_);}
+	void flush(int rank){MPI_Win_flush(rank, impl_);}  // NOLINT(readability-make-member-function-const) TODO(correaa)
+	void flush_all(){MPI_Win_flush_all(impl_);}  // NOLINT(readability-make-member-function-const) TODO(correaa)
 	void flush(){return flush_all();}
-	void flush_local(int rank){MPI_Win_flush_local(rank, impl_);}
-	void flush_local_all(){MPI_Win_flush_local_all(impl_);}
-	void flush_local(){return flush_local_all();}
+	void flush_local(int rank) {MPI_Win_flush_local(rank, impl_);}  // NOLINT(readability-make-member-function-const) TODO(correaa)
+	void flush_local_all() {MPI_Win_flush_local_all(impl_);}  // NOLINT(readability-make-member-function-const) TODO(correaa)
+	void flush_local() {return flush_local_all();}
 
 	void* base() const{
 		void* base;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -108,16 +105,16 @@ protected:
 		group ret; MPI_(Win_get_group)(impl_, &ret.impl_); return ret;
 	}
 
-	void lock(int rank, int lock_type = MPI_LOCK_EXCLUSIVE, int assert = MPI_MODE_NOCHECK){
-		MPI3_CALL(MPI_Win_lock)(lock_type, rank, assert, impl_);
+	void lock(int rank, int lock_type = MPI_LOCK_EXCLUSIVE, int assert = MPI_MODE_NOCHECK) const {
+		MPI_(Win_lock)(lock_type, rank, assert, impl_);
 	}
-	void lock_exclusive(int rank, int assert = MPI_MODE_NOCHECK){
-		MPI3_CALL(MPI_Win_lock)(MPI_LOCK_EXCLUSIVE, rank, assert, impl_);
+	void lock_exclusive(int rank, int assert = MPI_MODE_NOCHECK) const {
+		MPI_(Win_lock)(MPI_LOCK_EXCLUSIVE, rank, assert, impl_);
 	}
-	void lock_shared(int rank, int assert = MPI_MODE_NOCHECK){
-		MPI3_CALL(MPI_Win_lock)(MPI_LOCK_SHARED, rank, assert, impl_);
+	void lock_shared(int rank, int assert = MPI_MODE_NOCHECK) const {
+		MPI_(Win_lock)(MPI_LOCK_SHARED, rank, assert, impl_);
 	}
-	void lock_all(int assert = MPI_MODE_NOCHECK){MPI_Win_lock_all(assert, impl_);}
+	void lock_all(int assert = MPI_MODE_NOCHECK) const {MPI_Win_lock_all(assert, impl_);}
 //	void post(group const& g, int assert = MPI_MODE_NOCHECK) const{
 //		MPI_Win_post(g.impl_, assert, impl_);
 //	}
@@ -129,10 +126,10 @@ protected:
 //	void start(group const& g, int assert = MPI_MODE_NOCHECK){
 //		MPI_Win_start(g.impl_, assert, impl_);
 //	}
-	void sync(){MPI_Win_sync(impl_);}
+	void sync() const{MPI_Win_sync(impl_);}
 //	void test(...)
 	void unlock(int rank) const{MPI_Win_unlock(rank, impl_);}
-	void unlock_all(){MPI_Win_unlock_all(impl_);}
+	void unlock_all() const{MPI_Win_unlock_all(impl_);}
 	void wait() const{MPI_Win_wait(impl_);}
 //	void fetch_and_op(T const*  origin, T* target, int target_rank, int target_disp = 0) const{
 //		MPI_Fetch_and_op(origin, target, detail::datatype<T>{}, target_rank, target_disp, , impl_);
@@ -220,7 +217,7 @@ protected:
 };
 
 template<class T>
-struct window : window<void>{
+class window : public window<void>{
 protected:
 	window() = default;
 public:

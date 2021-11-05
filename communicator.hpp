@@ -184,11 +184,11 @@ using boost::any_cast;
 
 //class communicator_ptr{};
 
-template<class T> struct window;
+template<class T> class window;
 
 class communicator : protected detail::basic_communicator {
 	friend struct detail::package;
-	friend struct window<void>;
+	friend class window<void>;
 
  protected:
 	bool is_null() const {return MPI_COMM_NULL == impl_;}  // TODO(correaa) reconsider the meaning of null
