@@ -999,7 +999,7 @@ public:
 	}
 	template<class It, typename Size>
 	auto receive_n(
-		It dest, 
+		It dest,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
@@ -1011,7 +1011,9 @@ public:
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, tag, impl_, &sta.impl_
 		);
-		return dest + count;
+		assert(sta.count<typename std::iterator_traits<It>::value_type>() == sta.count);
+		assert(sta.count<typename std::iterator_traits<It>::value_type>() == count);
+		return dest + sta.count<typename std::iterator_traits<It>::value_type>();
 	}
 	template<class It, typename Size>
 	auto ireceive_n(
