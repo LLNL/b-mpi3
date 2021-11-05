@@ -63,7 +63,7 @@ void part5(mpi3::communicator& world)
 	std::vector<T> v_local(world.rank() + 10, T{world.rank(), world.rank()});
 	std::vector<T> v(v_local.size()*world.size());
 	auto d_last = world.all_gather(begin(v_local), begin(v_local) + 4, begin(v));
-	assert( std::distance(begin(v), d_last) == 4*world.size() );
+	assert( std::distance(begin(v), d_last) == 4L*world.size() );
 //	assert(e == end(v));
 	assert(( v[ 0] == T{0.,0} ));
 	assert(( v[ 4] == T{1.,1} ));
