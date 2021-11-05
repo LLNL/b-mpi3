@@ -215,48 +215,57 @@ class communicator : protected detail::basic_communicator {
 		return ret;
 	}
 
-	template<class T = void*>
-	struct keyval {
-		static int delete_fn_(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
-			delete (T*)attr_val; attr_val = nullptr;
+	template<class T>
+	class keyval {
+		static int delete_fn(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
+			delete static_cast<T*>(attr_val);  // NOLINT(cppcoreguidelines-owning-memory)
+			attr_val = nullptr;
 			return MPI_SUCCESS;
 		}
-		static int copy_fn_(
+		static int copy_fn(
 			MPI_Comm /*oldcomm*/, int /*keyval*/,
 			void * /*extra_state*/, void *attribute_val_in,
 			void *attribute_val_out, int *flag
 		) {
-			*static_cast<void**>(attribute_val_out) = static_cast<void*>(new T{*((T const*)attribute_val_in)});
+			*static_cast<void**>(attribute_val_out) = static_cast<void*>(new T{*(static_cast<T const*>(attribute_val_in))});
 			assert(flag); *flag = 1;
 			return MPI_SUCCESS;
 		}
+
+	 public:
+		int impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
+
 		using mapped_type = T;
-		int impl_;
-		keyval() {  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
-			MPI_Comm_create_keyval(copy_fn_, delete_fn_, &impl_, (void *)0);
+
+		keyval() { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+			MPI_(Comm_create_keyval)(copy_fn, delete_fn, &impl_, nullptr);
 		}
+
 		keyval(keyval const&) = delete;
+		keyval(keyval     &&) = delete;
+
+		keyval& operator=(keyval const&) = delete;
+		keyval& operator=(keyval     &&) = delete;
+
 		~keyval() noexcept {MPI_Comm_free_keyval(&impl_);}
 	};
 
 	using detail::basic_communicator::send_receive_n;
 	using detail::basic_communicator::matched_probe;
+
 	template<class It, typename Size>
 	auto send_n(
-		It first, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		It first,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		Size count,
 		int dest, int tag
-	){
-		auto e = static_cast<enum error>(
-			MPI_Send(
-				detail::data(first), count, 
-				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-				dest, tag, impl_
-			)
+	) {
+		MPI_(Send)(
+			detail::data(first), count,
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			dest, tag, impl_
 		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot send"};
 	}
 	template<class It, typename Size>
 	auto isend_n(
@@ -265,7 +274,7 @@ class communicator : protected detail::basic_communicator {
 			detail::basic_tag /*tag*/,
 		Size count,
 		int dest, int tag
-	){
+	) {
 		mpi3::request r;
 		MPI_(Isend)(
 			detail::data(first), count, 
@@ -281,10 +290,10 @@ class communicator : protected detail::basic_communicator {
 			detail::value_unspecified_tag /*tag*/,
 		Size count,
 		int dest, int tag
-	){
+	) {
 		detail::package p(*this);
 		package_oarchive poa(p);
-		while(count--) poa << *first++;
+		while(count--) {poa << *first++;}
 		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
 	template<class It, typename Size>
@@ -299,25 +308,26 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class It, typename Size>
 	auto isend_n(
-		It first, 
-			detail::forward_iterator_tag,
-			detail::value_unspecified_tag,
-		Size count, 
+		It first,
+			detail::forward_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
+		Size count,
 		int dest, int tag
-	){
+	) {
 		detail::package p(*this);
 		package_oarchive poa(p);
-		while(count--) poa << *first++;
-		return isend_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
+		while(count--) {poa << *first++;}
+		return isend_n(p.begin(), p.size(), dest, tag);
 	}
 	template<class T, class = decltype(T::dimensionality)> static std::true_type  has_dimensionality_aux(T const&);
 	                                                       static std::false_type has_dimensionality_aux(...);
-	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})){};
+
+	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};
 
 	template<class It, typename Size, class = std::enable_if_t<(not has_dimensionality<It>{})> >
-	void send_n(It first, Size count, int dest, int tag = 0){
+	void send_n(It first, Size count, int dest, int tag = 0) {
 		return send_n(
-			first, 
+			first,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			count,
@@ -327,38 +337,38 @@ class communicator : protected detail::basic_communicator {
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::random_access_iterator_tag, 
-			detail::value_unspecified_tag,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::input_iterator_tag, 
-			detail::basic_tag,
+			detail::input_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		mpi3::vector<typename std::iterator_traits<It>::value_type> buffer(first, last);
 		return send_n(buffer.begin(), buffer.size(), dest, tag);
 	}
 	template<class It>
 	auto send(
 		It first, It last,
-			detail::input_iterator_tag,
-			detail::value_unspecified_tag,
+			detail::input_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		detail::package p(*this);
 		package_oarchive poa(p);
 		while(first!=last) {poa << *first++;}
@@ -378,14 +388,14 @@ class communicator : protected detail::basic_communicator {
 	template<class It>
 	auto isend(
 		It first, It last,
-			detail::random_access_iterator_tag, 
-			detail::value_unspecified_tag,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int dest, int tag
-	){
+	) {
 		return isend_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
-	auto send(It first, It last, int dest, int tag = 0){
+	auto send(It first, It last, int dest, int tag = 0) {
 		return send(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -394,7 +404,7 @@ class communicator : protected detail::basic_communicator {
 		);
 	}
 	template<class It>
-	auto isend(It first, It last, int dest, int tag = 0){
+	auto isend(It first, It last, int dest, int tag = 0) {
 		return isend(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -402,13 +412,14 @@ class communicator : protected detail::basic_communicator {
 			dest, tag
 		);
 	}
+
 	using detail::basic_communicator::basic_communicator;
-	communicator(communicator const&) = delete;//default;
-//	communicator(communicator&) = default;
-// intel need this:
-	communicator(communicator& other) : basic_communicator{other}{}
-	communicator(communicator&&) = default;
+
 	communicator() = default;
+
+	communicator(communicator const&) = delete;//default;
+	communicator(communicator& other) : basic_communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) intel and nvcc 11 need this (not =default)
+	communicator(communicator&&) = default;
 
 	communicator& operator=(communicator const&) = delete;
 	communicator& operator=(communicator&& other) noexcept {

@@ -19,8 +19,11 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 	assert(last == global.end());
 
-	for(std::size_t i = 0; i != global.size(); ++i){
-		assert(global[i] == local[i]*world.size());
+	{
+		auto const sz = global.size();
+		for(std::size_t i = 0; i != sz; ++i) {
+			assert(global[i] == local[i]*world.size());
+		}
 	}
 
 	auto const sum_of_ranks = (world += world.rank());

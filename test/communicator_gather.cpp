@@ -51,12 +51,12 @@ void part3(mpi3::communicator& world) {
 	vector<double> large(world.root()?small.size()*world.size():0, -1.);
 
 	world.gather(small.begin(), small.end(), large.begin(), 0);
-	if(world.root()){
+	if(world.root()) {
 		cout << "large: ";
-		for(auto& e : large){cout<< e <<" ";}
+		for(auto& e : large) {cout<< e <<" ";}  // NOLINT(altera-unroll-loops)
 		cout << '\n';
 	}
-	if(world.root()){
+	if(world.root()) {
 		assert(large[ 1] == 0);
 		assert(large[11] == 1);
 		assert(large[21] == 2);
@@ -64,12 +64,12 @@ void part3(mpi3::communicator& world) {
 }
 
 void part4(mpi3::communicator& world) {
-	auto val = std::string("5.1 opa");//{5.1, 12};
+	auto val = std::string{"5.1 opa"};
 	using T = decltype(val);
 	vector<T> small(10, val);
 	vector<T> large(world.root()?small.size()*world.size():0);
 	world.gather(small.begin(), small.end(), large.begin(), 0);
-	if(world.rank() == 0){
+	if(world.rank() == 0) {
 		assert(all_of(large.begin(), large.end(), [val](auto& e){return val == e;}) );
 	}
 }

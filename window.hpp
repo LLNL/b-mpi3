@@ -275,7 +275,8 @@ shm_pointer<T> communicator::allocate_shared(MPI_Aint size) const
 }
 #endif 
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_WINDOW
 
