@@ -132,14 +132,14 @@ class extended_type_info_typeid_arg :
 public:
     extended_type_info_typeid_arg(const std::type_info & ti) :
         extended_type_info_typeid_0(NULL)
-    { 
+    {
         // note absense of self register and key as this is used only as
         // search argument given a type_info reference and is not to 
         // be added to the map.
         m_ti = & ti;
     }
     ~extended_type_info_typeid_arg(){
-        m_ti = NULL;
+        m_ti = nullptr;
     }
 };
 
@@ -154,11 +154,12 @@ extended_type_info_typeid_0::get_extended_type_info(
     typeid_system::extended_type_info_typeid_arg etia(ti);
     const tkmap & t = singleton<tkmap>::get_const_instance();
     const tkmap::const_iterator it = t.find(& etia);
-    if(t.end() == it)
-        return NULL;
+    if(t.end() == it) {
+        return nullptr;
+	}
     return *(it);
 }
 
-} // namespace detail
-} // namespace serialization
-} // namespace boost
+}  // end namespace typeid_system
+}  // end namespace serialization
+}  // end namespace boost

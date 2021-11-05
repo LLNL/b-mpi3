@@ -65,13 +65,13 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 #define BOOST_SERIALIZATION_DECL
 #endif
 #include "../mpi3/serialization_hack/archive_exception.cpp"
-#include "../mpi3/serialization_hack/extended_type_info.cpp"
-#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"
 #include "../mpi3/serialization_hack/basic_archive.cpp"
 #include "../mpi3/serialization_hack/basic_iarchive.cpp"
 #include "../mpi3/serialization_hack/basic_oarchive.cpp"
 #include "../mpi3/serialization_hack/basic_iserializer.cpp"
 #include "../mpi3/serialization_hack/basic_oserializer.cpp"
+#include "../mpi3/serialization_hack/extended_type_info.cpp"
+#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"
 #endif
 
 #include "../mpi3/package_archive.hpp"
