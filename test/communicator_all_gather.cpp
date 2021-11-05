@@ -9,7 +9,7 @@ mpicxx $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
+void part1(mpi3::communicator& world)
 {
 	using T = std::tuple<double, double>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
@@ -20,6 +20,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(( v[10] == T{1.,1.} ));
 	assert(( v[20] == T{2.,2.} ));
 }
+
+void part2(mpi3::communicator& world)
 {
 	using T = std::tuple<double, double>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
@@ -30,6 +32,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(( v[10] == T{1.,1.} ));
 	assert(( v[20] == T{2.,2.} ));
 }
+
+void part3(mpi3::communicator& world)
 {
 	using T = std::pair<double, int>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
@@ -40,6 +44,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(( v[10] == T{1.,1} ));
 	assert(( v[20] == T{2.,2} ));
 }
+
+void part4(mpi3::communicator& world)
 {
 	using T = std::pair<double, int>;
 	std::vector<T> v_local(10, T{world.rank(), world.rank()});
@@ -50,6 +56,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(( v[10] == T{1.,1} ));
 	assert(( v[20] == T{2.,2} ));
 }
+
+void part5(mpi3::communicator& world)
 {
 	using T = std::pair<double, int>;
 	std::vector<T> v_local(world.rank() + 10, T{world.rank(), world.rank()});
@@ -62,12 +70,16 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 //	assert(( v[10] == T{1.,1} ));
 //	assert(( v[20] == T{2.,2} ));
 }
+
+void part6(mpi3::communicator& world)
 {
 	auto cs = world.all_gather_as<std::vector<int> >(world.rank());
 	assert(cs[0] == 0);
 	assert(cs[1] == 1);
 	assert(cs[2] == 2);
 }
+
+void part7(mpi3::communicator& world)
 {
 	using T = double;
 	std::vector<T> v_local(world.rank() + 1, world.rank());
@@ -81,6 +93,15 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	assert(( v[ 4] == 2. ));
 	assert(( v[ 5] == 2. ));
 }
+
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
+	part1(world);
+	part2(world);
+	part3(world);
+	part4(world);
+	part5(world);
+	part6(world);
+	part7(world);
 	return 0;
 }catch(...){
 	return 1;
