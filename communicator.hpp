@@ -361,7 +361,7 @@ class communicator : protected detail::basic_communicator {
 	){
 		detail::package p(*this);
 		package_oarchive poa(p);
-		while(first!=last) poa << *first++;
+		while(first!=last) {poa << *first++;}
 		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
 	}
 
@@ -411,12 +411,12 @@ class communicator : protected detail::basic_communicator {
 	communicator() = default;
 
 	communicator& operator=(communicator const&) = delete;
-	communicator& operator=(communicator&& other) {
+	communicator& operator=(communicator&& other) noexcept {
 		communicator tmp{std::move(other)};
 		swap(tmp);
 		return *this;
 	}
-	communicator& operator=(communicator& other) {
+	communicator& operator=(communicator& other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
 		communicator tmp{other};
 		swap(tmp);
 		return *this;
@@ -437,55 +437,55 @@ class communicator : protected detail::basic_communicator {
 		//	MPI_Comm_free(&impl_);
 		}
 	}
+
 	int size() const{
 		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
-		int size;  // NOLINT()
-		int s = MPI_Comm_size(impl_, &size);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get size"); 
+		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Comm_size)(impl_, &size);
 		return size;
 	}
-	bool is_empty() const {return is_null();}
-	NODISCARD("empty is not an action")
-	bool empty() const{return is_empty();}
 
-	void abort(int errorcode = 0) const{MPI_Abort(impl_, errorcode);}
-	bool is_intercommunicator() const{
-		int flag = false;
+	NODISCARD("empty is not an action")
+	bool    empty() const {return is_empty();}
+	bool is_empty() const {return is_null();}
+
+	void abort(int errorcode = 0) const {MPI_Abort(impl_, errorcode);}
+
+	bool is_intercommunicator() const {
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Comm_test_inter(impl_, &flag);
-		return flag;
+		return flag != 0;
 	}
-	communicator split(int color, int key) const{
+
+	communicator split(int color, int key) const {  // TODO(correaa) make non-const
 		communicator ret;
-		int s = MPI_Comm_split(impl_, color, key, &ret.impl_);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot split communicator");
-		if(ret) ret.name(name() + std::to_string(color));// + std::to_string(key));
-		if(ret) ret.attribute("color") = color;
+		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
+		if(ret) {ret.name(name() + std::to_string(color));}
+		if(ret) {ret.attribute("color") = color;}
 		return ret;
 	}
-	communicator split(int color = MPI_UNDEFINED) const{
+	communicator split(int color = MPI_UNDEFINED) const {  // TODO(correaa) make non-const
 		return split(color, rank());
 	}
-	communicator keep(bool cond) const{return split(cond?0:mpi3::undefined);}
+
+	communicator keep(bool cond) const {return split(cond?0:mpi3::undefined);}  // TODO(correaa) make non-const
 
 	shared_communicator split_shared(int key = 0) const;
 	shared_communicator split_shared(communicator_type t, int key = 0) const;
-	int remote_size() const{
-		int ret = -1;
-		int s = MPI_Comm_remote_size(impl_, &ret);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot remote size");
+
+	int remote_size() const {
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Comm_remote_size)(impl_, &ret);
 		return ret;
 	}
-	communicator reversed() const{
-		return split(0, size() - rank());
-	}
-	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const{
+	communicator reversed() const {return split(0, size() - rank());}
+	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
-		int ret;
-		int s = MPI_Cart_map(impl_, dims.size(), dims.data(), periods.data(), &ret);
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot map"};
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data(), &ret);
 		return ret;
 	}
-	int cartesian_map(std::vector<int> const& dimensions) const{
+	int cartesian_map(std::vector<int> const& dimensions) const {
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
 	pointer<void> malloc(MPI_Aint size) const;
@@ -493,45 +493,44 @@ class communicator : protected detail::basic_communicator {
 	template<class T = void> void deallocate(pointer<T>& p, MPI_Aint size = 0);
 	void free(pointer<void>& p) const;
 
-	bool similar(communicator const& o) const{return compare(o)==detail::equality::similar;}
+	bool similar(communicator const& o) const {return compare(o)==detail::equality::similar;}
 	template<class Vector>//, typename = typename std::enable_if<std::is_same<decltype(Vector{}.data()), int*>{}>::type>
-	communicator subcomm(Vector const& v) const{
-		MPI_Group old_g;
+	communicator subcomm(Vector const& v) const {
+		MPI_Group old_g;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Comm_group(impl_, &old_g);
-		MPI_Group new_g;
+		MPI_Group new_g;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Group_incl(old_g, v.size(), v.data(), &new_g);
 		communicator ret; MPI_Comm_create(impl_, new_g, &ret.impl_);
 		MPI_Group_free(&new_g);
 		MPI_Group_free(&old_g);
 		return ret;
 	}
-	communicator subcomm(std::initializer_list<int> l) const{
+	communicator subcomm(std::initializer_list<int> l) const {
 		return subcomm(std::vector<int>(l));
 	}
 	enum class topology{undefined = MPI_UNDEFINED, graph = MPI_GRAPH, cartesian = MPI_CART};
-//	topology topo() const{return static_cast<topology>(call<&MPI_Topo_test>());}
-	int rank() const{
-		int rank = -1;
-		if(impl_ == MPI_COMM_NULL) throw std::runtime_error("rank on null communicator");
-		int s = MPI_Comm_rank(impl_, &rank);
-		if(s != MPI_SUCCESS) MPI_Comm_call_errhandler(impl_, s);
+
+	int rank() const {
+		assert(not is_empty());  // an empty communicator doesn't have ranks
+		int rank; // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Comm_rank)(impl_, &rank);
 		return rank;
 	}
-	int right() const{
+	int right() const {
 		int const s = size(); assert(s != 0);
 		return (rank() + 1) % s;
 	}
-	int left() const{
+	int left() const {
 		int const s = size(); assert(s != 0);
 		int left = rank() - 1;
 		if(left < 0) {left = s - 1;}
 		return left;
 	}
-	int next(int n = 1) const{
+	int next(int n = 1) const {
 		assert(rank() + n < size());
 		return rank() + n;
 	}
-	int prev(int n = 1) const{
+	int prev(int n = 1) const {
 		assert(rank() - n > 0);
 		return rank() - n;
 	}
@@ -558,23 +557,23 @@ class communicator : protected detail::basic_communicator {
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
-		MPI_Comm_set_attr(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion)
+		MPI_Comm_set_attr(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
 	inline void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
 	}
 	void* get_attribute(int kvidx) const {
-		void* v = nullptr; int flag;
+		void* v = nullptr;
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
 		if(flag == 0) {assert(!v); return nullptr;}
 		return v;
 	}
 	bool has_attribute(int kvidx) const {
 		void* v = nullptr;
-		int flag;
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
-		if(flag == 0) return false;
-		return true;
+		return flag != 0;
 	}
 
  public:
@@ -583,7 +582,7 @@ class communicator : protected detail::basic_communicator {
 	template<class T>
 	inline void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
 	template<class T>
-	T const& get_attribute(keyval<T> const& kv) const {return *(T*)get_attribute(kv.impl_);}
+	T const& get_attribute(keyval<T> const& kv) const {return *static_cast<T*>(get_attribute(kv.impl_));}
 	template<class T>
 	T& get_attribute(keyval<T> const& kv) {return *static_cast<T*>(get_attribute(kv.impl_));}
 	template<class T>
