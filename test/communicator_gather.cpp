@@ -16,8 +16,9 @@ namespace mpi3 = boost::mpi3;
 
 using std::cout;
 using std::list;
+using std::vector;
 
-void par1(mpi3::communicator& world) {
+void part1(mpi3::communicator& world) {
 	vector<std::pair<double, int>> small(10, {0., world.rank()});
 	vector<std::pair<double, int>> large(world.root()?small.size()*world.size():0, std::pair<double, int>(0.,-1));
 	auto it = world.gather_n(small.begin(), small.size(), large.begin(), 0);
@@ -91,11 +92,11 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 
 	assert( world.size() > 2);
 
-	part1();
-	part2();
-	part3();
-	part4();
-	part5();
+	part1(world);
+	part2(world);
+	part3(world);
+	part4(world);
+	part5(world);
 
 	return 0;
 
