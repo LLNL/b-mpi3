@@ -31,16 +31,19 @@ template<>
 struct window<void>{
 protected:
 	MPI_Win impl_ = MPI_WIN_NULL;
-public:
-	MPI_Win& operator&(){return impl_;}
+
+ public:
+	MPI_Win      & operator&()      {return impl_;}
 	MPI_Win const& operator&() const{return impl_;}
-	void clear(){
-		if(impl_ != MPI_WIN_NULL) MPI3_CALL(MPI_Win_free)(&impl_);
+	void clear() {
+		try{if(impl_ != MPI_WIN_NULL) {MPI_(Win_free)(&impl_);}} catch(...) {}
 		assert(impl_ == MPI_WIN_NULL);
 	}
-protected:
+
+ protected:
 	window() = default;
-public:
+
+ public:
 	template<class T, class Size = mpi3::size_t>
 	window(communicator const& c, T* b, Size n = 0){
 		MPI3_CALL(MPI_Win_create)(b, n*sizeof(T), alignof(T), MPI_INFO_NULL, c.get(), &impl_);
@@ -49,17 +52,17 @@ public:
 	window(window const&) = delete;// see text before §4.5 in Using Adv. MPI
 	window(window&& o) noexcept : impl_{std::exchange(o.impl_, MPI_WIN_NULL)}{}
 	window& operator=(window const&) = delete; // see cctor
-	window& operator=(window&& other){// self assignment is undefined
+	window& operator=(window&& other) noexcept {// self assignment is undefined
 		clear(); swap(*this, other); return *this;
 	}
 	friend void swap(window& a, window& b){std::swap(a.impl_, b.impl_);}
 	~window(){clear();}
+
 	template<typename It1, typename Size, typename V = typename std::iterator_traits<It1>::value_type>
 	void accumulate_n(It1 first, Size count, int target_rank, int target_disp = 0){
 		using detail::data;
 		int target_count = count;
-		int s = MPI_Accumulate(data(first), count, detail::basic_datatype<V>{}, target_rank, target_disp, target_count, detail::basic_datatype<V>{}, MPI_SUM, impl_); 
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot accumulate_n");
+		MPI_(Accumulate)(data(first), count, detail::basic_datatype<V>{}, target_rank, target_disp, target_count, detail::basic_datatype<V>{}, MPI_SUM, impl_);
 	}
 //	void attach(void* base, MPI_Aint size){MPI_Win_attach(impl_, base, size);}
 //	void call_errhandler(int errorcode);
@@ -71,38 +74,40 @@ public:
 		MPI_Win_fence(assert_mode, impl_);
 	}
 //	void free_keyval(...);
+
 	void flush(int rank){MPI_Win_flush(rank, impl_);}
 	void flush_all(){MPI_Win_flush_all(impl_);}
 	void flush(){return flush_all();}
 	void flush_local(int rank){MPI_Win_flush_local(rank, impl_);}
 	void flush_local_all(){MPI_Win_flush_local_all(impl_);}
 	void flush_local(){return flush_local_all();}
+
 	void* base() const{
-		void* base; int flag;
-		MPI3_CALL(MPI_Win_get_attr)(impl_, MPI_WIN_BASE, &base, &flag);
+		void* base;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Win_get_attr)(impl_, MPI_WIN_BASE, &base, &flag);
 		assert(flag);
 		return base;
 	}
-	mpi3::size_t const& size() const{
-		MPI_Aint* size_p; int flag;
-		MPI3_CALL(MPI_Win_get_attr)(impl_, MPI_WIN_SIZE, &size_p, &flag);
+	mpi3::size_t const& size() const {
+		MPI_Aint* size_p;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Win_get_attr)(impl_, MPI_WIN_SIZE, &size_p, &flag);
 		assert(flag);
 		return *size_p;
 	}
-	int const& disp_unit() const{
-		int* disp_unit_p; int flag;
-		MPI3_CALL(MPI_Win_get_attr)(impl_, MPI_WIN_DISP_UNIT, &disp_unit_p, &flag);
+	int const& disp_unit() const {
+		int* disp_unit_p;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Win_get_attr)(impl_, MPI_WIN_DISP_UNIT, &disp_unit_p, &flag);
 		assert(flag);
 		return *disp_unit_p;
 	}
-//	get_errhandler(...);
-	group get_group() const{
+
+	group get_group() const {
 		group ret; MPI_(Win_get_group)(impl_, &ret.impl_); return ret;
 	}
-//	group get_group(){use reinterpret_cast?}
-//	... get_info
-//	... get_name
-	// lock arguments are reversed
+
 	void lock(int rank, int lock_type = MPI_LOCK_EXCLUSIVE, int assert = MPI_MODE_NOCHECK){
 		MPI3_CALL(MPI_Win_lock)(lock_type, rank, assert, impl_);
 	}
@@ -152,9 +157,12 @@ public:
 	void fetch_replace_value(T const&  origin, T& target, int target_rank, int target_disp = 0) const{
 		MPI3_CALL(MPI_Fetch_and_op)(&origin, &target, detail::basic_datatype<T>{}, target_rank, target_disp, MPI_REPLACE, impl_);
 	}
-	template<class CI1, class CI2, class datatypeT = detail::basic_datatype<typename std::iterator_traits<CI1>::value_type> >
-	void fetch_replace(CI1 it1, CI2 it2, int target_rank, int target_disp = 0) const{
-		MPI3_CALL(MPI_Fetch_and_op)(std::addressof(*it1), std::addressof(*it2), datatypeT{}, target_rank, target_disp, MPI_REPLACE, impl_); 
+	template<
+		class CI1, class CI2, 
+		class DatatypeT = detail::basic_datatype<typename std::iterator_traits<CI1>::value_type>
+	>
+	void fetch_replace(CI1 it1, CI2 it2, int target_rank, int target_disp = 0) const {
+		MPI3_CALL(MPI_Fetch_and_op)(std::addressof(*it1), std::addressof(*it2), DatatypeT{}, target_rank, target_disp, MPI_REPLACE, impl_); 
 	}
 	template<class ContiguousIterator>
 	void blocking_put_n(ContiguousIterator it, int count, int target_rank, int target_offset = 0){
@@ -234,7 +242,7 @@ template<class T> struct reference;
 
 template<class T>
 struct shm_pointer : window<> {
-//	T* ptr_ = nullptr;
+	// TODO(correaa) in C++20 this functions can return std::span
 	T* local_ptr(int rank) const {
 		mpi3::size_t size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int disp_unit;  // NOLINT(cppcoreguidelines-init-variables) delayed init
