@@ -32,17 +32,11 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	std::vector<T> v_local(world.rank() + 5, T{world.rank(), world.rank()});
 	std::vector<T> v(1000, T{-99., -99.});
 	auto d_last = world.all_gatherv_n(begin(v_local), v_local.size(), begin(v));
-	
+
 	int predict_size = 0;
-	for(auto i = 0; i != world.size(); ++i){predict_size += i + 5;}
+	for(auto i = 0; i != world.size(); ++i) {predict_size += i + 5;}
 	assert( std::distance(begin(v), d_last) == predict_size );
-	
-	if(world.rank()==1){
-		cout<< std::distance(begin(v), d_last) <<std::endl;
-		for(auto it = begin(v); it != d_last; ++it){
-			cout<<"("<< std::get<0>(*it) <<' '<< std::get<1>(*it) <<"), "<<std::endl;
-		}
-	}
+
 	assert(( v[ 0] == T{0.,0.} ));
 	assert(( v[ 4] == T{0.,0.} ));
 	assert(( v[ 5] == T{1.,1.} ));
