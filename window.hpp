@@ -233,47 +233,25 @@ class panel{
 template<class T> struct reference;
 
 template<class T>
-struct shm_pointer : window<>{
+struct shm_pointer : window<> {
 //	T* ptr_ = nullptr;
-	T* local_ptr(int rank) const{
-		mpi3::size_t size;
-		int disp_unit;
-		void* baseptr;
-		int i = MPI_Win_shared_query(window::impl_, rank, &size, &disp_unit, &baseptr);
-		if(i != MPI_SUCCESS) throw std::runtime_error{"cannot query"};
+	T* local_ptr(int rank) const {
+		mpi3::size_t size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		int disp_unit;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		void* baseptr;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Win_shared_query)(window::impl_, rank, &size, &disp_unit, &baseptr);
 		return static_cast<T*>(baseptr);
 	}
-	mpi3::size_t local_size(int rank) const{
-		mpi3::size_t ret = -1;
-		int disp_unit = -1;
-		void* baseptr = nullptr;
-		int s = MPI_Win_shared_query(window::impl_, rank, &ret, &disp_unit, &baseptr);
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot get local size");
-		assert(ret%disp_unit == 0);
+	mpi3::size_t local_size(int rank) const {
+		mpi3::size_t ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		int disp_unit;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		void* baseptr;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Win_shared_query)(window::impl_, rank, &ret, &disp_unit, &baseptr);
+		assert(ret % disp_unit == 0);
 		return ret/disp_unit;
 	}
 	reference<T> operator*() const;
 };
-
-//template<class T> reference<T> pointer<T>::operator*() const{
-//	return {*this};
-//}
-
-#if 0
-template<class T>
-shm_pointer<T> communicator::allocate_shared(MPI_Aint size) const
-{
-	shm_pointer<T> ret;
-	// this assumes that the communicator is contained in a node
-	int i = MPI_Win_allocate_shared(
-		size*sizeof(T), sizeof(T), MPI_INFO_NULL, impl_, 
-		&ret.ptr_, //&static_cast<window&>(ret).impl_
-		&ret.window::impl_
-	);
-	if(i!=0) assert(0);
-	return ret;
-}
-#endif 
 
 }  // end namespace mpi3
 }  // end namespace boost
