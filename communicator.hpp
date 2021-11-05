@@ -1000,33 +1000,30 @@ public:
 	template<class It, typename Size>
 	auto receive_n(
 		It dest, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Size count, 
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Size count,
 		int source, int tag
-	){
+	) {
 		status sta;
-		auto e = static_cast<enum error>(
-			MPI_Recv(
-				detail::data(dest), count, 
-				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-				source, tag, impl_, &sta.impl_
-			)
+		MPI_(Recv)(
+			detail::data(dest), count,
+			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			source, tag, impl_, &sta.impl_
 		);
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot receive"};
 		return dest + count;
 	}
 	template<class It, typename Size>
 	auto ireceive_n(
-		It dest, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
-		Size count, 
+		It dest,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Size count,
 		int source, int tag
-	){
+	) {
 		mpi3::request r;
 		MPI_(Irecv)(
-			detail::data(dest), count, 
+			detail::data(dest), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			source, tag, impl_, &r.impl_
 		);
@@ -1034,16 +1031,16 @@ public:
 	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	auto receive_n(
-		It dest, 
-			detail::forward_iterator_tag,
-			detail::value_unspecified_tag,
-		Size count, 
+		It dest,
+			detail::forward_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
+		Size count,
 		int source, int tag
 	){
 		detail::package p(*this);
 		p.receive(source, tag);
 		package_iarchive pia(p);
-		while(count--) pia >> *dest++;
+		while(count--) {pia >> *dest++;}
 		return dest;
 	}
 /*	template<class It, typename Size>
@@ -1101,8 +1098,8 @@ public:
 	template<class It>
 	auto receive(
 		It dest,
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int source, int tag
 	) {
 		match m = matched_probe(source, tag);
@@ -1120,7 +1117,7 @@ public:
 		detail::package p(*this);
 		p.receive(source, tag);
 		package_iarchive pia(p);
-		while(p) pia >> *dest++;
+		while(p) {pia >> *dest++;}
 		return dest;
 	}
 	template<class It>
@@ -1144,8 +1141,8 @@ public:
 	template<class It>
 	auto receive(
 		It d_first, It d_last,
-			detail::random_access_iterator_tag,
-			detail::value_unspecified_tag,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int source, int tag
 	) {
 		return receive_n(d_first, std::distance(d_first, d_last), source, tag);
