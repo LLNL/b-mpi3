@@ -524,7 +524,7 @@ class communicator : protected detail::basic_communicator {
 	int left() const{
 		int const s = size(); assert(s != 0);
 		int left = rank() - 1;
-		if(left < 0) left = s - 1;
+		if(left < 0) {left = s - 1;}
 		return left;
 	}
 	int next(int n = 1) const{
@@ -546,68 +546,64 @@ class communicator : protected detail::basic_communicator {
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
+
 	bool    root() const {return (not empty()) and (rank() == 0);}
 	bool is_root() const {return root();}
+	bool at_root() const {return root();}
 
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
-//	template<typename T>
-//	void set_attribute(keyval const& kv, int idx, T const& val);
-//	void delete_attribute(keyval const& kv, int idx);
-//	template<typename T>
-//	void get_attribute(keyval const& kv, int idx, T& val);
-//	template<typename T>
-//	T const& get_attribute_as(keyval const& kv, int idx);
-//	bool has_attribute(keyval const& kv, int idx);
 
-	auto operator[](int i) -> process;
-protected:
-	template<class T> void set_attribute(int kv_idx, T const& t){
-		MPI_Comm_set_attr(impl_, kv_idx, new T{t});
+	auto operator[](int rank) -> process;
+
+ protected:
+	template<class T> void set_attribute(int kv_idx, T const& t) {
+		MPI_Comm_set_attr(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion)
 	}
 	inline void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
 	}
-	void* get_attribute(int kvidx) const{
-		void* v = nullptr; int flag = 0;
+	void* get_attribute(int kvidx) const {
+		void* v = nullptr; int flag;
 		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
-		if(not flag){assert(!v); return nullptr;}
+		if(flag == 0) {assert(!v); return nullptr;}
 		return v;
 	}
-	bool has_attribute(int kvidx) const{
-		void* v = nullptr; int flag = 0;
+	bool has_attribute(int kvidx) const {
+		void* v = nullptr;
+		int flag;
 		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
-		if(not flag) return false;
+		if(flag == 0) return false;
 		return true;
 	}
 
  public:
 	template<class T, class TT = T> void
-	set_attribute(keyval<T> const& k, TT const& t = {}){set_attribute<T>(k.impl_, t);}
+	set_attribute(keyval<T> const& k, TT const& t = {}) {set_attribute<T>(k.impl_, t);}
 	template<class T>
-	inline void delete_attribute(keyval<T> const& k){delete_attribute(k.impl_);}
+	inline void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
 	template<class T>
-	T const& get_attribute(keyval<T> const& kv) const{return *(T*)get_attribute(kv.impl_);}
-	template<class T> 
-	T& get_attribute(keyval<T> const& kv){return *(T*)get_attribute(kv.impl_);}
+	T const& get_attribute(keyval<T> const& kv) const {return *(T*)get_attribute(kv.impl_);}
 	template<class T>
-	bool has_attribute(keyval<T> const& kv) const{return has_attribute(kv.impl_);}
+	T& get_attribute(keyval<T> const& kv) {return *static_cast<T*>(get_attribute(kv.impl_));}
 	template<class T>
-	T& attribute(keyval<T> const& kv){
-		if(not has_attribute(kv)) set_attribute(kv);
+	bool has_attribute(keyval<T> const& kv) const {return has_attribute(kv.impl_);}
+	template<class T>
+	T& attribute(keyval<T> const& kv) {
+		if(not has_attribute(kv)) {set_attribute(kv);}
 		return get_attribute(kv);
 	}
 	mpi3::any& attribute(std::string const& s);
 
-	void call_error_handler(int errorcode){
-		int status = MPI_Comm_call_errhandler(impl_, errorcode);
-		if(status != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
+	void call_error_handler(int errorcode) noexcept {
+		auto const s = MPI_Comm_call_errhandler(impl_, errorcode); (void)s;
+		assert(s == MPI_SUCCESS);
 	}
-	void error(mpi3::error const& e){
-		int s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e));
-		if(s != MPI_SUCCESS) throw std::runtime_error{"cannot call error handler"};
+	void error(mpi3::error const& e) noexcept {
+		auto const s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e)); (void)s;
+		assert(s == MPI_SUCCESS);
 	}
-	communicator divide_low(int n) const{
+	communicator divide_low(int n) const {
 		return split(
 			(rank() < size()/n*(n-size()%n))?
 				rank()/(size()/n):
@@ -619,7 +615,7 @@ protected:
 		int i = 0;
 		for(int last = 0; ; i++){
 			last += bat + ((i < residue)?1:0);
-			if(rank() < last) break;
+			if(rank() < last) {break;}
 		}
 		return split(i);
 	}
@@ -632,7 +628,7 @@ protected:
 	communicator divide_even(int n) const{
 		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
-	communicator operator/ (double nn) const{return divide_even(nn);}
+//  communicator operator/ (double nn) const{return divide_even(nn);}
 	communicator operator< (int n) const {return split((rank() <  n)?0:MPI_UNDEFINED);}
 	communicator operator<=(int n) const {return split((rank() <= n)?0:MPI_UNDEFINED);}
 	communicator operator> (int n) const {return split((rank() >  n)?0:MPI_UNDEFINED);}
