@@ -8,7 +8,6 @@ mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
 #include<numeric> //iota
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
 template<class T> void f(int);
 
