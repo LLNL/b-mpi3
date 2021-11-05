@@ -42,6 +42,22 @@ ompi-clang-tidy:
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
+        - clang-tidy --version
+        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-bugprone-exception-escape,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-modernize-use-trailing-return-type,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
+        - make VERBOSE=1
+        - ctest --output-on-failure
+
+ompi-clang-tidy-dev:
+    image: silkeh/clang:dev
+    stage: build
+    script:
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang libstdc++-11-dev clang-tidy cmake make libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
+        - mkdir build && cd build
+        - export MPI_OVERSUBSCRIBE="--oversubscribe"
+        - clang++ --version
+        - clang-tidy --version
         - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-bugprone-exception-escape,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-modernize-use-trailing-return-type,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
         - make VERBOSE=1
         - ctest --output-on-failure
