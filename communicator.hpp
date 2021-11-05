@@ -1175,22 +1175,22 @@ public:
 		receive_n(buffer.begin(), buffer.size(), source, tag);
 		return std::copy(buffer.begin(), buffer.end(), d_first);
 	}
-	class ir_req{
-		boost::mpi3::status query(){
-			boost::mpi3::status ret;
-			ret.set_source(MPI_UNDEFINED);
-			ret.set_tag(MPI_UNDEFINED);
-			ret.set_cancelled();
-			ret.set_elements<char>(0);
-			return ret;
-		}
-		void free(){
-			std::cout << "free" << std::endl;
-		}
-		void cancel(int complete){
-			std::cout << "cancel " << complete << std::endl;
-		}
-	};
+//	class ir_req{
+//		boost::mpi3::status query(){
+//			boost::mpi3::status ret;
+//			ret.set_source(MPI_UNDEFINED);
+//			ret.set_tag(MPI_UNDEFINED);
+//			ret.set_cancelled();
+//			ret.set_elements<char>(0);
+//			return ret;
+//		}
+//		static void free(){
+//			std::cout << "free" << std::endl;
+//		}
+//		static void cancel(int complete) {
+//			std::cout << "cancel " << complete << std::endl;
+//		}
+//	};
 	template<class It>
 	struct receive_args {
 		communicator* commP;
@@ -1205,27 +1205,27 @@ public:
 		int source = MPI_UNDEFINED;
 		int tag = MPI_UNDEFINED;
 	};
-	template<class It>
-	inline static void* receive_thread(void* ptr) {
-		receive_args<It>* args = (receive_args<It>*)ptr;
-		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
-		MPI_Grequest_complete(*args->requestP);
-		::free(ptr);
-		return NULL;
-	}
-	inline static int query_fn(void* extra_state, MPI_Status *status){
-		receive_state* rs = (receive_state*)extra_state;
-		/* always send just one int */ 
-		MPI_Status_set_elements(status, MPI_INT, 1);
-		/* can never cancel so always true */ 
-		MPI_Status_set_cancelled(status, rs->cancelled); 
-		/* choose not to return a value for this */
-		status->MPI_SOURCE = rs->source; 
-		/* tag has not meaning for this generalized request */ 
-		status->MPI_TAG = rs->tag; 
-		/* this generalized request never fails */ 
-		return MPI_SUCCESS;
-	}
+//	template<class It>
+//	inline static void* receive_thread(void* ptr) {
+//		receive_args<It>* args = (receive_args<It>*)ptr;
+//		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+//		MPI_Grequest_complete(*args->requestP);
+//		::free(ptr);
+//		return nullptr;
+//	}
+//	inline static int query_fn(void* extra_state, MPI_Status *status){
+//		auto* rs = static_cast<receive_state*>(extra_state);
+//		/* always send just one int */ 
+//		MPI_Status_set_elements(status, MPI_INT, 1);
+//		/* can never cancel so always true */ 
+//		MPI_Status_set_cancelled(status, rs->cancelled); 
+//		/* choose not to return a value for this */
+//		status->MPI_SOURCE = rs->source; 
+//		/* tag has not meaning for this generalized request */ 
+//		status->MPI_TAG = rs->tag; 
+//		/* this generalized request never fails */ 
+//		return MPI_SUCCESS;
+//	}
 //	inline static int free_fn(void* extra_state) {
 //		/* this generalized request does not need to do any freeing */ 
 //		/* as a result it never fails here */
