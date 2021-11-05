@@ -12,7 +12,7 @@ namespace mpi3 = boost::mpi3;
 
 struct projector {
 	projector() = default;
-	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}, n_{5} {}
+	explicit projector(mpi3::communicator comm) : n_{5}, comm_{std::move(comm)} {}
 	projector(projector&&) = default;
 	projector(projector const&) = default;
 
