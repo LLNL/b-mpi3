@@ -1089,7 +1089,7 @@ public:
 	template<class It, typename Size>
 	mpi3::request ireceive_n(
 		It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG
-	){
+	) {
 		return ireceive_n(
 			dest,
 				detail::iterator_category_t<It>{},
@@ -1100,11 +1100,11 @@ public:
 	}
 	template<class It>
 	auto receive(
-		It dest, 
+		It dest,
 			detail::contiguous_iterator_tag,
 			detail::basic_tag,
 		int source, int tag
-	){
+	) {
 		match m = matched_probe(source, tag);
 		auto count = m.count<typename std::iterator_traits<It>::value_type>();
 		m.receive_n(dest, count);
@@ -1112,11 +1112,11 @@ public:
 	}
 	template<class It>
 	auto receive(
-		It dest, 
-			detail::forward_iterator_tag,
-			detail::value_unspecified_tag,
+		It dest,
+			detail::forward_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
 		int source, int tag
-	){
+	) {
 		detail::package p(*this);
 		p.receive(source, tag);
 		package_iarchive pia(p);
@@ -1125,18 +1125,15 @@ public:
 	}
 	template<class It>
 	auto receive(
-		It dest, 
-			detail::forward_iterator_tag,
-			detail::basic_tag,
+		It dest,
+			detail::forward_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int source, int tag
-	){
-	//	match m = matched_probe(source, tag);
-	//	auto count = m.count<typename std::iterator_traits<It>::value_type>();
-	//	mpi3::uvector<typename std::iterator_traits<It>::value_type> v(count);
-		return matched_probe(source, tag).receive_n(dest);//, count);
+	) {
+		return matched_probe(source, tag).receive_n(dest);
 	}
 	template<class It>
-	auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(
 			dest,
 				detail::iterator_category_t<It>{},
@@ -1146,31 +1143,31 @@ public:
 	}
 	template<class It>
 	auto receive(
-		It d_first, It d_last, 
+		It d_first, It d_last,
 			detail::random_access_iterator_tag,
 			detail::value_unspecified_tag,
 		int source, int tag
-	){
+	) {
 		return receive_n(d_first, std::distance(d_first, d_last), source, tag);
 	}
 	template<class It>
 	auto receive(
-		It d_first, It d_last, 
-			detail::contiguous_iterator_tag,
-			detail::basic_tag,
+		It d_first, It d_last,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int source, int tag
-	){
+	) {
 		return receive_n(std::addressof(*d_first), std::distance(d_first, d_last), source, tag);
 	//	return std::copy(buffer.begin(), buffer.end(), d_first);
 	}
 
 	template<class It>
 	auto receive(
-		It d_first, It d_last, 
-			detail::forward_iterator_tag,
-			detail::basic_tag,
+		It d_first, It d_last,
+			detail::forward_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
 		int source, int tag
-	){
+	) {
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(std::distance(d_first, d_last));
 		receive_n(buffer.begin(), buffer.size(), source, tag);
 		return std::copy(buffer.begin(), buffer.end(), d_first);
@@ -1191,20 +1188,20 @@ public:
 //			std::cout << "cancel " << complete << std::endl;
 //		}
 //	};
-	template<class It>
-	struct receive_args {
-		communicator* commP;
-		It d_first;
-	//	It d_last;
-		int source;
-		int tag; 
-		MPI_Request* requestP;
-	};
-	struct receive_state{
-		int cancelled = 0;
-		int source = MPI_UNDEFINED;
-		int tag = MPI_UNDEFINED;
-	};
+//	template<class It>
+//	struct receive_args {
+//		communicator* commP;
+//		It d_first;
+//	//	It d_last;
+//		int source;
+//		int tag; 
+//		MPI_Request* requestP;
+//	};
+//	struct receive_state{
+//		int cancelled = 0;
+//		int source = MPI_UNDEFINED;
+//		int tag = MPI_UNDEFINED;
+//	};
 //	template<class It>
 //	inline static void* receive_thread(void* ptr) {
 //		receive_args<It>* args = (receive_args<It>*)ptr;
