@@ -16,6 +16,7 @@ Checks: '*,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -readability-magic-numbers
+  -google-runtime-references
 '
 CheckOptions:
   - { key: readability-identifier-naming.NamespaceCase,       value: lower_case }
