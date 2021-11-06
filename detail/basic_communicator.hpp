@@ -45,7 +45,7 @@ class basic_communicator{
 //			if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
 //		}
 //	}
-	basic_communicator(basic_communicator& other){
+	basic_communicator(basic_communicator& other) {
 		if(MPI_COMM_NULL != other.impl_){
 			int s = MPI_Comm_dup(other.impl_, &impl_);
 			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot duplicate communicator");}
