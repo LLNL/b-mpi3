@@ -647,7 +647,7 @@ class communicator : protected detail::basic_communicator {
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0) {
-		send(std::addressof(t), std::addressof(t) + 1, dest, tag);
+		send(std::addressof(t), std::next(std::addressof(t)), dest, tag);
 	}
 	template<class T>
 	auto isend_value(T const& t, int dest, int tag = 0) {
@@ -655,7 +655,7 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) compatibility
-		send(std::addressof(t[0]), std::addressof(t[N-1]) + 1, dest, tag);
+		send(std::addressof(t[0]), std::next(std::addressof(t[N-1])), dest, tag);
 	}
 	template<class ContIt, class Size>
 	request send_init_n(ContIt first, Size count, int dest, int tag = 0);
@@ -666,20 +666,6 @@ class communicator : protected detail::basic_communicator {
 	receive_request receive_init_n(ContIt first, Size count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
 	template<class ContIt>
 	receive_request receive_init(ContIt first, ContIt last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
-
-//	template<typename InputIt, typename Size, 
-//		class value_type = typename std::iterator_traits<InputIt>::value_type, 
-//		class datatype = detail::basic_datatype<value_type>
-//	>
-//	auto pack_n_aux(
-//		std::random_access_iterator_tag /*tag*/, 
-//		InputIt first, Size count, char* out, int max_size
-//	) {
-//		assert(0);
-//		int position = 0;
-//		MPI_Pack(detail::data(first), count, datatype{}, out, max_size, &position, impl_);
-//		return std::next(out, position);
-//	}
 
 	template<
 		class InputIt, class Size, 
@@ -1758,7 +1744,7 @@ class communicator : protected detail::basic_communicator {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
 		int s =
 			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
-			                 MPI_Reduce(data_adl(first), NULL        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+			                 MPI_Reduce(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
 		;
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 	}
@@ -2220,7 +2206,7 @@ class communicator : protected detail::basic_communicator {
 		auto s = std::accumulate(counts, counts + size(), typename std::iterator_traits<CountsIt>::value_type{0});
 		std::vector<typename std::iterator_traits<It1>::value_type> buff(s);
 		auto e = all_gatherv_n(first, count, buff.data(), counts, displs);
-		assert( e == buff.data() + buff.size() );
+		assert( e == std::next(buff.data(), buff.size()) );
 		using std::move;
 		return move(buff.begin(), buff.end(), d_first);
 	}
