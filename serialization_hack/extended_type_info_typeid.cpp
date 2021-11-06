@@ -124,11 +124,11 @@ class extended_type_info_typeid_arg :  // NOLINT(cppcoreguidelines-special-membe
     public extended_type_info_typeid_0
 {
     /*virtual*/ void * construct(unsigned int /*count*/, ...) const override {  // NOLINT(cert-dcl50-cpp) external code
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         return nullptr;
     }
     /*virtual*/ void destroy(void const * const /*p*/) const override {
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
     }
 public:
     explicit  // lints google-explicit-constructor,hicpp-explicit-conversions
