@@ -11,10 +11,11 @@
 #include <boost/config.hpp> // msvc 6.0 needs this to suppress warnings
 
 #include <boost/assert.hpp>
-#include <set>
-#include <list>
-#include <vector>
+
 #include <cstddef> // size_t, NULL
+#include <list>
+#include <set>
+#include <vector>
 
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)
@@ -36,15 +37,15 @@ namespace std{
 #include <boost/serialization/tracking.hpp>
 
 #include <boost/archive/archive_exception.hpp>
-#include <boost/archive/detail/decl.hpp>
 #include <boost/archive/basic_archive.hpp>
+#include <boost/archive/detail/basic_iarchive.hpp>
 #include <boost/archive/detail/basic_iserializer.hpp>
 #include <boost/archive/detail/basic_pointer_iserializer.hpp>
-#include <boost/archive/detail/basic_iarchive.hpp>
+#include <boost/archive/detail/decl.hpp>
 
 #include <boost/archive/detail/auto_link_archive.hpp>
 
-using namespace boost::serialization;
+using namespace boost::serialization;  // NOLINT(google-build-using-namespace,google-global-names-in-headers) external code TODO(correaa) avoid global namespace
 
 namespace boost {
 namespace archive {
@@ -60,33 +61,33 @@ class basic_iarchive_impl {
     // indexed on object_id
     struct aobject
     {
-        void * address;
-        bool loaded_as_pointer;
-        class_id_type class_id;
+        void * address;  // NOLINT(modernize-use-default-member-init,misc-non-private-member-variables-in-classes) external code
+        bool loaded_as_pointer;  // NOLINT(modernize-use-default-member-init,misc-non-private-member-variables-in-classes) external code
+        class_id_type class_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         aobject(
             void *a,
-            class_id_type class_id_
+            class_id_type class_id_  // NOLINT(performance-unnecessary-value-param) external code
         ) :
             address(a),
             loaded_as_pointer(false),
             class_id(class_id_)
         {}
         aobject() : 
-            address(NULL),
+            address(nullptr),
             loaded_as_pointer(false),
             class_id(-2) 
         {}
     };
-    typedef std::vector<aobject> object_id_vector_type;
+    typedef std::vector<aobject> object_id_vector_type;  // NOLINT(modernize-use-using) external code
     object_id_vector_type object_id_vector;
 
     //////////////////////////////////////////////////////////////////////
     // used to implement the reset_object_address operation.
     struct moveable_objects {
-        object_id_type start;
-        object_id_type end;
-        object_id_type recent;
-        bool is_pointer;
+        object_id_type start;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        object_id_type end;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        object_id_type recent;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        bool is_pointer;  // NOLINT(modernize-use-default-member-init,misc-non-private-member-variables-in-classes) external code
         moveable_objects() :
             start(0),
             end(0),
@@ -102,10 +103,10 @@ class basic_iarchive_impl {
 
     //////////////////////////////////////////////////////////////////////
     // used by load object to look up class id given basic_serializer
-    struct cobject_type
+    struct cobject_type  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions) external code
     {
-        const basic_iserializer * m_bis;
-        const class_id_type m_class_id;
+        const basic_iserializer * m_bis;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const class_id_type m_class_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         cobject_type(
             std::size_t class_id,
             const basic_iserializer & bis
@@ -134,7 +135,7 @@ class basic_iarchive_impl {
     class cobject_id  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions) external code
     {
     public:
-        cobject_id & operator=(const cobject_id & rhs){  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
+        cobject_id & operator=(const cobject_id & rhs){  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default,bugprone-unhandled-self-assignment,cert-oop54-cpp) external code
             bis_ptr = rhs.bis_ptr;
             bpis_ptr = rhs.bpis_ptr;
             file_version = rhs.file_version;
@@ -170,8 +171,8 @@ class basic_iarchive_impl {
     // address of the most recent object serialized as a poiner
     // whose data itself is now pending serialization
     struct pending {
-        void * object;  // NOLINT(misc-non-private-member-variables-in-classes) external code
-        const basic_iserializer * bis;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        void * object;  // NOLINT(misc-non-private-member-variables-in-classes,modernize-use-default-member-init) external code
+        const basic_iserializer * bis;  // NOLINT(misc-non-private-member-variables-in-classes,modernize-use-default-member-init) external code
         version_type version;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         pending() :
             object(nullptr),
@@ -180,11 +181,11 @@ class basic_iarchive_impl {
         {}
     } m_pending;
 
-    basic_iarchive_impl(unsigned int flags) :
+    explicit basic_iarchive_impl(unsigned int flags) :
         m_archive_library_version(BOOST_ARCHIVE_VERSION()),
         m_flags(flags)
     {}
-    void set_library_version(library_version_type archive_library_version){
+    void set_library_version(library_version_type archive_library_version){  // NOLINT(performance-unnecessary-value-param) external code
         m_archive_library_version = archive_library_version;
     }
     bool
@@ -236,8 +237,8 @@ basic_iarchive_impl::reset_object_address(
     void const * const new_address, 
     void const * const old_address
 ){
-    if(m_moveable_objects.is_pointer)
-        return;
+    if(m_moveable_objects.is_pointer) {
+        return; }
 
     // this code handles a couple of situations.
     // a) where reset_object_address is applied to an untracked object.
@@ -253,8 +254,8 @@ basic_iarchive_impl::reset_object_address(
     //    can save a few more people from themselves as above.
     object_id_type i = m_moveable_objects.recent;
     for(; i < m_moveable_objects.end; ++i){
-        if(old_address == object_id_vector[i].address)
-            break;
+        if(old_address == object_id_vector[i].address) {
+            break; }
     }
     for(; i < m_moveable_objects.end; ++i){
         void const * const this_address = object_id_vector[i].address;
@@ -265,7 +266,7 @@ basic_iarchive_impl::reset_object_address(
             std::size_t member_displacement
                 = reinterpret_cast<std::size_t>(this_address)  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
                 - reinterpret_cast<std::size_t>(old_address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
-            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,performance-no-int-to-ptr) external
                 reinterpret_cast<std::size_t>(new_address) + member_displacement  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
             );
         }
@@ -273,7 +274,7 @@ basic_iarchive_impl::reset_object_address(
             std::size_t member_displacement
                 = reinterpret_cast<std::size_t>(old_address)  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
                 - reinterpret_cast<std::size_t>(this_address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
-            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,performance-no-int-to-ptr) external
                 reinterpret_cast<std::size_t>(new_address) - member_displacement  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external code
             );
        }
@@ -541,7 +542,7 @@ basic_iarchive::~basic_iarchive()  // NOLINT(hicpp-use-equals-default,modernize-
 {}
 
 BOOST_ARCHIVE_DECL void
-basic_iarchive::set_library_version(library_version_type archive_library_version){
+basic_iarchive::set_library_version(library_version_type archive_library_version){  // NOLINT(performance-unnecessary-value-param)
     pimpl->set_library_version(archive_library_version);
 }
 

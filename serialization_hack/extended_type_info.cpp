@@ -101,7 +101,7 @@ class extended_type_info_arg : public extended_type_info  // NOLINT(cppcoreguide
         BOOST_ASSERT(false);
     }
 public:
-    extended_type_info_arg(const char * key) :
+    explicit extended_type_info_arg(const char * key) :
         extended_type_info(0, key)
     {}
 

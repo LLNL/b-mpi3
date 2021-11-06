@@ -11,8 +11,9 @@
 #include <boost/config.hpp> // msvc 6.0 needs this for warning suppression
 
 #include <boost/assert.hpp>
-#include <set>
+
 #include <cstddef> // NULL
+#include <set>
 
 #include <boost/limits.hpp>
 
@@ -23,15 +24,15 @@
 // same modules are marked export and import.
 #define BOOST_SERIALIZATION_SOURCE
 #include <boost/serialization/config.hpp>
+#include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/state_saver.hpp>
 #include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/extended_type_info.hpp>
 
 #include <boost/archive/archive_exception.hpp>
 #include <boost/archive/basic_archive.hpp>
+#include <boost/archive/detail/basic_oarchive.hpp>
 #include <boost/archive/detail/basic_oserializer.hpp>
 #include <boost/archive/detail/basic_pointer_oserializer.hpp>
-#include <boost/archive/detail/basic_oarchive.hpp>
 #include <boost/archive/detail/decl.hpp>
 
 #ifdef BOOST_MSVC
@@ -39,7 +40,7 @@
 #  pragma warning(disable : 4251 4231 4660 4275)
 #endif
 
-using namespace boost::serialization;  // NOLINT(google-build-using-namespace)
+using namespace boost::serialization;  // NOLINT(google-build-using-namespace,google-global-names-in-headers) TODO(correaa) remove this global using namespace
 
 namespace boost {
 namespace archive {
@@ -54,7 +55,7 @@ class basic_oarchive_impl {
     // keyed on address, class_id
     struct aobject
     {
-        const void * address;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const void * address;  // NOLINT(misc-non-private-member-variables-in-classes, modernize-use-default-member-init) external code
         class_id_type class_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         object_id_type object_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
 
@@ -78,8 +79,8 @@ class basic_oarchive_impl {
 //        }
         aobject(
             const void *a,
-            class_id_type class_id_,
-            object_id_type object_id_
+            class_id_type class_id_,  // NOLINT(performance-unnecessary-value-param) external code
+            object_id_type object_id_  // NOLINT(performance-unnecessary-value-param) external code
         ) :
             address(a),
             class_id(class_id_),
@@ -107,10 +108,10 @@ class basic_oarchive_impl {
             m_class_id(class_id),
             m_initialized(false)
         {}
-        explicit cobject_type(const basic_oserializer & bos)
+        explicit cobject_type(const basic_oserializer & bos)  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
             : m_bos_ptr(& bos)
         {}
-        cobject_type(
+        cobject_type(  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
             const cobject_type & rhs
         ) :
             m_bos_ptr(rhs.m_bos_ptr),
@@ -443,7 +444,7 @@ basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
 }
 
 BOOST_ARCHIVE_DECL library_version_type
-basic_oarchive::get_library_version() const{  // NOLINT(eadability-convert-member-functions-to-static) external code
+basic_oarchive::get_library_version() const{  // NOLINT(readability-convert-member-functions-to-static) external code
     return BOOST_ARCHIVE_VERSION();
 }
 
