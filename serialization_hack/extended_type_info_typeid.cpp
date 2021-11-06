@@ -13,6 +13,7 @@
 #include <cstddef> // NULL
 #include <set>
 #include <typeinfo>
+
 #include <boost/assert.hpp>
 
 #include <boost/core/no_exceptions_support.hpp>
@@ -119,7 +120,7 @@ extended_type_info_typeid_0::type_unregister()
 #endif
 
 // this derivation is used for creating search arguments
-class extended_type_info_typeid_arg :
+class extended_type_info_typeid_arg :  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions) external code
     public extended_type_info_typeid_0
 {
     /*virtual*/ void * construct(unsigned int /*count*/, ...) const override {  // NOLINT(cert-dcl50-cpp) external code

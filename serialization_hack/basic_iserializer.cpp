@@ -12,6 +12,7 @@
 
 #define BOOST_ARCHIVE_SOURCE
 #include <boost/serialization/config.hpp>
+
 #include <boost/archive/detail/basic_iserializer.hpp>
 
 namespace boost {
@@ -23,11 +24,11 @@ basic_iserializer::basic_iserializer(
     const boost::serialization::extended_type_info & type /*eti*/
 ) :
     basic_serializer(type),
-    m_bpis(NULL)
+    m_bpis(nullptr)
 {}
 
 BOOST_ARCHIVE_DECL 
-basic_iserializer::~basic_iserializer(){}
+basic_iserializer::~basic_iserializer(){}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
 
 } // namespace detail
 } // namespace archive

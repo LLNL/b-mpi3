@@ -11,8 +11,8 @@
 #include <cstddef> // NULL
 
 #define BOOST_ARCHIVE_SOURCE
-#include <boost/serialization/config.hpp>
 #include <boost/archive/detail/basic_oserializer.hpp>
+#include <boost/serialization/config.hpp>
 
 namespace boost {
 namespace archive {
@@ -23,11 +23,11 @@ basic_oserializer::basic_oserializer(
         const boost::serialization::extended_type_info & type_ /*eti*/
 ) :
     basic_serializer(type_),
-    m_bpos(NULL)
+    m_bpos(nullptr)
 {}
 
 BOOST_ARCHIVE_DECL 
-basic_oserializer::~basic_oserializer(){}
+basic_oserializer::~basic_oserializer(){}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default)
 
 } // namespace detail
 } // namespace archive

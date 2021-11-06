@@ -150,7 +150,7 @@ class basic_iarchive_impl {
 
         cobject_id(const basic_iserializer & bis_) :
             bis_ptr(& bis_),
-            bpis_ptr(NULL),
+            bpis_ptr(nullptr),
             file_version(0),
             tracking_level(track_never),
             initialized(false)
@@ -263,18 +263,18 @@ basic_iarchive_impl::reset_object_address(
         // but expected to work on all platforms in current usage
         if(this_address > old_address){
             std::size_t member_displacement
-                = reinterpret_cast<std::size_t>(this_address) 
-                - reinterpret_cast<std::size_t>(old_address);
-            object_id_vector[i].address = reinterpret_cast<void *>(
-                reinterpret_cast<std::size_t>(new_address) + member_displacement
+                = reinterpret_cast<std::size_t>(this_address)  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+                - reinterpret_cast<std::size_t>(old_address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+                reinterpret_cast<std::size_t>(new_address) + member_displacement  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
             );
         }
         else{
             std::size_t member_displacement
-                = reinterpret_cast<std::size_t>(old_address)
-                - reinterpret_cast<std::size_t>(this_address); 
-            object_id_vector[i].address = reinterpret_cast<void *>(
-                reinterpret_cast<std::size_t>(new_address) - member_displacement
+                = reinterpret_cast<std::size_t>(old_address)  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+                - reinterpret_cast<std::size_t>(this_address);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+            object_id_vector[i].address = reinterpret_cast<void *>(  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external
+                reinterpret_cast<std::size_t>(new_address) - member_displacement  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) external code
             );
        }
     }
@@ -396,9 +396,9 @@ basic_iarchive_impl::load_object(
     // if we tracked this object when the archive was saved
     if(tracking){ 
         // if it was already read
-        if(!track(ar, t))
+        if(!track(ar, t)) {
             // we're done
-            return;
+            return; }
         // add a new enty into the tracking list
         object_id_vector.push_back(aobject(t, cid));
         // and add an entry for this object
@@ -431,7 +431,7 @@ basic_iarchive_impl::load_pointer(
     }
 #else // this case is taken from https://github.com/boostorg/serialization/blob/develop/src/basic_iarchive.cpp#L430-L433
     if(BOOST_SERIALIZATION_NULL_POINTER_TAG == cid){
-        t = NULL;
+        t = nullptr;
         return bpis_ptr;
     }
 #endif
@@ -439,24 +439,24 @@ basic_iarchive_impl::load_pointer(
     // if its a new class type - i.e. never been registered
     if(class_id_type(cobject_info_set.size()) <= cid){
         // if its either abstract
-        if(NULL == bpis_ptr
+        if(nullptr == bpis_ptr
         // or polymorphic
         || bpis_ptr->get_basic_serializer().is_polymorphic()){
             // is must have been exported
-            char key[BOOST_SERIALIZATION_MAX_KEY_SIZE];
+            char key[BOOST_SERIALIZATION_MAX_KEY_SIZE];  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) external code
             class_name_type class_name(key);
             load(ar, class_name);
             // if it has a class name
-            const serialization::extended_type_info *eti = NULL;
-            if(0 != key[0])
-                eti = serialization::extended_type_info::find(key);
-            if(NULL == eti)
+            const serialization::extended_type_info *eti = nullptr;
+            if(0 != key[0]) {
+                eti = serialization::extended_type_info::find(key); }
+            if(nullptr == eti) {
                 boost::serialization::throw_exception(
                     archive_exception(archive_exception::unregistered_class)
-                );
+                ); }
             bpis_ptr = (*finder)(*eti);
         }
-        BOOST_ASSERT(NULL != bpis_ptr);
+        BOOST_ASSERT(nullptr != bpis_ptr);
         // class_id_type new_cid = register_type(bpis_ptr->get_basic_serializer());
         BOOST_VERIFY(register_type(bpis_ptr->get_basic_serializer()) == cid);
         int i = cid;
@@ -471,16 +471,16 @@ basic_iarchive_impl::load_pointer(
     // extra line to evade borland issue
     const bool tracking = co.tracking_level;
     // if we're tracking and the pointer has already been read
-    if(tracking && ! track(ar, t))
+    if(tracking && ! track(ar, t)) {
         // we're done
-        return bpis_ptr;
+        return bpis_ptr; }
 
     // save state
     serialization::state_saver<object_id_type> w_start(m_moveable_objects.start);
 
     // allocate space on the heap for the object - to be constructed later
     t = bpis_ptr->heap_allocation();
-    BOOST_ASSERT(NULL != t);
+    BOOST_ASSERT(nullptr != t);
 
     if(! tracking){
         bpis_ptr->load_object_ptr(ar, t, co.file_version);
@@ -537,7 +537,7 @@ basic_iarchive::basic_iarchive(unsigned int flags) :
 {}
 
 BOOST_ARCHIVE_DECL
-basic_iarchive::~basic_iarchive()
+basic_iarchive::~basic_iarchive()  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
 {}
 
 BOOST_ARCHIVE_DECL void
