@@ -168,7 +168,7 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 		std::size_t size; //  *this->This() >> size;
 		p_.unpack_n(&size, 1);
 		s.resize(size);
-		p_.unpack_n(&s[0], size);  // TODO(correaa) use s.data() in C++17
+		p_.unpack_n(&s.front(), size);  // TODO(correaa) use s.data() in C++17
 	}
 	void load(std::wstring &ws){
     	const std::size_t size = ws.size();

@@ -148,7 +148,7 @@ struct type {
 	type resize(MPI_Aint lower_bound, MPI_Aint extent) const {
 		type ret; MPI_Type_create_resized(impl_, lower_bound, extent, &ret.impl_); return ret;
 	}
-	type stride(int stride) const {return resize(0, stride*size());}
+	type stride(int stride) const {return resize(0, static_cast<MPI_Aint>(stride*size()));}
 	// MPI_Type_struct is deprecated
 	static type struct_(std::initializer_list<type> il) {  // NOLINT(readability-identifier-naming) meta
 		type ret;
@@ -187,7 +187,7 @@ struct type {
 		return ret;
 	}
 
-	std::string name() const {
+	auto name() const {
 		std::array<char, MPI_MAX_OBJECT_NAME> name{};
 		int namelen;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Type_get_name(impl_, name.data(), &namelen);

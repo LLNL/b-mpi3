@@ -121,7 +121,7 @@ class basic_communicator{
 			detail::input_iterator_tag /*input*/,
 		uvector<detail::packed>& b
 	){
-		while(first != second){
+		while(first != second) {
 			pack_n(std::addressof(*first), 1, b);
 			++first;
 		}

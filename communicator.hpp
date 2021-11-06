@@ -844,7 +844,7 @@ class communicator : protected detail::basic_communicator {
 		MPI_(Probe)(source, tag, impl_, &s.impl_);
 		return s;
 	}
-	optional<status> iprobe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	auto iprobe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		status s;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Iprobe)(source, tag, impl_, &flag, &s.impl_);
@@ -2849,8 +2849,8 @@ class strided_range{
 	int stride_ = 1;
 
  public:
-	strided_range(int f, int l) : first_{f}, last_{l} {}
-	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}
+	strided_range(int f, int l) : first_{f}, last_{l} {}  // NOLINT(bugprone-easily-swappable-parameters)
+	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}  // NOLINT(bugprone-easily-swappable-parameters)
 
 	int front() const{return first_;}
 	int back()  const{return last_ - 1;}
