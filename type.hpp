@@ -148,7 +148,8 @@ struct type {
 	type resize(MPI_Aint lower_bound, MPI_Aint extent) const {
 		type ret; MPI_Type_create_resized(impl_, lower_bound, extent, &ret.impl_); return ret;
 	}
-	type stride(int stride) const {return resize(0, static_cast<MPI_Aint>(stride*size()));}
+	type stride(int stride) const {return resize(0, stride*size());}
+
 	// MPI_Type_struct is deprecated
 	static type struct_(std::initializer_list<type> il) {  // NOLINT(readability-identifier-naming) meta
 		type ret;
