@@ -16,70 +16,68 @@ mpic++ -D_TEST_MPI3_SHARED_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x
 #include<boost/uuid/uuid.hpp>
 #include<boost/uuid/uuid_generators.hpp>
 
-namespace boost{
-
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 template<class T = void>
 struct shared_window;
 
-struct shared_communicator : communicator{
+struct shared_communicator : communicator {
 	shared_communicator() = default;
 	shared_communicator(shared_communicator&&) = default;
 	shared_communicator(shared_communicator const&) = delete;
-	shared_communicator(mpi3::group const& g) : communicator(g){}
-	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag){}
-private:
-	template<class T> static auto data_(T&& t){
-		using detail::data;
-		return data(std::forward<T>(t));
-	}
+
+	explicit shared_communicator(mpi3::group const& g) : communicator(g) {}
+	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag) {}
+
+ private:
 	template<class T> friend struct shared_window;
 	explicit shared_communicator(communicator&& c) : communicator(std::move(c)){}
-	explicit shared_communicator(communicator const& comm, int key = 0){
+	explicit shared_communicator(communicator const& comm, int key = 0) {  // TODO(correaa) make duplicate constructor
 		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
-		if(e != mpi3::error::success) throw std::system_error{e, "cannot split"};
+		if(e != mpi3::error::success) {throw std::system_error{e, "cannot split"};}
 		name(comm.name()+":"+mpi3::processor_name());
 	}
 	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
 		MPI3_CALL(MPI_Comm_split_type)(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
 		boost::uuids::uuid tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
-		auto utag = reinterpret_cast<unsigned int const&>(tag);
+		auto utag = reinterpret_cast<unsigned int const&>(tag);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
 		this->broadcast_n(&utag, 1, 0);
 		auto Tag = std::to_string(utag);
 		std::string const& base = comm.name();
-		// !!! switch-case don't work here because in some MPI impls there are repeats !!!
-		if(communicator_type::shared==t){
+		// !!! switch-case don't work here because in some MPI impls there are repeats in the cases !!!
+		if(communicator_type::shared==t) {
 			#if __linux__
 			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
 			#else
 			set_name(base+":shared/pu" + Tag);
 			#endif
-		}
-		else if(communicator_type::core     ==t){
+		} else if(communicator_type::core     ==t) {
 			#if __linux__
 			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
 			#else
 			set_name(base+":core/pu" + Tag);
 			#endif
 		}
-		else if(communicator_type::hw_thread==t) set_name(base+":hw_thread"+Tag);
-		else if(communicator_type::l1_cache ==t) set_name(base+":l1_cache" +Tag);
-		else if(communicator_type::l2_cache ==t) set_name(base+":l2_cache" +Tag);
-		else if(communicator_type::l3_cache ==t) set_name(base+":l3_cache" +Tag);
-		else if(communicator_type::socket   ==t) set_name(base+":socket"   +Tag);
-		else if(communicator_type::numa     ==t) set_name(base+":numa"     +Tag);
-		else if(communicator_type::board    ==t) set_name(base+":board"    +Tag);
-		else if(communicator_type::host     ==t) set_name(base+":cu"       +Tag);
-		else if(communicator_type::cu       ==t) set_name(base+":cu"       +Tag);
-		else if(communicator_type::cluster  ==t) set_name(base+":cluster"  +Tag);
+		else if(communicator_type::hw_thread==t) {set_name(base+":hw_thread"+Tag);}
+		else if(communicator_type::l1_cache ==t) {set_name(base+":l1_cache" +Tag);}
+		else if(communicator_type::l2_cache ==t) {set_name(base+":l2_cache" +Tag);}
+		else if(communicator_type::l3_cache ==t) {set_name(base+":l3_cache" +Tag);}
+		else if(communicator_type::socket   ==t) {set_name(base+":socket"   +Tag);}
+		else if(communicator_type::numa     ==t) {set_name(base+":numa"     +Tag);}
+		else if(communicator_type::board    ==t) {set_name(base+":board"    +Tag);}
+		else if(communicator_type::host     ==t) {set_name(base+":host"     +Tag);}
+		else if(communicator_type::cu       ==t) {set_name(base+":cu"       +Tag);}
+		else if(communicator_type::cluster  ==t) {set_name(base+":cluster"  +Tag);}
 	}
 	friend class communicator;
 
  public:
 	shared_communicator& operator=(shared_communicator const&) = delete;
 	shared_communicator& operator=(shared_communicator     &&) = default;
-	shared_communicator& operator=(shared_communicator      &) = default;
+	shared_communicator& operator=(shared_communicator      &) = default;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator)
+
+	~shared_communicator() = default;
 
 	inline shared_communicator split(int key) const{return split_shared(key);}
 	auto split(int color, int key) const{
@@ -100,7 +98,8 @@ inline shared_communicator communicator::split_shared(communicator_type t, int k
 	return shared_communicator(*this, t, key);
 }
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_SHARED_COMMUNICATOR
 
