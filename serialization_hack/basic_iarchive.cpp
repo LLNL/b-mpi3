@@ -234,7 +234,7 @@ class basic_iarchive_impl {
 
 inline void 
 basic_iarchive_impl::reset_object_address(
-    void const * const new_address, 
+    void const * const new_address,  // NOLINT(bugprone-easily-swappable-parameters) external code
     void const * const old_address
 ){
     if(m_moveable_objects.is_pointer) {
