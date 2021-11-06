@@ -43,7 +43,7 @@ ompi-clang-tidy:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - clang-tidy --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-bugprone-exception-escape,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-modernize-use-trailing-return-type,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
+        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
         - make VERBOSE=1
         - ctest --output-on-failure
 
@@ -58,7 +58,7 @@ ompi-clang-tidy-dev:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - clang-tidy --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-checks=*,-altera-id-dependent-backward-branch,-altera-unroll-loops,-altera-struct-pack-align,-bugprone-exception-escape,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-google-runtime-references,-fuchsia-default-arguments-calls,-fuchsia-statically-constructed-objects,-fuchsia-trailing-return,-fuchsia-overloaded-operator,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-readability-identifier-length,-cppcoreguidelines-macro-usage,-cppcoreguidelines-avoid-non-const-global-variables,-modernize-use-trailing-return-type,-llvmlibc-implementation-in-namespace,-llvmlibc-callee-namespace,-llvmlibc-restrict-system-libc-headers,-cert-err58-cpp;--warnings-as-errors=*"
+        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
         - make VERBOSE=1
         - ctest --output-on-failure
 
