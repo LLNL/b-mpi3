@@ -9,9 +9,8 @@ mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 	assert( world.size() > 1);
-	
 	{
 		int count = 120;
 		std::vector<int> send_buffer(count);
@@ -49,8 +48,4 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-}catch(...){
-	return 1;
 }
-
-
