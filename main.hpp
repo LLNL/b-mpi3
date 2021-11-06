@@ -5,9 +5,6 @@
 #ifndef BOOST_MPI3_MAIN_HPP
 #define BOOST_MPI3_MAIN_HPP
 
-//#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
-//#include<mpi.h>
-
 #include "../mpi3/communicator.hpp"
 #include "../mpi3/environment.hpp"
 #include "../mpi3/exception.hpp"
@@ -15,7 +12,7 @@
 namespace boost{
 namespace mpi3{
 
-static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world*/); // if you include this file you should define `::boost::mpi3::main`
+static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world*/); // if you include this file you should define `::boost::mpi3::main`NOLINT(bugprone-exception-escape)
 
 }  // end namespace mpi3
 }  // end namespace boost
