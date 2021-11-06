@@ -113,7 +113,7 @@ class basic_iarchive_impl {
             m_bis(& bis),
             m_class_id(class_id)
         {}
-        cobject_type(const cobject_type & rhs) : 
+        cobject_type(const cobject_type & rhs) :  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
             m_bis(rhs.m_bis),
             m_class_id(rhs.m_class_id)
         {}
@@ -126,15 +126,15 @@ class basic_iarchive_impl {
             return *m_bis < *(rhs.m_bis);
         }
     };
-    typedef std::set<cobject_type> cobject_info_set_type;
+    typedef std::set<cobject_type> cobject_info_set_type;  // NOLINT(modernize-use-using) external code
     cobject_info_set_type cobject_info_set;
 
     //////////////////////////////////////////////////////////////////////
     // information about each serialized class indexed on class_id
-    class cobject_id 
+    class cobject_id  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions) external code
     {
     public:
-        cobject_id & operator=(const cobject_id & rhs){
+        cobject_id & operator=(const cobject_id & rhs){  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
             bis_ptr = rhs.bis_ptr;
             bpis_ptr = rhs.bpis_ptr;
             file_version = rhs.file_version;
@@ -142,20 +142,20 @@ class basic_iarchive_impl {
             initialized = rhs.initialized;
             return *this;
         }
-        const basic_iserializer * bis_ptr;
-        const basic_pointer_iserializer * bpis_ptr;
-        version_type file_version;
-        tracking_type tracking_level;
-        bool initialized;
+        const basic_iserializer * bis_ptr;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const basic_pointer_iserializer * bpis_ptr;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        version_type file_version;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        tracking_type tracking_level;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        bool initialized;  // NOLINT(misc-non-private-member-variables-in-classes) external code
 
-        cobject_id(const basic_iserializer & bis_) :
+        explicit cobject_id(const basic_iserializer & bis_) :
             bis_ptr(& bis_),
             bpis_ptr(nullptr),
             file_version(0),
-            tracking_level(track_never),
+            tracking_level(track_never),  // NOLINT(readability-implicit-bool-conversion) external code
             initialized(false)
         {}
-        cobject_id(const cobject_id &rhs): 
+        cobject_id(const cobject_id &rhs):  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
             bis_ptr(rhs.bis_ptr),
             bpis_ptr(rhs.bpis_ptr),
             file_version(rhs.file_version),
@@ -163,19 +163,19 @@ class basic_iarchive_impl {
             initialized(rhs.initialized)
         {}
     };
-    typedef std::vector<cobject_id> cobject_id_vector_type;
+    typedef std::vector<cobject_id> cobject_id_vector_type;  // NOLINT(modernize-use-using) external code
     cobject_id_vector_type cobject_id_vector;
 
     //////////////////////////////////////////////////////////////////////
     // address of the most recent object serialized as a poiner
     // whose data itself is now pending serialization
     struct pending {
-        void * object;
-        const basic_iserializer * bis;
-        version_type version;
+        void * object;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const basic_iserializer * bis;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        version_type version;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         pending() :
-            object(NULL),
-            bis(NULL),
+            object(nullptr),
+            bis(nullptr),
             version(0)
         {}
     } m_pending;
