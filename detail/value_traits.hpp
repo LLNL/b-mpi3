@@ -68,7 +68,7 @@ value_unspecified_tag value_category_aux(V[N]);  // NOLINT(cppcoreguidelines-avo
 value_unspecified_tag value_category_aux(... );
 
 template<class V>
-struct value_category{using type = decltype(value_category_aux(std::declval<V>()));};
+struct value_category{using type = decltype(value_category_aux(std::declval<V>()));};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 template<class V>
 using value_category_t = typename value_category<V>::type;

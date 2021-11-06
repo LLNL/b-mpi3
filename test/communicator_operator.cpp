@@ -31,7 +31,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			cout <<"comm["<< world.rank() <<"] about to ireceive"<< std::endl;
 			mpi3::request r;//= world.ireceive_n(inbuf.begin(), inbuf.size(), 0);
 			MPI_Irecv(
-				inbuf.data(), inbuf.size(), 
+				inbuf.data(), static_cast<int>(inbuf.size()),
 				detail::basic_datatype<double>{},
 				MPI_ANY_SOURCE, MPI_ANY_TAG, world.get(), &r.impl_
 			);

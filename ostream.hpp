@@ -12,53 +12,64 @@
 #include<iostream>
 #include<sstream>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-struct ostream : public std::ostream{ // http://stackoverflow.com/a/2212940/225186
-	class streambuf : public std::stringbuf{
+struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) bug in clang-tidy 12?
+	class streambuf : public std::stringbuf {  // http://stackoverflow.com/a/2212940/225186
 		communicator& comm_;
 		std::ostream& output;
 		std::string msg_;
-		public:
-		streambuf(communicator& comm, std::ostream& strm = std::cout) : 
-			comm_(comm), output(strm)
-		{}
-		virtual int sync(){
+
+	 public:
+		explicit streambuf(communicator& comm, std::ostream& strm = std::cout)
+		: comm_{comm}, output{strm} {}
+		int sync() override {
 			// following code can be improved by a custom reduce operation
-			if(comm_.root()){
+			if(comm_.at_root()) {
 				boost::icl::interval_map<int, std::string> messages;
 				messages.insert(std::make_pair(0, str()));
-				for(int i = 1; i != comm_.size(); ++i){
+				for(int i = 1; i != comm_.size(); ++i) {
 					match m = comm_.matched_probe(i);
 					msg_.resize(m.count<char>());
 					m.receive(msg_.begin());
 					messages.insert(std::make_pair(i, msg_));
 				}
-				for(auto& m : messages){
+				for(auto& m : messages) {
 					output << comm_.name();
-					if((int)size(m.first) < (int)comm_.size()){
-						if(size(m.first) == 1) output<<"["<< lower(m.first) <<"]";
-						else output<<"["<< m.first <<"]";
+					if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
+						if(size(m.first) == 1) {output<<"["<< lower(m.first) <<"]";}
+						else                   {output<<"["<< m.first        <<"]";}
 					}
 					output<<"\t: "<< m.second;
 				}
-			}else comm_.send_n(str().begin(), str().size(), 0);
+			} else {
+				comm_.send_n(str().begin(), str().size(), 0);
+			}
 			str("");
 			output.flush();
 			comm_.barrier();
 			return 0;
 		}
 	};
+
+	ostream(ostream const&) = delete;
+	ostream& operator=(ostream const&) = delete;
+
+	ostream(ostream&&) = delete;
+	ostream& operator=(ostream&&) = delete;
+
+ private:
 	streambuf buffer;
-public:
-	ostream(communicator& comm, std::ostream& os = std::cout) : 
-		std::ostream(&buffer), buffer(comm, os)
-	{}
-	~ostream(){flush();}
+
+ public:
+	explicit ostream(communicator& comm, std::ostream& os = std::cout)
+	: std::ostream(&buffer), buffer(comm, os) {}
+	~ostream() override {flush();}
 };
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_OSTREAM
 

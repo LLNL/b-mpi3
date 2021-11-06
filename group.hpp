@@ -21,9 +21,6 @@ OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 
 namespace boost {
 namespace mpi3 {
 
-//class communicator;
-//template<class T = void> struct window;
-
 using ptr = MPI_Group;
 
 class group {
@@ -31,7 +28,7 @@ class group {
 
  public:
 	friend class communicator;
-	template<class T> friend struct window;
+	template<class T> friend class window;
 
 	MPI_Group& get(){return impl_;}
 	MPI_Group operator&() {return get();}  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions,google-runtime-operator) access implementation as pointer

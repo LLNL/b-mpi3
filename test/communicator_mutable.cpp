@@ -10,24 +10,31 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-struct projector{
+struct projector {
 	projector() = default;
-	explicit projector(mpi3::communicator comm) : comm_{std::move(comm)}, n_{5}{}
-	projector(projector&&) = default;
+
+	explicit projector(mpi3::communicator comm) : n_{5}, comm_{std::move(comm)} {}
+
 	projector(projector const&) = default;
+	projector(projector     &&) = default;
+
 	auto operator=(projector const&) -> projector& = default;
 	auto operator=(projector     &&) -> projector& = default;
 //	auto operator=(projector      &) -> projector& = default;
-	friend auto operator==(projector const& a, projector const& b){return a.comm_ == b.comm_;}
+
+	friend auto operator==(projector const& a, projector const& b) {return a.n_ == b.n_;} //  a.comm_ == b.comm_;}
+	friend auto operator!=(projector const& a, projector const& b) {return a.n_ != b.n_;} //  a.comm_ == b.comm_;}
+
 	decltype(auto) get_comm() const {return comm_;}
 	auto get_n() const -> int{return n_;}
 	~projector() = default;
-private:
-	mutable mpi3::communicator comm_;
+
+ private:
 	int n_ = 0;
+	mutable mpi3::communicator comm_;
 };
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 //	{
 //		projector const p{world};
 //		projector p2;
@@ -63,7 +70,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-}catch(...){
+} catch(...) {
 	return 0;
 }
 
