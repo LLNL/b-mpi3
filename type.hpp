@@ -187,7 +187,7 @@ struct type {
 		return ret;
 	}
 
-	auto name() const {
+	std::string name() const {
 		std::array<char, MPI_MAX_OBJECT_NAME> name{};
 		int namelen;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Type_get_name(impl_, name.data(), &namelen);
