@@ -50,7 +50,7 @@ void part3(mpi3::communicator& world)
 		if(total){assert( *total == static_cast<double>(world.size()*(world.size()-1))/2 );}
 	}
 
-int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try {
 	assert( world.size() > 1);
 
 	part1(world);
@@ -58,4 +58,4 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 	part3(world);
 
 	return 0;
-}
+}catch(...){return 1;}

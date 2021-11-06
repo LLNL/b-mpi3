@@ -13,7 +13,7 @@ mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try {
 	mpi3::group wg{world};
 	mpi3::communicator w2{wg};
 
@@ -35,5 +35,5 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world){
 //	static_assert( std::is_same<decltype(*&wg), mpi3::group&>{}, "!" );
 
 	return 0;
-}
+} catch(...) {return 1;}
 
