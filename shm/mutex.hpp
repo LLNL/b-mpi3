@@ -6,32 +6,37 @@ mpic++ -xc++ $0 -o $0x -lrt&&mpirun -n 4 $0x $@&&rm $0x;exit
 
 #include "../../mpi3/shm/allocator.hpp"
 
-namespace boost{
-namespace mpi3{
-namespace shm{
+namespace boost {
+namespace mpi3 {
+namespace shm {
 
-class mutex{
+class mutex {
 	mpi3::shared_communicator& scomm_;
 	using allocator_type = mpi3::shm::allocator<std::atomic_flag>;
 	allocator_type alloc_;
 	mpi3::shm::ptr<std::atomic_flag> f_;
 	public:
-	mutex(mpi3::shared_communicator& scomm) : scomm_(scomm), alloc_{&scomm_}, f_(alloc_.allocate(1)){
-		if(scomm_.root()) std::allocator_traits<mpi3::shm::allocator<std::atomic_flag>>::construct(alloc_, &*f_, false);
+	explicit mutex(mpi3::shared_communicator& scomm) : scomm_(scomm), alloc_{&scomm_}, f_(alloc_.allocate(1)){
+		if(scomm_.root()) {std::allocator_traits<mpi3::shm::allocator<std::atomic_flag>>::construct(alloc_, &*f_, false);}
 		scomm_.barrier();
 	}
 	mutex(mutex const&) = delete;
 	mutex(mutex&&) = delete;
-	void lock(){while(f_->test_and_set(std::memory_order_acquire));}
+
+	mutex& operator=(mutex const&) = delete;
+	mutex& operator=(mutex     &&) = delete;
+//	void lock() {while(f_->test_and_set(std::memory_order_acquire));}
 	void unlock(){f_->clear(std::memory_order_release);}
-	~mutex(){
-		if(scomm_.root()) std::allocator_traits<allocator_type>::destroy(alloc_, &*f_);
+	~mutex() try{
+		if(scomm_.root()) {std::allocator_traits<allocator_type>::destroy(alloc_, &*f_);}
 		scomm_.barrier();
 		alloc_.deallocate(f_, 1);
-	}
+	} catch(...) {}
 };
 
-}}}
+}  // end namespace shm
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__ // TEST_BELOW
 #include "../../mpi3/main.hpp"
