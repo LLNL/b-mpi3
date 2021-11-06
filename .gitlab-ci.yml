@@ -49,7 +49,7 @@ ompi-clang-tidy:
 
 ompi-clang-tidy-dev:
     image: silkeh/clang:dev
-    stage: build
+    stage: test
     script:
         - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang `#libstdc++-dev` clang-tidy cmake make libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
