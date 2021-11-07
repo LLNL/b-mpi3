@@ -90,12 +90,12 @@ struct shared_communicator : communicator {
 	shared_window<T> make_shared_window();
 };
 
-inline shared_communicator communicator::split_shared(int key /*= 0*/) const {  // TODO(correaa) remove const
-	return shared_communicator(*this, key);
+inline shared_communicator communicator::split_shared(int key /*= 0*/) {
+	return shared_communicator{*this, key};
 }
 
-inline shared_communicator communicator::split_shared(communicator_type t, int key /*= 0*/) const {  // TODO(correaa) remove const
-	return shared_communicator(*this, t, key);
+inline auto communicator::split_shared(communicator_type t, int key /*= 0*/) {
+	return shared_communicator{*this, t, key};
 }
 
 }  // end namespace mpi3
