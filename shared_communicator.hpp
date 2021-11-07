@@ -26,6 +26,7 @@ struct shared_communicator : communicator {
 	shared_communicator() = default;
 	shared_communicator(shared_communicator&&) = default;
 	shared_communicator(shared_communicator const&) = delete;
+	shared_communicator(shared_communicator&) = default;
 
 	explicit shared_communicator(mpi3::group const& g) : communicator(g) {}
 	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag) {}
@@ -79,8 +80,8 @@ struct shared_communicator : communicator {
 
 	~shared_communicator() = default;
 
-	inline shared_communicator split(int key) const{return split_shared(key);}
-	auto split(int color, int key) const{
+	inline shared_communicator split(int key) {return split_shared(key);}
+	auto split(int color, int key) {
 		return shared_communicator{communicator::split(color, key)};
 	}
 
@@ -94,7 +95,7 @@ inline shared_communicator communicator::split_shared(int key /*= 0*/) {
 	return shared_communicator{*this, key};
 }
 
-inline auto communicator::split_shared(communicator_type t, int key /*= 0*/) {
+inline shared_communicator communicator::split_shared(communicator_type t, int key /*= 0*/) {
 	return shared_communicator{*this, t, key};
 }
 

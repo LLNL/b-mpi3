@@ -468,28 +468,28 @@ class communicator : protected detail::basic_communicator {
 		return flag != 0;
 	}
 
-	communicator split(int color, int key) const {  // TODO(correaa) make non-const
+	communicator split(int color, int key) {
 		communicator ret;
 		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
 		if(ret) {ret.name(name() + std::to_string(color));}
 		if(ret) {ret.attribute("color") = color;}
 		return ret;
 	}
-	communicator split(int color = MPI_UNDEFINED) const {  // TODO(correaa) make non-const
+	communicator split(int color = MPI_UNDEFINED) {
 		return split(color, rank());
 	}
 
-	communicator keep(bool cond) const {return split(cond?0:mpi3::undefined);}  // TODO(correaa) make non-const
+	communicator keep(bool cond) {return split(cond?0:mpi3::undefined);}
 
-	shared_communicator split_shared(int key = 0) const;
-	shared_communicator split_shared(communicator_type t, int key = 0) const;
+	shared_communicator split_shared(int key = 0);
+	shared_communicator split_shared(communicator_type t, int key = 0);
 
 	int remote_size() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Comm_remote_size)(impl_, &ret);
 		return ret;
 	}
-	communicator reversed() const {return split(0, size() - rank());}
+	communicator reversed() {return split(0, size() - rank());}
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -613,14 +613,14 @@ class communicator : protected detail::basic_communicator {
 		auto const s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e)); (void)s;
 		assert(s == MPI_SUCCESS);
 	}
-	communicator divide_low(int n) const {
+	communicator divide_low(int n) {
 		return split(
 			(rank() < size()/n*(n-size()%n))?
 				rank()/(size()/n):
 				n-size()%n + (rank() - (n-size()%n)*(size()/n))/((size()/n)+1)
 		);
 	}
-	communicator divide_high(int n) const {
+	communicator divide_high(int n) {
 		int bat=size()/n; int residue = size()%n;
 		int i = 0;
 		for(int last = 0; ; i++){
@@ -629,21 +629,21 @@ class communicator : protected detail::basic_communicator {
 		}
 		return split(i);
 	}
-	communicator operator/(int n) const {
+	communicator operator/(int n) {
 		assert(n!=0);
 		if(n > 0) {return divide_high(n);}
 		return divide_low(n);
 	}
-	communicator operator%(int n) const{return split(rank()%n);}
-	communicator divide_even(int n) const{
+	communicator operator%(int n) {return split(rank()%n);}
+	communicator divide_even(int n) {
 		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
 //  communicator operator/ (double nn) const{return divide_even(nn);}
-	communicator operator< (int n) const {return split((rank() <  n)?0:MPI_UNDEFINED);}
-	communicator operator<=(int n) const {return split((rank() <= n)?0:MPI_UNDEFINED);}
-	communicator operator> (int n) const {return split((rank() >  n)?0:MPI_UNDEFINED);}
-	communicator operator>=(int n) const {return split((rank() >= n)?0:MPI_UNDEFINED);}
-	communicator operator==(int n) const {return split((rank() == n)?0:MPI_UNDEFINED);}
+	communicator operator< (int n) {return split((rank() <  n)?0:MPI_UNDEFINED);}
+	communicator operator<=(int n) {return split((rank() <= n)?0:MPI_UNDEFINED);}
+	communicator operator> (int n) {return split((rank() >  n)?0:MPI_UNDEFINED);}
+	communicator operator>=(int n) {return split((rank() >= n)?0:MPI_UNDEFINED);}
+	communicator operator==(int n) {return split((rank() == n)?0:MPI_UNDEFINED);}
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0) {
