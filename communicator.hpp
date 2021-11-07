@@ -1912,11 +1912,11 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class RA2, class It1>
 	auto scatter_from(
-		RA2 first, RA2 last, 
-			detail::random_access_iterator_tag /*tag*/, 
+		RA2   first, RA2 last,
+			detail::random_access_iterator_tag /*tag*/,
 		It1 d_first, int root
 	) {
-		return scatter_n_from(first, std::distance(first, last), d_first, root);
+		return scatter_n_from(first, std::distance(first, last), d_first, root);  // NOLINT(readability-suspicious-call-argument) TODO(correaa) range based passing
 	}
 	template<class V, class It1>
 	auto scatter_value_from(V& v, It1 first, int root = 0) {
@@ -1944,7 +1944,7 @@ class communicator : protected detail::basic_communicator {
 
 	template<class It1, class It2>
 	auto scatter_from(It2 d_first, It2 d_last, It1 first, int root = 0){
-		return scatter_from(d_first, d_last, detail::iterator_category_t<It2>{}, first, root);
+		return scatter_from(d_first, d_last, detail::iterator_category_t<It2>{}, first, root);  // NOLINT(readability-suspicious-call-argument) TODO(correaa) range based passing
 	}
 
 	template<class CIt1, class Size, class CIt2>
