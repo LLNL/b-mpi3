@@ -25,7 +25,9 @@ class mutex {
 
 	mutex& operator=(mutex const&) = delete;
 	mutex& operator=(mutex     &&) = delete;
-//	void lock() {while(f_->test_and_set(std::memory_order_acquire));}
+	void lock() {
+		while(f_->test_and_set(std::memory_order_acquire)) {};
+	}
 	void unlock(){f_->clear(std::memory_order_release);}
 	~mutex() try{
 		if(scomm_.root()) {std::allocator_traits<allocator_type>::destroy(alloc_, &*f_);}
