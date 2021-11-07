@@ -5,19 +5,19 @@
 #define BOOST_MPI3_DYNAMIC_WINDOW_HPP
 
 #include<mpi.h>
+
 #include "../mpi3/window.hpp"
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 template<class T = void>
 struct dynamic_window : window<T>{
 	protected:
 	dynamic_window() : window<T>{}{}
 	public:
-	dynamic_window(communicator& comm){
-		int s = MPI_Win_create_dynamic(MPI_INFO_NULL, comm.get(), &(this->impl_));
-		if(s != MPI_SUCCESS) throw std::runtime_error("cannot create dynamic window");
+	explicit dynamic_window(communicator& comm){
+		MPI_(Win_create_dynamic)(MPI_INFO_NULL, comm.get(), &(this->impl_));
 	}
 	template<class TT = char>
 	void attach_n(TT* base, mpi3::size_t n){MPI_Win_attach(this->impl_, base, n*sizeof(TT));}
@@ -32,11 +32,8 @@ struct dynamic_window : window<T>{
 
 };
 
-//window communicator::make_dynamic_window(){
-//	return dynamic_window(t, n, *this);
-//}
-
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_BOOST_MPI3_DYNAMIC_WINDOW
 

@@ -10,7 +10,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-l
 namespace mpi3 = boost::mpi3;
 
 // nontrivial nonpod class
-class B{
+class B {  // NOLINT(readability-identifier-naming) example name
 	std::string name_ = "unnamed";
 	int n_ = 0;
 	template<class Archive> friend void save(Archive & ar, B const& b, unsigned int/*version*/);

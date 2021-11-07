@@ -82,23 +82,23 @@ class extended_type_info_arg : public extended_type_info  // NOLINT(cppcoreguide
 {
     /*virtual*/ bool
     is_less_than(const extended_type_info & /*rhs*/) const override {
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         return false;
     };
     /*virtual*/ bool
     is_equal(const extended_type_info & /*rhs*/) const override {
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         return false;
     };
     /*virtual*/ const char * get_debug_info() const override {
         return get_key();
     }
     /*virtual*/ void * construct(unsigned int /*count*/, ...) const override {  // NOLINT(cert-dcl50-cpp) external code
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         return nullptr;
     }
     /*virtual*/ void destroy(void const * const /*p*/) const override {
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
     }
 public:
     explicit extended_type_info_arg(const char * key) :

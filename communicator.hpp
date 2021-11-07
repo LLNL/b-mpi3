@@ -468,28 +468,28 @@ class communicator : protected detail::basic_communicator {
 		return flag != 0;
 	}
 
-	communicator split(int color, int key) const {  // TODO(correaa) make non-const
+	communicator split(int color, int key) {
 		communicator ret;
 		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
 		if(ret) {ret.name(name() + std::to_string(color));}
 		if(ret) {ret.attribute("color") = color;}
 		return ret;
 	}
-	communicator split(int color = MPI_UNDEFINED) const {  // TODO(correaa) make non-const
+	communicator split(int color = MPI_UNDEFINED) {
 		return split(color, rank());
 	}
 
-	communicator keep(bool cond) const {return split(cond?0:mpi3::undefined);}  // TODO(correaa) make non-const
+	communicator keep(bool cond) {return split(cond?0:mpi3::undefined);}
 
-	shared_communicator split_shared(int key = 0) const;
-	shared_communicator split_shared(communicator_type t, int key = 0) const;
+	shared_communicator split_shared(int key = 0);
+	shared_communicator split_shared(communicator_type t, int key = 0);
 
 	int remote_size() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Comm_remote_size)(impl_, &ret);
 		return ret;
 	}
-	communicator reversed() const {return split(0, size() - rank());}
+	communicator reversed() {return split(0, size() - rank());}
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -613,14 +613,14 @@ class communicator : protected detail::basic_communicator {
 		auto const s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e)); (void)s;
 		assert(s == MPI_SUCCESS);
 	}
-	communicator divide_low(int n) const {
+	communicator divide_low(int n) {
 		return split(
 			(rank() < size()/n*(n-size()%n))?
 				rank()/(size()/n):
 				n-size()%n + (rank() - (n-size()%n)*(size()/n))/((size()/n)+1)
 		);
 	}
-	communicator divide_high(int n) const {
+	communicator divide_high(int n) {
 		int bat=size()/n; int residue = size()%n;
 		int i = 0;
 		for(int last = 0; ; i++){
@@ -629,25 +629,25 @@ class communicator : protected detail::basic_communicator {
 		}
 		return split(i);
 	}
-	communicator operator/(int n) const {
+	communicator operator/(int n) {
 		assert(n!=0);
 		if(n > 0) {return divide_high(n);}
 		return divide_low(n);
 	}
-	communicator operator%(int n) const{return split(rank()%n);}
-	communicator divide_even(int n) const{
+	communicator operator%(int n) {return split(rank()%n);}
+	communicator divide_even(int n) {
 		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
 //  communicator operator/ (double nn) const{return divide_even(nn);}
-	communicator operator< (int n) const {return split((rank() <  n)?0:MPI_UNDEFINED);}
-	communicator operator<=(int n) const {return split((rank() <= n)?0:MPI_UNDEFINED);}
-	communicator operator> (int n) const {return split((rank() >  n)?0:MPI_UNDEFINED);}
-	communicator operator>=(int n) const {return split((rank() >= n)?0:MPI_UNDEFINED);}
-	communicator operator==(int n) const {return split((rank() == n)?0:MPI_UNDEFINED);}
+	communicator operator< (int n) {return split((rank() <  n)?0:MPI_UNDEFINED);}
+	communicator operator<=(int n) {return split((rank() <= n)?0:MPI_UNDEFINED);}
+	communicator operator> (int n) {return split((rank() >  n)?0:MPI_UNDEFINED);}
+	communicator operator>=(int n) {return split((rank() >= n)?0:MPI_UNDEFINED);}
+	communicator operator==(int n) {return split((rank() == n)?0:MPI_UNDEFINED);}
 
 	template<class T>
 	void send_value(T const& t, int dest, int tag = 0) {
-		send(std::addressof(t), std::addressof(t) + 1, dest, tag);
+		send(std::addressof(t), std::next(std::addressof(t)), dest, tag);
 	}
 	template<class T>
 	auto isend_value(T const& t, int dest, int tag = 0) {
@@ -655,7 +655,7 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) compatibility
-		send(std::addressof(t[0]), std::addressof(t[N-1]) + 1, dest, tag);
+		send(std::addressof(t[0]), std::next(std::addressof(t[N-1])), dest, tag);
 	}
 	template<class ContIt, class Size>
 	request send_init_n(ContIt first, Size count, int dest, int tag = 0);
@@ -666,20 +666,6 @@ class communicator : protected detail::basic_communicator {
 	receive_request receive_init_n(ContIt first, Size count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
 	template<class ContIt>
 	receive_request receive_init(ContIt first, ContIt last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
-
-//	template<typename InputIt, typename Size, 
-//		class value_type = typename std::iterator_traits<InputIt>::value_type, 
-//		class datatype = detail::basic_datatype<value_type>
-//	>
-//	auto pack_n_aux(
-//		std::random_access_iterator_tag /*tag*/, 
-//		InputIt first, Size count, char* out, int max_size
-//	) {
-//		assert(0);
-//		int position = 0;
-//		MPI_Pack(detail::data(first), count, datatype{}, out, max_size, &position, impl_);
-//		return std::next(out, position);
-//	}
 
 	template<
 		class InputIt, class Size, 
@@ -858,7 +844,7 @@ class communicator : protected detail::basic_communicator {
 		MPI_(Probe)(source, tag, impl_, &s.impl_);
 		return s;
 	}
-	optional<status> iprobe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	auto iprobe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		status s;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Iprobe)(source, tag, impl_, &flag, &s.impl_);
@@ -1758,7 +1744,7 @@ class communicator : protected detail::basic_communicator {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
 		int s =
 			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
-			                 MPI_Reduce(data_adl(first), NULL        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+			                 MPI_Reduce(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
 		;
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 	}
@@ -1926,11 +1912,11 @@ class communicator : protected detail::basic_communicator {
 	}
 	template<class RA2, class It1>
 	auto scatter_from(
-		RA2 first, RA2 last, 
-			detail::random_access_iterator_tag /*tag*/, 
+		RA2   first, RA2 last,
+			detail::random_access_iterator_tag /*tag*/,
 		It1 d_first, int root
 	) {
-		return scatter_n_from(first, std::distance(first, last), d_first, root);
+		return scatter_n_from(first, std::distance(first, last), d_first, root);  // NOLINT(readability-suspicious-call-argument) TODO(correaa) range based passing
 	}
 	template<class V, class It1>
 	auto scatter_value_from(V& v, It1 first, int root = 0) {
@@ -1958,7 +1944,7 @@ class communicator : protected detail::basic_communicator {
 
 	template<class It1, class It2>
 	auto scatter_from(It2 d_first, It2 d_last, It1 first, int root = 0){
-		return scatter_from(d_first, d_last, detail::iterator_category_t<It2>{}, first, root);
+		return scatter_from(d_first, d_last, detail::iterator_category_t<It2>{}, first, root);  // NOLINT(readability-suspicious-call-argument) TODO(correaa) range based passing
 	}
 
 	template<class CIt1, class Size, class CIt2>
@@ -2220,7 +2206,7 @@ class communicator : protected detail::basic_communicator {
 		auto s = std::accumulate(counts, counts + size(), typename std::iterator_traits<CountsIt>::value_type{0});
 		std::vector<typename std::iterator_traits<It1>::value_type> buff(s);
 		auto e = all_gatherv_n(first, count, buff.data(), counts, displs);
-		assert( e == buff.data() + buff.size() );
+		assert( e == std::next(buff.data(), buff.size()) );
 		using std::move;
 		return move(buff.begin(), buff.end(), d_first);
 	}
@@ -2722,11 +2708,10 @@ class communicator : protected detail::basic_communicator {
 
  public:
 	std::string get_name() const {
-		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 		std::array<char, MPI_MAX_OBJECT_NAME> comm_name{};
-		int status = MPI_Comm_get_name(impl_, comm_name.data(), &len);
-		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot set name"};}
-		return std::string(comm_name.data(), len);
+		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
+		MPI_(Comm_get_name)(impl_, comm_name.data(), &len);
+		return {comm_name.data(), static_cast<std::size_t>(len)};
 	}
 	void set_name(std::string const& s){
 		int status = MPI_Comm_set_name(impl_, s.c_str());
@@ -2863,172 +2848,13 @@ class strided_range{
 	int stride_ = 1;
 
  public:
-	strided_range(int f, int l) : first_{f}, last_{l} {}
-	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}
+	strided_range(int f, int l) : first_{f}, last_{l} {}  // NOLINT(bugprone-easily-swappable-parameters)
+	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}  // NOLINT(bugprone-easily-swappable-parameters)
 
 	int front() const{return first_;}
 	int back()  const{return last_ - 1;}
 	int size()  const{return (last_ - first_) / stride_;}
 };
-
-#if 0
-struct group{
-	MPI_Group impl_;
-//	static group empty(){return group();}
-	group() : impl_{MPI_GROUP_EMPTY}{}
-	group(communicator const& comm){MPI_Comm_group(&comm, &impl_);}
-//	template<class ContiguousIntIterator>
-//	group(group const& other, ContiguousIntIterator ranks_begin, std::size_t n){
-//		MPI_Group_incl(other.impl_, n, ranks_begin, &impl_);
-//	}
-	group(group const& other, std::vector<int> ranks){// : group(other, ranks.data(), ranks.size()){
-		MPI_Group_incl(other.impl_, ranks.size(), ranks.data(), &impl_);
-	}
-	~group(){MPI_Group_free(&impl_);}
-	int rank() const{
-		int rank = -1; 
-		int s = MPI_Group_rank(impl_, &rank);
-		if(s != MPI_SUCCESS) throw std::runtime_error("rank not available");
-		return rank;
-	}
-//	bool is_null() const{return MPI_GROUP_NULL == impl_;}
-//	operator bool() const{return not is_null();}
-	int size() const{
-		int size = -1;
-		MPI_Group_size(impl_, &size); 
-		return size;
-	}
-	bool empty() const{
-		return size() == 0;
-	}
-
-	mpi3::equality compare(group const& other) const{
-		int result;
-		MPI_Group_compare(impl_, other.impl_, &result);
-		return static_cast<boost::mpi3::equality>(result);
-	}
-	friend mpi3::equality compare(group const& self, group const& other){return self.compare(other);}
-
-	bool operator==(group const& other) const{return compare(other) == boost::mpi3::identical;}
-	bool operator!=(group const& other) const{return not operator==(other);} 
-
-	std::vector<int> translate_ranks(std::vector<int> const& ranks1, group const& other) const{
-		std::vector<int> ranks2(ranks1.size());
-		MPI_Group_translate_ranks(impl_, ranks1.size(), ranks1.data(), other.impl_, ranks2.data());
-		return ranks2;
-	}
-	std::vector<int> translate_ranks(group const& other) const{
-		std::vector<int> ranks1(other.size());
-		for(int i = 0; i != (int)ranks1.size(); ++i) ranks1[i] = i;
-	//	std::iota(ranks1.begin(), ranks1.end(), 0);
-		return translate_ranks(ranks1, other);
-	}
-public:
-	template<class Iterator, class Size>
-	group include_n(Iterator it, Size count) const{
-		return include_n_dispatch(typename std::iterator_traits<Iterator>::value_type{}, detail::iterator_category<Iterator>{}, it, count); 
-	}
-	template<class Iterator>
-	group include(Iterator first, Iterator last) const{return include_n(first, std::distance(first, last));}
-	template<class Range>
-	group include(Range const& r) const{using std::begin; using std::end; return include(begin(r), end(r));}
-private:
-	template<class Iterator, class Size>
-	group include_n_dispatch(int, detail::contiguous_iterator_tag, Iterator first, Size count) const{
-		group ret;
-		MPI_Group_incl(impl_, count, detail::data(first), &ret.impl_);
-		return ret;
-	}
-	template<class Iterator, class Size, class Value, class = decltype(int(Value{}))>
-	group include_n_dispatch(Value, std::input_iterator_tag, Iterator first, Size count) const{
-		std::vector<int> v(count); std::copy_n(first, count, v.begin());
-		return include_n(v.data(), v.size()); 
-	}
-public:
-	group include(std::vector<int> const& ranks){return group(*this, ranks);}
-	template<class ContiguousIntIterator, class Size>
-	group exclude_n(ContiguousIntIterator it, Size count) const{
-		group ret;
-		MPI_Group_excl(impl_, count, boost::mpi3::detail::data(it), &ret.impl_);
-		return ret;
-	}
-	template<class ContiguousIntIterator>
-	group exclude(ContiguousIntIterator first, ContiguousIntIterator last) const{
-		return exclude_n(first, std::distance(first, last));
-	}
-	template<class ContiguousRangeIterator, class Size>
-	group range_exclude_n(ContiguousRangeIterator it, Size n) const{
-		group ret;
-		using int3 = int[3];
-		auto ptr = const_cast<int3*>(reinterpret_cast<int3 const*>(boost::mpi3::detail::data(it)));
-		int status = MPI_Group_range_excl(impl_, n, ptr, &ret.impl_);
-		if(status != MPI_SUCCESS) throw std::runtime_error("cannot exclude");
-		return ret;
-	}
-	template<class ContiguousRangeIterator, class Size>
-	group range_include_n(ContiguousRangeIterator it, Size n) const{
-		group ret;
-		using int3 = int[3];
-		auto ptr = const_cast<int3*>(reinterpret_cast<int3 const*>(boost::mpi3::detail::data(it)));
-		int status = MPI_Group_range_incl(impl_, n, ptr, &ret.impl_);
-		if(status  != MPI_SUCCESS) throw std::runtime_error("cannot include");
-		return ret;
-	}
-
-	template<class ContiguousRangeIterator>
-	group range_exclude(ContiguousRangeIterator first, ContiguousRangeIterator last) const{
-		return range_exclude_n(first, std::distance(first, last));
-	}
-	group range_exclude(std::vector<boost::mpi3::strided_range> const& ranges){
-		return range_exclude(ranges.begin(), ranges.end());
-	}
-	template<class ContiguousRangeIterator>
-	group range_include(ContiguousRangeIterator first, ContiguousRangeIterator last) const{
-		return range_include_n(first, std::distance(first, last));
-	}
-	group range_include(std::vector<boost::mpi3::strided_range> const& ranges){
-		return range_include(ranges.begin(), ranges.end());
-	}
-	group set_union(group const& other) const{
-		group ret;
-		MPI_Group_union(impl_, other.impl_, &ret.impl_); 
-		return ret;
-	}
-	friend group set_union(group const& self, group const& other){
-		return self.set_union(other);
-	}
-	group set_intersection(group const& other) const{
-		group ret;
-		MPI_Group_intersection(impl_, other.impl_, &ret.impl_);
-		return ret;
-	}
-	group intersection(group const& other) const{return set_intersection(other);}
-	friend group set_intersection(group const& self, group const& other){
-		return self.set_intersection(other);
-	}
-	friend group intersection(group const& self, group const& other){
-		return self.intersection(other);
-	}
-//	template<class Iterator, class Size>
-//	group include_n(Iterator it, Size n) const{
-//		group ret;
-//		MPI_Group_incl(impl_, n, std::addressof(*it), &ret.impl_);
-//		return ret;
-//	}
-#if 0
-	template<class ContiguousIntIterator>
-	group include(ContiguousIntIterator it1, ContiguousIntIterator it2) const{
-		return include_n(it1, std::distance(it1, it2));
-	}
-	template<class Range>
-	group include(Range const& r) const{
-		using std::begin;
-		using std::end;
-		return include(begin(r), end(r));
-	}
-#endif
-};
-#endif
 
 template<class Range>
 auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading

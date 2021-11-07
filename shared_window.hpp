@@ -6,32 +6,41 @@ mpic++ -D_TEST_MPI3_SHARED_WINDOW -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
 #ifndef MPI3_SHARED_WINDOW_HPP
 #define MPI3_SHARED_WINDOW_HPP
 
-#include "../mpi3/shared_communicator.hpp"
 #include "../mpi3/dynamic_window.hpp"
 #include "../mpi3/group.hpp"
+#include "../mpi3/shared_communicator.hpp"
 
-#include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/managed_shared_memory.hpp>
 
 #include<mpi.h>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 template<class T>
-struct shared_window : window<T>{
+struct shared_window : window<T> {
 	shared_window(shared_communicator& comm, mpi3::size_t n, int disp_unit = alignof(T)) //: //sizeof(T)) : // here we assume that disp_unit is used for align
 	//	window<T>{}//, comm_{comm}
 	{
 		void* base_ptr = nullptr;
 		MPI_(Win_allocate_shared)(n*sizeof(T), disp_unit, MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_);
 	}
-	shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
+	explicit shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)
 	{}
+
+
 	shared_window(shared_window const&) = default;
-	shared_window(shared_window&& other) = default;
+	shared_window(shared_window&& other) noexcept = default;
+
+	shared_window& operator=(shared_window const&) = delete;
+	shared_window& operator=(shared_window     &&) = delete;
+	shared_window& operator=(shared_window      &) = delete;
+
+	~shared_window() = default;
+
 	group get_group() const{group r; MPI_(Win_get_group)(this->impl_, &(r.get())); return r;}
 	struct query_t{
 		mpi3::size_t size;
@@ -39,7 +48,7 @@ struct shared_window : window<T>{
 		void* base;
 	};
 	struct query_t query(int rank = MPI_PROC_NULL) const{
-		query_t r;
+		query_t r;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		MPI3_CALL(MPI_Win_shared_query)(this->impl_, rank, &r.size, &r.disp_unit, &r.base);
 		return r;
 	}
@@ -60,14 +69,15 @@ shared_window<T> shared_communicator::make_shared_window(){
 	return shared_window<T>(*this);//, sizeof(T));
 }
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #ifdef _TEST_MPI3_SHARED_WINDOW
 
 #include "../mpi3/main.hpp"
 #include "../mpi3/ostream.hpp"
 
-namespace mpi3 = boost::mpi3; 
+namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int, char*[], mpi3::communicator world){
 

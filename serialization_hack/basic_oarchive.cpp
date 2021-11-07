@@ -181,28 +181,28 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
         public basic_oserializer
     {
         bool class_info() const override {
-            BOOST_ASSERT(false); 
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
         // returns true if objects should be tracked
         bool tracking(const unsigned int /*flags*/) const override {
-            BOOST_ASSERT(false);
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
         // returns class version
         version_type version() const override {
-            BOOST_ASSERT(false);
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return version_type(0);
         }
         // returns true if this class is polymorphic
         bool is_polymorphic() const override {
-            BOOST_ASSERT(false);
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
-        void save_object_data(      
+        void save_object_data(
             basic_oarchive & /*ar*/, const void * /*x*/
         ) const override {
-            BOOST_ASSERT(false);
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         }
     public:
         explicit bosarg(const serialization::extended_type_info & eti) :

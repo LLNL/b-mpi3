@@ -33,11 +33,12 @@ struct back_arg{
 
 template<class F> using back_arg_t = typename back_arg<F>::type;
 
-template<int(*F)(char*, int*)> std::string call(){
+template<int(*F)(char*, int*)>
+std::string call() {
 	int len = -1;
 	std::array<char, MPI_MAX_PROCESSOR_NAME> name{};
 	F(name.data(), &len);
-	return std::string(name.data(), len);
+	return {name.data(), static_cast<std::size_t>(len)};
 }
 
 template<class FT, FT* F, class... Args>

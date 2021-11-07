@@ -75,7 +75,7 @@ archive_exception::archive_exception(  // NOLINT(cppcoreguidelines-pro-type-memb
         if(nullptr != e1){
             length = append(length, " - ");
             length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
-        }    
+        }
         break;
     case array_size_too_short:
         length = append(length, "array size too short");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
@@ -106,13 +106,13 @@ archive_exception::archive_exception(  // NOLINT(cppcoreguidelines-pro-type-memb
         if(nullptr != e1){
             length = append(length, " - ");
             length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
-        }    
+        }
         break;
     case output_stream_error:
         length = append(length, "output stream error");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     default:
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         length = append(length, "programming error");
         break;
     }
