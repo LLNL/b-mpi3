@@ -201,11 +201,75 @@ class communicator : protected detail::basic_communicator {
 
  public:
 	communicator(communicator const& o, group const& g);
-	communicator(group const& g, int tag);
 
+	communicator(group const& g, int tag);
 	explicit communicator(group const& g);
 
-	impl_t& get() {return this->impl_;}
+	using detail::basic_communicator::basic_communicator;
+
+	communicator() = default;
+
+	communicator(communicator const&) = delete;//default;
+	communicator(communicator& other) : basic_communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) intel and nvcc 11 need this (not =default)
+	communicator(communicator&&) = default;
+
+	communicator& operator=(communicator const&) = delete;
+	communicator& operator=(communicator& other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
+		communicator tmp{other};
+		swap(tmp);
+		return *this;
+	}
+	communicator& operator=(communicator     && other) noexcept {
+		communicator tmp{std::move(other)};
+		swap(tmp);
+		return *this;
+	}
+
+	bool operator!=(communicator const& o) const {return not(*this==o);}
+	bool operator==(communicator const& o) const {
+		return this==std::addressof(o) or compare(o) == detail::equality::congruent;
+	}
+
+	explicit operator bool() const{return not is_empty();}
+
+	auto get_mutable()       {return impl_;}
+	auto get()         const {return impl_;}  // TODO(correaa) deprecate
+	auto get()               {return impl_;}
+
+	class ptr {
+		communicator* ptr_;
+	 public:
+		explicit ptr(communicator* ptr) : ptr_{ptr} {}
+		operator MPI_Comm() const{return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+		explicit operator communicator      *() const{return ptr_;}
+	//	explicit operator communicator const*() const{return ptr_;}
+		friend bool operator==(ptr const& a, ptr const& b) {return a.ptr_ == b.ptr_;}
+		friend bool operator!=(ptr const& a, ptr const& b) {return a.ptr_ != b.ptr_;}
+	};
+
+	ptr                 operator&()      & {return ptr{this};}  // NOLINT(google-runtime-operator)
+	communicator const* operator&() const& {return this;}                    // NOLINT(google-runtime-operator)
+	communicator      * operator&()     && {return this;}                    // NOLINT(google-runtime-operator)
+
+	~communicator(){
+		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
+			MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
+		//	MPI_Comm_free(&impl_);
+		}
+	}
+
+	int size() const{
+		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
+		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Comm_size)(impl_, &size);
+		return size;
+	}
+
+	NODISCARD("empty is not an action")
+	bool    empty() const {return is_empty();}
+	bool is_empty() const {return is_null();}
+
+	void abort(int errorcode = 0) const {MPI_Abort(impl_, errorcode);}
 
 	explicit operator group() const;
 
@@ -412,72 +476,6 @@ class communicator : protected detail::basic_communicator {
 			dest, tag
 		);
 	}
-
-	using detail::basic_communicator::basic_communicator;
-
-	communicator() = default;
-
-	communicator(communicator const&) = delete;//default;
-	communicator(communicator& other) : basic_communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) intel and nvcc 11 need this (not =default)
-	communicator(communicator&&) = default;
-
-	communicator& operator=(communicator const&) = delete;
-	communicator& operator=(communicator&& other) noexcept {
-		communicator tmp{std::move(other)};
-		swap(tmp);
-		return *this;
-	}
-	communicator& operator=(communicator& other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
-		communicator tmp{other};
-		swap(tmp);
-		return *this;
-	}
-
-	bool operator==(communicator const& other) const{
-		return &*this==&other or compare(other)==detail::equality::congruent;
-	//	auto eq = compare(other);
-	//	return (eq == equality::identical) or (eq == equality::congruent);
-	}
-	bool operator!=(communicator const& other) const{return not(*this==other);}
-	explicit operator bool() const{return not is_null();}
-
-	auto get_mutable() {return impl_;}
-	auto get() const{return impl_;}  // TODO(correaa) deprecate
-
-	class communicator_ptr{
-		communicator* ptr_;
-	 public:
-		explicit communicator_ptr(communicator* ptr) : ptr_{ptr} {}
-		operator MPI_Comm() const{return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-		explicit operator communicator      *() const{return ptr_;}
-	//	explicit operator communicator const*() const{return ptr_;}
-		friend bool operator==(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ == b.ptr_;}
-		friend bool operator!=(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ != b.ptr_;}
-	};
-
-	communicator_ptr    operator&()      & {return communicator_ptr{this};}  // NOLINT(google-runtime-operator)
-	communicator const* operator&() const& {return this;}                    // NOLINT(google-runtime-operator)
-	communicator      * operator&()     && {return this;}                    // NOLINT(google-runtime-operator)
-
-	~communicator(){
-		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
-			MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
-		//	MPI_Comm_free(&impl_);
-		}
-	}
-
-	int size() const{
-		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
-		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_size)(impl_, &size);
-		return size;
-	}
-
-	NODISCARD("empty is not an action")
-	bool    empty() const {return is_empty();}
-	bool is_empty() const {return is_null();}
-
-	void abort(int errorcode = 0) const {MPI_Abort(impl_, errorcode);}
 
 	bool is_intercommunicator() const {
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
