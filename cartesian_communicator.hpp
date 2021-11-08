@@ -51,7 +51,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
 	// vvv nvcc 11 workaround, needs explicit definition of duplicate assigment
 	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
-		if(this == &other) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
+		if(this == std::addressof(other)) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
 		communicator::operator=(other);
 		return *this;
 	}

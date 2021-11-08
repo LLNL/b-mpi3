@@ -440,8 +440,9 @@ class communicator : protected detail::basic_communicator {
 	}
 	bool operator!=(communicator const& other) const{return not(*this==other);}
 	explicit operator bool() const{return not is_null();}
-//	impl_t operator&() const{return impl_;}
+	impl_t operator&() const{return impl_;}  // NOLINT(google-runtime-operator)
 	auto get() const{return impl_;}
+
 	~communicator(){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
 			MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
