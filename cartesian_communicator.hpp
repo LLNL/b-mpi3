@@ -157,7 +157,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
 	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
 	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
-		if(this == std::addreessof(other)) {return *this;}  // lints cert-oop54-cpp
+		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
 		cartesian_communicator<>::operator=(other);
 		return *this;
 	}
