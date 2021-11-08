@@ -80,6 +80,10 @@ struct shared_communicator : communicator {
 
 	~shared_communicator() = default;
 
+	shared_communicator      * operator&()      & {return this;}  // NOLINT(google-runtime-operator)
+	shared_communicator const* operator&() const& {return this;}  // NOLINT(google-runtime-operator)
+	shared_communicator      * operator&()     && {return this;}  // NOLINT(google-runtime-operator)
+
 	inline shared_communicator split(int key) {return split_shared(key);}
 	auto split(int color, int key) {
 		return shared_communicator{communicator::split(color, key)};
