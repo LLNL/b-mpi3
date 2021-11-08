@@ -1,7 +1,5 @@
 // #if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-// mpicxx -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-// #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 #ifndef BOOST_MPI3_MAIN_HPP
 #define BOOST_MPI3_MAIN_HPP
 
@@ -17,54 +15,22 @@ static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world
 }  // end namespace mpi3
 }  // end namespace boost
 
-int main(int argc, char* argv[]) try{  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`
+int main(int argc, char* argv[]) try {  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`
 	boost::mpi3::environment env{argc, argv};
-
-	int ret = -1;
 	try{
-		ret = boost::mpi3::main(argc, argv, /*env.*/ boost::mpi3::environment::get_world_instance());  // TODO(correaa) : use return
-	}catch(...){
-		ret = 1;
+		return boost::mpi3::main(argc, argv, /*env.*/ boost::mpi3::environment::get_world_instance());
+	} catch(std::exception& e) {
+		if(boost::mpi3::environment::get_world_instance().root()) {std::cerr<<"exception message: "<< e.what() <<"\n\n\n"<<std::endl;}
+		return 1;
+	} catch(...) {
+		if(boost::mpi3::environment::get_world_instance().root()) {std::cerr<<"unknown exception message"<<std::endl;}
+		return 1;
 	}
-	return ret;
-}catch(...){
+} catch(...) {
+	std::cerr<<"unknown error in MPI pogram"<<std::endl;
 	return 1;
 }
 
-#if 0
-//#ifndef _BOOST_MPI3_MAIN_ENVIRONMENT
-int main(int argc, char* argv[]){
-	boost::mpi3::environment env{argc, argv};
-	try{
-		return boost::mpi3::main(argc, argv, env.world());
-	}catch(std::exception& e){
-		int rank = -1;
-		int s = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if(s == MPI_SUCCESS and rank == 0){
-			std::cerr << 
-				"terminate called after throwing\n"
-				"  what(): " << e.what() << std::endl
-			;
-			MPI_Abort(MPI_COMM_WORLD, 1);
-		}
-		return 0;
-	}catch(...){
-		int rank = -1;
-		int s = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		if(s == MPI_SUCCESS and rank == 0){
-			std::cerr << "terminate called after throwing an unknown type\n";
-		}
-		return 1;
-	}
-}
-#endif
-
-//int main(int argc, char* argv[]){
-//	boost::mpi3::environment env(argc, argv);
-//	return boost::mpi3::main(argc, argv, env);
-//}
-#if 0
-#endif
 
 #if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_MAIN
 

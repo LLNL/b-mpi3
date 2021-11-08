@@ -440,8 +440,24 @@ class communicator : protected detail::basic_communicator {
 	}
 	bool operator!=(communicator const& other) const{return not(*this==other);}
 	explicit operator bool() const{return not is_null();}
-	impl_t operator&() const{return impl_;}  // NOLINT(google-runtime-operator)
-	auto get() const{return impl_;}
+
+	auto get_mutable() {return impl_;}
+	auto get() const{return impl_;}  // TODO(correaa) deprecate
+
+	class communicator_ptr{
+		communicator* ptr_;
+	 public:
+		explicit communicator_ptr(communicator* ptr) : ptr_{ptr} {}
+		operator MPI_Comm() const{return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+		explicit operator communicator      *() const{return ptr_;}
+		explicit operator communicator const*() const{return ptr_;}
+		friend bool operator==(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ == b.ptr_;}
+		friend bool operator!=(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ != b.ptr_;}
+	};
+
+	communicator_ptr    operator&()      & {return communicator_ptr{this};}  // NOLINT(google-runtime-operator)
+	communicator const* operator&() const& {return this;}                    // NOLINT(google-runtime-operator)
+	communicator      * operator&()     && {return this;}                    // NOLINT(google-runtime-operator)
 
 	~communicator(){
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){

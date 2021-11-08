@@ -34,13 +34,13 @@ struct shared_communicator : communicator {
  private:
 	template<class T> friend struct shared_window;
 	explicit shared_communicator(communicator&& c) : communicator(std::move(c)){}
-	explicit shared_communicator(communicator const& comm, int key = 0) {  // TODO(correaa) make duplicate constructor
-		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
+	explicit shared_communicator(communicator& comm, int key = 0) {  // TODO(correaa) make duplicate constructor
+		auto e = static_cast<enum error>(MPI_Comm_split_type(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
 		if(e != mpi3::error::success) {throw std::system_error{e, "cannot split"};}
 		name(comm.name()+":"+mpi3::processor_name());
 	}
-	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
-		MPI3_CALL(MPI_Comm_split_type)(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
+	shared_communicator(communicator& comm, mpi3::communicator_type t, int key = 0){
+		MPI3_CALL(MPI_Comm_split_type)(&comm, static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
 		boost::uuids::uuid tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
 		auto utag = reinterpret_cast<unsigned int const&>(tag);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
 		this->broadcast_n(&utag, 1, 0);
