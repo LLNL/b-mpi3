@@ -425,7 +425,7 @@ Typical low-level use patterns become extremely simple, and that exposes higher-
 This section describes the process to bring a C++ program that uses MPI to one that uses B.MPI3.
 Below it is a perfectly valid C++ MPI program using send and receive function. 
 Due to the legacy nature of MPI, C and C++ idioms are mixed.
-We will transform the program in one that 
+At the end, we will transform the program in one that uses more modern C++ guidelines.
 
 ```cpp
 #include<mpi.h>
@@ -489,9 +489,10 @@ int main(int argc, char **argv) try {
 }
 ```
 
-Notice that we are getting a reference the global communicator using the `get_world_instance`, then the ampersand (`&`) operator returns a `MPI_Comm` handle than can be used with the rest of the code untouched.
+Notice that we are getting a reference to the global communicator using the `get_world_instance`, then, with the ampersand (`&`) operator, we obtain a `MPI_Comm` handle than can be used with the rest of the code untouched.
 
 Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the enviroment.
+Just like in classic MPI, it is wrong to have more than one environment.
 
 Both, accesing the global communicator for any place of the code and playing with the global communicator is in general considered problematic.
 For this reason it makes more sense ask directly for a duplicate of the global communicator.
@@ -506,7 +507,7 @@ int main(int argc, char **argv) {
 }
 ```
 
-This ensures that `finalized` is always called and that we are using a copy and not the global communicator.
+This ensures that `finalize` is always called (by the destructor) and that we are using a copy and not the global communicator.
 
 Since this pattern is very common, a convenient "main" function is declared by the library as a replacement for main and provided by the `mpi3/main.hpp` header.
 
@@ -526,9 +527,9 @@ int bmpi3::main(int, char **, bmpi3::communicator world) {
 }
 ```
 
-The next step is to replace the use of the MPI communicato handle by a proper `mpi3::communicator` object.
+The next step is to replace the use of the MPI communicator handle by a proper `mpi3::communicator` object.
 Since `world` is already a duplicate of the communicator we can directly use it.
-`size` and `rank` are methods of this object which naturally return their values.
+The `size` and `rank` are methods of this object which naturally return their values.
 
 ```cpp
 ...
@@ -547,7 +548,7 @@ Notice that the all the irrelevant arguments (including the receive source) can 
 ...
 ```
 
-Notice that we use the `_n` suffix interface to emphasize that we are using element count as argument.
+Notice that we use the `_n` suffix interface to emphasize that we are using element count (container size) as argument.
 
 The condition `(rank == 0)` is so common that can be replaced by the `communicator`'s method `is_root()`:
 
@@ -588,7 +589,7 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
 
 This completes the replacement of the original MPI interface.
 Further steps can be taken to exploit more safety of the library. 
-For example instead of using the pointer of the vectors, we can use the iterators to describe the start of the sequences.
+For example, instead of using the pointer from the dynamic arrays, we can use the iterators to describe the start of the sequences.
 
 ```cpp
 ...
@@ -605,9 +606,9 @@ or use the range.
 ...
 ```
 
-Note that `_n` was dropped from the method name.
+(Note that `_n` was dropped from the method name because we are using iterator ranges now.)
 
-Finally, the end of the receiving sequence can be ommited in many cases since the information is contained in the message.
+Finally, the end of the receiving sequence can be ommited in many cases since the information is contained in the message and the correctness can be ensured by the logic of the program.
 
 ```cpp
 ...
@@ -615,8 +616,8 @@ Finally, the end of the receiving sequence can be ommited in many cases since th
 ...
 ```
 
-After some rearranges we obtain the final code, which is listed below.
-There are no pointers in the interface and at worst they have been replaced by iterators.
+After some rearrangement we obtain the final code, which is listed below.
+There are no pointers being used in the interface.
 
 ```cpp
 #include "../../mpi3/main.hpp"
@@ -644,6 +645,3 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) {
 	return 0;
 }
 ```
-
-
-
