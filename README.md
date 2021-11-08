@@ -418,4 +418,232 @@ Higher abstractions and use patterns will be implemented, specially those that f
 
 The goal is to provide a type-safe, efficient, generic interface for MPI.
 We achieve this by leveraging template code and classes that C++ provides.
-Typical low-level use patterns become extremely simple, and that exposes higher-level patterns. 
+Typical low-level use patterns become extremely simple, and that exposes higher-level patterns.
+
+# Tutorial
+
+This section describes the process to bring a C++ program that uses MPI to one that uses B.MPI3.
+Below it is a perfectly valid C++ MPI program using send and receive function. 
+Due to the legacy nature of MPI, C and C++ idioms are mixed.
+We will transform the program in one that 
+
+```cpp
+#include<mpi.h>
+
+#include<iostream>
+#include<numeric>
+#include<vector>
+
+int main(int argc, char **argv) {
+	MPI_Init(&argc, &argv);
+	MPI_Comm comm = MPI_COMM_WORLD;
+
+	int count = 10;
+
+	std::vector<double> xsend(count); iota(begin(xsend), end(xsend), 0);
+	std::vector<double> xrecv(count, -1);
+
+	int rank = -1;
+	int nprocs = -1;
+	MPI_Comm_rank(comm, &rank);
+	MPI_Comm_size(comm, &nprocs);
+	if(nprocs%2 == 1) {
+	   if(rank == 0) {std::cerr<<"Must be called with an even number of processes"<<std::endl;}
+	   return 1;
+	}
+
+	int partner_rank = (rank/2)*2 + (rank+1)%2;
+
+	MPI_Send(xsend.data(), count, MPI_DOUBLE, partner_rank  , 0          , comm);
+	MPI_Recv(xrecv.data(), count, MPI_DOUBLE, MPI_ANY_SOURCE, MPI_ANY_TAG, comm, MPI_STATUS_IGNORE);
+	assert(xrecv[5] == 5);
+
+	if(rank == 0) {std::cerr<<"successfully completed"<<std::endl;}
+
+	MPI_Finalize();
+	return 0;
+}
+```
+
+We are going to work "inward", with the idea of mimicking the process of modernizing a code from the top (the opposite it is also feasible).
+This process is typical if the low level code needs to stay untouched for historical reasons.
+
+The first step is to include the wrapper library and, as a warm up, replace the `Init`, `Finalize` calls, and the access to the (global) world communicator from the library.
+
+
+```cpp
+#include "../../mpi3/environment.hpp"
+
+#include<iostream>
+#include<numeric>
+#include<vector>
+
+namespace bmpi3 = boost::mpi3;
+
+int main(int argc, char **argv) try {
+	bmpi3::environment::initialize(argc, argv);
+	MPI_Comm comm = &bmpi3::environment::get_world_instance(); assert(comm == MPI_COMM_WORLD)
+...
+	bmpi3::environment::finalize();
+	return 0;
+}
+```
+
+Notice that we are getting a reference the global communicator using the `get_world_instance`, then the ampersand (`&`) operator returns a `MPI_Comm` handle than can be used with the rest of the code untouched.
+
+Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the enviroment.
+
+Both, accesing the global communicator for any place of the code and playing with the global communicator is in general considered problematic.
+For this reason it makes more sense ask directly for a duplicate of the global communicator.
+
+```cpp
+int main(int argc, char **argv) {
+	bmpi3::environment env(argc, argv);
+	bmpi3::communicator world = env.world();
+	MPI_Comm comm = &world; assert(comm != MPI_COMM_WORLD);
+...
+	return 0;
+}
+```
+
+This ensures that `finalized` is always called and that we are using a copy and not the global communicator.
+
+Since this pattern is very common, a convenient "main" function is declared by the library as a replacement for main and provided by the `mpi3/main.hpp` header.
+
+```cpp
+#include "../../mpi3/main.hpp"
+
+#include<iostream>
+#include<numeric>
+#include<vector>
+
+namespace bmpi3 = boost::mpi3;
+
+int bmpi3::main(int, char **, bmpi3::communicator world) {
+	MPI_Comm comm = &world; assert(comm != MPI_COMM_WORLD);
+...
+	return 0;
+}
+```
+
+The next step is to replace the use of the MPI communicato handle by a proper `mpi3::communicator` object.
+Since `world` is already a duplicate of the communicator we can directly use it.
+`size` and `rank` are methods of this object which naturally return their values.
+
+```cpp
+...
+	int rank = world.rank();
+	int nprocs = world.size();
+...
+```
+
+Similarly the calls to send and receive data can be transformed. 
+Notice that the all the irrelevant arguments (including the receive source) can be omitted.
+
+```cpp
+...
+	world.send_n   (xsend.data(), count, partner_rank);
+	world.receive_n(xrecv.data(), count);
+...
+```
+
+Notice that we use the `_n` suffix interface to emphasize that we are using element count as argument.
+
+The condition `(rank == 0)` is so common that can be replaced by the `communicator`'s method `is_root()`:
+
+```cpp
+	if(world.is_root()) {std::cerr<<"Must be called with an even number of processes"<<std::endl;}
+```
+
+```cpp
+#include "../../mpi3/main.hpp"
+
+#include<iostream>
+#include<numeric>
+#include<vector>
+
+namespace bmpi3 = boost::mpi3;
+
+int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
+	int count = 10;
+
+	std::vector<double> xsend(count); iota(begin(xsend), end(xsend), 0);
+	std::vector<double> xrecv(count, -1);
+
+	if(world.size()%2 == 1) {
+	   if(world.is_root()) {std::cerr<<"Must be called with an even number of processes"<<std::endl;}
+	   return 1;
+	}
+
+	int partner_rank = (world.rank()/2)*2 + (world.rank()+1)%2;
+
+	world.send_n   (xsend.data(), count, partner_rank);
+	world.receive_n(xrecv.data(), count);
+	assert(xrecv[5] == 5);
+
+	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
+	return 0;
+}
+```
+
+This completes the replacement of the original MPI interface.
+Further steps can be taken to exploit more safety of the library. 
+For example instead of using the pointer of the vectors, we can use the iterators to describe the start of the sequences.
+
+```cpp
+...
+	world.send_n   (xsend.begin(), xsend.size(), partner_rank);
+	world.receive_n(xrecv.begin(), xrecv.size());
+...
+```
+or use the range.
+
+```cpp
+...
+	world.send   (xsend.begin(), xsend.end(), partner_rank);
+	world.receive(xrecv.begin(), xrecv.end());
+...
+```
+
+Note that `_n` was dropped from the method name.
+
+Finally, the end of the receiving sequence can be ommited in many cases since the information is contained in the message.
+
+```cpp
+...
+	auto last = world.receive(xrecv.begin());  assert(last == xrecv.end()); 
+...
+```
+
+After some rearranges we obtain the final code, which is listed below.
+There are no pointers in the interface and at worst they have been replaced by iterators.
+
+```cpp
+#include "../../mpi3/main.hpp"
+
+#include<iostream>
+#include<numeric>
+#include<vector>
+
+namespace bmpi3 = boost::mpi3;
+
+int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) {
+	if(world.size()%2 == 1) {
+	   if(world.is_root()) {std::cerr<<"Must be called with an even number of processes"<<std::endl;}
+	   return 1;
+	}
+
+	std::vector<double> xsend(10); iota(begin(xsend), end(xsend), 0);
+	std::vector<double> xrecv(xsend.size(), -1);
+
+	world.send   (xsend.begin(), xsend.end(), (world.rank()/2)*2 + (world.rank()+1)%2);
+	world.receive(xrecv.begin());
+
+	assert(xrecv[5] == 5);
+	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
+	return 0;
+}
+```
+
+
+
