@@ -450,7 +450,7 @@ class communicator : protected detail::basic_communicator {
 		explicit communicator_ptr(communicator* ptr) : ptr_{ptr} {}
 		operator MPI_Comm() const{return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 		explicit operator communicator      *() const{return ptr_;}
-		explicit operator communicator const*() const{return ptr_;}
+	//	explicit operator communicator const*() const{return ptr_;}
 		friend bool operator==(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ == b.ptr_;}
 		friend bool operator!=(communicator_ptr const& a, communicator_ptr const& b) {return a.ptr_ != b.ptr_;}
 	};
