@@ -241,7 +241,9 @@ class communicator : protected detail::basic_communicator {
 	 public:
 		explicit ptr(communicator* ptr) : ptr_{ptr} {}
 		operator MPI_Comm() const {return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-		explicit operator communicator      *() const {return ptr_;}
+	//	explicit operator communicator      *() const {return ptr_;}
+		template<class T>
+		explicit operator T*() const{return {ptr_};}
 	//	explicit operator communicator const*() const{return ptr_;}
 		friend bool operator==(ptr const& a, ptr const& b) {return a.ptr_ == b.ptr_;}
 		friend bool operator!=(ptr const& a, ptr const& b) {return a.ptr_ != b.ptr_;}
