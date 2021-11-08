@@ -234,14 +234,14 @@ class communicator : protected detail::basic_communicator {
 
 	auto get_mutable()       {return impl_;}
 	auto get()         const {return impl_;}  // TODO(correaa) deprecate
-	auto get()               {return impl_;}
+	impl_t& get() {return this->impl_;}
 
 	class ptr {
 		communicator* ptr_;
 	 public:
 		explicit ptr(communicator* ptr) : ptr_{ptr} {}
-		operator MPI_Comm() const{return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
-		explicit operator communicator      *() const{return ptr_;}
+		operator MPI_Comm() const {return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+		explicit operator communicator      *() const {return ptr_;}
 	//	explicit operator communicator const*() const{return ptr_;}
 		friend bool operator==(ptr const& a, ptr const& b) {return a.ptr_ == b.ptr_;}
 		friend bool operator!=(ptr const& a, ptr const& b) {return a.ptr_ != b.ptr_;}
@@ -251,14 +251,16 @@ class communicator : protected detail::basic_communicator {
 	communicator const* operator&() const& {return this;}                    // NOLINT(google-runtime-operator)
 	communicator      * operator&()     && {return this;}                    // NOLINT(google-runtime-operator)
 
-	~communicator(){
-		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF){
-			MPI_Comm_disconnect(&impl_); //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
-		//	MPI_Comm_free(&impl_);
+	~communicator() {
+		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF) {
+			try {
+				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
+			//	MPI_Comm_free(&impl_);
+			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
 		}
 	}
 
-	int size() const{
+	int size() const {
 		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
 		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Comm_size)(impl_, &size);
