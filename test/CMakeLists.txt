@@ -66,6 +66,7 @@ empty_main.cpp
 window_put_get.cpp
 shared_mutex.cpp
 simple_send_receive.cpp
+simple_broadcast.cpp
 )
 
 # List of tests that need to link with boost_serialization

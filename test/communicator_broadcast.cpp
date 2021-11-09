@@ -27,8 +27,7 @@ void syntax_test(mpi3::communicator& world) {
 	}
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
-
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
 	std::vector<std::size_t> sizes = {100L, 64L*1024L};//, 128L*1024L}; // TODO check larger number (fails with openmpi 4.0.5)
 	int NUM_REPS = 5;
 
@@ -59,8 +58,6 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 	}
 	syntax_test(world);
 	return 0;
-}catch(...){
-	return 1;
-}
+} catch(...) {return 1;}
 
 
