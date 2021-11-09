@@ -66,12 +66,12 @@ void call(Args... args) {
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
 }
 
-//template<auto F, class... Args>
-//status call(Args... args) {
-//	status ret;
-//	auto e = static_cast<enum error>(F(args..., &ret.impl));
-//	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
-//}
+template<auto F, class... Args, decltype(static_cast<enum error>(F(std::declval<Args>()..., std::declval<MPI_Status*>())))* =0>
+void call(Args... args) {
+	mpi3::status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
+	auto const e = static_cast<enum error>(F(args..., &ret.impl_));
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
+}
 #endif
 
 #define MPI3_CALL(F) detail::call<decltype(F), F>  // NOLINT(cppcoreguidelines-macro-usage)
