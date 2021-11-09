@@ -26,7 +26,7 @@ private:
 //	allocator() = delete;
 
  public:
-	explicit allocator(mpi3::shared_communicator* comm = static_cast<mpi3::shared_communicator*>(&mpi3::environment::get_self_instance())) : comm_{comm} {}  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) TODO(correaa) check
+	explicit allocator(mpi3::shared_communicator* comm = std::addressof(static_cast<mpi3::shared_communicator&>(mpi3::environment::get_self_instance()))) : comm_{comm} {}  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) TODO(correaa) check
 	template<class U> allocator(allocator<U> const& o) : comm_{o.comm_} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) common practice
 	allocator(allocator const&) = default;
 	allocator(allocator     &&) noexcept = default;

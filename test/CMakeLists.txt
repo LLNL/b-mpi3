@@ -65,6 +65,7 @@ communicator_split.cpp
 empty_main.cpp
 window_put_get.cpp
 shared_mutex.cpp
+simple_send_receive.cpp
 )
 
 # List of tests that need to link with boost_serialization
@@ -102,10 +103,12 @@ foreach(TEST_FILE ${TEST_SRCS})
   target_link_libraries(${TEST_EXE} pthread)
 
   set(NPROC 3)
-  if ((TEST_FILE STREQUAL "communicator_divide.cpp"  ) OR
-      (TEST_FILE STREQUAL "communicator_operator.cpp") OR
-      (TEST_FILE STREQUAL "communicator_scatter.cpp" ) OR
-      (TEST_FILE STREQUAL "cartesian.cpp"            )
+  if (
+	   (TEST_FILE STREQUAL "communicator_divide.cpp"  )
+    OR (TEST_FILE STREQUAL "communicator_operator.cpp")
+    OR (TEST_FILE STREQUAL "communicator_scatter.cpp" )
+    OR (TEST_FILE STREQUAL "cartesian.cpp"            )
+	OR (TEST_FILE STREQUAL "simple_send_receive.cpp"  )
   )
     set(NPROC 6)
   endif()
@@ -114,6 +117,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   else()
     add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} ./${TEST_EXE})
   endif()
+  set_tests_properties(${TEST_EXE} PROPERTIES TIMEOUT 30)
 endforeach()
 
 set_tests_properties(communicator_abort.cpp.x PROPERTIES WILL_FAIL true)

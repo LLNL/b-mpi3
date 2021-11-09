@@ -1,7 +1,7 @@
 #if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 mpic++ -D_TEST_MPI3_SHARED_COMMUNICATOR -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
 #endif
-// © Alfredo A. Correa 2018-2020
+// © Alfredo A. Correa 2018-2021
 
 #ifndef MPI3_SHARED_COMMUNICATOR_HPP
 #define MPI3_SHARED_COMMUNICATOR_HPP
@@ -24,30 +24,31 @@ struct shared_window;
 
 struct shared_communicator : communicator {
 	shared_communicator() = default;
-	shared_communicator(shared_communicator&&) = default;
+
 	shared_communicator(shared_communicator const&) = delete;
-	shared_communicator(shared_communicator&) = default;
+	shared_communicator(shared_communicator     &&) = default;
+	shared_communicator(shared_communicator      &) = default;
 
 	explicit shared_communicator(mpi3::group const& g) : communicator(g) {}
 	shared_communicator(mpi3::group const& g, int tag) : communicator(g, tag) {}
 
  private:
 	template<class T> friend struct shared_window;
-	explicit shared_communicator(communicator&& c) : communicator(std::move(c)){}
-	explicit shared_communicator(communicator const& comm, int key = 0) {  // TODO(correaa) make duplicate constructor
-		auto e = static_cast<enum error>(MPI_Comm_split_type(comm.get(), MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_));
-		if(e != mpi3::error::success) {throw std::system_error{e, "cannot split"};}
+	explicit shared_communicator(communicator&& c) : communicator(std::move(c)) {}
+	explicit shared_communicator(communicator& comm, int key = 0) {
+		MPI_(Comm_split_type)(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_);
 		name(comm.name()+":"+mpi3::processor_name());
 	}
-	shared_communicator(communicator const& comm, mpi3::communicator_type t, int key = 0){
-		MPI3_CALL(MPI_Comm_split_type)(comm.get(), static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
+	shared_communicator(communicator& comm, mpi3::communicator_type t, int key = 0) {
+		MPI_(Comm_split_type)(&comm, static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
 		boost::uuids::uuid tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
 		auto utag = reinterpret_cast<unsigned int const&>(tag);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
 		this->broadcast_n(&utag, 1, 0);
 		auto Tag = std::to_string(utag);
 		std::string const& base = comm.name();
+
 		// !!! switch-case don't work here because in some MPI impls there are repeats in the cases !!!
-		if(communicator_type::shared==t) {
+		if(communicator_type::shared == t) {
 			#if __linux__
 			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
 			#else
@@ -79,6 +80,10 @@ struct shared_communicator : communicator {
 	shared_communicator& operator=(shared_communicator      &) = default;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator)
 
 	~shared_communicator() = default;
+
+	shared_communicator      * operator&()      & {return this;}  // NOLINT(google-runtime-operator)
+	shared_communicator const* operator&() const& {return this;}  // NOLINT(google-runtime-operator)
+	shared_communicator      * operator&()     && {return this;}  // NOLINT(google-runtime-operator)
 
 	inline shared_communicator split(int key) {return split_shared(key);}
 	auto split(int color, int key) {
@@ -113,8 +118,7 @@ inline shared_communicator communicator::split_shared(communicator_type t, int k
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-	
+int mpi3::main(int, char*[], mpi3::communicator world) {
 	auto numa = world.split_shared(communicator_type::numa); // fallback to world.split_shared() if OMPI is not available
 	auto win = numa.make_shared_window<int>(numa.rank()?0:1);
 	assert(win.base() != nullptr and win.size() == 1);
@@ -128,29 +132,8 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 		else if(numa.rank()==j) numa.receive_n((int*)nullptr, 0, 0, 666);
 	}
 	if(numa.rank() != 0) win.sync();
-//	int l = *win.base();
 	win.unlock_all();
 
-#if 0
-	auto win = node.make_shared_window<int>(node.rank()?0:1);
-	assert(win.base() != nullptr and win.size() == 1);
-	win.lock_all();
-	if(node.rank()==0){
-		*win.base() = 42;
-		win.sync();
-	}
-	for(int j=1; j != node.size(); ++j){
-		if(node.rank()==0) node.send_n((int*)nullptr, 0, j, 666);
-		else if(node.rank()==j) node.receive_n((int*)nullptr, 0, 0, 666);
-	}
-	if(node.rank() != 0) win.sync();
-	int l = *win.base();
-	win.unlock_all();
-	int minmax[2] = {-l,l};
-//	node.reduce_in_place_n(&minmax[0], 2, mpi3::max<>{}, 0);
-	node.all_reduce_n(&minmax[0], 2, mpi3::max<>{});
-	assert( -minmax[0] == minmax[1] );
-#endif
 	return 0;
 }
 
