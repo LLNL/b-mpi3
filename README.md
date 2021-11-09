@@ -422,10 +422,9 @@ Typical low-level use patterns become extremely simple, and that exposes higher-
 
 # Tutorial
 
-This section describes the process to bring a C++ program that uses MPI to one that uses B.MPI3.
-Below it is a perfectly valid C++ MPI program using send and receive function. 
+This section describes the process of bringing a C++ program that uses the original MPI interface to one that uses B.MPI3.
+Below it is a valid C++ MPI program using send and receive function.
 Due to the legacy nature of MPI, C and C++ idioms are mixed.
-At the end, we will transform the program in one that uses more modern C++ guidelines.
 
 ```cpp
 #include<mpi.h>
@@ -468,7 +467,8 @@ int main(int argc, char **argv) {
 We are going to work "inward", with the idea of mimicking the process of modernizing a code from the top (the opposite it is also feasible).
 This process is typical if the low level code needs to stay untouched for historical reasons.
 
-The first step is to include the wrapper library and, as a warm up, replace the `Init`, `Finalize` calls, and the access to the (global) world communicator from the library.
+The first step is to include the wrapper library and, as a warm up, replace the `Init`, `Finalize` calls.
+At the same time we obtain the (global) world communicator from the library.
 
 
 ```cpp
@@ -492,10 +492,10 @@ int main(int argc, char **argv) try {
 Notice that we are getting a reference to the global communicator using the `get_world_instance`, then, with the ampersand (`&`) operator, we obtain a `MPI_Comm` handle than can be used with the rest of the code untouched.
 
 Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the enviroment.
-Just like in classic MPI, it is wrong to have more than one environment.
+Just like in classic MPI, it is wrong to create more than one environment.
 
-Both, accesing the global communicator for any place of the code and playing with the global communicator is in general considered problematic.
-For this reason it makes more sense ask directly for a duplicate of the global communicator.
+Both, accesing the global communicator directky is in general considered problematic.
+For this reason it makes more sense to ask for a duplicate of the global communicator.
 
 ```cpp
 int main(int argc, char **argv) {
@@ -507,9 +507,9 @@ int main(int argc, char **argv) {
 }
 ```
 
-This ensures that `finalize` is always called (by the destructor) and that we are using a copy and not the global communicator.
+This ensures that `finalize` is always called (by the destructor) and that we are not using the original global communicator, but a duplicate.
 
-Since this pattern is very common, a convenient "main" function is declared by the library as a replacement for main and provided by the `mpi3/main.hpp` header.
+Since this pattern is very common, a convenient "main" function is declared by the library as a replacement declared in the `mpi3/main.hpp` header.
 
 ```cpp
 #include "../../mpi3/main.hpp"
@@ -538,8 +538,8 @@ The `size` and `rank` are methods of this object which naturally return their va
 ...
 ```
 
-Similarly the calls to send and receive data can be transformed. 
-Notice that the all the irrelevant arguments (including the receive source) can be omitted.
+Similarly the calls to send and receive data can be transformed.
+Notice that the all the irrelevant or redundant arguments (including the receive source) can be omitted.
 
 ```cpp
 ...
@@ -548,7 +548,7 @@ Notice that the all the irrelevant arguments (including the receive source) can 
 ...
 ```
 
-Notice that we use the `_n` suffix interface to emphasize that we are using element count (container size) as argument.
+(We use the `_n` suffix interface to emphasize that we are using element count (container size) as argument.)
 
 The condition `(rank == 0)` is so common that can be replaced by the `communicator`'s method `is_root()`:
 
@@ -588,8 +588,8 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
 ```
 
 This completes the replacement of the original MPI interface.
-Further steps can be taken to exploit more safety of the library. 
-For example, instead of using the pointer from the dynamic arrays, we can use the iterators to describe the start of the sequences.
+Further steps can be taken to exploit the safety provided by the library. 
+For example, instead of using pointers from the dynamic arrays, we can use the iterators to describe the start of the sequences.
 
 ```cpp
 ...
@@ -612,14 +612,14 @@ Finally, the end of the receiving sequence can be ommited in many cases since th
 
 ```cpp
 ...
-	world.send   (xsend.begin(), xsend.end(), partner_rank);
+	world.send(xsend.begin(), xsend.end(), partner_rank);
 	auto last = world.receive(xrecv.begin());  assert(last == xrecv.end()); 
 ...
 ```
 
 After some rearrangement we obtain the final code, which is listed below.
-We also replace separate calls by a single `send_receive` call.
-There are no pointers being used in the interface.
+We also replace separate calls by a single `send_receive` call which is optimized by the MPI system and more correct in this case.
+There are no pointers being used in this final version.
 
 ```cpp
 #include "../../mpi3/main.hpp"
