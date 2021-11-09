@@ -612,11 +612,13 @@ Finally, the end of the receiving sequence can be ommited in many cases since th
 
 ```cpp
 ...
+	world.send   (xsend.begin(), xsend.end(), partner_rank);
 	auto last = world.receive(xrecv.begin());  assert(last == xrecv.end()); 
 ...
 ```
 
 After some rearrangement we obtain the final code, which is listed below.
+We also replace separate calls by a single `send_receive` call.
 There are no pointers being used in the interface.
 
 ```cpp
@@ -637,8 +639,7 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) {
 	std::vector<double> xsend(10); iota(begin(xsend), end(xsend), 0);
 	std::vector<double> xrecv(xsend.size(), -1);
 
-	world.send   (xsend.begin(), xsend.end(), (world.rank()/2)*2 + (world.rank()+1)%2);
-	world.receive(xrecv.begin());
+	world.send_receive(begin(xsend), end(xsend), (world.rank()/2)*2 + (world.rank()+1)%2), begin(xrecv));
 
 	assert(xrecv[5] == 5);
 	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
