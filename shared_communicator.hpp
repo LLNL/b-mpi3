@@ -123,15 +123,15 @@ int mpi3::main(int, char*[], mpi3::communicator world) {
 	auto win = numa.make_shared_window<int>(numa.rank()?0:1);
 	assert(win.base() != nullptr and win.size() == 1);
 	win.lock_all();
-	if(numa.rank() == 0){
+	if(numa.rank() == 0) {
 		*win.base() = 42;
 		win.sync();
 	}
-	for(int j=1; j != numa.size(); ++j){
-		if(numa.rank()==0) numa.send_n((int*)nullptr, 0, j, 666);
-		else if(numa.rank()==j) numa.receive_n((int*)nullptr, 0, 0, 666);
+	for(int j=1; j != numa.size(); ++j) {
+		if     (numa.rank()==0) {numa.send_n((int*)nullptr, 0, j, 666);}
+		else if(numa.rank()==j) {numa.receive_n((int*)nullptr, 0, 0, 666);}
 	}
-	if(numa.rank() != 0) win.sync();
+	if(numa.rank() != 0) {win.sync();}
 	win.unlock_all();
 
 	return 0;

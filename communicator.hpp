@@ -655,7 +655,7 @@ class communicator : protected detail::basic_communicator {
 	communicator divide_even(int n) {
 		return split(2*(rank()%n) > n?mpi3::undefined:rank()/n);
 	}
-//  communicator operator/ (double nn) const{return divide_even(nn);}
+
 	communicator operator< (int n) {return split((rank() <  n)?0:MPI_UNDEFINED);}
 	communicator operator<=(int n) {return split((rank() <= n)?0:MPI_UNDEFINED);}
 	communicator operator> (int n) {return split((rank() >  n)?0:MPI_UNDEFINED);}
@@ -704,7 +704,7 @@ class communicator : protected detail::basic_communicator {
 		return pack_n(first, std::distance(first, last), b, pos);
 	}
 	template<class It>
-	auto pack(It first, It last, uvector<detail::packed>& b, int pos){
+	auto pack(It first, It last, uvector<detail::packed>& b, int pos) {
 		return pack(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -741,20 +741,38 @@ class communicator : protected detail::basic_communicator {
 		);
 		return ret;
 	}
-	template<class It, typename Size>
+	template<class It1, typename Size, class It2>
 	auto send_receive_n(
-		It first, Size count, int dest,
-		It d_first, Size d_count, int source,
+		It1 first, Size count, int dest,
+		It2 d_first, Size d_count, int source,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	) {
 		return send_receive_n(
-			first, count, dest, 
+			first, count, dest,
 			d_first, d_count, source,
-				detail::iterator_category_t<It>{},
-				detail::value_category_t<typename std::iterator_traits<It>::value_type>{}, 
+				detail::iterator_category_t<It1>{},  // It2???
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{}, 
 			sendtag, recvtag
 		);
 	}
+
+	template<class It1, typename Size, class It2>
+	auto send_receive_n(
+		It1 first, Size count, int dest,
+		It2 d_first, int source = MPI_ANY_SOURCE,
+		int sendtag = 0, int recvtag = MPI_ANY_TAG
+	) {
+		return send_receive_n(
+			first, count, dest,
+			d_first, source,
+				detail::iterator_category_t<It1>{},  // It2??? TODO(correaa)
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},  // It2??? TODO(correaa)
+			sendtag, recvtag
+		);
+	}
+
+
+ private:
 	template<class It, typename Size>
 	auto send_receive_n(
 		It first, Size count, int dest,
@@ -776,6 +794,29 @@ class communicator : protected detail::basic_communicator {
 		);
 		return ret;
 	}
+
+	template<class It1, class Size, class It2>
+	auto send_receive_n(
+		It1   first, Size count, int dest,
+		It2 d_first,             int source,
+			detail::contiguous_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		int sendtag, int recvtag
+	) {
+		status ret;;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
+		MPI_(Sendrecv)(
+			detail::data(first), count,
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			dest, sendtag,
+			detail::data(d_first), std::numeric_limits<int>::max(),
+			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			source, recvtag,
+			impl_,
+			&ret.impl_
+		);
+		return ret;
+	}
+
 
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
@@ -803,56 +844,91 @@ class communicator : protected detail::basic_communicator {
 		while(p2) {pia >> *first++;}
 		return first;
 	}
+
 	template<class It, typename Size>
 	auto send_receive_replace_n(
 		It first,
 			detail::forward_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
-	){
+	) {
 		uvector<typename std::iterator_traits<It>::value_type> v(count);
 		std::copy_n(first, count, v.begin());
 		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
 		return std::copy_n(v.begin(), v.size(), first);
 	}
+
+ public:
 	template<class It, class Size>
 	auto send_receive_n(
-		It first, Size size, 
+		It first, Size size,
 		int dest, int source, // = MPI_ANY_SOURCE, 
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
-	){
+	) {
 		return send_receive_replace_n(
 			first, size,
 			dest, source, sendtag, recvtag
 		);
 	}
 
-	template<class It>
+ private:
+	template<class It1, class It2>
 	auto send_receive(
-		It first, It last, int dest,
-		It d_first, It d_last, int source,
+		It1 first, It1 last, int dest,
+		It2 d_first, It2 d_last, int source,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::value_unspecified_tag /*tag*/,
 		int sendtag, int recvtag
-	){
+	) {
 		return send_receive_n(
 			first, std::distance(first, last), dest,
 			d_first, std::distance(d_first, d_last), source,
 			sendtag, recvtag
 		);
 	}
-	template<class It>
+
+	template<class It1, class It2>
 	auto send_receive(
-		It first, It last, int dest, 
-		It d_first, It d_last, int source, 
+		It1 first, It1 last, int dest,
+		It2 d_first, int source,
+			detail::random_access_iterator_tag /*tag*/,
+			detail::value_unspecified_tag /*tag*/,
+		int sendtag, int recvtag
+	) {
+		return send_receive_n(
+			first, std::distance(first, last), dest,
+			d_first, source,
+			sendtag, recvtag
+		);
+	}
+
+ public:
+	template<class It1, class It2>
+	auto send_receive(
+		It1   first, It1   last, int dest,
+		It2 d_first, It2 d_last, int source = MPI_ANY_SOURCE,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	){
 		return send_receive(
 			first, last, dest,
 			d_first, d_last, source,
-				detail::iterator_category_t<It>{},
-				detail::value_category_t<typename std::iterator_traits<It>::value_type>{}, 
+				detail::iterator_category_t<It1>{},  // It2???
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},  // It2???
 			sendtag, recvtag
+		);
+	}
+
+	template<class It1, class It2>
+	auto send_receive(
+		It1 first, It1 last, int dest,
+		It2 d_first
+	){
+		return send_receive(
+			first, last, dest,
+			d_first, MPI_ANY_SOURCE,
+				detail::iterator_category_t<It1>{},
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			/*sendtag*/ 0, /*recvtag*/ MPI_ANY_TAG
 		);
 	}
 
