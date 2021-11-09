@@ -30,10 +30,10 @@ struct status {
 	//	MPI_Status_free(&impl_);
 	//}
 
-	template<class T>// = char>
-	int count() const { //entries received of datatype T
+	template<class T>  // = char>
+	int count() const {  // entries received of datatype T
 		int ret = -1;
-		MPI_(Get_count)(&impl_, detail::basic_datatype<T>{}, &ret);
+		MPI_Get_count(&impl_, detail::basic_datatype<T>{}, &ret);  // can't use MPI_(Get_count)
 		return ret;
 	}
 

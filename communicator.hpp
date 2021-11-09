@@ -795,7 +795,10 @@ class communicator : protected detail::basic_communicator {
 		return ret;
 	}
 
-	template<class It1, class Size, class It2>
+	template<class It1, class Size, class It2
+		, class V1 = typename std::iterator_traits<It1>::value_type
+		, class V2 = typename std::iterator_traits<It2>::value_type
+	>
 	auto send_receive_n(
 		It1   first, Size count, int dest,
 		It2 d_first,             int source,
@@ -803,20 +806,16 @@ class communicator : protected detail::basic_communicator {
 			detail::basic_tag /*tag*/,
 		int sendtag, int recvtag
 	) {
-		status ret;;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
-		MPI_(Sendrecv)(
-			detail::data(first), count,
-			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+		static_assert( std::is_same<V1, V2>{}, "source and destination need to be same type" );
+		status ret = MPI_(Sendrecv)(
+			detail::data(first), count, detail::basic_datatype<V1>{},
 			dest, sendtag,
-			detail::data(d_first), std::numeric_limits<int>::max(),
-			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			detail::data(d_first), std::numeric_limits<int>::max() /*unlim in receiving*/, detail::basic_datatype<V2>{},
 			source, recvtag,
-			impl_,
-			&ret.impl_
+			impl_  //, &ret.impl_  // status refers to the receive operation.
 		);
-		return ret;
+		return d_first + ret.count<V2>();
 	}
-
 
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
@@ -1588,6 +1587,14 @@ class communicator : protected detail::basic_communicator {
  public:
 	template<class T>
 	auto broadcast_value(T& t, int root = 0){return broadcast_n(std::addressof(t), 1, root);}
+
+	template<class T>
+	auto broadcast_value(std::vector<T>& t, int root = 0){
+		auto size = t.size();
+		broadcast_value(size, root);
+		t.resize(size);
+		return broadcast_n(t.data(), t.size(), root);
+	}
 
 	template<class It, typename Size>
 	auto ibroadcast_n(
