@@ -10,11 +10,9 @@ auto bmpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int t
 	{
 		using T = int;
 		std::vector<T> v(10);
-		if(world.is_root()) {
-			iota(begin(v), end(v), 0);
-		}
-		world.broadcast(begin(v), end(v));
+		if(world.is_root()) {iota(begin(v), end(v), 0);}
 
+		world.broadcast(begin(v), end(v));
 		assert( v[9] == T(9) );
 	}
 	{
@@ -31,15 +29,24 @@ auto bmpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int t
 	{
 		using T = double;
 		std::vector<T> v;
-		if(world.is_root()) {
-			v.resize(10);
-			iota(begin(v), end(v), 0);
-		}
+		if(world.is_root()) {v.resize(10); iota(begin(v), end(v), 0);}
+
 		auto size = v.size();
 		world.broadcast_n(&size, 1);
+
 		v.resize(size);
+		assert( v.size() == 10UL );
+
 		world.broadcast_n(v.data(), v.size());
-//		world.broadcast_value(v);
+
+		assert( v[9] == T(9) );
+	}
+	{
+		using T = double;
+		std::vector<T> v;
+		if(world.is_root()) {v.resize(10); iota(begin(v), end(v), 0);}
+
+		world[0] & v;
 
 		assert( v.size() == 10UL );
 		assert( v[9] == T(9) );
