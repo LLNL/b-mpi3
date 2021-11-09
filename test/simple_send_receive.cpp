@@ -16,8 +16,10 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
 	std::vector<double> xsend(10); iota(begin(xsend), end(xsend), 0);
 	std::vector<double> xrecv(xsend.size(), -1);
 
-	world.send   (xsend.begin(), xsend.end(), (world.rank()/2)*2 + (world.rank()+1)%2);
-	world.receive(xrecv.begin());
+	world.send_receive(
+		xsend.cbegin(), xsend.cend(), (world.rank()/2)*2 + (world.rank()+1)%2,
+		xrecv. begin()
+	);
 
 	assert(xrecv[5] == 5);
 	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
