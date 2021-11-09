@@ -7,19 +7,19 @@
 #define __has_cpp_attribute(name) 0
 #endif
 
-#ifndef NODISCARD
+#ifndef BMPI3_NODISCARD
 #if defined(__NVCC__)
-	#define NODISCARD(MsG)
+	#define BMPI3_NODISCARD(MsG)
 #elif (__has_cpp_attribute(nodiscard) and (__cplusplus>=201703L))
 	#if (__has_cpp_attribute(nodiscard)>=201907) and (__cplusplus>201703L)
-		#define NODISCARD(MsG) [[nodiscard(MsG)]]
+		#define BMPI3_NODISCARD(MsG) [[nodiscard(MsG)]]
 	#else
-		#define NODISCARD(MsG) [[nodiscard]]
+		#define BMPI3_NODISCARD(MsG) [[nodiscard]]
 	#endif
 #elif __has_cpp_attribute(gnu::warn_unused_result)
-	#define NODISCARD(MsG) [[gnu::warn_unused_result]]  // NOLINT(cppcoreguidelines-macro-usage) : replaced by `nodiscard` in C++17
+	#define BMPI3_NODISCARD(MsG) [[gnu::warn_unused_result]]  // NOLINT(cppcoreguidelines-macro-usage) : replaced by `nodiscard` in C++17
 #else
-	#define NODISCARD(MsG)
+	#define BMPI3_NODISCARD(MsG)
 #endif
 #endif
 

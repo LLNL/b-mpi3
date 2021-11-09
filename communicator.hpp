@@ -267,7 +267,7 @@ class communicator : protected detail::basic_communicator {
 		return size;
 	}
 
-	NODISCARD("empty is not an action")
+	BMPI3_NODISCARD("empty is not an action")
 	bool    empty() const {return is_empty();}
 	bool is_empty() const {return is_null();}
 
@@ -1540,7 +1540,7 @@ class communicator : protected detail::basic_communicator {
 		return std::forward<T>(t);
 	}
 	template<class T> 
-	NODISCARD("do not ignore result when argument is const")
+	BMPI3_NODISCARD("do not ignore result when argument is const")
 	auto operator()(T const& t)
 	->decltype(communicator::all_to_all(t.begin(), std::declval<T>().begin()), T(communicator::size())){
 		assert(t.size() == communicator::size());
