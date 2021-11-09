@@ -200,8 +200,8 @@ inline mpi3::any& communicator::attribute(std::string const& s){
 	return attribute(environment::named_attributes_key())[s];
 }
 
-} // end namespace mpi3
-} // end namespace boost
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
 
