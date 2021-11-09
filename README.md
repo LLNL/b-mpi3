@@ -618,7 +618,7 @@ Finally, the end of the receiving sequence can be ommited in many cases since th
 ```
 
 After some rearrangement we obtain the final code, which is listed below.
-We also replace separate calls by a single `send_receive` call which is optimized by the MPI system and more correct in this case.
+We also replace separate calls by a single `send_receive` call which is optimized by the MPI system and more correct in this case, also we ensure "constness" of the sent values (`cbegin/cend`)).
 There are no pointers being used in this final version.
 
 ```cpp
@@ -639,7 +639,7 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) {
 	std::vector<double> xsend(10); iota(begin(xsend), end(xsend), 0);
 	std::vector<double> xrecv(xsend.size(), -1);
 
-	world.send_receive(begin(xsend), end(xsend), (world.rank()/2)*2 + (world.rank()+1)%2), begin(xrecv));
+	world.send_receive(cbegin(xsend), cend(xsend), (world.rank()/2)*2 + (world.rank()+1)%2), begin(xrecv));
 
 	assert(xrecv[5] == 5);
 	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
