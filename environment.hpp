@@ -71,23 +71,21 @@ inline thread_level initialize(thread_level required = thread_level::single) {
 
 inline thread_level initialize_thread(
 	int& argc, char**& argv, thread_level required
-){
+) {
 	int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
-	int status = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &ret);
-	if(status != MPI_SUCCESS) {throw std::runtime_error("cannot thread-initialize");}
+	MPI_(Init_thread)(&argc, &argv, static_cast<int>(required), &ret);
 	return static_cast<thread_level>(ret);
 }
 
 inline thread_level thread_support() {
 	int r;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
-	MPI_(Query_thread)(&r); 
+	MPI_(Query_thread)(&r);
 	return static_cast<thread_level>(r);
 }
 
 inline bool is_thread_main() {
 	int flag;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
-	int s = MPI_Is_thread_main(&flag);
-	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot determine is thread main"};}
+	MPI_(Is_thread_main)(&flag);
 	return flag != 0;
 }
 
@@ -129,31 +127,33 @@ class environment {
 //	static /*inline*/ communicator::keyval<int> const* color_key_p;
 //	static communicator::keyval<int> const& color_key(){return *color_key_p;}
 //	static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
-	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f(){
+	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f() {
 		static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const> named_attributes_key_p;
 		return named_attributes_key_p;
 	}
-	static communicator::keyval<std::map<std::string, mpi3::any>> const& named_attributes_key(){
+	static communicator::keyval<std::map<std::string, mpi3::any>> const& named_attributes_key() {
 	//	static communicator::keyval<std::map<std::string, mpi3::any>> const named_attributes_key_p;
 	//	return named_attributes_key_p;
 		return *named_attributes_key_f();
 	}
 
-	static inline void initialize(){mpi3::initialize();}
-	static inline void initialize(thread_level required){mpi3::initialize_thread(required);}
-	static inline void initialize(int argc, char** argv){mpi3::initialize(argc, argv);}
-	static inline void initialize(int argc, char** argv, thread_level req){mpi3::initialize_thread(argc, argv, req);}
+	static inline void         initialize()                                        {mpi3::initialize();}
+	static inline void         initialize(int argc, char** argv)                   {mpi3::initialize(argc, argv);}
+
+	static inline thread_level initialize(thread_level required)                   {return mpi3::initialize_thread(required);}
+	static inline thread_level initialize(int argc, char** argv, thread_level req) {return mpi3::initialize_thread(argc, argv, req);}
 
 	static inline void finalize() noexcept {mpi3::finalize();}
 
-	static inline bool is_initialized(){return mpi3::initialized();}
-	static inline bool is_finalized(){return mpi3::finalized();}
+	static inline bool is_initialized() {return mpi3::initialized();}
+	static inline bool is_finalized()   {return mpi3::finalized();}
+
 	using wall_clock = mpi3::wall_clock;
 	explicit operator bool() const {return initialized();}
 
 	static bool is_thread_main() {return mpi3::is_thread_main();}
 
-	static inline communicator& get_self_instance(){
+	static inline communicator& get_self_instance() {
 		assert(initialized());
 		static communicator instance = []{
 		//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
