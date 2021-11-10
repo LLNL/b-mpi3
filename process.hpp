@@ -67,7 +67,7 @@ inline auto communicator::operator[](int rank) -> process {return {*this, rank};
 template<class T>
 auto operator&(communicator& comm, T&& t)
 ->decltype(comm.all_to_all(begin(std::forward<T>(t))), std::forward<T>(t)) {
-	assert(t.size() == comm.size());
+	assert( t.size() == comm.size() );
 //	using std::begin;
 	auto e = comm.all_to_all(begin(std::forward<T>(t)));
 	using std::end;
