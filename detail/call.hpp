@@ -60,13 +60,13 @@ BMPI3_NODISCARD("") status call(Args... args) {
 }
 
 #if __cpp_nontype_template_parameter_auto >= 201606
-template<auto F, class... Args, decltype(static_cast<enum error>(F(std::declval<Args>()...)))* =0>
+template<auto F, class... Args, class = decltype(static_cast<enum error>(F(std::declval<Args>()...))), int* = 0>
 void call(Args... args) {
 	auto const e = static_cast<enum error>(F(args...));
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
 }
 
-template<auto F, class... Args, decltype(static_cast<enum error>(F(std::declval<Args>()..., std::declval<MPI_Status*>())))* =0>
+template<auto F, class... Args, class = decltype(static_cast<enum error>(F(std::declval<Args>()..., std::declval<MPI_Status*>()))), double* = 0>
 void call(Args... args) {
 	mpi3::status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 	auto const e = static_cast<enum error>(F(args..., &ret.impl_));
