@@ -1,8 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -D_TEST_MPI3_DETAIL_CALL $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
-//  (C) Copyright Alfredo A. Correa 2019
-
+// © Alfredo A. Correa 2019-2021
 #ifndef BOOST_MPI3_DETAIL_CALL_HPP
 #define BOOST_MPI3_DETAIL_CALL_HPP
 
@@ -11,31 +7,13 @@
 
 #include "../config/NODISCARD.hpp"
 
-
-// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
-#include<mpi.h> // MPI_MAX_PROCESSOR_NAME
+#include<mpi.h>  // MPI_MAX_PROCESSOR_NAME
 
 #include<string>
 
 namespace boost {
 namespace mpi3 {
 namespace detail {
-
-template< class ...Args> struct back;
-template< class A> struct back<A> { using type = A; };
-template< class A, class... Args> struct back<A,Args...>{ 
-	using type = typename back<Args...>::type;
-};
-
-template<class R, class... Args>
-typename back<Args...>::type back_arg_aux(R(*pp)(Args...));
-
-template<class F>
-struct back_arg{
-	using type = decltype(back_arg_aux(std::declval<F*>()));
-};
-
-template<class F> using back_arg_t = typename back_arg<F>::type;
 
 template<int(*F)(char*, int*)>
 std::string call() {
@@ -59,21 +37,6 @@ BMPI3_NODISCARD("") status call(Args... args) {
 	return ret;
 }
 
-//#if __cpp_nontype_template_parameter_auto >= 201606
-//template<auto F, class... Args, class = decltype(static_cast<enum error>(F(std::declval<Args>()...))), int* = 0>
-//void call(Args... args) {
-//	auto const e = static_cast<enum error>(F(args...));
-//	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
-//}
-
-//template<auto F, class... Args, class = decltype(static_cast<enum error>(F(std::declval<Args>()..., std::declval<MPI_Status*>()))), double* = 0>
-//void call(Args... args) {
-//	mpi3::status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
-//	auto const e = static_cast<enum error>(F(args..., &ret.impl_));
-//	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function"};}
-//}
-//#endif
-
 #define MPI3_CALL(F) detail::call<decltype(F), F>  // NOLINT(cppcoreguidelines-macro-usage)
 #define MPI_(F) MPI3_CALL(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage): name concatenation
 
@@ -81,15 +44,4 @@ BMPI3_NODISCARD("") status call(Args... args) {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_MPI3_DETAIL_CALL
-
-void f(double, int){}
-
-int main(){
-//	static_assert( 
-//	typename boost::mpi3::detail::last_argument<decltype(f)>::type a;
-}
 #endif
-
-#endif
-
