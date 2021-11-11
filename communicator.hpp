@@ -501,21 +501,18 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	shared_communicator split_shared(int key = 0);
 	shared_communicator split_shared(communicator_type t, int key = 0);
 
-	int remote_size() const {
-		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_remote_size)(impl_, &ret);
-		return ret;
-	}
+	int remote_size() const {return MPI_(Comm_remote_size)(impl_);}
+
 	communicator reversed() {return split(0, size() - rank());}
+
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
-		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data(), &ret);
-		return ret;
+		return MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data());
 	}
 	int cartesian_map(std::vector<int> const& dimensions) const {
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
+
 	pointer<void> malloc(MPI_Aint size) const;
 	template<class T = void> void deallocate_shared(pointer<T> p);
 	template<class T = void> void deallocate(pointer<T>& p, MPI_Aint size = 0);
@@ -570,7 +567,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void barrier() const {MPI_(Barrier)(impl_);}
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
-		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
+		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
 
@@ -585,7 +582,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
-		MPI_Comm_set_attr(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
+		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
 	inline void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
@@ -593,7 +590,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void* get_attribute(int kvidx) const {
 		void* v = nullptr;
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
+		MPI_(Comm_get_attr)(impl_, kvidx, &v, &flag);
 		if(flag == 0) {assert(!v); return nullptr;}
 		return v;
 	}
@@ -727,19 +724,17 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	auto send_receive_replace_n(
+	mpi3::status send_receive_replace_n(
 		It first,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
-		MPI_(Sendrecv_replace)(
+		return MPI_(Sendrecv_replace)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			dest, sendtag, source, recvtag, impl_, &ret.impl_
+			dest, sendtag, source, recvtag, impl_
 		);
-		return ret;
 	}
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(

@@ -35,10 +35,8 @@ struct request {
 		return ret != 0;
 	}
 	status get_status() const{
-		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 		int ignore = -1;
-		MPI_(Request_get_status)(impl_, &ignore, &ret.impl_);
-		return ret;
+		return MPI_(Request_get_status)(impl_, &ignore);
 	}
 	void swap(request& other){std::swap(impl_, other.impl_);}
 	void cancel(){MPI_Cancel(&impl_);}
