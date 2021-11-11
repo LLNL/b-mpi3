@@ -186,12 +186,12 @@ using boost::any_cast;
 
 template<class T> class window;
 
-class communicator : protected detail::basic_communicator {
+class communicator : protected detail::basic_communicator {  // in mpich MPI_Comm == int
 	friend struct detail::package;
 	friend class window<void>;
 
  protected:
-	bool is_null() const {return MPI_COMM_NULL == impl_;}  // TODO(correaa) reconsider the meaning of null
+	bool is_null() const {return MPI_COMM_NULL == impl_;}
 	friend class mpi3::environment;
 	detail::equality compare(communicator const& other) const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -2961,22 +2961,6 @@ auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded
 	->decltype(self.scatter(begin(r), end(r))) {
 		return self.scatter(begin(r), end(r)); }
 
-}  // end namespace mpi3
-}  // end namespace boost
-
-namespace boost {
-namespace mpi3 {
-namespace detail {
-
-template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Comm*>())))* = nullptr>
-BMPI3_NODISCARD("") mpi3::communicator call(Args... args) {
-	mpi3::communicator ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
-	auto const e = static_cast<enum error>((*F)(args..., &ret.handle()));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
-	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
-	return ret;
-}
-
-}  // end namespace detail
 }  // end namespace mpi3
 }  // end namespace boost
 

@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall `#-Wfatal-errors` -D_TEST_BOOST_MPI3_REQUEST $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+// © Alfredo A. Correa 2019-2021
 #ifndef BOOST_MPI3_REQUEST_HPP
 #define BOOST_MPI3_REQUEST_HPP
 
@@ -32,14 +30,14 @@ struct request {
 		return *this;
 	}
 	bool completed() const{
-		int ret = -1;
-		MPI_Request_get_status(impl_, &ret, MPI_STATUS_IGNORE);
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+		MPI_(Request_get_status)(impl_, &ret, MPI_STATUS_IGNORE);
 		return ret != 0;
 	}
 	status get_status() const{
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 		int ignore = -1;
-		MPI_Request_get_status(impl_, &ignore, &ret.impl_);
+		MPI_(Request_get_status)(impl_, &ignore, &ret.impl_);
 		return ret;
 	}
 	void swap(request& other){std::swap(impl_, other.impl_);}
@@ -159,9 +157,9 @@ template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(s
 BMPI3_NODISCARD("") mpi3::request call_i(Args... args) {
 	mpi3::request ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 	auto const e = static_cast<enum error>((*F)(args..., &ret.impl_));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
-	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
-	return ret;  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
-}
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+	return ret;  // ret destructor will call wait
+}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker)
 
 #define MPI_I(F) detail::call_i<decltype(MPI_I##F), MPI_I##F>  // NOLINT(cppcoreguidelines-macro-usage): name concatenation
 
@@ -170,52 +168,4 @@ BMPI3_NODISCARD("") mpi3::request call_i(Args... args) {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_REQUEST
-
-#include "../mpi3/environment.hpp"
-#include<iostream>
-
-using std::cout;
-namespace mpi3 = boost::mpi3;
-
-int main(int argc, char** argv) {
-	mpi3::environment env(argc, argv);
-	std::vector<int> buf(10);
-
-#if 0
-//	mpi3::send_
-	mpi3::request r = env.world().send_init_n(buf.begin(), buf.size(), 0);
-
-	std::vector<int> rbuf(10);
-	if(env.world().rank() == 0){
-		std::vector<mpi3::request> rr;//(env.world().size());
-		for(int i = 0; i != env.world().size(); ++i)
-			rr.emplace_back(env.world().ireceive(rbuf.begin(), rbuf.end(), i));
-		r.start();
-		r.wait();
-		wait_all(rr.begin(), rr.end());
-	}else{
-		r.start();
-		r.wait();
-	}
-#endif
-
-#if 0
-	if(env.world().rank() == 0){
-	//	mpi3::receive_
-		mpi3::request r = env.world().receive_init(rbuf.begin(), rbuf.end());
-		mpi3::request sr = env.world().isend(buf.begin(), buf.end(), 0);
-		for(int i = 0; i != env.world().size(); ++i){
-			r.start();
-			r.wait();
-		}
-		sr.wait();
-	}else{
-		env.world().send(buf.begin(), buf.end(), 0);
-	}
-#endif
-
-	return 0;
-}
-#endif
 #endif
