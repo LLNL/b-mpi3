@@ -334,20 +334,20 @@ class communicator : protected detail::basic_communicator {
 		);
 	}
 	template<class It, typename Size>
-	auto isend_n(
+	BMPI3_NODISCARD("")
+	mpi3::request isend_n(
 		It first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
 		int dest, int tag
 	) {
-		mpi3::request r = MPI_I(send)(
-			detail::data(first), count, 
+		 return MPI_I(send)(
+			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, impl_
 		);
-		return r;
-	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+	}  // mayLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	void send_n(
 		It first,
