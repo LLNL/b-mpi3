@@ -64,6 +64,7 @@ communicator_set_error_handler.cpp
 communicator_split.cpp
 empty_main.cpp
 window_put_get.cpp
+ring.cpp
 shared_mutex.cpp
 simple_send_receive.cpp
 simple_broadcast.cpp

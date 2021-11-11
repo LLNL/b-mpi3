@@ -186,12 +186,12 @@ using boost::any_cast;
 
 template<class T> class window;
 
-class communicator : protected detail::basic_communicator {
+class communicator : protected detail::basic_communicator {  // in mpich MPI_Comm == int
 	friend struct detail::package;
 	friend class window<void>;
 
  protected:
-	bool is_null() const {return MPI_COMM_NULL == impl_;}  // TODO(correaa) reconsider the meaning of null
+	bool is_null() const {return MPI_COMM_NULL == impl_;}
 	friend class mpi3::environment;
 	detail::equality compare(communicator const& other) const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -232,6 +232,7 @@ class communicator : protected detail::basic_communicator {
 
 	explicit operator bool() const{return not is_empty();}
 
+	auto& handle() {return impl_;}
 	auto get_mutable()       {return impl_;}
 	auto get()         const {return impl_;}  // TODO(correaa) deprecate
 	impl_t& get() {return this->impl_;}
@@ -261,9 +262,9 @@ class communicator : protected detail::basic_communicator {
 	}
 
 	int size() const {
-		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
-		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_size)(impl_, &size);
+		if(is_null()) {return 0;}
+		int size = MPI_(Comm_size)(impl_);
+		assert(size > 0);
 		return size;
 	}
 
@@ -334,21 +335,20 @@ class communicator : protected detail::basic_communicator {
 		);
 	}
 	template<class It, typename Size>
-	auto isend_n(
+	BMPI3_NODISCARD("")
+	mpi3::request isend_n(
 		It first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
 		int dest, int tag
 	) {
-		mpi3::request r;
-		MPI_(Isend)(
-			detail::data(first), count, 
+		 return MPI_I(send)(
+			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			dest, tag, impl_, &r.impl_
+			dest, tag, impl_
 		);
-		return r;
-	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+	}
 	template<class It, typename Size>
 	void send_n(
 		It first,
@@ -501,21 +501,18 @@ class communicator : protected detail::basic_communicator {
 	shared_communicator split_shared(int key = 0);
 	shared_communicator split_shared(communicator_type t, int key = 0);
 
-	int remote_size() const {
-		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_remote_size)(impl_, &ret);
-		return ret;
-	}
+	int remote_size() const {return MPI_(Comm_remote_size)(impl_);}
+
 	communicator reversed() {return split(0, size() - rank());}
+
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
-		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data(), &ret);
-		return ret;
+		return MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data());
 	}
 	int cartesian_map(std::vector<int> const& dimensions) const {
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
+
 	pointer<void> malloc(MPI_Aint size) const;
 	template<class T = void> void deallocate_shared(pointer<T> p);
 	template<class T = void> void deallocate(pointer<T>& p, MPI_Aint size = 0);
@@ -567,10 +564,10 @@ class communicator : protected detail::basic_communicator {
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const {MPI3_CALL(MPI_Barrier)(impl_);}
+	void barrier() const {MPI_(Barrier)(impl_);}
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
-		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
+		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
 
@@ -585,7 +582,7 @@ class communicator : protected detail::basic_communicator {
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
-		MPI_Comm_set_attr(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
+		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
 	inline void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
@@ -593,7 +590,7 @@ class communicator : protected detail::basic_communicator {
 	void* get_attribute(int kvidx) const {
 		void* v = nullptr;
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
+		MPI_(Comm_get_attr)(impl_, kvidx, &v, &flag);
 		if(flag == 0) {assert(!v); return nullptr;}
 		return v;
 	}
@@ -727,19 +724,17 @@ class communicator : protected detail::basic_communicator {
 		);
 	}
 	template<class It, typename Size>
-	auto send_receive_replace_n(
+	mpi3::status send_receive_replace_n(
 		It first,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
-		MPI_(Sendrecv_replace)(
+		return MPI_(Sendrecv_replace)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			dest, sendtag, source, recvtag, impl_, &ret.impl_
+			dest, sendtag, source, recvtag, impl_
 		);
-		return ret;
 	}
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(
@@ -2942,7 +2937,7 @@ inline window<T> communicator::make_window(mpi3::size_t size){
 }
 #endif
 
-class strided_range{
+class strided_range {
 	int first_;
 	int last_;
 	int stride_ = 1;
@@ -2951,15 +2946,15 @@ class strided_range{
 	strided_range(int f, int l) : first_{f}, last_{l} {}  // NOLINT(bugprone-easily-swappable-parameters)
 	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}  // NOLINT(bugprone-easily-swappable-parameters)
 
-	int front() const{return first_;}
-	int back()  const{return last_ - 1;}
-	int size()  const{return (last_ - first_) / stride_;}
+	int front() const {return first_;}
+	int back()  const {return last_ - 1;}
+	int size()  const {return (last_ - first_) / stride_;}
 };
 
 template<class Range>
 auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading
-	->decltype(self.scatter(begin(r), end(r))){
-		return self.scatter(begin(r), end(r));}
+	->decltype(self.scatter(begin(r), end(r))) {
+		return self.scatter(begin(r), end(r)); }
 
 }  // end namespace mpi3
 }  // end namespace boost
@@ -3075,5 +3070,4 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 #endif
 #endif
-
 

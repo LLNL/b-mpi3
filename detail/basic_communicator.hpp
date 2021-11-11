@@ -1,11 +1,6 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2020
-
+// © Alfredo A. Correa 2018-2021
 #ifndef MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
 #define MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
-// #define OMPI_SKIP_MPICXX 1 // workaround for https://github.com/open-mpi/ompi/issues/5157
 
 #include "../../mpi3/vector.hpp"
 
@@ -20,9 +15,9 @@ mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
 
 #include<cassert>
 
-namespace boost{
-namespace mpi3{
-namespace detail{
+namespace boost {
+namespace mpi3 {
+namespace detail {
 
 class basic_communicator{
  protected:
@@ -38,25 +33,16 @@ class basic_communicator{
 	auto operator=(basic_communicator const&) -> basic_communicator& = delete;
 	auto operator=(basic_communicator&&)      -> basic_communicator& = delete;
 
-//	[[deprecated("communicators are not values, they are not copiable, only duplicable; they cannot be elements of std::vector")]] 
-	basic_communicator(basic_communicator const& other) = delete; // communicators are not copyable, only duplicable, if you know what you are doing use `mutable`
-//		if(MPI_COMM_NULL != other.impl_){
-//			int s = MPI_Comm_dup(other.impl_, &impl_);
-//			if(s != MPI_SUCCESS) throw std::runtime_error("cannot duplicate communicator");
-//		}
-//	}
+	basic_communicator(basic_communicator const&) = delete; // communicators are not copyable, only duplicable, if you know what you are doing, use `mutable`
 	basic_communicator(basic_communicator& other) {
-		if(MPI_COMM_NULL != other.impl_){
-			int s = MPI_Comm_dup(other.impl_, &impl_);
-			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot duplicate communicator");}
-		}
+		if(MPI_COMM_NULL != other.impl_) {MPI_(Comm_dup)(other.impl_, &impl_);}
 	}
-	basic_communicator(basic_communicator&& other) noexcept : 
-		impl_{std::exchange(other.impl_, MPI_COMM_NULL)}
-	{}
-	void swap(basic_communicator& other) noexcept{
-		std::swap(impl_, other.impl_);
-	}
+	basic_communicator(basic_communicator&& other) noexcept :
+		impl_{std::exchange(other.impl_, MPI_COMM_NULL)} {}
+
+	void swap(basic_communicator& o) noexcept {std::swap(impl_, o.impl_);}
+	friend void swap(basic_communicator& self, basic_communicator& other) noexcept {self.swap(other);}
+
 	template<class T>
 	int pack_size(int count, detail::basic_tag /*tag*/) {
 		int size = -1;
@@ -65,7 +51,7 @@ class basic_communicator{
 		return size;
 	}
 	template<class T>
-	int pack_size(int count){
+	int pack_size(int count) {
 		return pack_size<T>(count, detail::value_category_t<T>{});
 	}
 	template<class It, typename Size>
@@ -168,7 +154,7 @@ class basic_communicator{
 		uvector<detail::packed>& b, int pos,
 		It first, It last,
 			detail::forward_iterator_tag /*forward*/
-	){
+	) {
 		while(first != last){
 			pos = unpack_n(b, pos, std::addressof(*first), 1);
 			++first;
@@ -179,7 +165,7 @@ class basic_communicator{
 	auto unpack(
 		uvector<detail::packed>& b, int pos,
 		It first, It last
-	){
+	) {
 		return unpack(
 			b, pos, 
 			first, last, 
@@ -201,7 +187,7 @@ class basic_communicator{
 		);
 	}
 	template<class It, typename Size>
-	auto unpack_n(detail::buffer& b, It first, Size count){
+	auto unpack_n(detail::buffer& b, It first, Size count) {
 	//	assert(0);
 		b.pos = unpack_n(b, b.pos, first, count); 
 		return b.pos;
@@ -213,7 +199,7 @@ class basic_communicator{
 			detail::basic_tag /*basic*/,
 		Size count,
 		int dest, int tag
-	){
+	) {
 		MPI_Send(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
@@ -222,7 +208,7 @@ class basic_communicator{
 		);
 	}
 	template<class It, typename Size>
-	auto send_n(It first, Size count, int dest, int tag = 0){
+	auto send_n(It first, Size count, int dest, int tag = 0) {
 		return send_n(
 			first, 
 				detail::iterator_category_t<It>{},
@@ -237,7 +223,7 @@ class basic_communicator{
 			detail::random_access_iterator_tag /*random_access*/,
 			detail::value_unspecified_tag /*value_unspecified*/,
 		int dest, int tag
-	){
+	) {
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
@@ -246,12 +232,12 @@ class basic_communicator{
 			detail::input_iterator_tag /*input*/,
 			detail::basic_tag /*basic*/,
 		int dest, int tag
-	){
+	) {
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(first, last);
 		return send_n(buffer.data(), buffer.size(), dest, tag);
 	}
 	template<class It>
-	auto send(It first, It last, int dest, int tag = 0){
+	auto send(It first, It last, int dest, int tag = 0) {
 		return send(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -259,10 +245,10 @@ class basic_communicator{
 			dest, tag
 		);
 	}
-	auto send(uvector<detail::packed> const& p, int dest, int tag = 0){
+	auto send(uvector<detail::packed> const& p, int dest, int tag = 0) {
 		return send_n(p.data(), p.size(), dest, tag);
 	}
-	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
+	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		match m;
 		int s = MPI_Mprobe(source, tag, impl_, &m.message::impl_, &m.status::impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot mprobe");}
@@ -275,7 +261,7 @@ class basic_communicator{
 			detail::basic_tag /*basic*/,
 		Size n,
 		int source, int tag
-	){
+	) {
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(n);
 		receive_n(buffer.data(), buffer.size(), source, tag);
 		return std::copy_n(buffer.begin(), n, dest);
@@ -342,7 +328,7 @@ class basic_communicator{
 		It first, Size size, 
 		int dest, int source, // = MPI_ANY_SOURCE, 
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
-	){
+	) {
 		return send_receive_replace_n(first, size, dest, source, sendtag, recvtag);
 	}
 };
@@ -350,22 +336,4 @@ class basic_communicator{
 }  // end namespace detail
 }  // end namespace mpi3
 }  // end namespace boost
-
-#if not __INCLUDE_LEVEL__ // def _TEST_MPI3_DETAIL_BASIC_COMMUNICATOR
-
-#include "../../mpi3/version.hpp"
-
-int main(int argc, char* argv[]){
-
-    int rank, nprocs;
-
-    MPI_Init(&argc,&argv);
-    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-    MPI_Finalize();
-    return 0; 
-}
-
 #endif
-#endif
-
-
