@@ -19,6 +19,7 @@ namespace boost {
 namespace mpi3 {
 
 struct request {
+	// in mpich MPI_Request is same as int
 	MPI_Request impl_ = MPI_REQUEST_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
 	request() = default;
@@ -142,6 +143,29 @@ template<class ContiguousIterator>
 std::vector<int> wait_some(ContiguousIterator first, ContiguousIterator last){
 	return wait_some_n(first, std::distance(first, last));
 }
+
+namespace detail {
+
+// this doesn't work in general because MPI_Request == int in mpich
+//template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Request*>())))* = nullptr>
+//BMPI3_NODISCARD("") mpi3::request call(Args... args) {
+//	mpi3::request ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
+//	auto const e = static_cast<enum error>((*F)(args..., &ret.impl_));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
+//	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
+//	return ret;
+//}
+
+template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Request*>())))* = nullptr>
+BMPI3_NODISCARD("") mpi3::request call_i(Args... args) {
+	mpi3::request ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
+	auto const e = static_cast<enum error>((*F)(args..., &ret.impl_));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
+	return ret;
+}
+
+#define MPI_I(F) detail::call_i<decltype(MPI_I##F), MPI_I##F>  // NOLINT(cppcoreguidelines-macro-usage): name concatenation
+
+}  // end namespace detail
 
 }  // end namespace mpi3
 }  // end namespace boost

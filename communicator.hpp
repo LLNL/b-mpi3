@@ -261,9 +261,9 @@ class communicator : protected detail::basic_communicator {
 	}
 
 	int size() const {
-		if(is_empty()) {return 0;}//throw std::runtime_error("size called on null communicator");
-		int size;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Comm_size)(impl_, &size);
+		if(is_null()) {return 0;}
+		int size = MPI_(Comm_size)(impl_);
+		assert(size > 0);
 		return size;
 	}
 
@@ -341,11 +341,10 @@ class communicator : protected detail::basic_communicator {
 		Size count,
 		int dest, int tag
 	) {
-		mpi3::request r;
-		MPI_(Isend)(
+		mpi3::request r = MPI_I(send)(
 			detail::data(first), count, 
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			dest, tag, impl_, &r.impl_
+			dest, tag, impl_
 		);
 		return r;
 	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
