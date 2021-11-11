@@ -232,6 +232,7 @@ class communicator : protected detail::basic_communicator {
 
 	explicit operator bool() const{return not is_empty();}
 
+	auto& handle() {return impl_;}
 	auto get_mutable()       {return impl_;}
 	auto get()         const {return impl_;}  // TODO(correaa) deprecate
 	impl_t& get() {return this->impl_;}
@@ -347,7 +348,7 @@ class communicator : protected detail::basic_communicator {
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, impl_
 		);
-	}  // mayLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+	}
 	template<class It, typename Size>
 	void send_n(
 		It first,
@@ -566,7 +567,7 @@ class communicator : protected detail::basic_communicator {
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const {MPI3_CALL(MPI_Barrier)(impl_);}
+	void barrier() const {MPI_(Barrier)(impl_);}
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_Comm_connect(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -2941,7 +2942,7 @@ inline window<T> communicator::make_window(mpi3::size_t size){
 }
 #endif
 
-class strided_range{
+class strided_range {
 	int first_;
 	int last_;
 	int stride_ = 1;
@@ -2950,16 +2951,32 @@ class strided_range{
 	strided_range(int f, int l) : first_{f}, last_{l} {}  // NOLINT(bugprone-easily-swappable-parameters)
 	strided_range(int f, int l, int s) : first_{f}, last_{l}, stride_{s} {}  // NOLINT(bugprone-easily-swappable-parameters)
 
-	int front() const{return first_;}
-	int back()  const{return last_ - 1;}
-	int size()  const{return (last_ - first_) / stride_;}
+	int front() const {return first_;}
+	int back()  const {return last_ - 1;}
+	int size()  const {return (last_ - first_) / stride_;}
 };
 
 template<class Range>
 auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded-operator) : experimental operator overloading
-	->decltype(self.scatter(begin(r), end(r))){
-		return self.scatter(begin(r), end(r));}
+	->decltype(self.scatter(begin(r), end(r))) {
+		return self.scatter(begin(r), end(r)); }
 
+}  // end namespace mpi3
+}  // end namespace boost
+
+namespace boost {
+namespace mpi3 {
+namespace detail {
+
+template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Comm*>())))* = nullptr>
+BMPI3_NODISCARD("") mpi3::communicator call(Args... args) {
+	mpi3::communicator ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
+	auto const e = static_cast<enum error>((*F)(args..., &ret.handle()));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
+	return ret;
+}
+
+}  // end namespace detail
 }  // end namespace mpi3
 }  // end namespace boost
 
@@ -3074,5 +3091,4 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 
 #endif
 #endif
-
 
