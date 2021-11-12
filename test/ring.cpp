@@ -9,21 +9,19 @@
 namespace bmpi3 = boost::mpi3;
 
 int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
-	auto const size = world.size(); assert(size != 0);
+	auto const size  = world.size(); assert(size != 0);
+
+	mpi3::process&& next  = world[(world.rank() + size + 1) % size];
+	mpi3::process&& prior = world[(world.rank() + size - 1) % size];
 
 	int token;  // NOLINT(cppcoreguidelines-init-variables)
-	if(world.rank() != 0) {
-		world[world.rank() - 1] >> token;
-		assert(token == -1);
-	} else {
-		token = -1;
-	}
+	if(not world.is_root()) { prior >> token; }
+	else                    {token = -1;      }
 
-	world[(world.rank() + 1) %  size] << token;
+	next << token;
 
-	if(world.rank() == 0) {
-		world[size - 1] >> token;
-		assert(token == -1);
-	}
+	if(    world.is_root()) { prior >> token; }
+
+	assert(token == -1);
 	return 0;
 } catch(...) {return 1;}
