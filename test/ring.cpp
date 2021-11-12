@@ -15,12 +15,12 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
 	mpi3::process&& prior = world[(world.rank() + size - 1) % size];
 
 	int token;  // NOLINT(cppcoreguidelines-init-variables)
-	if(not world.is_root()) { prior >> token; }
-	else                    {token = -1;      }
+	if(not world.is_root()) {prior >> token;}
+	else                    {token = -1;    }
 
 	next << token;
 
-	if(    world.is_root()) { prior >> token; }
+	if(    world.is_root()) {prior >> token;}
 
 	assert(token == -1);
 	return 0;
