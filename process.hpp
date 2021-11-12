@@ -34,10 +34,10 @@ struct process{
 	}
 
 	template<class T>
-	process&& operator>>(T& t) && {
+	process& operator>>(T& t) & {
 		comm_.receive_n(&t, 1, rank_);
 	//	comm_.receive_value(t, rank_);
-		return std::move(*this);  // NOLINT(hicpp-move-const-arg,performance-move-const-arg) TODO(correaa)
+		return *this;  // NOLINT(hicpp-move-const-arg,performance-move-const-arg) TODO(correaa)
 	}
 	template<class T>
 	process&& operator&(T& t) && {
