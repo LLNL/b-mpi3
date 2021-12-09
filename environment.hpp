@@ -16,15 +16,17 @@ $CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx
 
 #include<string>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-enum thread_level : int{
+enum class thread_level : int {
 	single     = MPI_THREAD_SINGLE,
 	funneled   = MPI_THREAD_FUNNELED,
-	serialized = MPI_THREAD_SERIALIZED, 
+	serialized = MPI_THREAD_SERIALIZED,
 	multiple   = MPI_THREAD_MULTIPLE
 };
+
+using thread = thread_level;
 
 inline void finalize() noexcept {
 	std::set_terminate(&std::abort);
@@ -123,7 +125,7 @@ class environment {
 		finalize();
 	}
 
-	inline static thread_level thread_support(){return mpi3::thread_support();}
+	inline static thread_level thread_support() {return mpi3::thread_support();}
 //	static /*inline*/ communicator::keyval<int> const* color_key_p;
 //	static communicator::keyval<int> const& color_key(){return *color_key_p;}
 //	static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
