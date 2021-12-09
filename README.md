@@ -421,38 +421,36 @@ Higher abstractions and use patterns will be implemented, specially those that f
 If you are not using threads at all, you can skip this section, however if you read it you may understand some design decisions taken by the library.
 
 Thread-safety with MPI is extremely complicated, as there are various aspects to it, from the data communicated, to the communicator itself, to the runtime system.
-This library doesn't try to hide this fact, but it provides the tools available to C++ to deal with this complication.
+This library doesn't try to hide this fact; in place, it provides the tools available to C++ to deal with this complication.
 As we will see, there are certain steps to take to make the code _compatible_ with threads.
 
-Absolute thread-safety is a very strong guarantee and it would come at a very steep performance price.
-Almost no general purpose library guarantees thread safety.
-In opposition to thread-safety we will discuss thread-compatibility.
+Absolute thread-safety is a very strong guarantee and it would come at a very steep performance cost.
+Almost no general purpose library guarantees complete thread safety.
+In opposition to thread-safety, we will discuss thread-compatibility which is a more reasonable goal.
 Thread-compatibility referres to the property of a system to be able to thread-safe if extra steps are taken and only when needed.
 
-The first condition to ask for a certain level of level of thread compatibility, is to request it during the creation of the environment.
-The way that it works is that the MPI runtime is asked for a certain level and it may guarantee the same level or a lower one.
-For the purposes of this explanation, any thread compatibility level *different* from `mpi3::single` is logically equivalent.
-(Higher levels may provide better performance.)
-If the system returns `mpi3::single` it means that there is no way to make MPI operations from different thread an expect correct results.
-If your system expect to call MPI in concurrent sections, your only option would be to change to a system that supports MPI threading.
-Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
+The first condition for thread compatibility is to have an MPI environment that supports it.
+If the system provides only a `thread_support` at the level of `mpi3::thread::single` it means that there is no way to make MPI operations from different threads an expect correct results.
+If your system expect to call MPI in concurrent portition sections, your only option would be to change to a system that supports MPI threading.
 
-In this small example, we assume that the program excpects threading and MPI and completely reject the run if the any level different from `single` is not provided. 
-This is not at all terrible choice, optionally supporting threading in a program can be prohibitive.
+In this small example, we assume that the program excpects threading and MPI and completely rejects the run if the any level different from `single` is not provided. 
+This is not at all terrible choice, optionally supporting threading in a program can be prohibitive from a design point of view.
 
 ```cpp
 int main() {
-	mpi3::environment env{mpi3::multiple};
-	switch( env.thread_suppost() ) {
-		case mpi3::single    : throw std::logic_error{"threads not supported"};
-		case mpi3::funneled  : std::cout<<"funneled"<< std::endl;
-		case mpi3::serialized: std::cout<<"serialized"<< std::endl;
-		case mpi3::multiple  : std::cout<<"multiple"<< std::endl;
+	mpi3::environment env{mpi3::thread::multiple};
+	switch( env.thread_support() ) {
+		case mpi3::thread::single    : throw std::logic_error{"threads not supported"};
+		case mpi3::thread::funneled  : std::cout<<"funneled"  <<std::endl;
+		case mpi3::thread::serialized: std::cout<<"serialized"<<std::endl;
+		case mpi3::thread::multiple  : std::cout<<"multiple"  <<std::endl;
 	}
 	...
 ```
 
 Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since `single < funneled < serialized < multiple`.
+
+Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
 
 
 
