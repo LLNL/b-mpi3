@@ -414,13 +414,55 @@ Mutexes themselves can be used to implement atomic operations on data.
 We are implementing memory allocators for remote memory, atomic classes and asynchronous remote function calls.
 Higher abstractions and use patterns will be implemented, specially those that fit into the patterns of the STL algorithms and containers.
 
+# Advanced Topics
+
+## Thread safety
+
+If you are not using threads at all, you can skip this section, however if you read it you may understand some design decisions taken by the library.
+
+Thread-safety with MPI is extremely complicated, as there are various aspects to it, from the data communicated, to the communicator itself, to the runtime system.
+This library doesn't try to hide this fact, but it provides the tools available to C++ to deal with this complication.
+As we will see, there are certain steps to take to make the code _compatible_ with threads.
+
+Absolute thread-safety is a very strong guarantee and it would come at a very steep performance price.
+Almost no general purpose library guarantees thread safety.
+In opposition to thread-safety we will discuss thread-compatibility.
+Thread-compatibility referres to the property of a system to be able to thread-safe if extra steps are taken and only when needed.
+
+The first condition to ask for a certain level of level of thread compatibility, is to request it during the creation of the environment.
+The way that it works is that the MPI runtime is asked for a certain level and it may guarantee the same level or a lower one.
+For the purposes of this explanation, any thread compatibility level *different* from `mpi3::single` is logically equivalent.
+(Higher levels may provide better performance.)
+If the system returns `mpi3::single` it means that there is no way to make MPI operations from different thread an expect correct results.
+If your system expect to call MPI in concurrent sections, your only option would be to change to a system that supports MPI threading.
+Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
+
+In this small example, we assume that the program excpects threading and MPI and completely reject the run if the any level different from `single` is not provided. 
+This is not at all terrible choice, optionally supporting threading in a program can be prohibitive.
+
+```cpp
+int main() {
+	mpi3::environment env{mpi3::multiple};
+	switch( env.thread_suppost() ) {
+		case mpi3::single    : throw std::logic_error{"threads not supported"};
+		case mpi3::funneled  : std::cout<<"funneled"<< std::endl;
+		case mpi3::serialized: std::cout<<"serialized"<< std::endl;
+		case mpi3::multiple  : std::cout<<"multiple"<< std::endl;
+	}
+	...
+```
+
+Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since `single < funneled < serialized < multiple`.
+
+
+
 # Conclusion
 
 The goal is to provide a type-safe, efficient, generic interface for MPI.
 We achieve this by leveraging template code and classes that C++ provides.
 Typical low-level use patterns become extremely simple, and that exposes higher-level patterns.
 
-# Tutorial
+# Mini tutorial
 
 This section describes the process of bringing a C++ program that uses the original MPI interface to one that uses B.MPI3.
 Below it is a valid C++ MPI program using send and receive function.
@@ -491,7 +533,7 @@ int main(int argc, char **argv) try {
 
 Notice that we are getting a reference to the global communicator using the `get_world_instance`, then, with the ampersand (`&`) operator, we obtain a `MPI_Comm` handle than can be used with the rest of the code untouched.
 
-Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the enviroment.
+Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the environment.
 Just like in classic MPI, it is wrong to create more than one environment.
 
 Both, accesing the global communicator directky is in general considered problematic.
