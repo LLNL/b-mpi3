@@ -62,6 +62,7 @@ communicator_reduce_in_place.cpp
 communicator_scatter.cpp
 communicator_set_error_handler.cpp
 communicator_split.cpp
+environment_thread.cpp
 empty_main.cpp
 window_put_get.cpp
 ring.cpp
