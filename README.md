@@ -450,16 +450,23 @@ int main() {
 
 Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since the levels `multiple > serialized > funneled > single` are ordered.
 
-### Data
+### From C to C++
+
+The MPI-C standard is expressed in standrd C, the C-language doesn't have many ways to deal with threads except by throrough documentation.
+This indicates that any level of thread safety that we can express in C++ cannot be derived by the C syntax alone; it has to be derived at best from the documentation and if documentation is lacking from common sense and common practice in existing MPI implementations.
+
+The modern C++ language has several tools to deal with thread safety: the C++11 memory model, the `const`, `mutable` and `thread_local` attributes and a few other standard types and functions, such as `std::mutex`, `std::call_once`, etc.
+
+### Data and threads
 
 Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
 Clear ownership and scoping of *data* helps a lot toward the thread safety. 
 Avoiding mutable shared data between threads also helps a lot. 
-As a last resort, data can be locked with std::mutex`-like object to be written or accessed one thread at time.
+As a last resort, data can be locked with mutex objects to be written or accessed one thread at time.
 
-### Communicator
+### Communicator and threads
 
-The library doesn't control or owns data for the most part, therefore the main concern regarding threading that the library is within the communicator class itself.
+The library doesn't control or owns data for the most part, therefore the main concern of the library regarding threading is within the communicator class itself.
 
 The C-MPI interface briefly mentions thread-safety, for example most MPI operations are acompained by the following note (e.g. https://www.mpich.org/static/docs/latest/www3/MPI_Send.html):
 
@@ -470,17 +477,23 @@ The C-MPI interface briefly mentions thread-safety, for example most MPI operati
 This doesn't mean that that *all* calls to, for example, `MPI_Send`, can be safely done from different threads concurrently, only some of them, a.k.a. with completely different argument can be safe.
 
 In practice it is observable that for most MPI operations the "state" of the communicator can change in time.
-Even if after the operation the communicator seems to be in the same state as before the call the operation itself changes briefly the state of the object.
-This internal state can be observed from another thread even through undefined behavior.
-In modern C++, this is enough to mark communicator operations a no-`const` (i.e. an operation than can be applied only on a mutable communicator).
+Even if after the operation the communicator seems to be in the same state as before the call the operation itself changes, at least briefly, the state of the communicator object.
+This internal state can be observed from another thread even through undefined behavior, even if transiently.
 
-`MPI_Send` has "tags" to differenciate separate communicators, this is still not a enough since the tag is a runtime variable.
-Agreeing in tags would in itself require synchronization.
-Besides most collective operation do not have tags at all. 
+In modern C++, this is enough to mark communicator operations non-`const` (i.e. an operation than can be applied only on a mutable instance of the communicator).
+
+`MPI_Send` has "tags" to differenciate separate communications, this is still not a enough since the tag is a runtime variable, of which the library doesn't know the origin.
+Besides, tags is not a general solution since most collective operation do not use tags at all.
 It has been known for a while that the identity of the communicator in some sense serves as a tag for collective communications.
-This is why it is so useful to be able to duplicate communicators.
+This is why it is so useful to be able to duplicate communicators to distinguish between collective communication messages.
+
+This so far, explains why most members of communicator are non-`const`, it also explains why most of the time `communicators` must either be passed by non-`const` reference or by value.
 
 This brings us to the important topic of communicator construction and assigment.
+
+## Duplication of communicator
+
+
 
 
 # Conclusion
