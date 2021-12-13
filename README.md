@@ -418,20 +418,20 @@ Higher abstractions and use patterns will be implemented, specially those that f
 
 ## Thread safety
 
-If you are not using threads at all, you can skip this section, however if you read it you may understand some design decisions taken by the library.
+If you are not using threads at all, you can skip this section, however here you can find some rationale behind design decisions taken by the library.
 
-Thread-safety with MPI is extremely complicated, as there are various aspects to it, from the data communicated, to the communicator itself, to the runtime system.
+Thread-safety with MPI is extremely complicated, as there are various aspects to it, from the data communicated, to the communicator itself, to operations order, to the runtime system.
 This library doesn't try to hide this fact; in place, it provides the tools available to C++ to deal with this complication.
-As we will see, there are certain steps to take to make the code _compatible_ with threads.
+As we will see, there are certain steps to make the code _compatible_ with threads.
 
 Absolute thread-safety is a very strong guarantee and it would come at a very steep performance cost.
 Almost no general purpose library guarantees complete thread safety.
-In opposition to thread-safety, we will discuss thread-compatibility which is a more reasonable goal.
+In opposition to thread-safety, we will discuss thread-compatibility, which is a more reasonable and graded goal.
 Thread-compatibility referres to the property of a system to be able to be thread-safe if extra steps are taken and only when needed.
 
 The first condition for thread compatibility is to have an MPI environment that supports it.
-If you have an MPI system provides only a `thread_support` at the level of `mpi3::thread::single` it means that there is no way to make MPI operations from different threads an expect correct results.
-If your program expect to call MPI in concurrent portition sections, your only option would be to change to a system that supports MPI threading.
+If you have an MPI system provides only a `thread_support` at the level of `mpi3::thread::single` it means that there is probably no way to make MPI calls from different threads an expect correct results.
+If your program expects to call MPI in concurrent portition sections, your only option would be to change to a system that supports MPI threading.
 
 In this small example, we assume that the program excpects threading and MPI and completely rejects the run if the any level different from `single` is not provided. 
 This is not at all terrible choice, optionally supporting threading in a big program can be prohibitive from a design point of view.
@@ -452,17 +452,18 @@ Alternatively you can just check that `env.thread_suppost() > mpi3::single`, sin
 
 ### From C to C++
 
-The MPI-C standard is expressed in standrd C, the C-language doesn't have many ways to deal with threads except by throrough documentation.
-This indicates that any level of thread assurance that we can express in C++ cannot be derived by the C syntax alone; it has to be derived at best from the documentation and if documentation is lacking from common sense and common practice in existing MPI implementations.
+The MPI-C standard is expressed in the C language. 
+The C-language doesn't have many ways to deal with threads except by throrough documentation.
+This indicates that any level of thread assurance that we can express in C++ cannot be derived by the C syntax alone; it has to be derived at best from the documentation and when documentation is lacking from common sense and common practice in existing MPI implementations.
 
 The modern C++ language has several tools to deal with thread safety: the C++11 memory model, the `const`, `mutable` and `thread_local` attributes and a few other standard types and functions, such as `std::mutex`, `std::call_once`, etc.
 
 ### Data and threads
 
-Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
+Even if MPI operations are called outside concurrent sections it is still your responsibility to make sure that the *data* involved is synchronized; this is always the case.
 Clear ownership and scoping of *data* helps a lot toward the thread safety. 
-Avoiding mutable shared data between threads also helps a lot. 
-As a last resort, data can be locked with mutex objects to be written or accessed one thread at time.
+Avoiding mutable shared data between threads also helps. 
+Perhaps as a last resort, data can be locked with mutex objects to be written or accessed one thread at time.
 
 ### Communicator and threads
 
