@@ -427,14 +427,14 @@ As we will see, there are certain steps to take to make the code _compatible_ wi
 Absolute thread-safety is a very strong guarantee and it would come at a very steep performance cost.
 Almost no general purpose library guarantees complete thread safety.
 In opposition to thread-safety, we will discuss thread-compatibility which is a more reasonable goal.
-Thread-compatibility referres to the property of a system to be able to thread-safe if extra steps are taken and only when needed.
+Thread-compatibility referres to the property of a system to be able to be thread-safe if extra steps are taken and only when needed.
 
 The first condition for thread compatibility is to have an MPI environment that supports it.
-If the system provides only a `thread_support` at the level of `mpi3::thread::single` it means that there is no way to make MPI operations from different threads an expect correct results.
-If your system expect to call MPI in concurrent portition sections, your only option would be to change to a system that supports MPI threading.
+If you have an MPI system provides only a `thread_support` at the level of `mpi3::thread::single` it means that there is no way to make MPI operations from different threads an expect correct results.
+If your program expect to call MPI in concurrent portition sections, your only option would be to change to a system that supports MPI threading.
 
 In this small example, we assume that the program excpects threading and MPI and completely rejects the run if the any level different from `single` is not provided. 
-This is not at all terrible choice, optionally supporting threading in a program can be prohibitive from a design point of view.
+This is not at all terrible choice, optionally supporting threading in a big program can be prohibitive from a design point of view.
 
 ```cpp
 int main() {
@@ -448,10 +448,39 @@ int main() {
 	...
 ```
 
-Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since `single < funneled < serialized < multiple`.
+Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since the levels `multiple > serialized > funneled > single` are ordered.
+
+### Data
 
 Even if MPI operations are called outside concurrent sections it is still be your responsibility to make sure that the *data* involved is synchronized, this is always the case.
+Clear ownership and scoping of *data* helps a lot toward the thread safety. 
+Avoiding mutable shared data between threads also helps a lot. 
+As a last resort, data can be locked with std::mutex`-like object to be written or accessed one thread at time.
 
+### Communicator
+
+The library doesn't control or owns data for the most part, therefore the main concern regarding threading that the library is within the communicator class itself.
+
+The C-MPI interface briefly mentions thread-safety, for example most MPI operations are acompained by the following note (e.g. https://www.mpich.org/static/docs/latest/www3/MPI_Send.html):
+
+> ### Thread and Interrupt Safety
+> 
+> This routine is thread-safe. This means that this routine may be safely used by multiple threads without the need for any  user-provided thread locks. However, the routine is not interrupt safe. Typically, this is due to the use of memory allocation routines such as malloc or other non-MPICH runtime routines that are themselves not interrupt-safe. 
+
+This doesn't mean that that *all* calls to, for example, `MPI_Send`, can be safely done from different threads concurrently, only some of them, a.k.a. with completely different argument can be safe.
+
+In practice it is observable that for most MPI operations the "state" of the communicator can change in time.
+Even if after the operation the communicator seems to be in the same state as before the call the operation itself changes briefly the state of the object.
+This internal state can be observed from another thread even through undefined behavior.
+In modern C++, this is enough to mark communicator operations a no-`const` (i.e. an operation than can be applied only on a mutable communicator).
+
+`MPI_Send` has "tags" to differenciate separate communicators, this is still not a enough since the tag is a runtime variable.
+Agreeing in tags would in itself require synchronization.
+Besides most collective operation do not have tags at all. 
+It has been known for a while that the identity of the communicator in some sense serves as a tag for collective communications.
+This is why it is so useful to be able to duplicate communicators.
+
+This brings us to the important topic of communicator construction and assigment.
 
 
 # Conclusion
