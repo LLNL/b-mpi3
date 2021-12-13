@@ -168,7 +168,7 @@ struct receive_request;
 
 struct FILE;
 
-struct process;
+class process;
 
 struct ostream;
 
@@ -578,7 +578,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 
-	auto operator[](int rank) -> process;
+	auto operator[](int rank) -> process;  // TODO(correaa) add overload for const&
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
@@ -1742,15 +1742,32 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		all_reduce_value(int{t}, ret, op); 
 		return ret != 0;
 	}
+
 	template<class T>
-	auto max(T const& t){
-		auto ret = std::numeric_limits<T>::lowest(); 
+	auto max(T const& t) {
+		auto ret = std::numeric_limits<T>::lowest();
 		all_reduce_value(t, ret, mpi3::max<>{}); return ret;
 	}
 	template<class T>
-	auto min(T const& t){
+	auto min(T const& t) {
 		auto ret = std::numeric_limits<T>::max();
 		all_reduce_value(t, ret, mpi3::min<>{}); return ret;
+	}
+	template<class T>
+	auto max_loc(T const& t) {
+		mpi3::vlp<T> const in{t, rank()};
+		mpi3::vlp<T> ret{std::numeric_limits<T>::lowest(), -1};
+		all_reduce_value(in, ret, mpi3::max_loc<>{});  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+		return ret;
+	}
+	template<class T>
+	std::pair<T, process> max_location(T const& t);
+
+	template<class T>
+	T* max_element(T& t) {
+		auto const ml = max_loc(t);
+		if(ml.location == rank()) {assert(t == ml.value);}
+		return ml.location == rank()? &t : nullptr;
 	}
 
 	template<
@@ -2858,21 +2875,21 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 //	comm.all_gather_n(std::addressof(t), 1, first, root); 
 //}
 
-template<class T>
-friend T operator+=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
-	return comm.all_reduce_value(t, std::plus<>{});
-}
+	template<class T>
+	friend T operator+=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		return comm.all_reduce_value(t, std::plus<>{});
+	}
 
-template<class T>
-friend T operator&=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
-	return comm.all_reduce_value(t, std::logical_and<>{});
-}
+	template<class T>
+	friend T operator&=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		return comm.all_reduce_value(t, std::logical_and<>{});
+	}
 
-template<class T>
-friend communicator& operator<<(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
-	comm.send_value(t);
-	return comm;
-}
+	template<class T>
+	friend communicator& operator<<(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		comm.send_value(t);
+		return comm;
+	}
 
 
 };

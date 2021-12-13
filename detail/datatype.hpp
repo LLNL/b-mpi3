@@ -1,4 +1,4 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
+#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 #endif
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
@@ -18,9 +18,16 @@ mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpi
 #include<type_traits>
 #include<utility> // pair
 
-namespace boost{
-namespace mpi3{
-namespace detail{
+namespace boost {
+namespace mpi3 {
+
+template<class T>
+struct vlp {  // value location pair
+	T value;
+	int location;
+};
+
+namespace detail {
 
 using float_int       = std::pair<float      , int>;
 using long_int        = std::pair<long       , int>;  // NOLINT(google-runtime-int) : long <-> int64
@@ -101,13 +108,10 @@ MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_CXX_FLOAT_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_CXX_DOUBLE_COMPLEX);
 
-MPI3_DECLARE_DATATYPE(float_float            , MPI_CXX_FLOAT_COMPLEX);
-	static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
-MPI3_DECLARE_DATATYPE(double_double          , MPI_CXX_DOUBLE_COMPLEX);
-	static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(float_float            , MPI_CXX_FLOAT_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(double_double          , MPI_CXX_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_CXX_DOUBLE_COMPLEX);
-MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX);
-	static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 #ifdef __CUDACC__
 MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
@@ -120,8 +124,15 @@ MPI3_DECLARE_DATATYPE(short_int              , MPI_SHORT_INT);
 MPI3_DECLARE_DATATYPE(int_int                , MPI_2INT);
 MPI3_DECLARE_DATATYPE(long_double_int        , MPI_LONG_DOUBLE_INT);
 
-//BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t, MPI_AINT);
-//BOOST_MPI3_DECLARE_DATATYPE(std::size_t, MPI_AINT);
+MPI3_DECLARE_DATATYPE(vlp<float>             , MPI_FLOAT_INT);
+MPI3_DECLARE_DATATYPE(vlp<long>              , MPI_LONG_INT);
+MPI3_DECLARE_DATATYPE(vlp<double>            , MPI_DOUBLE_INT);
+MPI3_DECLARE_DATATYPE(vlp<short>             , MPI_SHORT_INT);
+MPI3_DECLARE_DATATYPE(vlp<int>               , MPI_2INT);
+MPI3_DECLARE_DATATYPE(vlp<long double>       , MPI_LONG_DOUBLE_INT);
+
+//BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t  , MPI_AINT);
+//BOOST_MPI3_DECLARE_DATATYPE(std::size_t    , MPI_AINT);
 MPI3_DECLARE_DATATYPE(void*                  , MPI_AINT);
 
 //BOOST_MPI3_DECLARE_DATATYPE(bool, MPI_INT);
@@ -155,7 +166,7 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int main(){
+int main() {
 	using mpi3::detail::is_basic;
 
 	static_assert( is_basic<int>{}, "");

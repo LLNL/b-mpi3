@@ -15,13 +15,13 @@ namespace mpi3 {
 
 using boost::optional;  // TODO(correaa) use std::optional in C++17
 
-struct process{
- private:
+class process {
 	communicator& comm_;
 	int rank_;
 	friend boost::mpi3::communicator;
 
 	process(communicator& comm, int rank) : comm_{comm}, rank_{rank} {}
+
  public:
 	communicator& comm() const {return comm_;}
 
@@ -102,6 +102,15 @@ std::vector<T> operator|=(communicator& comm, T const& t) {
 template<class T>
 std::vector<T> operator|=(process&& self, T const& t) {
 	return self.comm().gather_value(t, self.rank());
+}
+
+template<class T>
+std::pair<T, process> communicator::max_location(T const& t) {
+	auto const ml = max_loc(t);
+	return std::pair<T, process>{
+		ml.value,
+		process{*this, ml.location}
+	};
 }
 
 }  // end namespace mpi3

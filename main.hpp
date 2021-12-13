@@ -15,7 +15,7 @@ static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world
 }  // end namespace mpi3
 }  // end namespace boost
 
-int main(int argc, char* argv[]) try {  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`
+int main(int argc, char** argv) try {  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`, you should define `boost::mpi3::main(int argc, char** argv, boost::mpi3::communicator world)` instead
 	boost::mpi3::environment env{argc, argv};
 	try{
 		return boost::mpi3::main(argc, argv, /*env.*/ boost::mpi3::environment::get_world_instance());
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) try {  // NOLINT(misc-definitions-in-headers) :
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int boost::mpi3::main(int argc, char* argv[], mpi3::communicator world){
+int boost::mpi3::main(int argc, char* argv[], mpi3::communicator world) {
 	if(world.rank() == 0) cout<< mpi3::version() <<'\n';
 	mpi3::communicator duo = world < 2;
 	if(duo) cout <<"my rank in comm "<< duo.name() <<" is "<< duo.rank() <<'\n';

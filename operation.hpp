@@ -71,18 +71,32 @@ using minus = std::minus<T>;
 template<class T = void>
 using multiplies = std::multiplies<T>;
 
-template<class T = void> struct min{
-	T const& operator()(T const& t1, T const& t2) const{return std::min(t1, t2);}
+template<class T = void> struct min {
+	T const& operator()(T const& t1, T const& t2) const {return std::min(t1, t2);}
 };
 template<> struct min<void>{
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const{return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
-template<class T = void> struct max{
-	T const& operator()(T const& t1, T const& t2) const{return std::max(t1, t2);}
+template<class T = void> struct max {
+	T const& operator()(T const& t1, T const& t2) const {return std::max(t1, t2);}
 };
-template<> struct max<void>{
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const{return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+template<> struct max<void> {
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+};
+
+template<class T = void> struct max_loc {  // the only differences is that argument is assumed to be a pair, and second element is int
+	T const& operator()(T const& t1, T const& t2) const {std::max(t1, t2);}
+};
+template<> struct max_loc<void> {
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+};
+
+template<class T = void> struct min_loc {  // the only differences is that argument is assumed to be a pair, and second element is int
+	T const& operator()(T const& t1, T const& t2) const {std::min(t1, t2);}
+};
+template<> struct min_loc<void> {
+	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
 template<class Op> struct predefined_operation;
@@ -101,6 +115,9 @@ BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::logical_and<>, MPI_LAND, logical_an
 
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(max<>, MPI_MAX, maximum);
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min<>, MPI_MIN, minimum);
+
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(max_loc<>, MPI_MAXLOC, maximum_location);
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min_loc<>, MPI_MINLOC, minimum_location);
 
 #undef BOOST_MPI3_DECLARE_PREDEFINED_OPERATION
 

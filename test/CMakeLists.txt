@@ -64,6 +64,7 @@ communicator_set_error_handler.cpp
 communicator_split.cpp
 empty_main.cpp
 window_put_get.cpp
+reduce_maxloc.cpp
 ring.cpp
 shared_mutex.cpp
 simple_send_receive.cpp
@@ -114,6 +115,13 @@ foreach(TEST_FILE ${TEST_SRCS})
   )
     set(NPROC 6)
   endif()
+
+  if (
+	   (TEST_FILE STREQUAL "reduce_maxloc.cpp"  )
+  )
+    set(NPROC 4)
+  endif()
+
   if(DEFINED ENV{VALGRIND_EXE})
     add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1 ./${TEST_EXE})
   else()
