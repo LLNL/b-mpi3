@@ -1755,15 +1755,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class T>
 	auto max_loc(T const& t) {
-		struct {
-			T value;
-			int location;
-		} ret{
-			std::numeric_limits<T>::lowest(),
-			-1
-		};
-		auto const in = std::make_pair(t, rank());
-		all_reduce_value(in, reinterpret_cast<std::pair<T, int>&>(ret), mpi3::max_loc<>{});  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+		mpi3::vlp<T> in{t, rank()};
+		mpi3::vlp<T> ret{std::numeric_limits<T>::lowest(), -1};
+		all_reduce_value(in, ret, mpi3::max_loc<>{});  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 		return ret;
 	}
 	template<class T>
