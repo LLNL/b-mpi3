@@ -1755,9 +1755,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class T>
 	auto max_loc(T const& t) {
-		auto const t_loc = std::make_pair(t, rank());
-		auto ret = std::make_pair(std::numeric_limits<T>::lowest(), -1);
-		all_reduce_value(t_loc, ret, mpi3::max_loc<>{});
+		struct {
+			T value;
+			int location;
+		} ret{
+			std::numeric_limits<T>::lowest(),
+			-1
+		};
+		all_reduce_value(std::pair(t, rank()), std::tie(ret.value, ret.location), mpi3::max_loc<>{});
 		return ret;
 	}
 //	template<class T>
