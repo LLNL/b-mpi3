@@ -1761,7 +1761,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return ret;
 	}
 	template<class T>
-	auto max_location(T const& t) {
+	std::pair<T, process> max_location(T const& t) {
 		auto const ml = max_loc(t);
 		return std::pair<T, process>{
 			ml.value,
