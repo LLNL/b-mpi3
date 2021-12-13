@@ -168,7 +168,7 @@ struct receive_request;
 
 struct FILE;
 
-struct process;
+class process;
 
 struct ostream;
 
@@ -578,7 +578,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 
-	auto operator[](int rank) -> process;
+	auto operator[](int rank) -> process;  // TODO(correaa) add overload for const&
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
@@ -1762,19 +1762,23 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			std::numeric_limits<T>::lowest(),
 			-1
 		};
-		all_reduce_value(std::pair(t, rank()), std::tie(ret.value, ret.location), mpi3::max_loc<>{});
+		auto const in = std::make_pair(t, rank());
+		all_reduce_value(in, reinterpret_cast<std::pair<T, int>&>(ret), mpi3::max_loc<>{});  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 		return ret;
 	}
-//	template<class T>
-//	auto max_location(T const& t) {
-//		auto const ml = max_loc(t);
-//		return std::pair<T, process>{ml.first, (*this)[ml.second]};  // process is an incomplete type here
-//	}
+	template<class T>
+	auto max_location(T const& t) {
+		auto const ml = max_loc(t);
+		return std::pair<T, process>{
+			ml.value,
+			process{*this, ml.location}
+		};
+	}
 	template<class T>
 	T* max_element(T& t) {
 		auto const ml = max_loc(t);
-		if(ml.second == rank()) {assert(t == ml.first);}
-		return ml.second == rank()? &t : nullptr;
+		if(ml.location == rank()) {assert(t == ml.value);}
+		return ml.location == rank()? &t : nullptr;
 	}
 
 	template<

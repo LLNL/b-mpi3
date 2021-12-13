@@ -1,4 +1,5 @@
 #include "../../mpi3/main.hpp"
+#include "../../mpi3/process.hpp"
 
 namespace mpi3 = boost::mpi3;
 
@@ -14,13 +15,19 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	{
 		auto reduction = world.max_loc(data);
 
-		assert( reduction.first == 78 );
-		assert( reduction.second == 3 );
+		assert( reduction.value == 78 );
+		assert( reduction.location == 3 );
 	}
-#if 0
+#if __cpp_structured_bindings >= 201606
 	{
-		auto&& [m, p] = world.max_location(data);
-		assert( m == 78 );
+		auto [value, location] = world.max_loc(data);
+		assert( value == 78 );
+		assert( location == 3 );
+	}
+	{
+		auto&& [value, procs] world.max_location(data);
+		assert( value == 78 );
+		assert( proc.rank() == 3 );
 	}
 #endif
 	{
@@ -31,7 +38,6 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 			assert( not max_ptr );
 		}
 	}
-
 	return 0;
 } catch(...) {
 	return 1;

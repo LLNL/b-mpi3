@@ -15,13 +15,13 @@ namespace mpi3 {
 
 using boost::optional;  // TODO(correaa) use std::optional in C++17
 
-struct process{
- private:
+class process {
 	communicator& comm_;
 	int rank_;
 	friend boost::mpi3::communicator;
 
 	process(communicator& comm, int rank) : comm_{comm}, rank_{rank} {}
+
  public:
 	communicator& comm() const {return comm_;}
 
