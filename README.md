@@ -453,7 +453,7 @@ Alternatively you can just check that `env.thread_suppost() > mpi3::single`, sin
 ### From C to C++
 
 The MPI-C standard is expressed in standrd C, the C-language doesn't have many ways to deal with threads except by throrough documentation.
-This indicates that any level of thread safety that we can express in C++ cannot be derived by the C syntax alone; it has to be derived at best from the documentation and if documentation is lacking from common sense and common practice in existing MPI implementations.
+This indicates that any level of thread assurance that we can express in C++ cannot be derived by the C syntax alone; it has to be derived at best from the documentation and if documentation is lacking from common sense and common practice in existing MPI implementations.
 
 The modern C++ language has several tools to deal with thread safety: the C++11 memory model, the `const`, `mutable` and `thread_local` attributes and a few other standard types and functions, such as `std::mutex`, `std::call_once`, etc.
 
@@ -488,13 +488,156 @@ It has been known for a while that the identity of the communicator in some sens
 This is why it is so useful to be able to duplicate communicators to distinguish between collective communication messages.
 
 This so far, explains why most members of communicator are non-`const`, it also explains why most of the time `communicators` must either be passed by non-`const` reference or by value.
+(This is not unheard of in C++, standard streams generally need be mutable to be useful (e.g. `std::cout` or `std::ifstream`), even though they don't seem to have a changing state.)
 
 This brings us to the important topic of communicator construction and assigment.
 
 ## Duplication of communicator
 
+In C, custom structures do not have special member functions that indicate copying.
+In general this is provided by free functions operating in pointer or handle types, and in general in their signature ignore `const`ness.
+
+In C-MPI, the main function to duplicate a communicator is `int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)`.
+When translating from C to C++ we have to understand that `MPI_Comm` is a handle to a communicator, that is, it behaves like a pointer.
+In general the source (first argument) is conceptually constant (unmodified) during a copy, so we could be tempted to mark it as const when translating to C++. 
+
+```cpp
+struct communicator {
+    ...
+    communicator duplicate() const;  // returns a new communicator, congruent to the current communicator
+};
+```
+Furdermore, we could be tempted to call it `copy` or even to make it part of the copy-constructor.
+
+But, alas, this is not the case according to the rules we delineated earlier.
+We know that duplication is an operation that requires communication and it is observable (through concurrent threads) that the internal state of the original communicator is changed *while* it is duplicated.
+Therefore to be honest with the semantics of communicator duplication we are forced to implement this function as non const.
+
+```cpp
+struct communicator {
+    ...
+    communicator duplicate();  // returns a new communicator, congruent to the current communicator
+};
+```
+
+The consequence of this line of though is that a `const` communicator cannot be duplicated.
+That is, not only such communicator cannot do any communication operation but it cannot be duplicated itself.
+
+```cpp
+mpi3::communicator new_comm = comm.duplicate();
+```
+(in C++17 this is correct even if there is no copy-constructor or move-constructor)
 
 
+This syntax makes very explicit what is the operation.
+
+## Communicator as an implementation detail
+
+Note that so far we didn't indicate how to use `mpi3::communicator` with threads, we are simply being honest of what each MPI operation is likely to perform behind the scenes regarding the (transient) state of the communicator.
+
+In C++ it is very tempting to include a communicator to each object that requieres to perform communication to maintain its internal consistency.
+Suppose we have a data that is distributed across many processes, and that we store a instance of the communicator containing these processes.
+Such class could have operations that modify its state and other that do not.
+The correct design is to mark the function in the latter category as `const`.
+
+```cpp
+class distributed_data {
+    void set() { ... }
+    void print() const { ... }
+private:
+    mpi3::communicator comm_;
+};
+```
+
+However such design doesn't work, because for `print` to do any actual communication (e.g. to communicate some data to the root process) would need to have access to a mutable communicator, the `const` mark prevents that.
+
+One option is to remove const by force,
+```
+    void print() const { const_cast<mpi3::communicator&>(comm_).do_something()... }
+```
+which would work but it is not very idiomatic.
+Besides, this class would become **hostile** to threads, because two simultaneous `print` calls (which are marked as `const`) on the same class could overlap, the messsages could be mixed and weird behavior can appear under threads and we would need to look inside the implementation of `print`.
+
+This leads to a much more modern design which would use the keyword `mutable`.
+
+```cpp
+class distributed_data {
+    void set() { ... }
+    void print() const { ... }
+private:
+    mutable mpi3::communicator comm_;
+};
+```
+
+This will allow the use of the communicator from internals of `print() const` without the use of `const_cast`.
+This doesn't save us from the problem of using the communicator concurrently but at least it is clear in the declaration of the class.
+As a matter of fact this `mutable` attribute is exactly what marks the class a thread unsafe.
+If a single instance of the class is never used across threads there is nothing else that we need to do.
+Note also that different instances of the class can also be used from different threads, since they don't share anything, nor internal data or their internal communicator.
+
+What if you want to make your class, that contains a communicator thread safe, at least for non mutating (const) members?
+For that you need to implement your own synchronization or locking mechanism.
+There is no single recipe for that, you can use a single mutex to lock access to the communicator and data or the communicator alone.
+
+```cpp
+class distributed_data {
+    void set() { ... }
+    void print() const { std::lock_guard<std::mutex> guard{mtx_}; ... use comm_ ... }
+private:
+	mutable std::mutex mtx_;
+    mutable mpi3::communicator comm_;
+};
+```
+
+I can not give a general recipe beyond this point, because there are many possible choices on how to make class thread safe (e.g. data-safe) or thread safe to some specific level (operation-safe).
+The whole point is that the library gives you this option, to trade-off safety and efficiency to the desired degree.
+
+In fact a (bad) blanket way to make the library thread safe is to wrap every communicator in class with a mutex and make all most communication operations `const`. 
+This would force an unacceptable operation const.
+
+### No copy constructor, but duplicate constructor
+
+So far we shown the `duplicate` interface function as a mechanism for duplicating communicators (`auto new_comm = comm.duplicate()`), which is nice because it makes the operation very explicit, but also difficult to integrate with other parts of C++.
+
+A reasonable copy constructor of the class containing a communicator.
+
+```cpp
+class distributed_data {
+    distributed_data(distributed_data const& other) : comm_{other.comm_.duplicate()} {}
+private:
+    ...
+    mutable mpi3::communicator comm_;
+};
+```
+Note that this code is valid because `comm_` is a mutable member of `other`.
+The worst part of forcing us to use the "non-standard" `duplicate` function is that we can no longer default the copy constructor.
+
+Copying in C++ is usually delegate to special member functions such as the copy constructor and copy assignment.
+However these function take their source argument as `const` reference and as such it cannot call the `duplicate` member.
+(And even if we could we would be lying to the compiler in the sense that we could make the system crash by copying concurrently a single (supposedly) `const` communicator that is shared in two threads.)
+
+However the language is general enough to allow a constructor by non-const reference.
+The signature of this constructor is this one
+
+```cpp
+communicator::communicator(communicator& other) {...}
+communicator::communicator(communicator const&) = delete;  // no copy constructor
+```
+
+There is no standard name for this type of constructor, I choose to call it "duplicate"-constructor, or mutable-copy-constructor.
+This function does internally call `MPI_Comm_dup`, like `duplicate()` it can only be called with a source that is mutable.
+This makes the copy constructor of the containing class more standard, or even can be `= default;`.
+
+```cpp
+class distributed_data {
+    distributed_data(distributed_data const& other) : comm_{other.comm_} {}
+    ...
+};
+```
+
+(This is not completely strage to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. Other classes have special "duplication" semantics, for example random distributions, such as [`std::uniform_real_distribution`](https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution).)
+
+**In summary**, 1) all important communication operations are non-const because acording to the rules and practice of modern C++ the internal state of the communicator is affected by the operation, 2) including the duplicate operation, 3) mutable is a good marker to indicate potential problems with threads and the need for custom synchronization mechanism 4) the need may be critical or not, the user of the library decides, 5) mutable instantance of communicators (i.e. non-`const` variables or mutable members) canbe duplicated using standard C++ syntax via "duplicate"-constructor or via "duplicate" member functions.
 
 # Conclusion
 
