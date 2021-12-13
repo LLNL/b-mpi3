@@ -1761,13 +1761,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return ret;
 	}
 	template<class T>
-	std::pair<T, process> max_location(T const& t) {
-		auto const ml = max_loc(t);
-		return std::pair<T, process>{
-			ml.value,
-			process{*this, ml.location}
-		};
-	}
+	std::pair<T, process> max_location(T const& t);
+
 	template<class T>
 	T* max_element(T& t) {
 		auto const ml = max_loc(t);

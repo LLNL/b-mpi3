@@ -104,6 +104,15 @@ std::vector<T> operator|=(process&& self, T const& t) {
 	return self.comm().gather_value(t, self.rank());
 }
 
+template<class T>
+std::pair<T, process> communicator::max_location(T const& t) {
+	auto const ml = max_loc(t);
+	return std::pair<T, process>{
+		ml.value,
+		process{*this, ml.location}
+	};
+}
+
 }  // end namespace mpi3
 }  // end namespace boost
 
