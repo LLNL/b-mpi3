@@ -648,9 +648,10 @@ class distributed_data {
 };
 ```
 
-(This is special constructor is not completely strange to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. Other classes have special "duplication" semantics, for example random distributions, such as [`std::uniform_real_distribution`](https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution).)
+(This is special constructor is not completely strange to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. 
+Other classes have special "duplication" semantics, for example random distributions, such as [`std::uniform_real_distribution`](https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution).)
 
-**In summary**, 1) all important communication operations are non-const because acording to the rules and practice of modern C++ the internal state of the communicator is affected by the operation, 2) including the duplicate operation, 3) mutable is a good marker to indicate potential problems with threads and the need for custom synchronization mechanism 4) the need may be critical or not, the user of the library decides, 5) mutable instantance of communicators (i.e. non-`const` variables or mutable members) canbe duplicated using standard C++ syntax via "duplicate"-constructor or via "duplicate" member functions.
+**In summary**, 1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 2) ... including the `duplicate` operation; 3) `mutable` is a good marker to indicate the _possible_ need for custom synchronization mechanism; 4) the need may be critical or not, the user of the library decides, 5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions.
 
 # Conclusion
 
@@ -729,7 +730,7 @@ int main(int argc, char **argv) try {
 
 Notice that we are getting a reference to the global communicator using the `get_world_instance`, then, with the ampersand (`&`) operator, we obtain a `MPI_Comm` handle than can be used with the rest of the code untouched.
 
-Since `finalize` will need to be exectuted in any path, it is preferrable to use an RAII object to represent the environment.
+Since `finalize` will need to be executed in any path, it is preferable to use an RAII object to represent the environment.
 Just like in classic MPI, it is wrong to create more than one environment.
 
 Both, accesing the global communicator directky is in general considered problematic.
