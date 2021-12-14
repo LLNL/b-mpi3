@@ -83,7 +83,7 @@ In this way, changes to existing code can be made incrementally.
 The library is "header-only"; no separate compilation is necessary.
 Most functions are inline or template functions.
 In order to compile it requires an MPI distribution (e.g. OpenMPI or MPICH2) and the corresponding compiler-wrapper (`mpic++` or `mpicxx`).
-Currently the library requieres C++14 (usually activated with the compiler option `-std=c++14`) and Boost. In particular it depends on Boost.Serialization and may require linking to this library if values passed are not basic types (`-lboost_serialization`). A typical compilation/run command looks like this:
+Currently the library requires C++14 (usually activated with the compiler option `-std=c++14`) and Boost. In particular it depends on Boost.Serialization and may require linking to this library if values passed are not basic types (`-lboost_serialization`). A typical compilation/run command looks like this:
 
 ```bash
 $ mpic++ -std=c++14 -O3 mpi3/test/communicator_send.cpp -o communicator_send.x -lboost_serialization
@@ -147,7 +147,7 @@ int main(int argc, char** argv){
 
 ## Communicators
 
-In the last example, `world` is a global communicator (not necessarely the same as `MPI_COMM_WORLD`, but a copy of it).
+In the last example, `world` is a global communicator (not necessarily the same as `MPI_COMM_WORLD`, but a copy of it).
 There is no global communicator variable `world` that can be accessed directly in a nested function.
 The idea behind this is to avoid using the global communicators in nested functions of the program unless they are explicitly passed in the function call.
 Communicators are usually passed by reference to nested functions.
@@ -538,7 +538,7 @@ This syntax also makes very explicit what the operation really does.
 
 ## Communicator as an implementation detail
 
-Note that so far we didn't indicate how to use `mpi3::communicator` member with threads, we are simply following the logic being transparant of what each MPI operation is likely to perform behind the scenes regarding the (transient) state of the communicator.
+Note that so far we didn't indicate how to use `mpi3::communicator` member with threads, we are simply following the logic being transparent of what each MPI operation is likely to perform behind the scenes regarding the (transient) state of the communicator.
 
 In C++ it is very useful to include a communicator to each object that requires to perform communication to maintain its internal consistency.
 Suppose we have a data that is distributed across many processes, and that we store a instance of the communicator containing these processes.
@@ -733,7 +733,7 @@ Notice that we are getting a reference to the global communicator using the `get
 Since `finalize` will need to be executed in any path, it is preferable to use an RAII object to represent the environment.
 Just like in classic MPI, it is wrong to create more than one environment.
 
-Both, accesing the global communicator directky is in general considered problematic.
+Both, accessing the global communicator directly is in general considered problematic.
 For this reason it makes more sense to ask for a duplicate of the global communicator.
 
 ```cpp
@@ -847,7 +847,7 @@ or use the range.
 
 (Note that `_n` was dropped from the method name because we are using iterator ranges now.)
 
-Finally, the end of the receiving sequence can be ommited in many cases since the information is contained in the message and the correctness can be ensured by the logic of the program.
+Finally, the end of the receiving sequence can be omitted in many cases since the information is contained in the message and the correctness can be ensured by the logic of the program.
 
 ```cpp
 ...
