@@ -473,7 +473,7 @@ The library doesn't control or owns data for the most part, therefore the main c
 
 The C-MPI interface briefly mentions thread-safety, for example most MPI operations are accompanied by the following note (e.g. https://www.mpich.org/static/docs/latest/www3/MPI_Send.html):
 
-> *Thread and Interrupt Safety*
+> ### Thread and Interrupt Safety
 >
 > This routine is thread-safe. This means that this routine may be safely used by multiple threads without the need for any  user-provided thread locks. However, the routine is not interrupt safe. Typically, this is due to the use of memory allocation routines such as malloc or other non-MPICH runtime routines that are themselves not interrupt-safe. 
 
@@ -651,7 +651,7 @@ class distributed_data {
 (This is special constructor is not completely strange to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. 
 Other classes have special "duplication" semantics, for example random distributions, such as [`std::uniform_real_distribution`](https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution).)
 
-**In summary**, 1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 2) ... including the `duplicate` operation; 3) `mutable` is a good marker to indicate the _possible_ need for custom synchronization mechanism; 4) the need may be critical or not, the user of the library decides, 5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions.
+**In summary**, 1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 2) ... including the `duplicate` operation; 3) `mutable` is a good marker to indicate the _possible_ need for custom synchronization mechanism; 4) the need may be critical or not, the user of the library decides, 5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions. 6) In general it is likely to be a good idea to duplicate communicator for specific threds *before* creating such threads; otherwise duplication will happen "too late" with a shared (non-const) communicator.
 
 # Conclusion
 
