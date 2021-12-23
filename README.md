@@ -536,7 +536,7 @@ mpi3::communicator new_comm{comm.duplicate()};
 
 This syntax also makes very explicit what the operation really does.
 
-## Pass-by-value or pass-by-reference
+### Pass-by-value or pass-by-reference
 
 As indicated earlier, a useful communicator is one that is mutable.
 Therefore when passing a communicator to a function we have two main options, either pass by reference (non-const reference) or by value.
