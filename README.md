@@ -678,8 +678,6 @@ class distributed_data {
 };
 ```
 
-(This is special constructor is not completely strange to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. 
-
 **In summary**, 
 1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 
 2) ... including the `duplicate` operation; 
