@@ -442,34 +442,34 @@ int main() {
 	mpi3::environment env{mpi3::thread::multiple};
 	switch( env.thread_support() ) {
 		case mpi3::thread::single    : throw std::logic_error{"threads not supported"};
-		case mpi3::thread::funneled  : std::cout<<"funneled"  <<std::endl;
-		case mpi3::thread::serialized: std::cout<<"serialized"<<std::endl;
-		case mpi3::thread::multiple  : std::cout<<"multiple"  <<std::endl;
+		case mpi3::thread::funneled  : std::cout<<"funneled"  <<std::endl; break;
+		case mpi3::thread::serialized: std::cout<<"serialized"<<std::endl; break;
+		case mpi3::thread::multiple  : std::cout<<"multiple"  <<std::endl; break;
 	}
 	...
 ```
 
-Alternatively you can just check that `env.thread_suppost() > mpi3::single`, since the levels `multiple > serialized > funneled > single` are ordered.
+Alternatively you can just check that `env.thread_support() > mpi3::single`, since the levels `multiple > serialized > funneled > single` are ordered.
 
 ### From C to C++
 
 The MPI-C standard interface is expressed in the C language (and Fortran).
 The C-language doesn't have many ways to deal with threads except by thorough documentation.
-This indicates that any level of thread assurance that we can express in a C++ interface cannot be derived by the C syntax alone; 
-it has to be derived at best from the documentation and when documentation is lacking from common sense and common practice in existing MPI implementations.
+This indicates that any level of thread assurance that we can express in a C++ interface cannot be derived by the C-interface syntax alone; 
+it has to be derived, at best, from the documentation and when documentation is lacking from common sense and common practice in existing MPI implementations.
 
 The modern C++ language has several tools to deal with thread safety: the C++11 memory model, the `const`, `mutable` and `thread_local` attributes and a few other standard types and functions, such as `std::mutex`, `std::call_once`, etc.
 
 ### Data and threads
 
-Even if MPI operations are called outside concurrent sections it is still your responsibility to make sure that the *data* involved is synchronized; this is always the case.
+Even if MPI operations are called outside concurrent sections it is still your responsibility to make sure that the *data* involved in communication is synchronized; this is always the case.
 Clear ownership and scoping of *data* helps a lot toward the thread safety.
 Avoiding mutable shared data between threads also helps.
 Perhaps as a last resort, data can be locked with mutex objects to be written or accessed one thread at time.
 
 ### Communicator and threads
 
-The library doesn't control or owns data for the most part, therefore the main concern of the library regarding threading is within the communicator class itself.
+The library doesn't control or owns the communicated data for the most part, therefore the main concern of the library regarding threading is within the communicator class itself.
 
 The C-MPI interface briefly mentions thread-safety, for example most MPI operations are accompanied by the following note (e.g. https://www.mpich.org/static/docs/latest/www3/MPI_Send.html):
 
@@ -477,31 +477,32 @@ The C-MPI interface briefly mentions thread-safety, for example most MPI operati
 >
 > This routine is thread-safe. This means that this routine may be safely used by multiple threads without the need for any  user-provided thread locks. However, the routine is not interrupt safe. Typically, this is due to the use of memory allocation routines such as malloc or other non-MPICH runtime routines that are themselves not interrupt-safe. 
 
-This doesn't mean that that _all_ calls to, for example, `MPI_Send`, can be safely done from different threads concurrently, only some of them, a.k.a. those with completely different argument can be safe.
+This doesn't mean that that _all_ calls can be safely done from different threads concurrently, only some of them, those that refer to completely different argument can be safe.
 
 In practice it is observable that for most MPI operations the "state" of the communicator can change in time.
 Even if after the operation the communicator seems to be in the same state as before the call the operation itself changes, at least briefly, the state of the communicator object.
 This internal state can be observed from another thread even through undefined behavior, even if transiently.
-Internal buffer could be use or flags could be set internally, there no sure way to know exactly how this state changes,
-it is even reasonable that internal optimizations could use hidden state.
-A common situation is that messages with in the same communication are mixed, but worst things can happen.
+Internal buffers or sockets could be used, or flags could be set internally, there no sure way to know exactly how this state changes,
+it is even reasonable that internal optimizations could use a hidden state.
+A common situation is that messages with in the same communicator are intermixed, but worst things can happen.
 
 In modern C++, this is enough to mark communicator operations non-`const` (i.e. an operation than can be applied only on a mutable instance of the communicator).
 
-`MPI_Send` has "tags" to differentiate separate communications and may help with concurrent calls, but this is still not a enough since the tags are runtime variable, of which the library doesn't know the origin.
+(`MPI_Send` has "tags" to differentiate separate communications and may help with concurrent calls, but this is still not a enough since the tags are runtime variables, of which the library doesn't know the origin.
 Besides, the use of tags are not a general solution since collective operation do not use tags at all.
 It has been known for a while that the identity of the communicator in some sense serves as a tag for collective communications.
-This is why it is so useful to be able to duplicate communicators to distinguish between collective communication messages.
+This is why it is so useful to be able to duplicate communicators to distinguish between collective communication messages.)
 
-This so far, explains why most members of `mpi3::communicator` are non-`const`, it also explains why most of the time `mpi3::communicators` must either be passed by non-`const` reference or by value.
-(This is not unheard of in C++, standard printing streams generally need be mutable to be useful (e.g. `std::cout` or `std::ifstream`), even though they don't seem to have a changing state.)
+This explains why most members of `mpi3::communicator` are non-`const`, and also why most of the time `mpi3::communicators` must either be passed by non-`const` reference or by value, depending on the intended use.
+Passing to a function by `const`-reference `mpi3::communicator const&` is not very productive because no communicator can be performed with this instance, not even duplication to obtain a new instance.
+(This behavior is not unheard of in C++: standard printing streams generally need be _mutable_ to be useful (e.g. `std::cout` or `std::ofstream`), even though they don't seem to have a changing state.)
 
 This brings us to the important topic of communicator construction and assignment.
 
 ### Duplication of communicator
 
 In C, custom structures do not have special member functions that indicate copying.
-In general this is provided by free functions operating in pointer or _handle_ types, and in general in their signature ignore `const`ness.
+In general this is provided by free functions operating in pointer or _handle_ types, and in general in their signature ignores `const`ness.
 
 In C-MPI, the main function to duplicate a communicator is `int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)`.
 When translating from C to C++ we have to understand that `MPI_Comm` is a handle to a communicator, that is, it behaves like a pointer.
@@ -526,15 +527,44 @@ struct communicator {
 };
 ```
 
-The consequence of this line of though is that a `const` communicator cannot be duplicated.
+The consequence of this line of though is that a `const` communicator (i.e. non-mutable) cannot be duplicated.
 That is, not only such communicator cannot do any communication operation but it cannot be duplicated itself.
 
 ```cpp
-mpi3::communicator new_comm = comm.duplicate();
+mpi3::communicator new_comm{comm.duplicate()};
 ```
-(in C++17 this is correct even if there is no copy-constructor or move-constructor)
 
 This syntax also makes very explicit what the operation really does.
+
+## Pass-by-value or pass-by-reference
+
+As indicated earlier, a useful communicator is one that is mutable.
+Therefore when passing a communicator to a function we have two main options, either pass by reference (non-const reference) or by value.
+
+```
+void f(mpi3::communicator& comm);
+void g(mpi3::communicator  comm);
+```
+
+These two cases have different meanings and different things can be done with the corresponding communicators.
+
+Case `f` implies that, first, we are reusing a communicator, even if all communication operations are internal to the function or second, that `f` can communicate messages with a communicator that is external to the function.
+
+Although reusing a communicator sound reasonable (since duplicating communicators can be an expensive operation), even if all communication is contained in `f` there is a risk that some communicator is mixed inadvertedly with communication external to `f`.
+The logic of collective operation would be distributed in different functions in the code, which is possible but difficult or imposible to reason about.
+If `f` is running in a multi-threaded environment, it could be dealing with a communicator that is being mutably shared with other threads.
+
+Case `g` is different in the sense that it knows that it has exclusive access to the communicator, send and receive operations cannot be captured by other functions and collective operations only need to be fully contained inside `g`.
+
+For completeness we can also imagine a function declared as pass-by-const-reference.
+
+```
+void h(mpi3::communicator const& comm);
+```
+
+In the current system, this is not very useful since only a handful of operations, which do not include communication, can be done. 
+(An example is probing the `.size()` of the communicator.)
+Take into account that, for `h` it is also too late to produce a duplicate of the communicator.
 
 ## Communicator as an implementation detail
 
@@ -607,7 +637,7 @@ The whole point is that the library gives you this option, to trade-off safety a
 In fact a (bad) blanket way to make the library thread safe could be to wrap every communicator in class with a mutex and make all most communication operations `const`. 
 This would force, from a design perspective, an unacceptable operation cost.
 
-### No a copy constructor, but a duplicate constructor
+### Not a copy constructor, but a duplicate constructor
 
 So far we have shown the `duplicate` interface function as a mechanism for duplicating communicators (used as `auto new_comm = comm.duplicate()`), which is nice because it makes the operation very explicit, but also difficult to integrate with other parts of C++.
 
