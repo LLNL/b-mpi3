@@ -57,6 +57,7 @@ communicator_igather.cpp
 communicator_list.cpp
 communicator_mutable.cpp
 communicator_operator.cpp
+communicator_passby.cpp
 communicator_reduce.cpp
 communicator_reduce_in_place.cpp
 communicator_scatter.cpp
