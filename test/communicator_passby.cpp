@@ -29,12 +29,10 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	h(world);
 	h(world.duplicate());
 
-//  assert( ovrld(world) == "by reference" );  // ambiguous, not much to do, overload by reference is never called
+//  assert( ovrld(world) == "by reference" );  // ambiguous, not much to do, overload by reference can never called
 	assert( ovrld(world.duplicate()) == "by value" );
 	assert( ovrld(mpi3::communicator{world}) == "by value" );
 
 	return 0;
-} catch(...) {
-	return 1;
-}
+} catch(...) {return 1;}
 
