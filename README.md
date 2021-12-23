@@ -686,6 +686,8 @@ class distributed_data {
 5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions. 
 6) In general, it is likely to be a good idea to duplicate communicator for specific threads *before* creating them; otherwise duplication will happen "too late" with a shared (non-const) communicator.
 
+(Thanks Arthur O'Dwyer for the critical reading of this section.)
+
 # Conclusion
 
 The goal is to provide a type-safe, efficient, generic interface for MPI.
