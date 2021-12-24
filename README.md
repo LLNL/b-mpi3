@@ -597,7 +597,7 @@ Ending up with hostile class is an basically a show stopped for threading and mu
 
 Note that making the communicator member a pointer `mpi3::communicator* comm_;` doesn't solve any problem, it just kick the can down the road.
 
-This leads to a much more modern design which would use the keyword `mutable`.
+This leads to a more modern design which would use the keyword `mutable`.
 
 ```cpp
 class distributed_data {
@@ -637,9 +637,9 @@ The whole point is that the library gives you this option, to trade-off safety a
 In fact a (bad) blanket way to make the library thread safe could be to wrap every communicator in class with a mutex and make all most communication operations `const`. 
 This would force, from a design perspective, an unacceptable operation cost.
 
-### Not a copy constructor, but a duplicate constructor
+### Not a copy-constructor, but a duplicate-constructor
 
-So far we have shown the `duplicate` interface function as a mechanism for duplicating communicators (used as `auto new_comm = comm.duplicate()`), which is nice because it makes the operation very explicit, but also difficult to integrate with other parts of C++.
+So far we have shown the `duplicate` interface function as a mechanism for duplicating communicators (used as `auto new_comm{comm.duplicate()}`), which is nice because it makes the operation very explicit, but it also makes it difficult to integrate with other parts of C++.
 
 A reasonable copy constructor of the class containing a communicator would be:
 
@@ -652,7 +652,7 @@ private:
 };
 ```
 Note that this code is valid because `comm_` is a mutable member of `other`.
-The worst part of forcing us to use the "non-standard" `duplicate` function is that we can no longer default the copy constructor.
+The worst part of forcing us to use the "non-standard" `duplicate` function is that we can no longer "default" the copy constructor.
 
 Copying in C++ is usually delegated to special member functions such as the copy-constructor or copy-assignment.
 However these function take their source argument as `const` reference and as such it cannot call the `duplicate` member.
@@ -662,26 +662,31 @@ However the language is general enough to allow a constructor by non-const refer
 The signature of this constructor is this one:
 
 ```cpp
-communicator::communicator(communicator& other) {...}
-communicator::communicator(communicator const&) = delete;  // no copy constructor
+communicator::communicator(communicator      & other) {...}
+communicator::communicator(communicator const&      ) = delete;  // no copy constructor
 ```
 
 There is no standard name for this type of constructor, I choose to call it "duplicate"-constructor, or mutable-copy-constructor.
 This function does internally call `MPI_Comm_dup`, and like `duplicate()` it can only be called with a source that is mutable.
-This makes the copy constructor of the containing class more standard, or even can be `= default;`.
+This makes the copy constructor of the containing class more standard, or even can be  implemented as `= default;`.
 
 ```cpp
 class distributed_data {
-    distributed_data(distributed_data const& other) : comm_{other.comm_} {}
+    distributed_data(distributed_data const& other) : comm_{other.comm_} {}  // or = default;
     ...
     mutable mpi3::communicator comm_;
 };
 ```
 
-(This is special constructor is not completely strange to C++ history either, the infamous `std::auto_ptr` had this type of non-standard construction, although its rationale was completely different. 
-Other classes have special "duplication" semantics, for example random distributions, such as [`std::uniform_real_distribution`](https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution).)
+**In summary**, 
+1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 
+2) ... including the `duplicate` operation; 
+3) `mutable` is a good marker to indicate the _possible_ need for custom (thread) synchronization mechanism; it also makes possible the use of communicator as member of a class.
+4) the need may be critical or not (the user of the library decides),
+5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions. 
+6) In general, it is likely to be a good idea to duplicate communicator for specific threads *before* creating them; otherwise duplication will happen "too late" with a shared (non-const) communicator.
 
-**In summary**, 1) all important communication operations are non-`const` because according to the rules and practice of modern C++ the internal state of the communicator is affected by these operations, 2) ... including the `duplicate` operation; 3) `mutable` is a good marker to indicate the _possible_ need for custom synchronization mechanism; 4) the need may be critical or not, the user of the library decides, 5) mutable instances of communicators (i.e. non-`const` variables or mutable members) can be duplicated using standard C++ syntax, via "duplicate"-constructor or via `duplicate` member functions. 6) In general it is likely to be a good idea to duplicate communicator for specific threds *before* creating such threads; otherwise duplication will happen "too late" with a shared (non-const) communicator.
+(Thanks Arthur O'Dwyer for the critical reading of this section.)
 
 # Conclusion
 
