@@ -24,7 +24,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	//  f(world.duplicate());  // doesn't work, good
 
 	g(world.duplicate());
-	g(world);  // works, implicit calls to duplicate
+	g(world);  // works, implicit calls to duplicate-constructor
 
 	h(world);
 	h(world.duplicate());
