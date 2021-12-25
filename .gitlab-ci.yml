@@ -176,7 +176,7 @@ qmcpack-icpc-runner:
     - cd build
     - . /opt/intel/oneapi/setvars.sh
     - icpc --version
-    - CXX=icpc cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_CXX_STANDARD=17 ..
+    - `#CXX=icpc` cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_CXX_STANDARD=17 ..
     - make -j 16
     - ctest -R afqmc --output-on-failure
     - cd ..
