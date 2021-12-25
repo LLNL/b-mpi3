@@ -173,15 +173,22 @@ qmcpack-icpc-runner:
     - cmake --version
     - git clone https://github.com/QMCPACK/qmcpack.git
     - cd qmcpack
-    - git config --global user.email "alfredo.correa@gmail.com" && git config --global user.name "Alfredo Correa"
-    - git rm -r external_codes/mpi_wrapper/mpi3 && git commit -m "remove mpi3 subtree"
-    - git subtree add --squash -P external_codes/mpi_wrapper/mpi3 https://gitlab.com/correaa/boost-mpi3.git $CI_COMMIT_BRANCH
     - cd build
-    - cmake -DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_MIXED_PRECISION=1 -DCMAKE_BUILD_TYPE=Debug -DMPIEXEC_PREFLAGS="--allow-run-as-root;--bind-to;none" .. #-DCMAKE_CXX_FLAGS="-Werror"
+    - . /opt/intel/oneapi/setvars.sh
+    - icpc --version
+    - CXX=icpc cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_CXX_STANDARD=17 ..
     - make -j 16
     - ctest -R afqmc --output-on-failure
     - cd ..
     - rm -rf build/*
+    - git config --global user.email "alfredo.correa@gmail.com" && git config --global user.name "Alfredo Correa"
+    - git rm -r external_codes/mpi_wrapper/mpi3 && git commit -m "remove mpi3 subtree"
+    - git subtree add --squash -P external_codes/mpi_wrapper/mpi3 https://gitlab.com/correaa/boost-mpi3.git $CI_COMMIT_BRANCH
+#    - cd build
+#    - cmake -DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_MIXED_PRECISION=1 -DCMAKE_BUILD_TYPE=Debug -DMPIEXEC_PREFLAGS="--allow-run-as-root;--bind-to;none" .. #-DCMAKE_CXX_FLAGS="-Werror"
+#    - make -j 16
+#    - ctest -R afqmc --output-on-failure
+#    - cd ..
     - cd build
     - . /opt/intel/oneapi/setvars.sh
     - icpc --version
