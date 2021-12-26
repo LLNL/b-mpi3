@@ -179,7 +179,8 @@ qmcpack-icpc-runner:
     - . /opt/intel/oneapi/setvars.sh
     - icpc --version
     - CXX=icpc cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_CXX_STANDARD=17 ..
-    - make -j 16
+    - make -j 16 ppconvert afqmc test_afqmc_matrix test_afqmc_numerics test_afqmc_slaterdeterminantoperations test_afqmc_walkers test_afqmc_hamiltonians test_afqmc_hamiltonian_operations test_afqmc_phmsd test_afqmc_wfn_factory test_afqmc_prop_factory test_afqmc_estimators qmc-afqmc-performance
+    - ctest -R ppconvert --output-on-failure
     - ctest -R afqmc --output-on-failure
     - cd ..
     - rm -rf build/*
@@ -195,7 +196,7 @@ qmcpack-icpc-runner:
     - . /opt/intel/oneapi/setvars.sh
     - icpc --version
     - CXX=icpc cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DBUILD_AFQMC=1 -DBUILD_PPCONVERT=1 -DQMC_CXX_STANDARD=17 ..
-    - make -j 16
+    - make -j 16 ppconvert afqmc test_afqmc_matrix test_afqmc_numerics test_afqmc_slaterdeterminantoperations test_afqmc_walkers test_afqmc_hamiltonians test_afqmc_hamiltonian_operations test_afqmc_phmsd test_afqmc_wfn_factory test_afqmc_prop_factory test_afqmc_estimators qmc-afqmc-performance
     - ctest -R afqmc --output-on-failure
 
 inq-g++-latest:
