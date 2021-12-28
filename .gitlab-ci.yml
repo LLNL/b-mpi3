@@ -121,7 +121,7 @@ cuda-11.4-std17:
       - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
       - cd test
       - nvcc --version
-      - mkidr build && cd build
+      - mkdir build && cd build
       - CUDACXX=nvcc cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
       - cmake --build . --verbose
       - ctest --output-on-failure
