@@ -33,6 +33,7 @@
 *.x
 *.hppx.cpp
 build*
+.build*
 
 # Editor backup
 *~
