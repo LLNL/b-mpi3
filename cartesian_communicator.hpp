@@ -1,7 +1,8 @@
-#if COMPILATION //  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2021
+//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+//#if COMPILATION
+//OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
@@ -193,182 +194,181 @@ template<class... As> cartesian_communicator(As...)
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ // def _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
+//#if not __INCLUDE_LEVEL__ // def _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
 
-#include<iostream>
+//#include<iostream>
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/version.hpp"
-#include "../mpi3/ostream.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/version.hpp"
+//#include "../mpi3/ostream.hpp"
 
-using std::cout;
-using std::cerr;
-namespace mpi3 = boost::mpi3;
+//using std::cout;
+//using std::cerr;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], boost::mpi3::communicator world){
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6);
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 3 );
-	assert( div[1] == 2 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6, {});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 3 );
-	assert( div[1] == 2 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 3 );
-	assert( div[1] == 2 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, mpi3::fill});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 3 );
-	assert( div[1] == 2 );
-}
-{
-	assert(world.size() == 6);
-	auto div = mpi3::cartesian_communicator<2>::division(6, {2});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 2 );
-	assert( div[1] == 3 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6, {2, mpi3::fill});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 2 );
-	assert( div[1] == 3 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, 3});
-	assert( div[0]*div[1] == 6 );
-	assert( div[0] == 2 );
-	assert( div[1] == 3 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(7);
-	assert( div[0]*div[1] == 7 );
-	assert( div[0] == 7 );
-	assert( div[1] == 1 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(7);
-	assert( div[0]*div[1] == 7 );
-	assert( div[0] == 7 );
-	assert( div[1] == 1 );
-}
-{
-	auto div = mpi3::cartesian_communicator<2>::division(7, {mpi3::fill, mpi3::fill});
-	assert( div[0]*div[1] == 7 );
-	assert( div[0] == 7 );
-	assert( div[1] == 1 );
-}
-{
-	assert(world.size() == 6);
-	mpi3::cartesian_communicator<2> cart_comm(world, {2, 3});
-	assert( cart_comm );
-	assert( cart_comm.dimensions()[0] == 2 );
-	assert( cart_comm.dimensions()[1] == 3 );
-	auto row = cart_comm.axis(0);
-	auto col = cart_comm.axis(1);
-	assert( row.size() == 2 );
-	assert( col.size() == 3 );
-}
-{
-	assert(world.size() == 6);
-	if(mpi3::cartesian_communicator<2> cart_comm{world, {2, 2}}){
-		auto row = cart_comm.axis(0);
-		auto col = cart_comm.axis(1);
-	}
-}
-try{
-	assert(world.size() == 6);
-	mpi3::cartesian_communicator<2> cart_comm(world, {4});
-	assert(cart_comm.dimensions()[0] == 2);
-	assert(cart_comm.dimensions()[1] == 3);
-}catch(...){}
-{
-	mpi3::cartesian_communicator<2> cart_comm(world, {2, mpi3::fill});
-	assert(cart_comm.dimensions()[0] == 2);
-	assert(cart_comm.dimensions()[1] == 3);
-}
-{
-	mpi3::cartesian_communicator<2> cart_comm(world, {mpi3::fill, 2});
-	assert(cart_comm.dimensions()[0] == 3);
-	assert(cart_comm.dimensions()[1] == 2);
-}
-{
-	return 0;
+//int mpi3::main(int, char*[], boost::mpi3::communicator world){
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6);
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 3 );
+//	assert( div[1] == 2 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 3 );
+//	assert( div[1] == 2 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 3 );
+//	assert( div[1] == 2 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, mpi3::fill});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 3 );
+//	assert( div[1] == 2 );
+//}
+//{
+//	assert(world.size() == 6);
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {2});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 2 );
+//	assert( div[1] == 3 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {2, mpi3::fill});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 2 );
+//	assert( div[1] == 3 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::fill, 3});
+//	assert( div[0]*div[1] == 6 );
+//	assert( div[0] == 2 );
+//	assert( div[1] == 3 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(7);
+//	assert( div[0]*div[1] == 7 );
+//	assert( div[0] == 7 );
+//	assert( div[1] == 1 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(7);
+//	assert( div[0]*div[1] == 7 );
+//	assert( div[0] == 7 );
+//	assert( div[1] == 1 );
+//}
+//{
+//	auto div = mpi3::cartesian_communicator<2>::division(7, {mpi3::fill, mpi3::fill});
+//	assert( div[0]*div[1] == 7 );
+//	assert( div[0] == 7 );
+//	assert( div[1] == 1 );
+//}
+//{
+//	assert(world.size() == 6);
+//	mpi3::cartesian_communicator<2> cart_comm(world, {2, 3});
+//	assert( cart_comm );
+//	assert( cart_comm.dimensions()[0] == 2 );
+//	assert( cart_comm.dimensions()[1] == 3 );
+//	auto row = cart_comm.axis(0);
+//	auto col = cart_comm.axis(1);
+//	assert( row.size() == 2 );
+//	assert( col.size() == 3 );
+//}
+//{
+//	assert(world.size() == 6);
+//	if(mpi3::cartesian_communicator<2> cart_comm{world, {2, 2}}){
+//		auto row = cart_comm.axis(0);
+//		auto col = cart_comm.axis(1);
+//	}
+//}
+//try{
+//	assert(world.size() == 6);
+//	mpi3::cartesian_communicator<2> cart_comm(world, {4});
+//	assert(cart_comm.dimensions()[0] == 2);
+//	assert(cart_comm.dimensions()[1] == 3);
+//}catch(...){}
+//{
+//	mpi3::cartesian_communicator<2> cart_comm(world, {2, mpi3::fill});
+//	assert(cart_comm.dimensions()[0] == 2);
+//	assert(cart_comm.dimensions()[1] == 3);
+//}
+//{
+//	mpi3::cartesian_communicator<2> cart_comm(world, {mpi3::fill, 2});
+//	assert(cart_comm.dimensions()[0] == 3);
+//	assert(cart_comm.dimensions()[1] == 2);
+//}
+//{
+//	return 0;
 
-	mpi3::cartesian_communicator<> comm(world, {4, 3}, {true, false});
-	assert( comm.dimensionality() == 2 );
-	cerr <<"= I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
-	auto comm_sub = comm.sub();
-	assert( comm_sub.dimensionality() == 1 );
-}
-	if(world.root()) cerr<<"---"<<std::endl;
-#ifdef __cpp_deduction_guides
-{
-	assert(world.size() == 12);
+//	mpi3::cartesian_communicator<> comm(world, {4, 3}, {true, false});
+//	assert( comm.dimensionality() == 2 );
+//	cerr <<"= I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+//	auto comm_sub = comm.sub();
+//	assert( comm_sub.dimensionality() == 1 );
+//}
+//	if(world.root()) cerr<<"---"<<std::endl;
+//#ifdef __cpp_deduction_guides
+//{
+//	assert(world.size() == 12);
 
-	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
-	assert( comm.dimensionality() == 2 );
-	cerr <<"- I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
-}
+//	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
+//	assert( comm.dimensionality() == 2 );
+//	cerr <<"- I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+//}
+//#endif
+//	if(world.root()) cerr<<"---"<<std::endl;
+//#ifdef __cpp_deduction_guides
+//{
+//	assert(world.size() == 12);
+
+//	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
+//	assert( comm.dimensionality() == 2 );
+//	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
+//}
+//#endif
+//{
+//	assert(world.size() == 12);
+
+//	mpi3::cartesian_communicator<3> comm(world, {});
+//	static_assert( mpi3::cartesian_communicator<3>::dimensionality == 3, "!");
+//	assert( comm.cartesian_communicator<>::dimensionality() == 3 );
+//	assert( comm.num_elements() == world.size() );
+//	assert( comm.shape()[0] == 3 );
+//	assert( comm.shape()[1] == 2 );
+//	assert( comm.shape()[2] == 2 );
+//	cerr<<"+ I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
+
+//	auto comm_sub = comm.sub();
+//	static_assert( comm_sub.dimensionality == 2 , "!" );
+//	std::cout << "numelements " << comm_sub.num_elements() << std::endl;
+//	assert( comm_sub.num_elements() == 4 );
+
+//	assert( comm_sub.shape()[0] == 2 );
+//	assert( comm_sub.shape()[1] == 2 );
+//	{
+//		auto comm_sub0 = comm.axis(0);
+//		assert( comm_sub0.shape()[0] == 3 );
+//		assert( comm_sub0.size() == 3 );
+//	}
+//	{
+//		auto comm_sub1 = comm.axis(1);
+//		assert( comm_sub1.shape()[0] == 2 );
+//		assert( comm_sub1.size() == 2 );
+//	}
+//	{
+//		auto comm_sub2 = comm.axis(2);
+//		assert( comm_sub2.shape()[0] == 2 );
+//		assert( comm_sub2.size() == 2 );
+//	}
+
+//}
+//	return 0;
+//}
+
+//#endif
 #endif
-	if(world.root()) cerr<<"---"<<std::endl;
-#ifdef __cpp_deduction_guides
-{
-	assert(world.size() == 12);
-
-	mpi3::cartesian_communicator comm(world, {4, 3}, {true, false});
-	assert( comm.dimensionality() == 2 );
-	cerr <<"I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<"\n";
-}
-#endif
-{
-	assert(world.size() == 12);
-
-	mpi3::cartesian_communicator<3> comm(world, {});
-	static_assert( mpi3::cartesian_communicator<3>::dimensionality == 3, "!");
-	assert( comm.cartesian_communicator<>::dimensionality() == 3 );
-	assert( comm.num_elements() == world.size() );
-	assert( comm.shape()[0] == 3 );
-	assert( comm.shape()[1] == 2 );
-	assert( comm.shape()[2] == 2 );
-	cerr<<"+ I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
-
-	auto comm_sub = comm.sub();
-	static_assert( comm_sub.dimensionality == 2 , "!" );
-	std::cout << "numelements " << comm_sub.num_elements() << std::endl;
-	assert( comm_sub.num_elements() == 4 );
-
-	assert( comm_sub.shape()[0] == 2 );
-	assert( comm_sub.shape()[1] == 2 );
-	{
-		auto comm_sub0 = comm.axis(0);
-		assert( comm_sub0.shape()[0] == 3 );
-		assert( comm_sub0.size() == 3 );
-	}
-	{
-		auto comm_sub1 = comm.axis(1);
-		assert( comm_sub1.shape()[0] == 2 );
-		assert( comm_sub1.size() == 2 );
-	}
-	{
-		auto comm_sub2 = comm.axis(2);
-		assert( comm_sub2.shape()[0] == 2 );
-		assert( comm_sub2.size() == 2 );
-	}
-
-}
-	return 0;
-}
-
-#endif
-#endif
-

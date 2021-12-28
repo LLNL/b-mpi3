@@ -1,7 +1,8 @@
-#if COMPILATION//-*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4; -*-
-$CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2019
+//-*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4; -*-
+//#if COMPILATION
+//$CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
@@ -205,31 +206,30 @@ inline mpi3::any& communicator::attribute(std::string const& s){
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
+//#if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
 
-#include<thread> // this_tread::sleep_for
-#include<chrono>
+//#include<thread> // this_tread::sleep_for
+//#include<chrono>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
-using namespace std::chrono_literals; // 2s
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
+//using namespace std::chrono_literals; // 2s
 
-int main(){//int argc, char* argv[]){
-	mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
-	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
-	assert(mpi3::environment::is_initialized());
-	{
-		mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
-		auto then = mpi3::environment::wall_time();
-		std::this_thread::sleep_for(2s);
-	//	cout<< (mpi3::environment::wall_time() - then).count() <<" seconds\n"; 
-	}
-	mpi3::environment::finalize(); // same as MPI_Finalize()
-	assert(mpi3::environment::is_finalized());
-// or better:
-//	mpi3::environment env(argc, argv);
-//	auto world = env.world();
-}
+//int main(){//int argc, char* argv[]){
+//	mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
+//	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
+//	assert(mpi3::environment::is_initialized());
+//	{
+//		mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
+//		auto then = mpi3::environment::wall_time();
+//		std::this_thread::sleep_for(2s);
+//	//	cout<< (mpi3::environment::wall_time() - then).count() <<" seconds\n"; 
+//	}
+//	mpi3::environment::finalize(); // same as MPI_Finalize()
+//	assert(mpi3::environment::is_finalized());
+//// or better:
+////	mpi3::environment env(argc, argv);
+////	auto world = env.world();
+//}
+//#endif
 #endif
-#endif
-

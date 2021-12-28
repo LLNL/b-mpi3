@@ -1,7 +1,8 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-mpic++ -D_TEST_BOOST_MPI3_DETAIL_EQUALITY -xc++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2021
+/* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
+//#if COMPILATION_INSTRUCTIONS
+//mpic++ -D_TEST_BOOST_MPI3_DETAIL_EQUALITY -xc++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_DETAIL_EQUALITY_HPP
 #define BOOST_MPI3_DETAIL_EQUALITY_HPP
@@ -28,19 +29,18 @@ enum equality : int{
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_DETAIL_EQUALITY
+//#ifdef _TEST_BOOST_MPI3_DETAIL_EQUALITY
 
-namespace mpi3 = boost::mpi3;
+//namespace mpi3 = boost::mpi3;
 
-int main(){
+//int main(){
 
-	mpi3::detail::equality q = mpi3::detail::identical;
-	q = mpi3::detail::congruent;
-	q = mpi3::detail::similar;
-	q = mpi3::detail::unequal;
+//	mpi3::detail::equality q = mpi3::detail::identical;
+//	q = mpi3::detail::congruent;
+//	q = mpi3::detail::similar;
+//	q = mpi3::detail::unequal;
 
-}
+//}
 
+//#endif
 #endif
-#endif
-

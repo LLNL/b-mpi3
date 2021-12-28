@@ -1,7 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/window.hpp"

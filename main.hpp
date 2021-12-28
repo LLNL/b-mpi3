@@ -15,7 +15,8 @@ static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world
 }  // end namespace mpi3
 }  // end namespace boost
 
-int main(int argc, char** argv) try {  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`, you should define `boost::mpi3::main(int argc, char** argv, boost::mpi3::communicator world)` instead
+// cppcheck-suppress syntaxError ; bug cppcheck 2.3
+auto main(int argc, char** argv) -> int try {  // NOLINT(misc-definitions-in-headers) : if you include this file you shouldn't have your own `::main`, you should define `boost::mpi3::main(int argc, char** argv, boost::mpi3::communicator world)` instead
 	boost::mpi3::environment env{argc, argv};
 	try{
 		return boost::mpi3::main(argc, argv, /*env.*/ boost::mpi3::environment::get_world_instance());

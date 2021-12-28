@@ -1,7 +1,8 @@
-#if COMPILATION // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
-mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2021
+//  -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+//#if COMPILATION 
+//mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -264,109 +265,109 @@ template<> inline type make_type<int>(){return mpi3::int_;}
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__
+//#if not __INCLUDE_LEVEL__
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/communicator.hpp"
-#include "../mpi3/process.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/communicator.hpp"
+//#include "../mpi3/process.hpp"
 
-#include<iostream>
+//#include<iostream>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-struct A{
-	double d[6];
-	long l[20];
-};
+//struct A{
+//	double d[6];
+//	long l[20];
+//};
 
-struct B{
-	double d[7];
-	long l[9];
-};
+//struct B{
+//	double d[7];
+//	long l[9];
+//};
 
-template<class Archive>
-void serialize(Archive& ar, A& a, const unsigned int){
-	ar & boost::serialization::make_array(a.d, 6);
-	ar & boost::serialization::make_array(a.l, 20);
-}
+//template<class Archive>
+//void serialize(Archive& ar, A& a, const unsigned int){
+//	ar & boost::serialization::make_array(a.d, 6);
+//	ar & boost::serialization::make_array(a.l, 20);
+//}
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+//int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 
-	assert(world.size() >= 2);
-	{
-		int value = -1;
-		if(world.rank() == 0){
-			value = 5;
-			world[1] << value; //	world.send_value(value, 1);
-		}else{
-			assert(value == -1);
-			world[0] >> value; //world.receive(&value, &value + 1, 0);
-			assert(value == 5);
-		}
-	}
-	{
-		int buffer[100]; std::fill(&buffer[0], &buffer[100], 0);
-		if(world.rank() == 0){
-			std::iota(&buffer[0], &buffer[100], 0);
-			world[1] << buffer; // world.send_value(buffer, 1);
-		}else{
-			assert(buffer[11]==0);
-			world[0] >> buffer; //	world.receive_value(buffer, 0);
-		//	assert(buffer[11]==11);
-		}
-	}
-	{
-	//	auto Atype = (
-	//		mpi3::double_[6], 
-	//		mpi3::long_[20]
-	//	);
-	//	Atype.commit_as<A>();
+//	assert(world.size() >= 2);
+//	{
+//		int value = -1;
+//		if(world.rank() == 0){
+//			value = 5;
+//			world[1] << value; //	world.send_value(value, 1);
+//		}else{
+//			assert(value == -1);
+//			world[0] >> value; //world.receive(&value, &value + 1, 0);
+//			assert(value == 5);
+//		}
+//	}
+//	{
+//		int buffer[100]; std::fill(&buffer[0], &buffer[100], 0);
+//		if(world.rank() == 0){
+//			std::iota(&buffer[0], &buffer[100], 0);
+//			world[1] << buffer; // world.send_value(buffer, 1);
+//		}else{
+//			assert(buffer[11]==0);
+//			world[0] >> buffer; //	world.receive_value(buffer, 0);
+//		//	assert(buffer[11]==11);
+//		}
+//	}
+//	{
+//	//	auto Atype = (
+//	//		mpi3::double_[6], 
+//	//		mpi3::long_[20]
+//	//	);
+//	//	Atype.commit_as<A>();
 
-		A particle;
-		particle.d[2] = 0.;
-		if(world.rank()==0){
-			particle.d[2] = 5.1;
-			world[1] << particle;
-		}else{
-			assert(particle.d[2]==0.);
-			world[0] >> particle;
-		}
-	}
-/*	{
-		auto Btype = (
-			mpi3::double_[6], 
-			mpi3::long_[20]
-		);
-		Btype.commit_as<B>();
-		B b;
-		b.d[2] = 0.;
-		if(world.rank()==0){
-			b.d[2] = 5.1;
-			world[1] << b;
-		}else{
-			assert(b.d[2]==0.);
-			world[0] >> b;
-		}
-	}*/
-	return 0;
-#if 0
-	{
-		std::vector<double> v(100);
-		mpi3::type d100 = mpi3::type::double_[100];
-		d100.commit();
-		if(world.rank()==0){
-			v[5] = 6.;
-		//	world.send_n(v.data(), 1, d100);
-		}else{
-		//	world.receive_n(v.data(), 1, d100);
-			assert(v[5] == 6.);
-		}
-	}
-#endif
-	return 0;
-}
+//		A particle;
+//		particle.d[2] = 0.;
+//		if(world.rank()==0){
+//			particle.d[2] = 5.1;
+//			world[1] << particle;
+//		}else{
+//			assert(particle.d[2]==0.);
+//			world[0] >> particle;
+//		}
+//	}
+///*	{
+//		auto Btype = (
+//			mpi3::double_[6], 
+//			mpi3::long_[20]
+//		);
+//		Btype.commit_as<B>();
+//		B b;
+//		b.d[2] = 0.;
+//		if(world.rank()==0){
+//			b.d[2] = 5.1;
+//			world[1] << b;
+//		}else{
+//			assert(b.d[2]==0.);
+//			world[0] >> b;
+//		}
+//	}*/
+//	return 0;
+//#if 0
+//	{
+//		std::vector<double> v(100);
+//		mpi3::type d100 = mpi3::type::double_[100];
+//		d100.commit();
+//		if(world.rank()==0){
+//			v[5] = 6.;
+//		//	world.send_n(v.data(), 1, d100);
+//		}else{
+//		//	world.receive_n(v.data(), 1, d100);
+//			assert(v[5] == 6.);
+//		}
+//	}
+//#endif
+//	return 0;
+//}
 
-#endif
+//#endif
 #endif
 
