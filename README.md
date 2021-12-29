@@ -482,9 +482,7 @@ This doesn't mean that that _all_ calls can be safely done from different thread
 In practice it is observable that for most MPI operations the "state" of the communicator can change in time.
 Even if after the operation the communicator seems to be in the same state as before the call the operation itself changes, at least briefly, the state of the communicator object.
 This internal state can be observed from another thread even through undefined behavior, even if transiently.
-Internal buffers or sockets could be used, or flags could be set internally, there no sure way to know exactly how this state changes,
-it is even reasonable that internal optimizations could use a hidden state.
-A common situation is that messages with in the same communicator are intermixed, but worst things can happen.
+A plausible model to explain this behavior is that internal buffers are used by individual communicators during communication.
 
 In modern C++, this is enough to mark communicator operations non-`const` (i.e. an operation than can be applied only on a mutable instance of the communicator).
 
@@ -493,9 +491,9 @@ Besides, the use of tags are not a general solution since collective operation d
 It has been known for a while that the identity of the communicator in some sense serves as a tag for collective communications.
 This is why it is so useful to be able to duplicate communicators to distinguish between collective communication messages.)
 
-This explains why most members of `mpi3::communicator` are non-`const`, and also why most of the time `mpi3::communicators` must either be passed by non-`const` reference or by value, depending on the intended use.
-Passing to a function by `const`-reference `mpi3::communicator const&` is not very productive because no communicator can be performed with this instance, not even duplication to obtain a new instance.
-(This behavior is not unheard of in C++: standard printing streams generally need be _mutable_ to be useful (e.g. `std::cout` or `std::ofstream`), even though they don't seem to have a changing state.)
+This explains why most member functions of `mpi3::communicator` are non-`const`, and also why most of the time `mpi3::communicators` must either be passed either by non-`const` reference or by value (depending on the intended use, see below.)
+Be aware that passing by `const`-reference `mpi3::communicator const&` is not very productive because no communication operation can be performed with this instance (not even duplication to obtain a new instance).
+(This behavior is not unheard of in C++: standard "printing" streams generally need be _mutable_ to be useful (e.g. `std::cout` or `std::ofstream`), even though they don't seem to have a changing state.)
 
 This brings us to the important topic of communicator construction and assignment.
 
@@ -551,8 +549,8 @@ These two cases have different meanings and different things can be done with th
 Case `f` implies that, first, we are reusing a communicator, even if all communication operations are internal to the function or second, that `f` can communicate messages with a communicator that is external to the function.
 
 Although reusing a communicator sound reasonable (since duplicating communicators can be an expensive operation), even if all communication is contained in `f` there is a risk that some communicator is mixed inadvertedly with communication external to `f`.
-The logic of collective operation would be distributed in different functions in the code, which is possible but difficult or imposible to reason about.
-If `f` is running in a multi-threaded environment, it could be dealing with a communicator that is being mutably shared with other threads.
+The logic of collective operation would be distributed in different functions in the code, which is possible but difficult or impossible to reason about.
+If `f` is running in a multi-threaded environment, it could be dealing with a communicator that is being shared with other threads.
 
 Case `g` is different in the sense that it knows that it has exclusive access to the communicator, send and receive operations cannot be captured by other functions and collective operations only need to be fully contained inside `g`.
 
@@ -562,9 +560,9 @@ For completeness we can also imagine a function declared as pass-by-const-refere
 void h(mpi3::communicator const& comm);
 ```
 
-In the current system, this is not very useful since only a handful of operations, which do not include communication, can be done. 
+In the current system, this is not very useful since only a handful of operations, which do not include communication or duplication, can be done. 
 (An example is probing the `.size()` of the communicator.)
-Take into account that, for `h` it is also too late to produce a duplicate of the communicator.
+Take into account that, for `h` it is also "too late" to produce a duplicate of the communicator.
 
 ## Communicator as an implementation detail
 
