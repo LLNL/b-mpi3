@@ -248,7 +248,7 @@ class basic_communicator{
 	auto send(uvector<detail::packed> const& p, int dest, int tag = 0) {
 		return send_n(p.data(), p.size(), dest, tag);
 	}
-	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m;
 		int s = MPI_Mprobe(source, tag, impl_, &m.message::impl_, &m.status::impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot mprobe");}
