@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS//-*-indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*-
-mpic++ -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
-#endif
+//-*-indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*-
 // © Alfredo A. Correa 2019-2020
 
 #ifndef MPI3_SHM_ALLOCATOR_HPP
@@ -103,33 +101,32 @@ private:
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ // TEST BELOW
-#include "../../mpi3/main.hpp"
-#include "../../mpi3/shm/allocator.hpp"
+//#if not __INCLUDE_LEVEL__ // TEST BELOW
+//#include "../../mpi3/main.hpp"
+//#include "../../mpi3/shm/allocator.hpp"
 
-namespace mpi3 = boost::mpi3;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	mpi3::shared_communicator node = world.split_shared();
+//	mpi3::shared_communicator node = world.split_shared();
 
-	mpi3::shm::allocator<double> A1(&node);
-	mpi3::shm::ptr<double> data1 = A1.allocate(80);
+//	mpi3::shm::allocator<double> A1(&node);
+//	mpi3::shm::ptr<double> data1 = A1.allocate(80);
 
-	using ptr = decltype(data1);
-	std::pointer_traits<ptr>::pointer pp = data1;
-//	double* dp = std::addressof(*data1);
-//	double* dp2 = mpi3::shm::pointer_traits<ptr>::to_address(data1);
+//	using ptr = decltype(data1);
+//	std::pointer_traits<ptr>::pointer pp = data1;
+////	double* dp = std::addressof(*data1);
+////	double* dp2 = mpi3::shm::pointer_traits<ptr>::to_address(data1);
 
-	if(node.root()) data1[3] = 3.4;
-	node.barrier();
-	assert( data1[3] == 3.4);
+//	if(node.root()) data1[3] = 3.4;
+//	node.barrier();
+//	assert( data1[3] == 3.4);
 
-	A1.deallocate(data1, 80);
+//	A1.deallocate(data1, 80);
 
-	return 0;
-}
+//	return 0;
+//}
 
+//#endif
 #endif
-#endif
-

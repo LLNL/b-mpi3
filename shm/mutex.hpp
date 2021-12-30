@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -xc++ $0 -o $0x -lrt&&mpirun -n 4 $0x $@&&rm $0x;exit
-#endif
 #ifndef BOOST_MPI3_SHM_MUTEX_HPP
 #define BOOST_MPI3_SHM_MUTEX_HPP
 
@@ -40,28 +37,27 @@ class mutex {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ // TEST_BELOW
-#include "../../mpi3/main.hpp"
-#include<thread> // sleep_for
-#include <mutex> // lock_guard
+//#if not __INCLUDE_LEVEL__ // TEST_BELOW
+//#include "../../mpi3/main.hpp"
+//#include<thread> // sleep_for
+//#include <mutex> // lock_guard
 
-namespace mpi3 = boost::mpi3;
-using std::cout; 
+//namespace mpi3 = boost::mpi3;
+//using std::cout; 
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
-	mpi3::shared_communicator node = world.split_shared();
-	
-	mpi3::shm::mutex m(node);
-	using namespace std::chrono_literals;
-	{
-		std::lock_guard<mpi3::shm::mutex> guard(m);
-		cout << "I am rank "; 
-		std::this_thread::sleep_for(2s);
-		cout << node.rank() << '\n';
-	}
+//int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+//	mpi3::shared_communicator node = world.split_shared();
+//	
+//	mpi3::shm::mutex m(node);
+//	using namespace std::chrono_literals;
+//	{
+//		std::lock_guard<mpi3::shm::mutex> guard(m);
+//		cout << "I am rank "; 
+//		std::this_thread::sleep_for(2s);
+//		cout << node.rank() << '\n';
+//	}
 
-	return 0;
-}
+//	return 0;
+//}
+//#endif
 #endif
-#endif
-

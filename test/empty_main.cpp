@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpicxx $0 -o $0x&&mpirun -n 2 $0x $@&&rm $0x;exit
-#endif
 // © Alfredo A. Correa 2021
 
 #include "../../mpi3/environment.hpp"
@@ -8,6 +5,4 @@ mpicxx $0 -o $0x&&mpirun -n 2 $0x $@&&rm $0x;exit
 //namespace mpi3 = boost::mpi3;
 //mpi3::environment env;
 
-auto main() -> int{
-}
-
+auto main() -> int{}

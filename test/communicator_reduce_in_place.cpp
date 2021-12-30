@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
-#endif
 // Copyright 2018-2021 Alfredo A. Correa
 
 #include "../../mpi3/main.hpp"
@@ -50,7 +47,4 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 //		assert(m == world.size());
 //	}
 	return 0;
-}catch(...){
-	return 1;
-}
-
+} catch(...) {return 1;}

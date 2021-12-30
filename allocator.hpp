@@ -1,6 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_ALLOCATOR $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+
 #ifndef BOOST_MPI3_ALLOCATOR_HPP
 #define BOOST_MPI3_ALLOCATOR_HPP
 
@@ -74,58 +73,57 @@ constexpr std::add_const_t<T>& as_const(T& t) noexcept{return t;}
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_ALLOCATOR
+//#ifdef _TEST_BOOST_MPI3_ALLOCATOR
 
-#include "../mpi3/main.hpp"
+//#include "../mpi3/main.hpp"
 
-#include<cassert>
-#include<vector>
+//#include<cassert>
+//#include<vector>
 
-#include<boost/container/flat_set.hpp>
+//#include<boost/container/flat_set.hpp>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+//int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 
-	std::vector<double, mpi3::allocator<double>> v(1000000);
-	std::vector<double, mpi3::uallocator<double>> uv(1000000);
-	std::iota(v.begin(), v.end(), 0.);
-	using boost::mpi3::data;
-	assert( data(uv.begin()) == &*uv.begin() );
-	assert( std::accumulate(v.begin(), v.end(), 0.) == (v.size()*(v.size() - 1))/2 );
-	return 0;
-	
-	{
-		boost::container::flat_set<double, std::less<double>, mpi3::allocator<double> > fs;
-		fs.insert(5.);
-		fs.insert(3.);
-		auto it = fs.begin(); 
-		assert(*it == 3.); 
-		++it; 
-		assert(*it == 5.); 
-	}
-	{
-		boost::container::flat_set<int, std::less<int>, std::allocator_traits<mpi3::allocator<double>>::rebind_alloc<int>> fs;
-		fs.insert(5);
-		fs.insert(3);
-		auto it = fs.begin(); 
-		assert(*it == 3); 
-		++it; 
-		assert(*it == 5);
-	} 
-	{
-		boost::container::flat_set<std::pair<double, double>, std::less<std::pair<double, double>>, mpi3::allocator<std::pair<double, double>>> fsp;
-		fsp.insert({1.,2.});
-		fsp.insert({3.,4.});
-		auto it = fsp.begin(); 
-		assert(*it == std::make_pair(1.,2.)); 
-		++it; 
-		assert(*it == std::make_pair(3.,4.)); 
-	}
-	return 0;
-}
+//	std::vector<double, mpi3::allocator<double>> v(1000000);
+//	std::vector<double, mpi3::uallocator<double>> uv(1000000);
+//	std::iota(v.begin(), v.end(), 0.);
+//	using boost::mpi3::data;
+//	assert( data(uv.begin()) == &*uv.begin() );
+//	assert( std::accumulate(v.begin(), v.end(), 0.) == (v.size()*(v.size() - 1))/2 );
+//	return 0;
+//	
+//	{
+//		boost::container::flat_set<double, std::less<double>, mpi3::allocator<double> > fs;
+//		fs.insert(5.);
+//		fs.insert(3.);
+//		auto it = fs.begin(); 
+//		assert(*it == 3.); 
+//		++it; 
+//		assert(*it == 5.); 
+//	}
+//	{
+//		boost::container::flat_set<int, std::less<int>, std::allocator_traits<mpi3::allocator<double>>::rebind_alloc<int>> fs;
+//		fs.insert(5);
+//		fs.insert(3);
+//		auto it = fs.begin(); 
+//		assert(*it == 3); 
+//		++it; 
+//		assert(*it == 5);
+//	} 
+//	{
+//		boost::container::flat_set<std::pair<double, double>, std::less<std::pair<double, double>>, mpi3::allocator<std::pair<double, double>>> fsp;
+//		fsp.insert({1.,2.});
+//		fsp.insert({3.,4.});
+//		auto it = fsp.begin(); 
+//		assert(*it == std::make_pair(1.,2.)); 
+//		++it; 
+//		assert(*it == std::make_pair(3.,4.)); 
+//	}
+//	return 0;
+//}
 
+//#endif
 #endif
-#endif
-

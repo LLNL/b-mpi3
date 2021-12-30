@@ -1,6 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_INFO $0x.cpp -o $0x.x && time mpirun -np 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+
 #ifndef BOOST_MPI3_INFO_HPP
 #define BOOST_MPI3_INFO_HPP
 
@@ -66,30 +65,29 @@ struct info :
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_INFO
+//#ifdef _TEST_BOOST_MPI3_INFO
 
-#include "../mpi3/main.hpp"
-#include<iostream>
+//#include "../mpi3/main.hpp"
+//#include<iostream>
 
-using std::cout;
-using std::endl;
+//using std::cout;
+//using std::endl;
 
-int boost::mpi3::main(int, char*[], boost::mpi3::communicator world){
-	if(world.rank() == 0){
-		boost::mpi3::info nfo;
-		nfo.set("file", "runfile.txt");
-		nfo.set("soft", "host");
-		cout << nfo.get_nkeys() << '\n';
-		cout << nfo << '\n';
-		nfo.delete_("soft");
-		cout << nfo << '\n';
-		assert( nfo["file"] == "runfile.txt" );
-		boost::mpi3::info nfo2 = nfo;
-		cout << nfo2 << '\n';
-	}
-	return 0;
-}
+//int boost::mpi3::main(int, char*[], boost::mpi3::communicator world){
+//	if(world.rank() == 0){
+//		boost::mpi3::info nfo;
+//		nfo.set("file", "runfile.txt");
+//		nfo.set("soft", "host");
+//		cout << nfo.get_nkeys() << '\n';
+//		cout << nfo << '\n';
+//		nfo.delete_("soft");
+//		cout << nfo << '\n';
+//		assert( nfo["file"] == "runfile.txt" );
+//		boost::mpi3::info nfo2 = nfo;
+//		cout << nfo2 << '\n';
+//	}
+//	return 0;
+//}
 
+//#endif
 #endif
-#endif
-

@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++17 `#-Wfatal-errors` -Wall -Wextra -Wpedantic -D_TEST_BOOST_MPI3_WINDOW $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
 // © Alfredo A. Correa 2018-2020
 
 #ifndef BOOST_MPI3_WINDOW_HPP
@@ -261,42 +259,42 @@ struct shm_pointer : window<> {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_WINDOW
+//#ifdef _TEST_BOOST_MPI3_WINDOW
 
-#include "../mpi3/main.hpp"
-#include<iostream>
+//#include "../mpi3/main.hpp"
+//#include<iostream>
 
-namespace mpi3 = boost::mpi3; 
-using std::cout;
+//namespace mpi3 = boost::mpi3; 
+//using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	std::vector<double> darr(world.rank()?0:20);
-	std::iota(darr.begin(), darr.end(), 0);
+//	std::vector<double> darr(world.rank()?0:20);
+//	std::iota(darr.begin(), darr.end(), 0);
 
-	mpi3::window<double> win{world, darr.data(), darr.size()};
-	if(world.rank() == 0){
-		std::cout << win.size() << std::endl;
-		assert( win.size() == 20 );
-		assert( win.base()[13] == 13 );
-	}else{
-		assert(win.size() == 0);
-		assert(win.base() == nullptr );
-	}
-	win.fence();
-	if(world.rank() == 0){
-		std::vector<double> a = {5., 6.};
-		win.put(a.begin(), a.end(), 0);
-	}
-	mpi3::communicator{win.get_group()}.barrier();
-	win.fence();
-	std::vector<double> b(2);
-	win.get(b.begin(), b.end(), 0);
-	win.fence();
-	assert( b[0] == 5. and b[1] == 6. );
-	return 0;
-}
+//	mpi3::window<double> win{world, darr.data(), darr.size()};
+//	if(world.rank() == 0){
+//		std::cout << win.size() << std::endl;
+//		assert( win.size() == 20 );
+//		assert( win.base()[13] == 13 );
+//	}else{
+//		assert(win.size() == 0);
+//		assert(win.base() == nullptr );
+//	}
+//	win.fence();
+//	if(world.rank() == 0){
+//		std::vector<double> a = {5., 6.};
+//		win.put(a.begin(), a.end(), 0);
+//	}
+//	mpi3::communicator{win.get_group()}.barrier();
+//	win.fence();
+//	std::vector<double> b(2);
+//	win.get(b.begin(), b.end(), 0);
+//	win.fence();
+//	assert( b[0] == 5. and b[1] == 6. );
+//	return 0;
+//}
 
-#endif
+//#endif
 #endif
 

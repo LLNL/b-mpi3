@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
-#endif
 // © Copyright Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
@@ -27,7 +24,7 @@ void syntax_test(mpi3::communicator& world) {
 	}
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 	std::vector<std::size_t> sizes = {100L, 64L*1024L};//, 128L*1024L}; // TODO check larger number (fails with openmpi 4.0.5)
 	int NUM_REPS = 5;
 
@@ -59,5 +56,3 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	syntax_test(world);
 	return 0;
 } catch(...) {return 1;}
-
-

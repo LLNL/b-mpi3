@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_ERROR_HANDLER $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
 #ifndef BOOST_MPI3_ERROR_HANDLER_HPP
 #define BOOST_MPI3_ERROR_HANDLER_HPP
 
@@ -77,30 +75,29 @@ inline error_handler communicator::get_error_handler() const {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_ERROR_HANDLER
+//#ifdef _TEST_BOOST_MPI3_ERROR_HANDLER
 
-#include "../mpi3/main.hpp"
+//#include "../mpi3/main.hpp"
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) {
+//int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) {
 
-//	error_counter_t ec;
-//	mpi3::error_handler<&ehh> ehherr;
-//	mpi3::error_handler newerr(eh);
-//	world.set_error_handler(ec);
-//	world.set_error_handler(newerr);
-//	world.set_error_handler(
-//	world.error(error::other);
-//	cout << ec.count() << '\n';
-//	newerr(world, MPI_ERR_OTHER);
+////	error_counter_t ec;
+////	mpi3::error_handler<&ehh> ehherr;
+////	mpi3::error_handler newerr(eh);
+////	world.set_error_handler(ec);
+////	world.set_error_handler(newerr);
+////	world.set_error_handler(
+////	world.error(error::other);
+////	cout << ec.count() << '\n';
+////	newerr(world, MPI_ERR_OTHER);
 
-//	auto f = world.get_error_handler();
+////	auto f = world.get_error_handler();
 
-	return 0;
-}
+//	return 0;
+//}
 
+//#endif
 #endif
-#endif
-

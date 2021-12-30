@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-mpic++ $0 -o $0x&&mpirun -n 6 $0x&&rm $0x;exit
-#endif
+// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 // © Alfredo A. Correa 2018-2021
 
 #include "../../mpi3/environment.hpp"
@@ -11,8 +9,7 @@ mpic++ $0 -o $0x&&mpirun -n 6 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-auto main() -> int try{
-
+auto main() -> int try {
 	mpi3::environment env;
 	mpi3::communicator world = env.world();
 
@@ -101,4 +98,3 @@ auto main() -> int try{
 #endif
 	return 0;
 }catch(...){return 1;}
-

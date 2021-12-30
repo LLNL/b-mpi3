@@ -1,7 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x&&time mpirun -n 2 $0x&&rm $0x;exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
@@ -46,7 +42,4 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	if(world.rank() == 1){assert( inbuf[9] == 9. );}
 
 	return 0;
-}catch(...){
-	return 1;
-}
-
+} catch(...) {return 1;}

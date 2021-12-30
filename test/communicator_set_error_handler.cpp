@@ -1,7 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors $0 -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.x; exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/error_handler.hpp"
@@ -24,7 +20,4 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 //	world.send(&d, &d + 1, 100);
 
 	return 1;
-}catch(...){
-	return 911;
-}
-
+} catch(...) {return 911;}
