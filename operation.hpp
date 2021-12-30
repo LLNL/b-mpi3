@@ -1,6 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -D_TEST_BOOST_MPI3_OPERATION $0x.cpp -o $0x.x && time mpirun -n 4 $0x.x $@ && rm -f $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+
 #ifndef BOOST_MPI3_OPERATION_HPP
 #define BOOST_MPI3_OPERATION_HPP
 
@@ -134,47 +133,47 @@ struct non_commutative_operation : operation{
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_OPERATION
+//#ifdef _TEST_BOOST_MPI3_OPERATION
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/error_handler.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/error_handler.hpp"
 
-void addem_int(int const* invec, int *inoutvec, int *len, int* f){
-	for(int i=0; i<*len; i++) inoutvec[i] += invec[i];
-}
+//void addem_int(int const* invec, int *inoutvec, int *len, int* f){
+//	for(int i=0; i<*len; i++) inoutvec[i] += invec[i];
+//}
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	int correct_result = world.size()*(world.size()-1)/2;
+//	int correct_result = world.size()*(world.size()-1)/2;
 
-	int data = world.rank();
-	{
-		int result = -1;
-		world.reduce_n(&data, 1, &result, std::plus<>{}, 0);
-		if(world.root()) assert( result == correct_result ); else assert( result == -1 );
-		world.broadcast_n(&result, 1, 0);
-		assert(result == correct_result);
-	}
-	{
-		int result = -1;
-		world.all_reduce_n(&data, 1, &result, std::plus<>{});
-		assert(result == correct_result);
-	}
-	{
-	//	int result = world.all_reduce_value<std::plus<>>(data);
-	//	assert( result == correct_result );
-	}
-	{
-	//	int result = world.all_reduce_value(world.rank(), std::plus<>{});
-	//	assert( result == correct_result );
-	}
+//	int data = world.rank();
+//	{
+//		int result = -1;
+//		world.reduce_n(&data, 1, &result, std::plus<>{}, 0);
+//		if(world.root()) assert( result == correct_result ); else assert( result == -1 );
+//		world.broadcast_n(&result, 1, 0);
+//		assert(result == correct_result);
+//	}
+//	{
+//		int result = -1;
+//		world.all_reduce_n(&data, 1, &result, std::plus<>{});
+//		assert(result == correct_result);
+//	}
+//	{
+//	//	int result = world.all_reduce_value<std::plus<>>(data);
+//	//	assert( result == correct_result );
+//	}
+//	{
+//	//	int result = world.all_reduce_value(world.rank(), std::plus<>{});
+//	//	assert( result == correct_result );
+//	}
 
-	return 0;
-}
+//	return 0;
+//}
 
-#endif
+//#endif
 #endif
 

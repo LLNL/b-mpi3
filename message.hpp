@@ -1,6 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_MPI3_MESSAGE $0x.cpp -o $0x.x && time mpirun -np 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+
 #ifndef MPI3_MESSAGE_HPP
 #define MPI3_MESSAGE_HPP
 
@@ -56,15 +55,15 @@ class message {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_MPI3_MESSAGE
+//#ifdef _TEST_MPI3_MESSAGE
 
-#include "../mpi3/main.hpp"
+//#include "../mpi3/main.hpp"
 
-namespace mpi3 = boost::mpi3;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-}
+//int mpi3::main(int, char*[], mpi3::communicator world){
+//}
 
-#endif
+//#endif
 #endif
 

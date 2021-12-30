@@ -1,7 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
@@ -10,14 +6,13 @@ mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
 
 namespace mpi3 = boost::mpi3;
 
-struct projector{
-	explicit projector(mpi3::communicator& comm) : comm_{comm}{}
-private:
+struct projector {
+	explicit projector(mpi3::communicator& comm) : comm_{comm} {}
+ private:
 	mutable mpi3::communicator comm_;
 };
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
-
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int {
 	{
 		std::list<mpi3::communicator> v;
 		v.emplace_back(world);
@@ -36,4 +31,3 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int{
 
 	return 0;
 }
-

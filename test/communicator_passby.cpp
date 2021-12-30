@@ -1,7 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
@@ -30,7 +26,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	h(world.duplicate());
 
 //  assert( ovrld(world) == "by ???" );  // ambiguous, not much to do, overload by reference can never called
-//	assert( ovrld(std::ref(world)) == "by ???" ); // ambiguous
+//  assert( ovrld(std::ref(world)) == "by ???" ); // ambiguous
 	assert( ovrld(world.duplicate()) == "by value" );
 	assert( ovrld(mpi3::communicator{world}) == "by value" );
 

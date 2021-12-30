@@ -1,7 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpicxx -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_HANDLE $0x.cpp -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.cpp; exit
-#endif
-
+/* -*- indent-tabs-mode: t -*- */
 #ifndef BOOST_MPI3_DETAIL_HANDLE_HPP
 #define BOOST_MPI3_DETAIL_HANDLE_HPP
 
@@ -162,9 +159,5 @@ struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, I
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_DETAIL_HANDLE
-int main(){
-}
-#endif
 #endif
 

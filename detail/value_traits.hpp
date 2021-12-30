@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-(echo "#include\""$0"\"">$0x.cpp) && mpic++ -O3 -std=c++14 -Wfatal-errors -D_TEST_BOOST_MPI3_DETAIL_VALUE_TRAITS $0x.cpp -o $0x.x && time mpirun -n 1 $0x.x $@ && rm -f $0x.cpp; exit
-#endif
 #ifndef BOOST_MPI3_DETAIL_VALUE_TRAITS_HPP
 #define BOOST_MPI3_DETAIL_VALUE_TRAITS_HPP
 
@@ -77,56 +74,56 @@ using value_category_t = typename value_category<V>::type;
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_DETAIL_VALUE_TRAITS
+//#ifdef _TEST_BOOST_MPI3_DETAIL_VALUE_TRAITS
 
-#include "../../mpi3/environment.hpp"
-#include "../../mpi3/main.hpp"
+//#include "../../mpi3/environment.hpp"
+//#include "../../mpi3/main.hpp"
 
-#include<deque>
-#include<list>
-#include<vector>
+//#include<deque>
+//#include<list>
+//#include<vector>
 
-#include<iostream>
+//#include<iostream>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-template<class It>
-std::string f(It it, mpi3::detail::value_unspecified_tag){
-	return "memcopyable_tag";
-};
+//template<class It>
+//std::string f(It it, mpi3::detail::value_unspecified_tag){
+//	return "memcopyable_tag";
+//};
 
-template<class It>
-std::string f(It it, mpi3::detail::memcopyable_tag){
-	return "memcopyable_tag";
-};
+//template<class It>
+//std::string f(It it, mpi3::detail::memcopyable_tag){
+//	return "memcopyable_tag";
+//};
 
-template<class It>
-std::string f(It it, mpi3::detail::basic_tag const&){
-	return "basic_tag";
-};
+//template<class It>
+//std::string f(It it, mpi3::detail::basic_tag const&){
+//	return "basic_tag";
+//};
 
-template<class It> std::string f(It&& it){
-	return f(
-		std::forward<It>(it),
-		typename boost::mpi3::detail::value_category<typename std::iterator_traits<It>::value_type>::type{}
-	);
-}
+//template<class It> std::string f(It&& it){
+//	return f(
+//		std::forward<It>(it),
+//		typename boost::mpi3::detail::value_category<typename std::iterator_traits<It>::value_type>::type{}
+//	);
+//}
 
-int mpi3::main(int, char*[], mpi3::communicator){
+//int mpi3::main(int, char*[], mpi3::communicator){
 
-	{
-		std::list<std::tuple<double, double>> l1;
-	//	assert( f(begin(l1)) == "memcopyable_tag" );
-	//	std::list<double> l2;
-	//	assert( f(begin(l2)) == "basic_tag" );
-	//	static_assert(std::is_trivially_copyable<std::complex<double>>{}, "complex is not trivially copyable?");
-	//	assert( f(nullptr, mpi3::detail::value_category_t<std::tuple<double, double>>{}) == "memcopyable_tag" );
-	//	assert( f(nullptr, mpi3::detail::value_category_t<std::string>{}) == "memcopyable_tag" );
-	}
+//	{
+//		std::list<std::tuple<double, double>> l1;
+//	//	assert( f(begin(l1)) == "memcopyable_tag" );
+//	//	std::list<double> l2;
+//	//	assert( f(begin(l2)) == "basic_tag" );
+//	//	static_assert(std::is_trivially_copyable<std::complex<double>>{}, "complex is not trivially copyable?");
+//	//	assert( f(nullptr, mpi3::detail::value_category_t<std::tuple<double, double>>{}) == "memcopyable_tag" );
+//	//	assert( f(nullptr, mpi3::detail::value_category_t<std::string>{}) == "memcopyable_tag" );
+//	}
 
-	return 0;
-}
-#endif
+//	return 0;
+//}
+//#endif
 #endif
 

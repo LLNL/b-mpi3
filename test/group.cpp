@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS/*-*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-*/
-mpic++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
+/*-*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-*/
 // © Alfredo A. Correa 2018-2020
 
 #include "../../mpi3/communicator.hpp"
@@ -36,4 +34,3 @@ int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try {
 
 	return 0;
 } catch(...) {return 1;}
-

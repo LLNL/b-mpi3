@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo '#include"'$0'"'>$0.cpp)&&mpic++ -std=c++14 -O3 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_PACKAGE_ARCHIVE $0.cpp -o$0x -lboost_serialization&&mpirun -n 2 $0x && rm $0x $0.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
 
 #ifndef MPI3_PACKAGE_ARCHIVE_HPP
 #define MPI3_PACKAGE_ARCHIVE_HPP
@@ -297,70 +295,70 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 // maybe needed for optimization to take effect?
 // BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::archive::package_oarchive)
 
-#ifdef _TEST_MPI3_PACKAGE_ARCHIVE
+//#ifdef _TEST_MPI3_PACKAGE_ARCHIVE
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/process.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/process.hpp"
 
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/map.hpp>
+//#include <boost/serialization/vector.hpp>
+//#include <boost/serialization/map.hpp>
 
-namespace mpi3 = boost::mpi3;
-using std::cout; 
+//namespace mpi3 = boost::mpi3;
+//using std::cout; 
 
-int mpi3::main(int, char*[], mpi3::communicator world) {
-	assert(world.size() > 1);
-	switch(world.rank()){
-		case 0: {
-			mpi3::detail::package p(world);
-			mpi3::package_oarchive poa(p);
-			std::string s("hello");
-			int 
-				i = 12, 
-				j = 13
-			;
-			std::vector<double> v(20, 5.);
-			std::map<int, int> m = {{1,2},{2,4},{3,4}};
-			poa 
-				<< s 
-				<< i 
-				<< j
-				<< v
-				<< 5
-				<< m
-			;
-			p.send(1);
-		} break;
-		case 1: {
-			mpi3::detail::package p(world);
-			mpi3::package_iarchive pia(p);
-			p.receive(0);
-			std::string s;
-			int 
-				i,
-				j
-			;
-			std::vector<double> v;
-			int c;
-			std::map<int, int> m;
-			pia 
-				>> s
-				>> i
-				>> j
-				>> v
-				>> c
-				>> m
-			;
-			assert( s == "hello" );
-			assert( i == 12 );
-			assert( j == 13 );
-			assert(v.size() == 20);
-			assert(c == 5);
-			assert( m[3] == 4 );
-		}
-	}
-	return 0;
-}
-#endif
+//int mpi3::main(int, char*[], mpi3::communicator world) {
+//	assert(world.size() > 1);
+//	switch(world.rank()){
+//		case 0: {
+//			mpi3::detail::package p(world);
+//			mpi3::package_oarchive poa(p);
+//			std::string s("hello");
+//			int 
+//				i = 12, 
+//				j = 13
+//			;
+//			std::vector<double> v(20, 5.);
+//			std::map<int, int> m = {{1,2},{2,4},{3,4}};
+//			poa 
+//				<< s 
+//				<< i 
+//				<< j
+//				<< v
+//				<< 5
+//				<< m
+//			;
+//			p.send(1);
+//		} break;
+//		case 1: {
+//			mpi3::detail::package p(world);
+//			mpi3::package_iarchive pia(p);
+//			p.receive(0);
+//			std::string s;
+//			int 
+//				i,
+//				j
+//			;
+//			std::vector<double> v;
+//			int c;
+//			std::map<int, int> m;
+//			pia 
+//				>> s
+//				>> i
+//				>> j
+//				>> v
+//				>> c
+//				>> m
+//			;
+//			assert( s == "hello" );
+//			assert( i == 12 );
+//			assert( j == 13 );
+//			assert(v.size() == 20);
+//			assert(c == 5);
+//			assert( m[3] == 4 );
+//		}
+//	}
+//	return 0;
+//}
+//#endif
 #endif
 

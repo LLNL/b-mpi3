@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-mpic++ -D_TEST_MPI3_SHARED_WINDOW -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
-#endif
+// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
 // © Alfredo A. Correa 2018-2020
 
 #ifndef MPI3_SHARED_WINDOW_HPP
@@ -72,42 +70,41 @@ shared_window<T> shared_communicator::make_shared_window(){
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_MPI3_SHARED_WINDOW
+//#ifdef _TEST_MPI3_SHARED_WINDOW
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/ostream.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/ostream.hpp"
 
-namespace mpi3 = boost::mpi3;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	mpi3::ostream wout{world};
+//	mpi3::ostream wout{world};
 
-	mpi3::shared_communicator node = world.split_shared();
+//	mpi3::shared_communicator node = world.split_shared();
 
-	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
-	mpi3::shared_communicator node_cpy{win.get_group()};
-//	mpi3::shared_communicator node_cpy{win.get_group(), 0};
-	assert( node_cpy == node );
+//	mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
+//	mpi3::shared_communicator node_cpy{win.get_group()};
+////	mpi3::shared_communicator node_cpy{win.get_group(), 0};
+//	assert( node_cpy == node );
 
 
-	assert( win.base() != nullptr );
-	assert( win.size() == node.size() );
+//	assert( win.base() != nullptr );
+//	assert( win.size() == node.size() );
 
-	win.base()[node.rank()] = node.rank() + 1;
-	node.barrier();
-	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
-	{
-		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
-	//	assert( mpi3::shared_communicator(win.get_group()) == node );
-	}
-	{
-		mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
-		mpi3::shared_window<int> win2 = std::move(win);
-	}
-	return 0;
-}
+//	win.base()[node.rank()] = node.rank() + 1;
+//	node.barrier();
+//	for(int i = 0; i != node.size(); ++i) assert(win.base()[i] == i + 1);
+//	{
+//		mpi3::shared_window<int> win = node.make_shared_window<int>(0);
+//	//	assert( mpi3::shared_communicator(win.get_group()) == node );
+//	}
+//	{
+//		mpi3::shared_window<int> win = node.make_shared_window<int>(node.root()?node.size():0);
+//		mpi3::shared_window<int> win2 = std::move(win);
+//	}
+//	return 0;
+//}
 
+//#endif
 #endif
-#endif
-

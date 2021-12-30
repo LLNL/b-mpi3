@@ -1,6 +1,5 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 -Wall -Wextra -Wfatal-errors -D_TEST_MPI3_OSTREAM $0x.cpp -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+
 #ifndef MPI3_OSTREAM_HPP
 #define MPI3_OSTREAM_HPP
 
@@ -71,43 +70,43 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_MPI3_OSTREAM
+//#ifdef _TEST_MPI3_OSTREAM
 
-#include "../mpi3/main.hpp"
+//#include "../mpi3/main.hpp"
 
-namespace mpi3 = boost::mpi3;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	mpi3::ostream wout(world);
-	wout << "hello" << std::endl;
-	wout << "hello, I am rank " << world.rank() << " in " << world.name() << std::endl;
-	wout << "hello, my rank/2 is " << world.rank()/2 << std::endl;
-	wout << (not world.root()?"not root":"") << std::endl;
-	mpi3::communicator firsttwo = (world < 2);
-	if(firsttwo) firsttwo.name("firsttwo");
+//	mpi3::ostream wout(world);
+//	wout << "hello" << std::endl;
+//	wout << "hello, I am rank " << world.rank() << " in " << world.name() << std::endl;
+//	wout << "hello, my rank/2 is " << world.rank()/2 << std::endl;
+//	wout << (not world.root()?"not root":"") << std::endl;
+//	mpi3::communicator firsttwo = (world < 2);
+//	if(firsttwo) firsttwo.name("firsttwo");
 
-	if(firsttwo){
-		mpi3::ostream fout(firsttwo);
-		fout << "hola, I am rank " << firsttwo.rank() << " in " << firsttwo.name() << " and also rank " << world.rank() << " in " << world.name() << std::endl;
-	}
+//	if(firsttwo){
+//		mpi3::ostream fout(firsttwo);
+//		fout << "hola, I am rank " << firsttwo.rank() << " in " << firsttwo.name() << " and also rank " << world.rank() << " in " << world.name() << std::endl;
+//	}
 
-	return 0;
-}
+//	return 0;
+//}
 
-/* output: 
-world: hello
-world[0]: hello, I am rank 0 in world
-world[1]: hello, I am rank 1 in world
-world[2]: hello, I am rank 2 in world
-world[3]: hello, I am rank 3 in world
-world[0-1]: hello, my rank/2 is 0
-world[2-3]: hello, my rank/2 is 1
-firsttwo[0]: hola, I am rank 0 in firsttwo
-firsttwo[1]: hola, I am rank 1 in firsttwo
-firsttwo[2]: hola, I am rank 2 in firsttwo
-*/
+///* output: 
+//world: hello
+//world[0]: hello, I am rank 0 in world
+//world[1]: hello, I am rank 1 in world
+//world[2]: hello, I am rank 2 in world
+//world[3]: hello, I am rank 3 in world
+//world[0-1]: hello, my rank/2 is 0
+//world[2-3]: hello, my rank/2 is 1
+//firsttwo[0]: hola, I am rank 0 in firsttwo
+//firsttwo[1]: hola, I am rank 1 in firsttwo
+//firsttwo[2]: hola, I am rank 2 in firsttwo
+//*/
 
-#endif
+//#endif
 #endif
 

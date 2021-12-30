@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-mpicxx.mpich -D_TEST_BOOST_MPI3_VERSION -lboost_serialization -xc++ $0 -o $0x&&mpirun -np 4 $0x&&rm $0x;exit
-#endif
+/* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
 // © Alfredo A. Correa 2018-2020
 
 #ifndef BOOST_MPI3_VERSION_HPP
@@ -73,35 +71,35 @@ std::string library_version_short(){
 
 }}
 
-#ifdef _TEST_BOOST_MPI3_VERSION
+//#ifdef _TEST_BOOST_MPI3_VERSION
 
-#include "../mpi3/main.hpp"
-#include<cassert>
+//#include "../mpi3/main.hpp"
+//#include<cassert>
 
-namespace mpi3 = boost::mpi3;
-using std::cout;
+//namespace mpi3 = boost::mpi3;
+//using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	assert(( mpi3::version() == mpi3::Version() ));
-	assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
-	assert(( mpi3::version() == mpi3::version_t{3, 1} ));
-	assert(( mpi3::version() <  mpi3::version_t{3, 2} ));
-	assert(( mpi3::version() >  mpi3::version_t{3, 0} ));
-	if(world.rank() == 0){
-		cout 
-			<<"mpi Version                : "<< mpi3::Version()               <<'\n'
-			<<"mpi version                : "<< mpi3::version()               <<'\n'
-			<<"mpi3 library version       : "<< mpi3::library_version()       <<'\n'
-			<<"mpi3 library version short : "<< mpi3::library_version_short() <<'\n'
-			<<"mpi3 wrapper version       : "<< BOOST_MPI3_VERSION            <<'\n'
-			<<"mpi3 wrapper version string: "<< BOOST_MPI3_VERSION_STRING     <<'\n'
-		;
-	}
-	assert( BOOST_MPI3_VERSION >= 071 );
-	return 0;
+//	assert(( mpi3::version() == mpi3::Version() ));
+//	assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
+//	assert(( mpi3::version() == mpi3::version_t{3, 1} ));
+//	assert(( mpi3::version() <  mpi3::version_t{3, 2} ));
+//	assert(( mpi3::version() >  mpi3::version_t{3, 0} ));
+//	if(world.rank() == 0){
+//		cout 
+//			<<"mpi Version                : "<< mpi3::Version()               <<'\n'
+//			<<"mpi version                : "<< mpi3::version()               <<'\n'
+//			<<"mpi3 library version       : "<< mpi3::library_version()       <<'\n'
+//			<<"mpi3 library version short : "<< mpi3::library_version_short() <<'\n'
+//			<<"mpi3 wrapper version       : "<< BOOST_MPI3_VERSION            <<'\n'
+//			<<"mpi3 wrapper version string: "<< BOOST_MPI3_VERSION_STRING     <<'\n'
+//		;
+//	}
+//	assert( BOOST_MPI3_VERSION >= 071 );
+//	return 0;
 
-}
-#endif
+//}
+//#endif
 #endif
 

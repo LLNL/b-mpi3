@@ -1,6 +1,3 @@
-#if COMPILATION
-mpicxx $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
-#endif
 // © Alfredo Correa 2018-2021
 
 #include "../main.hpp"
@@ -106,5 +103,3 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world)->int try{
 }catch(...){
 	return 1;
 }
-
-

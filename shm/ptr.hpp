@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
-#endif
 // © Alfredo A. Correa 2019-2020
 
 #ifndef MPI3_SHM_POINTER_HPP
@@ -239,22 +236,20 @@ pointer<T> uninitialized_fill_n(pointer<T> f, Size n, TT const& val){
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__
-#include "../../mpi3/main.hpp"
-#include "../../mpi3/ostream.hpp"
+//#if not __INCLUDE_LEVEL__
+//#include "../../mpi3/main.hpp"
+//#include "../../mpi3/ostream.hpp"
 
-namespace mpi3 = boost::mpi3; 
+//namespace mpi3 = boost::mpi3; 
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-	using p = mpi3::shm::ptr<double>;
-	using cp = std::pointer_traits<p>::template rebind<double const>;//::other;
-//	whatis<cp>();
-	p P;
-	cp CP = P;
-	return 0;
-}
+//int mpi3::main(int, char*[], mpi3::communicator world){
+//	using p = mpi3::shm::ptr<double>;
+//	using cp = std::pointer_traits<p>::template rebind<double const>;//::other;
+////	whatis<cp>();
+//	p P;
+//	cp CP = P;
+//	return 0;
+//}
 
-#endif
-
-
+//#endif
 #endif
