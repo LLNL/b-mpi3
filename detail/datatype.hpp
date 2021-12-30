@@ -1,6 +1,9 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+//#if COMPILATION
+//mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2017-2021 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
 

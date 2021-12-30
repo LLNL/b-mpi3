@@ -1,7 +1,8 @@
-#if COMPILATION/* -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*- */
-mpic++ -D_TEST_BOOST_MPI3_ADDRESS -x c++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2021
+/* -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*- */
+//#if COMPILATION
+//mpic++ -D_TEST_BOOST_MPI3_ADDRESS -x c++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ADDRESS_HPP
 #define BOOST_MPI3_ADDRESS_HPP
@@ -28,25 +29,25 @@ address addressof(T const& t){return get_address(std::addressof(t));}
 }  // end namespace mpi3
 }  // end namespace boost
 
-#ifdef _TEST_BOOST_MPI3_ADDRESS
+//#ifdef _TEST_BOOST_MPI3_ADDRESS
 
-#include "../mpi3/main.hpp"
+//#include "../mpi3/main.hpp"
 
-using std::cout;
-namespace mpi3 = boost::mpi3;
+//using std::cout;
+//namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+//int mpi3::main(int, char*[], mpi3::communicator world){
 
-	std::cout << "dsadsad" << std::endl;
+//	std::cout << "dsadsad" << std::endl;
 
-	std::vector<int> v(10);
-	mpi3::address a1 = mpi3::addressof(v[0]);
-	mpi3::address a2 = mpi3::addressof(v[1]);
-	assert( a2 - a1 == sizeof(int) );
+//	std::vector<int> v(10);
+//	mpi3::address a1 = mpi3::addressof(v[0]);
+//	mpi3::address a2 = mpi3::addressof(v[1]);
+//	assert( a2 - a1 == sizeof(int) );
 
-	return 0;
-}
+//	return 0;
+//}
 
-#endif
+//#endif
 #endif
 

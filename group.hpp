@@ -1,7 +1,8 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
-OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2020
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
+//#if COMPILATION
+//OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef MPI3_GROUP_HPP
 #define MPI3_GROUP_HPP
@@ -30,7 +31,7 @@ class group {
 	friend class communicator;
 	template<class T> friend class window;
 
-	MPI_Group& get(){return impl_;}
+	MPI_Group& get() {return impl_;}
 	MPI_Group operator&() {return get();}  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions,google-runtime-operator) access implementation as pointer
 
 //	std::pointer_traits<MPI_Group>::element_type const* operator&() const{return impl_;} // this doesn't work because in mpich MPI_Group is not really pointer type

@@ -1,7 +1,5 @@
-#if COMPILATION // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-mpic++ -x c++ $0 -o $0x&&mpirun -n 1 $0x&&rm $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
@@ -2984,111 +2982,111 @@ auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_oarchive)
 //BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::mpi3::detail::package_iarchive)
 
-#if not __INCLUDE_LEVEL__
+//#if not __INCLUDE_LEVEL__
 
-#include "../mpi3/main.hpp"
-#include "../mpi3/version.hpp"
+//#include "../mpi3/main.hpp"
+//#include "../mpi3/version.hpp"
 
-#include<iostream>
+//#include<iostream>
 
-using std::cout;
-namespace mpi3 = boost::mpi3;
+//using std::cout;
+//namespace mpi3 = boost::mpi3;
 
-class V{
-	mpi3::communicator comm_;
-	public:
-	V(mpi3::communicator const& c) : comm_(c){}
-	V(mpi3::communicator&& c) : comm_(std::move(c)){}
-};
+//class V{
+//	mpi3::communicator comm_;
+//	public:
+//	V(mpi3::communicator const& c) : comm_(c){}
+//	V(mpi3::communicator&& c) : comm_(std::move(c)){}
+//};
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-	std::cout << mpi3::undefined << std::endl;
+//int mpi3::main(int, char*[], mpi3::communicator world){
+//	std::cout << mpi3::undefined << std::endl;
 
-	static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
+//	static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
 
-//	auto worldcopy1 = world;
-//	auto worldcopy2 = std::move(worldcopy1);
-//	V v(worldcopy);
-//	V v2(std::move(v));
+////	auto worldcopy1 = world;
+////	auto worldcopy2 = std::move(worldcopy1);
+////	V v(worldcopy);
+////	V v2(std::move(v));
 
-	if(world.rank() == 0) cout << "MPI version " <<  mpi3::version() << '\n';
-//	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
+//	if(world.rank() == 0) cout << "MPI version " <<  mpi3::version() << '\n';
+////	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
-	cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
+//	cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
 
-	mpi3::communicator comm;
-	assert(!comm);
-//	cout << comm.rank() << '\n';
+//	mpi3::communicator comm;
+//	assert(!comm);
+////	cout << comm.rank() << '\n';
 
-	mpi3::communicator comm2 = world;
-	assert(comm2);
-	assert(comm2.size() == world.size());
-	assert(comm2 == world);
-	assert(&comm2 != &world);
+//	mpi3::communicator comm2 = world;
+//	assert(comm2);
+//	assert(comm2.size() == world.size());
+//	assert(comm2 == world);
+//	assert(&comm2 != &world);
 
-	mpi3::communicator comm3 = world;//.duplicate();
-	assert(comm3);
-	assert(comm3 == world);
-	assert(&comm3 != &world);
-	comm = comm2;
-	assert(&comm != &comm2);
+//	mpi3::communicator comm3 = world;//.duplicate();
+//	assert(comm3);
+//	assert(comm3 == world);
+//	assert(&comm3 != &world);
+//	comm = comm2;
+//	assert(&comm != &comm2);
 
-//	world2 = world;
+////	world2 = world;
 
-	return 0;
-#if 0
-//	boost::mpi3::communicator newcomm = world;
-	{
-		int color = world.rank()/3;
-		communicator row_comm;
-		row_comm = world.split(color);
-		world.barrier();
-		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
-		world.barrier();
-	}
-	{
-		communicator row_comm = world/3;
-		world.barrier();
-		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
-		world.barrier();
-	}
+//	return 0;
+//#if 0
+////	boost::mpi3::communicator newcomm = world;
+//	{
+//		int color = world.rank()/3;
+//		communicator row_comm;
+//		row_comm = world.split(color);
+//		world.barrier();
+//		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
+//		world.barrier();
+//	}
+//	{
+//		communicator row_comm = world/3;
+//		world.barrier();
+//		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
+//		world.barrier();
+//	}
 
-	world.barrier();
-	if(world.rank() == 0) cout << "prime communicator" << '\n';
-	world.barrier();
+//	world.barrier();
+//	if(world.rank() == 0) cout << "prime communicator" << '\n';
+//	world.barrier();
 
-	{
-	//	group world_group(world);
-	//	const int ranks[4] = {2, 3, 5, 7};
-	//	group prime = world_group.include(ranks, ranks + 4);
-	//	communicator prime_comm(world, prime);
-		auto prime_comm = world.subcomm({2,3,5,7});
-		cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
-#if 0
-		if(communicator::null != prime_comm){
-			cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
-		}else{
-			cout << world.rank() << " not in prime comm\n";
-		}
-#endif
-	}
+//	{
+//	//	group world_group(world);
+//	//	const int ranks[4] = {2, 3, 5, 7};
+//	//	group prime = world_group.include(ranks, ranks + 4);
+//	//	communicator prime_comm(world, prime);
+//		auto prime_comm = world.subcomm({2,3,5,7});
+//		cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
+//#if 0
+//		if(communicator::null != prime_comm){
+//			cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
+//		}else{
+//			cout << world.rank() << " not in prime comm\n";
+//		}
+//#endif
+//	}
 
-	world.barrier();
-	if(world.rank() == 0) cout << "prime communicator" << '\n';
-	world.barrier();
+//	world.barrier();
+//	if(world.rank() == 0) cout << "prime communicator" << '\n';
+//	world.barrier();
 
-	if(0){
-		auto prime = world.subcomm({2,3,5,7});
-		if(prime.is_empty()){
-	//	if (communicator::null != prime){
-			cout << world.rank() << " -> " << prime.rank() << "/" << prime.size() << '\n';
-		}else{
-			cout << world.rank() << " not in prime comm\n";
-		}
-	}
-#endif
-}
+//	if(0){
+//		auto prime = world.subcomm({2,3,5,7});
+//		if(prime.is_empty()){
+//	//	if (communicator::null != prime){
+//			cout << world.rank() << " -> " << prime.rank() << "/" << prime.size() << '\n';
+//		}else{
+//			cout << world.rank() << " not in prime comm\n";
+//		}
+//	}
+//#endif
+//}
 
-#endif
+//#endif
 #endif
 

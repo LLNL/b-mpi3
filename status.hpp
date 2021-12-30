@@ -1,6 +1,9 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_STATUS $0x.cpp -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
+//#if COMPILATION_INSTRUCTIONS 
+//(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_STATUS $0x.cpp -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_STATUS_HPP
 #define BOOST_MPI3_STATUS_HPP
 

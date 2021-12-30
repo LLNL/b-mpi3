@@ -1,7 +1,8 @@
-#if COMPILATION /* -*- indent-tabs-mode: t -*- */
-mpic++ -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-#endif
-// © Copyright Alfredo A. Correa 2018-2021
+/* -*- indent-tabs-mode: t -*- */
+//#if COMPILATION
+//mpic++ -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_WALL_CLOCK_HPP
 #define BOOST_MPI3_WALL_CLOCK_HPP
@@ -63,39 +64,39 @@ class wall_timer {
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__
+//#if not __INCLUDE_LEVEL__
 
-#include "../mpi3/environment.hpp"
+//#include "../mpi3/environment.hpp"
 
-#include<iostream>
-#include<thread> // this_tread::sleep_for
+//#include<iostream>
+//#include<thread> // this_tread::sleep_for
 
-namespace bmpi3 = boost::mpi3;
-using std::cout;
-using namespace std::chrono_literals; // 2s
+//namespace bmpi3 = boost::mpi3;
+//using std::cout;
+//using namespace std::chrono_literals; // 2s
 
-void f(bmpi3::communicator c){
-	bmpi3::wall_timer f_watch{c, "OptionalTitle"};
-	std::this_thread::sleep_for(std::chrono::seconds(c.rank()+1));
-// prints "# OptionalTitle timing 1.00007[2.50007]4.00006 sec"
-}
+//void f(bmpi3::communicator c){
+//	bmpi3::wall_timer f_watch{c, "OptionalTitle"};
+//	std::this_thread::sleep_for(std::chrono::seconds(c.rank()+1));
+//// prints "# OptionalTitle timing 1.00007[2.50007]4.00006 sec"
+//}
 
-int main(int argc, char* argv[]){
-	bmpi3::environment::initialize(argc, argv); // same as MPI_Init(...);
-	assert(bmpi3::environment::is_initialized());
+//int main(int argc, char* argv[]){
+//	bmpi3::environment::initialize(argc, argv); // same as MPI_Init(...);
+//	assert(bmpi3::environment::is_initialized());
 
-	auto then = bmpi3::wall_time();
-	std::this_thread::sleep_for(2s);
-	cout<< (bmpi3::wall_time() - then).count() <<'\n'; 
+//	auto then = bmpi3::wall_time();
+//	std::this_thread::sleep_for(2s);
+//	cout<< (bmpi3::wall_time() - then).count() <<'\n'; 
 
-	{
-		auto world = bmpi3::environment::get_world_instance();
-		f(world);
-	}
+//	{
+//		auto world = bmpi3::environment::get_world_instance();
+//		f(world);
+//	}
 
-	bmpi3::environment::finalize(); // same as MPI_Finalize()
-	assert(bmpi3::environment::is_finalized());
-}
-#endif
+//	bmpi3::environment::finalize(); // same as MPI_Finalize()
+//	assert(bmpi3::environment::is_finalized());
+//}
+//#endif
 #endif
 
