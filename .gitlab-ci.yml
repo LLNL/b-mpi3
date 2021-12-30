@@ -122,11 +122,11 @@ cuda-11.4-std17:
       - mkdir /opt/cmake
       - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
       - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-      - export MPI_OVERSUBSCRIBE=""
       - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
       - cd test
       - nvcc --version
       - mkdir build && cd build
+      - export MPI_OVERSUBSCRIBE="--oversubscribe"
       - CUDACXX=nvcc cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
       - cmake --build . --verbose
       - ctest --output-on-failure
