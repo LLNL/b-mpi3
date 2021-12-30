@@ -266,14 +266,14 @@ class basic_communicator{
 		receive_n(buffer.data(), buffer.size(), source, tag);
 		return std::copy_n(buffer.begin(), n, dest);
 	}
-	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
 		auto count = m.count<detail::packed>();
 		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);
 	}
-	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		return receive(static_cast<uvector<detail::packed>&>(b), source, tag);
 	}
 	template<class It, typename Size, typename... Meta>
