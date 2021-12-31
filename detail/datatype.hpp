@@ -78,11 +78,11 @@ class packed {
 template<class T> struct basic_datatype;
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
-template<> struct basic_datatype<TypE>{ \
-/*	constexpr*/ operator MPI_Datatype() const{ \
-		assert( (MpiiD) != MPI_DATATYPE_NULL ); /*this system doesn't support this type*/ \
-		return MpiiD; \
+#define MPI3_DECLARE_DATATYPE(TypE, MpiiD)         \
+template<> struct basic_datatype<TypE> {           \
+/*	constexpr*/ operator MPI_Datatype() const {    \
+		assert( (MpiiD) != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
+		return MpiiD;                              \
 	} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
