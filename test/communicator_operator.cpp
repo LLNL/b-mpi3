@@ -32,7 +32,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 				MPI_ANY_SOURCE, MPI_ANY_TAG, world.get(), &r.impl_
 			);
 			cout <<"comm["<< world.rank() <<"] ireceived"<< std::endl;
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);  // NOLINT(ppcoreguidelines-pro-type-cstyle-cast) for macro
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 		//	r.wait();
 		}; break;
 		default: break;
