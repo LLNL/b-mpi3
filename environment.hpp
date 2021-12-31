@@ -184,7 +184,7 @@ class environment {
 		return instance;
 	}
 
-	BMPI3_NODISCARD("") communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
+	[[nodiscard]] communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
 		communicator ret{get_world_instance()}; ret.name("world");
 		return ret;
 	}

@@ -4,5 +4,5 @@
 (cd test && mkdir -p .build.g++mpich && cd .build.g++mpich && CXX=g++      cmake ..  -DMPI_EXECUTABLE_SUFFIX=.mpich                                                                                                                                && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
 (cd test && mkdir -p .build.clang++  && cd .build.clang++  && CXX=clang++  cmake ..                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy" -DCMAKE_BUILD_TYPE=Debug                                                                   && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
 
-#. /opt/intel/oneapi/setvars.sh
-#(cd test && mkdir -p .build.oneapi      && cd .build.oneapi      && CXX=icpc  MPICXX=mpiicpc    cmake ..                                 && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
+. /opt/intel/oneapi/setvars.sh
+(cd test && mkdir -p .build.oneapi      && cd .build.oneapi      && CXX=icpc  MPICXX=mpiicpc    cmake ..                                 && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666

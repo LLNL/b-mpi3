@@ -25,9 +25,9 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		assert( location == 3 );
 	}
 	{
-		auto&& [value, procs] world.max_location(data);
+		auto&& [value, procs] = world.max_location(data);
 		assert( value == 78 );
-		assert( proc.rank() == 3 );
+		assert( procs.rank() == 3 );
 	}
 #endif
 	{

@@ -9,12 +9,12 @@ using std::cout;
 using namespace std::chrono_literals;
 
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 
 	std::vector<double> inbuf(100);
 	std::vector<double> outbuf(100);
 
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0: {
 			iota(begin(outbuf), end(outbuf), 0.0);
 			std::this_thread::sleep_for(2s);
@@ -32,14 +32,14 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 				MPI_ANY_SOURCE, MPI_ANY_TAG, world.get(), &r.impl_
 			);
 			cout <<"comm["<< world.rank() <<"] ireceived"<< std::endl;
-			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);
+			MPI_Wait(&r.impl_, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 		//	r.wait();
 		}; break;
 		default: break;
 	}
 	cout <<"comm["<< world.rank() <<"] completed op"<< std::endl;
 
-	if(world.rank() == 1){assert( inbuf[9] == 9. );}
+	if(world.rank() == 1) {assert( inbuf[9] == 9. );}
 
 	return 0;
 } catch(...) {return 1;}
