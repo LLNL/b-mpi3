@@ -196,7 +196,7 @@ struct type {
 		return {name.data(), static_cast<std::size_t>(namelen)};
 	}
 	void     name(std::string const& s) {set_name(s);}
-	void set_name(std::string const& s) {MPI_Type_set_name(impl_, s.c_str());}
+	void set_name(std::string const& s) {MPI_Type_set_name(impl_, s.c_str());}  // NOLINT(readability-make-member-function-const) this is not really const
 
 	MPI_Aint extent() const {
 		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init

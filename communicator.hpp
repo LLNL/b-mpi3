@@ -266,7 +266,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return size;
 	}
 
-	[[nodiscard("empty is not an action")]]
+	[[nodiscard]]  // ("empty is not an action")]]
 	bool    empty() const {return is_empty();}
 	bool is_empty() const {return is_null();}
 
@@ -445,8 +445,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class MultiIt>
 	auto receive_n(MultiIt first, typename MultiIt::difference_type count, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG)
-	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count) {
-		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count; }
+	->decltype( MPI_Recv (mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count) {  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+		return MPI_(Recv)(mpi3::base(first), count, mpi3::type{first}, source, tag, impl_, MPI_STATUS_IGNORE), first + count; }  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 
 	template<class It>
 	auto isend(
@@ -1010,7 +1010,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int count = -1;
 		MPI_Mprobe(source, tag, impl_, &msg, &status);
 		MPI_Get_count(&status, MPI_PACKED, &count);
-		MPI_Mrecv(begin, count, MPI_PACKED, &msg, MPI_STATUS_IGNORE);
+		MPI_Mrecv(begin, count, MPI_PACKED, &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 	//	auto n = probe(source, tag).count<char>();
 	//	receive_packed_n(begin, n, source, tag);
 		return static_cast<void*>(std::next(static_cast<char*>(begin), count));
@@ -1318,7 +1318,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
     	MPI_Mprobe(source, tag, impl_, &msg, &status);
     	MPI_Get_count(&status, detail::basic_datatype<V>{}, &count);
     	using detail::data;
-    	MPI_Mrecv(data(first), count, detail::basic_datatype<V>{}, &msg, MPI_STATUS_IGNORE);
+    	MPI_Mrecv(data(first), count, detail::basic_datatype<V>{}, &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
 
 	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
@@ -1456,7 +1456,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return d_first + count;
 	}
 
-	using in_place_type = decltype(MPI_IN_PLACE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) openmpi #defines this as (void*)1, it may not be a pointer in general
+	using in_place_type = decltype(MPI_IN_PLACE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 
 	template<class It1, typename Size>
 	auto all_to_all_n(
@@ -1473,7 +1473,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			impl_
 		), first + count) {
 		assert( count % size() == 0 );
-		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 		MPI_(Alltoall)(
 			in_place, 0*count/size(),
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
@@ -1535,7 +1535,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return std::forward<T>(t);
 	}
 	template<class T> 
-	[[nodiscard("do not ignore result when argument is const")]]
+	[[nodiscard]]  // ("do not ignore result when argument is const")]]
 	auto operator()(T const& t)
 	->decltype(communicator::all_to_all(t.begin(), std::declval<T>().begin()), T(communicator::size())){
 		assert(t.size() == communicator::size());
@@ -1837,7 +1837,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class PredefinedOp = predefined_operation<Op>, class = decltype(PredefinedOp{})
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
-		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 		int s = MPI_Allreduce(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot all reduce n");}
 	}
@@ -1857,7 +1857,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class PredefinedOp = predefined_operation<Op>
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
-		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto) openmpi #defines this as (void*)1, it may not be a pointer in general
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 		int s =
 			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
 			                 MPI_Reduce(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)

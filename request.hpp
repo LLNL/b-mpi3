@@ -29,9 +29,9 @@ struct [[nodiscard]] request {
 		request(std::move(other)).swap(*this);
 		return *this;
 	}
-	bool completed() const{
+	bool completed() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_(Request_get_status)(impl_, &ret, MPI_STATUS_IGNORE);
+		MPI_(Request_get_status)(impl_, &ret, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 		return ret != 0;
 	}
 	status get_status() const{
@@ -50,7 +50,7 @@ struct [[nodiscard]] request {
 		}
 	}
 	void wait() {
-		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_, MPI_STATUS_IGNORE);}
+		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_, MPI_STATUS_IGNORE);}  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
@@ -85,7 +85,7 @@ inline std::vector<int> completed_some(std::vector<request> const& requests) {
 		const_cast<MPI_Request*>(&(requests.data()->impl_)),  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		&outcount,
 		ret.data(),
-		MPI_STATUSES_IGNORE
+		MPI_STATUSES_IGNORE  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	);
 	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot completed some");}
 	ret.resize(outcount);
@@ -94,7 +94,7 @@ inline std::vector<int> completed_some(std::vector<request> const& requests) {
 
 template<class ContRequestIterator, class Size>
 void wait_all_n(ContRequestIterator it, Size n){
-	MPI_Waitall(n, &detail::data(it)->impl_, MPI_STATUSES_IGNORE);
+	MPI_Waitall(n, &detail::data(it)->impl_, MPI_STATUSES_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 }
 
 template<class ContRequestIterator>
@@ -109,13 +109,13 @@ void wait(Args&&... args){
 		return ret;
 	};
 	std::vector<MPI_Request> v{move_impl(std::move(args))...};
-	MPI_Waitall(static_cast<int>(v.size()), v.data(), MPI_STATUSES_IGNORE);
+	MPI_Waitall(static_cast<int>(v.size()), v.data(), MPI_STATUSES_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 }
 
 template<class ContiguousIterator, class Size>
 ContiguousIterator wait_any_n(ContiguousIterator it, Size n){
 	int index = -1;
-	int s = MPI_Waitany(n, &detail::data(it)->impl_, &index, MPI_STATUS_IGNORE);
+	int s = MPI_Waitany(n, &detail::data(it)->impl_, &index, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait any");}
 	return it + index;
 }
@@ -129,7 +129,7 @@ template<class ContiguousIterator, class Size>
 std::vector<int> wait_some_n(ContiguousIterator it, Size n){
 	int outcount = -1;
 	std::vector<int> indices(n);
-	int s = MPI_Waitsome(n, &detail::data(it)->impl_, &outcount, indices.data(), MPI_STATUSES_IGNORE);
+	int s = MPI_Waitsome(n, &detail::data(it)->impl_, &outcount, indices.data(), MPI_STATUSES_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait some");}
 	indices.resize(outcount);
 	return indices;
