@@ -91,18 +91,18 @@ namespace mpi3 {
 #define SAFE_MPI_(F) check_mpi_(MPI_##F)  // NOLINT(cppcoreguidelines-macro-usage) : name concatenation
 
 #if !defined(OPEN_MPI) || (OMPI_MAJOR_VERSION < 2)
-#define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_HWTHREAD MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_CORE     MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_L1CACHE  MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_L2CACHE  MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_L3CACHE  MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_SOCKET   MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_NUMA     MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_BOARD    MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_HOST     MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_CU       MPI_COMM_TYPE_SHARED
-#define OMPI_COMM_TYPE_CLUSTER  MPI_COMM_TYPE_SHARED
+#define OMPI_COMM_TYPE_NODE     MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_HWTHREAD MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_CORE     MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_L1CACHE  MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_L2CACHE  MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_L3CACHE  MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_SOCKET   MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_NUMA     MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_BOARD    MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_HOST     MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_CU       MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
+#define OMPI_COMM_TYPE_CLUSTER  MPI_COMM_TYPE_SHARED  // NOLINT(cppcoreguidelines-macro-usage)
 #endif
 
 // https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
