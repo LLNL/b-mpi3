@@ -145,7 +145,7 @@ extended_type_info::find(const char *key) {
     BOOST_ASSERT(nullptr != key);
     const detail::ktmap & k = singleton<detail::ktmap>::get_const_instance();
     const detail::extended_type_info_arg eti_key(key);
-    const detail::ktmap::const_iterator it = k.find(& eti_key);
+    const detail::ktmap::const_iterator it = k.find(& eti_key);  // NOLINT(hicpp-use-auto,modernize-use-auto)
     if(k.end() == it) {
         return nullptr; }
     return *(it);

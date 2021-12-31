@@ -1,7 +1,4 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
-//#if COMPILATION
-//OMPI_CXX=$CXX mpic++ $0 -o $0x -lboost_serialization&&mpirun --oversubscribe -n 4 $0x&&rm $0x;exit
-//#endif
 // Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef MPI3_GROUP_HPP
@@ -59,17 +56,17 @@ class group {
 		}
 	}
 
-	group include(std::initializer_list<int> il){
+	group include(std::initializer_list<int> il) const {
 		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
 	}
-	group exclude(std::initializer_list<int> il){
+	group exclude(std::initializer_list<int> il) const {
 		group ret; MPI_(Group_excl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
 	}
-	int rank() const{int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
-	bool root() const{assert(not empty()); return rank() == 0;}
-	int size() const{int size=-1; MPI_(Group_size)(impl_, &size); return size;}
+	auto rank() const -> int {int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
+	auto root() const -> bool {assert(not empty()); return rank() == 0;}
+	auto size() const -> int {int size = -1; MPI_(Group_size)(impl_, &size); return size;}
 
-	group sliced(int first, int last, int stride = 1) const{
+	group sliced(int first, int last, int stride = 1) const {
 		int ranges[][3] = {{first, last - 1, stride}};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &ret.impl_); return ret;
 	}

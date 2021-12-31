@@ -266,7 +266,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return size;
 	}
 
-	BMPI3_NODISCARD("empty is not an action")
+	[[nodiscard("empty is not an action")]]
 	bool    empty() const {return is_empty();}
 	bool is_empty() const {return is_null();}
 
@@ -333,7 +333,6 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	BMPI3_NODISCARD("")
 	mpi3::request isend_n(
 		It first,
 			detail::contiguous_iterator_tag /*tag*/,
@@ -708,7 +707,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class It, class Size>
 	auto send_receive_replace_n(
-		It first, Size size, 
+		It first, Size size,
 		int dest, int source, // = MPI_ANY_SOURCE, 
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	) {
@@ -722,17 +721,18 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	mpi3::status send_receive_replace_n(
+	It send_receive_replace_n(
 		It first,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		return MPI_(Sendrecv_replace)(
+		mpi3::status s = MPI_(Sendrecv_replace)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, sendtag, source, recvtag, impl_
 		);
+		return first + s.count<typename std::iterator_traits<It>::value_type>();
 	}
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(
@@ -766,26 +766,27 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 
  private:
-	template<class It, typename Size>
+	template<class It, typename Size, class It2>
 	auto send_receive_n(
-		It first, Size count, int dest,
-		It d_first, Size d_count, int source,
+		It    first, Size   count, int dest,
+		It2 d_first, Size d_count, int source,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		int sendtag, int recvtag
 	) {
-		status ret;;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
+		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		MPI_(Sendrecv)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, sendtag,
 			detail::data(d_first), d_count,
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 			source, recvtag,
 			impl_,
 			&ret.impl_
 		);
-		return ret;
+		assert( static_cast<Size>(ret.count<typename std::iterator_traits<It2>::value_type>()) == d_count );
+		return d_first + d_count;
 	}
 
 	template<class It1, class Size, class It2
@@ -827,11 +828,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		send_receive_replace_n(&s, 1, dest, source, sendtag, recvtag);
 		detail::package p2(*this);
 		p2.resize(s);
-		send_receive_n(
+		auto st = send_receive_n(
 			p.begin(), p.size(), dest,
 			p2.begin(), p2.size(),
 			source, sendtag, recvtag
 		);
+		(void)st;
 		package_iarchive pia(p2);
 		while(p2) {pia >> *first++;}
 		return first;
@@ -1533,7 +1535,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return std::forward<T>(t);
 	}
 	template<class T> 
-	BMPI3_NODISCARD("do not ignore result when argument is const")
+	[[nodiscard("do not ignore result when argument is const")]]
 	auto operator()(T const& t)
 	->decltype(communicator::all_to_all(t.begin(), std::declval<T>().begin()), T(communicator::size())){
 		assert(t.size() == communicator::size());

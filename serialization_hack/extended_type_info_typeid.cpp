@@ -155,7 +155,7 @@ extended_type_info_typeid_0::get_extended_type_info(  // NOLINT(readability-conv
 ) const {
     typeid_system::extended_type_info_typeid_arg etia(ti);
     const tkmap & t = singleton<tkmap>::get_const_instance();
-    const tkmap::const_iterator it = t.find(& etia);
+    const tkmap::const_iterator it = t.find(& etia);  // NOLINT(hicpp-use-auto,modernize-use-auto)
     if(t.end() == it) {
         return nullptr;
 	}

@@ -30,7 +30,7 @@ void call(Args... args) {
 }
 
 template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Status*>())))* = nullptr>
-BMPI3_NODISCARD("") mpi3::status call(Args... args) {
+mpi3::status call(Args... args) {
 	mpi3::status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 	auto const e = static_cast<enum error>((*F)(args..., &ret.impl_));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
@@ -38,7 +38,7 @@ BMPI3_NODISCARD("") mpi3::status call(Args... args) {
 }
 
 template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<int*>())))* = nullptr>
-BMPI3_NODISCARD("") int call(Args... args) {
+[[nodiscard]] int call(Args... args) {
 	int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	auto const e = static_cast<enum error>((*F)(args..., &ret));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}

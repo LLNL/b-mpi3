@@ -17,7 +17,7 @@
 namespace boost {
 namespace mpi3 {
 
-struct status {
+struct [[nodiscard]] status {
 	MPI_Status impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
 	status() = default;
@@ -69,6 +69,7 @@ struct status {
 //		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot test cancelled"};}
 //		return ret != 0;
 //	}
+//	constexpr static auto const ignore = MPI_STATUS_IGNORE;
 };
 
 }  // end namespace mpi3

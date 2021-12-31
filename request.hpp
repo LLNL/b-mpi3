@@ -16,7 +16,7 @@
 namespace boost {
 namespace mpi3 {
 
-struct request {
+struct [[nodiscard]] request {
 	// in mpich MPI_Request is same as int
 	MPI_Request impl_ = MPI_REQUEST_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
@@ -152,7 +152,7 @@ namespace detail {
 //}
 
 template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(std::declval<Args>()..., std::declval<MPI_Request*>())))* = nullptr>
-BMPI3_NODISCARD("") mpi3::request call_i(Args... args) {
+mpi3::request call_i(Args... args) {
 	mpi3::request ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 	auto const e = static_cast<enum error>((*F)(args..., &ret.impl_));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
