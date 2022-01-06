@@ -2977,6 +2977,15 @@ auto operator/(Range const& r, communicator& self)  // NOLINT(fuchsia-overloaded
 	->decltype(self.scatter(begin(r), end(r))) {
 		return self.scatter(begin(r), end(r)); }
 
+
+inline mpi3::communicator& deref(MPI_Comm const& handle) {
+	return reinterpret_cast<mpi3::communicator&>(const_cast<MPI_Comm&>(handle));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+}
+
+inline mpi3::communicator& grip(MPI_Comm const& handle) {
+	return reinterpret_cast<mpi3::communicator&>(const_cast<MPI_Comm&>(handle));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+}
+
 }  // end namespace mpi3
 }  // end namespace boost
 
