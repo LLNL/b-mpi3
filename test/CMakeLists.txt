@@ -81,6 +81,7 @@ ring.cpp
 shared_mutex.cpp
 simple_send_receive.cpp
 simple_broadcast.cpp
+type_commit.cpp
 )
 
 # List of tests that need to link with boost_serialization
