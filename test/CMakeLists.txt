@@ -50,6 +50,7 @@ endif()
 # This list is only a subset of files.  It might be useful to divide some of the tests into
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
+async_interaction.cpp
 cartesian.cpp
 communicator_abort.cpp
 communicator_all_gather.cpp
@@ -81,6 +82,7 @@ ring.cpp
 shared_mutex.cpp
 simple_send_receive.cpp
 simple_broadcast.cpp
+type_commit.cpp
 )
 
 # List of tests that need to link with boost_serialization

@@ -30,7 +30,7 @@ typename MultiIt::element_ptr base(MultiIt first){return first.base();}
 
 template<class T> T* base(T* p){return p;}
 
-struct committed_type{
+struct committed_type {
  private:
 	MPI_Datatype impl_;
 	explicit committed_type(MPI_Datatype dt) : impl_{dt} {}
@@ -132,14 +132,14 @@ struct type {
 		} catch(...) {}
 	}
 
-	type contiguous(int count) const{
+	type contiguous(int count) const {
 		type ret;  // NOLINT() delayed init
 		int s = MPI_Type_contiguous(count, impl_, &ret.impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot build contiguous type"};}
 		ret.set_name("(" + name() + ")[" + std::to_string(count) + "]");
 		return ret;
 	}
-	type vector(int count, int block_length, int stride) const{ // element units, hvector for bytes
+	type vector(int count, int block_length, int stride) const { // element units, hvector for bytes
 		type ret;
 		MPI_Type_vector(count, block_length, stride, impl_, &ret.impl_);
 		using std::to_string;
@@ -259,8 +259,8 @@ static type const long_double_int{MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-stati
 template<class T>
 type make_type();
 
-template<> inline type make_type<double>(){return mpi3::double_;}
-template<> inline type make_type<int>(){return mpi3::int_;}
+template<> inline type make_type<double>() {return mpi3::double_;}
+template<> inline type make_type<int   >() {return mpi3::int_   ;}
 
 }  // end namespace mpi3
 }  // end namespace boost
