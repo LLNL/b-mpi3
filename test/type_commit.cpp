@@ -33,7 +33,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) try 
 	{
 		using Tuple = std::tuple<int, double, int, char, float, long double>;
 		Tuple tup;
-		constexpr auto offset4 = mpi3::detail::tuple_offset_v<4, Tuple>;
+		auto offset4 = mpi3::detail::element_offset<4, Tuple>();
 		assert( reinterpret_cast<char*>(&tup) + offset4 == reinterpret_cast<char*>(&std::get<4>(tup)) );  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert,cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic) for some compiler this is not a constexpr
 	}
 
