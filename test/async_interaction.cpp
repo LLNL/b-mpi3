@@ -7,7 +7,7 @@
 namespace mpi3 = boost::mpi3;
 
 auto async_send(mpi3::communicator& comm, int val, int target) {  // NOLINT(bugprone-easily-swappable-parameters)
-	return std::async([=, &comm]{
+	return std::async([=, &comm] () { // was: [=] () mutable {  in original Joseph's S. posting
     	auto value = val + 1;
 		comm[target] << value;  // same as comm.send(&value, &value + 1, target);
 	});
