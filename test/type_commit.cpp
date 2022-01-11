@@ -1,10 +1,10 @@
 // #define BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
 
-#include "alf/boost/mpi3/main.hpp"
-#include "alf/boost/mpi3/communicator.hpp"
-#include "alf/boost/mpi3/type.hpp"
+#include "../../mpi3/main.hpp"
+#include "../../mpi3/communicator.hpp"
+#include "../../mpi3/type.hpp"
 
-#include "alf/boost/mpi3/detail/tuple_offset.hpp"
+#include "../../mpi3/detail/tuple_offset.hpp"
 
 #include<tuple>
 
