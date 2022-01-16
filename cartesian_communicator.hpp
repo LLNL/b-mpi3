@@ -155,6 +155,21 @@ struct cartesian_communicator : cartesian_communicator<>{
 	//	return static_cast<cartesian_communicator<1>&>(comm_sub);
 //		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
 	}
+
+	cartesian_communicator<D - 1> hyperplane(int d) const{
+		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
+		
+		cartesian_communicator<D - 1> ret;
+		std::array<int, D> remains;
+		for(auto & rem : remains) rem = true;
+		remains[d] = false;
+		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
+		int dim;
+		MPI_Cartdim_get(ret.get(), &dim);
+		assert(dim == D - 1);
+		return ret;
+	}
+	
 };
 
 #ifdef __cpp_deduction_guides
@@ -342,6 +357,30 @@ try{
 		assert( comm_sub2.size() == 2 );
 	}
 
+	{
+		auto plane0 = comm.hyperplane(0);
+		static_assert( plane0.dimensionality == 2 , "!" );
+		assert( plane0.num_elements() == 4 );
+		assert( plane0.shape()[0] == 2 );
+		assert( plane0.shape()[1] == 2 );
+	}
+
+	{
+		auto plane1 = comm.hyperplane(1);
+		static_assert( plane1.dimensionality == 2 , "!" );
+		assert( plane1.num_elements() == 6 );
+		assert( plane1.shape()[0] == 3 );
+		assert( plane1.shape()[1] == 2 );
+	}
+	
+	{
+		auto plane2 = comm.hyperplane(2);
+		static_assert( plane2.dimensionality == 2 , "!" );
+		assert( plane2.num_elements() == 6 );
+		assert( plane2.shape()[0] == 3 );
+		assert( plane2.shape()[1] == 2 );
+	}
+	
 }
 	return 0;
 }
