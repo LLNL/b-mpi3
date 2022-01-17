@@ -53,6 +53,12 @@ void division_tests2() {
 	assert( div[1] == 3 );
 }
 {
+	auto div = mpi3::cartesian_communicator<2>::division(6, {mpi3::_, 3});
+	assert( div[0]*div[1] == 6 );
+	assert( div[0] == 2 );
+	assert( div[1] == 3 );
+}
+{
 	auto div = mpi3::cartesian_communicator<2>::division(7);
 	assert( div[0]*div[1] == 7 );
 	assert( div[0] == 7 );
@@ -99,7 +105,7 @@ void test_axis(mpi3::cartesian_communicator<3>& comm) {
 	}
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {  // NOLINT(readability-function-cognitive-complexity)
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator /*world*/) -> int try {  // NOLINT(readability-function-cognitive-complexity)
 
 //	assert( world.size() == 12 );
 //	mpi3::cartesian_communicator<2> world23(world, {2, 3});
