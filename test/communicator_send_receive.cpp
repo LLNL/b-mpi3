@@ -43,8 +43,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		std::array<int, 10> buffer {}; buffer [5] = world.rank();
 		std::array<int, 10> buffer2{}; buffer2[5] = -1;
 		world.send_receive_n(
-			buffer .data(), 10, left , 
-			buffer2.data(), 10, right
+			buffer .data(), 10, left ,
+			buffer2.data()    , right
 		);
 		assert(buffer2[5] == right);
 	}

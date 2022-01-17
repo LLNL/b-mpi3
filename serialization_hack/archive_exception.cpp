@@ -12,13 +12,13 @@
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
+#include <cstring>
 #include <exception>
 #include <string>
-#include <cstring>
 
 #define BOOST_ARCHIVE_SOURCE
-#include <boost/serialization/config.hpp>
 #include <boost/archive/archive_exception.hpp>
+#include <boost/serialization/config.hpp>
 #include <boost/version.hpp>
 
 namespace boost {
@@ -32,17 +32,17 @@ BOOST_ARCHIVE_DECL
 unsigned int
 archive_exception::append(unsigned int l, const char * a){
     while(l < (sizeof(m_buffer) - 1)){
-        char c = *a++;
-        if('\0' == c)
-            break;
-        m_buffer[l++] = c;
+        char c = *a++;  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic) external code
+        if('\0' == c) {
+            break; }
+        m_buffer[l++] = c;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index) external code
     }
-    m_buffer[l] = '\0';
+    m_buffer[l] = '\0';  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index) external code
     return l;
 }
 
 BOOST_ARCHIVE_DECL
-archive_exception::archive_exception(
+archive_exception::archive_exception(  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
     exception_code c, 
     const char * e1,
     const char * e2
@@ -52,67 +52,67 @@ archive_exception::archive_exception(
     unsigned int length = 0;
     switch(code){
     case no_exception:
-        length = append(length, "uninitialized exception");
+        length = append(length, "uninitialized exception");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unregistered_class:
         length = append(length, "unregistered class");
-        if(NULL != e1){
+        if(nullptr != e1){
             length = append(length, " - ");
-            length = append(length, e1);
+            length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         }    
         break;
     case invalid_signature:
-        length = append(length, "invalid signature");
+        length = append(length, "invalid signature");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unsupported_version:
-        length = append(length, "unsupported version");
+        length = append(length, "unsupported version");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case pointer_conflict:
-        length = append(length, "pointer conflict");
+        length = append(length, "pointer conflict");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case incompatible_native_format:
-        length = append(length, "incompatible native format");
-        if(NULL != e1){
+        length = append(length, "incompatible native format");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
+        if(nullptr != e1){
             length = append(length, " - ");
-            length = append(length, e1);
-        }    
+            length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
+        }
         break;
     case array_size_too_short:
-        length = append(length, "array size too short");
+        length = append(length, "array size too short");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case input_stream_error:
-        length = append(length, "input stream error");
+        length = append(length, "input stream error");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case invalid_class_name:
-        length = append(length, "class name too long");
+        length = append(length, "class name too long");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unregistered_cast:
         length = append(length, "unregistered void cast ");
-        length = append(length, (NULL != e1) ? e1 : "?");
+        length = append(length, (nullptr != e1) ? e1 : "?");
         length = append(length, "<-");
-        length = append(length, (NULL != e2) ? e2 : "?");
+        length = append(length, (nullptr != e2) ? e2 : "?");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unsupported_class_version:
         length = append(length, "class version ");
-        length = append(length, (NULL != e1) ? e1 : "<unknown class>");
+        length = append(length, (nullptr != e1) ? e1 : "<unknown class>");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case other_exception:
         // if get here - it indicates a derived exception 
         // was sliced by passing by value in catch
-        length = append(length, "unknown derived exception");
+        length = append(length, "unknown derived exception");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case multiple_code_instantiation:
         length = append(length, "code instantiated in more than one module");
-        if(NULL != e1){
+        if(nullptr != e1){
             length = append(length, " - ");
-            length = append(length, e1);
-        }    
+            length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
+        }
         break;
     case output_stream_error:
-        length = append(length, "output stream error");
+        length = append(length, "output stream error");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     default:
-        BOOST_ASSERT(false);
+        BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         length = append(length, "programming error");
         break;
     }
@@ -120,7 +120,7 @@ archive_exception::archive_exception(
 
 #if BOOST_VERSION > 105900
 BOOST_ARCHIVE_DECL
-archive_exception::archive_exception(archive_exception const & oth) BOOST_NOEXCEPT :
+archive_exception::archive_exception(archive_exception const & oth) BOOST_NOEXCEPT :  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
 	std::exception(oth),
 	code(oth.code)
 {
@@ -129,7 +129,7 @@ archive_exception::archive_exception(archive_exception const & oth) BOOST_NOEXCE
 #endif
 
 BOOST_ARCHIVE_DECL
-archive_exception::~archive_exception() BOOST_NOEXCEPT_OR_NOTHROW {}
+archive_exception::~archive_exception() BOOST_NOEXCEPT_OR_NOTHROW {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
 
 BOOST_ARCHIVE_DECL const char *
 archive_exception::what() const BOOST_NOEXCEPT_OR_NOTHROW {
@@ -137,9 +137,9 @@ archive_exception::what() const BOOST_NOEXCEPT_OR_NOTHROW {
 }
 
 BOOST_ARCHIVE_DECL
-archive_exception::archive_exception() BOOST_NOEXCEPT :
+archive_exception::archive_exception() BOOST_NOEXCEPT :  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
     code(no_exception)
 {}
 
-} // archive
-} // boost
+} // end namespace archive
+} // end namespace boost

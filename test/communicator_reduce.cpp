@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x; exit
-#endif
 // © Alfredo Correa 2018-2021
 
 #include "../../mpi3/main.hpp"
@@ -9,9 +6,7 @@ mpic++ -O3 -std=c++14 -Wall -Wextra `#-Wfatal-errors` $0 -o $0x.x && time mpirun
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
-	assert( world.size() > 1);
-	
+void part1(mpi3::communicator& world)
 	{
 		int count = 120;
 		std::vector<int> send_buffer(count);
@@ -26,6 +21,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			}
 		}
 	}
+
+void part2(mpi3::communicator& world)
 	{
 		double const v = world.rank();
 		double total = 0;
@@ -41,6 +38,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			assert(it == &total);
 		}
 	}
+
+void part3(mpi3::communicator& world)
 	{
 		mpi3::optional<int> total = (world[0] += world.rank());
 		if(world.rank() == 0){assert(total);}
@@ -48,9 +47,12 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		if(total){assert( *total == static_cast<double>(world.size()*(world.size()-1))/2 );}
 	}
 
+int mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) try {
+	assert( world.size() > 1);
+
+	part1(world);
+	part2(world);
+	part3(world);
+
 	return 0;
-}catch(...){
-	return 1;
-}
-
-
+} catch(...) {return 1;}

@@ -1,6 +1,4 @@
-#if COMPILATION_INSTRUCTIONS /* -*- indent-tabs-mode: t -*- */
-(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_MPI3_MESSAGE $0x.cpp -o $0x.x && time mpirun -n 8 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-#endif
+/* -*- indent-tabs-mode: t -*- */
 #ifndef MPI3_MATCH_HPP
 #define MPI3_MATCH_HPP
 
@@ -12,7 +10,7 @@
 namespace boost{
 namespace mpi3{
 
-struct match : public message, public status{
+struct match : public message, public status {  // NOLINT(fuchsia-multiple-inheritance)
 	friend class communicator;
 	template<class It>
 	auto receive(It dest){
@@ -23,17 +21,6 @@ struct match : public message, public status{
 	}
 };
 
-}}
-
-#ifdef _TEST_MPI3_MATCH
-
-#include "../mpi3/main.hpp"
-
-namespace mpi3 = boost::mpi3;
-
-int mpi3::main(int, char*[], mpi3::communicator world){
-}
-
+}  // end namespace mpi3
+}  // end namespace boost
 #endif
-#endif
-

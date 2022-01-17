@@ -1,13 +1,9 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -o $0x&&mpirun --oversubscribe -n 8 $0x&&rm $0x;exit
-#endif
-
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 
 	assert( world.size() > 1);
 
@@ -19,8 +15,11 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 	assert(last == global.end());
 
-	for(std::size_t i = 0; i != global.size(); ++i){
-		assert(global[i] == local[i]*world.size());
+	{
+		auto const sz = global.size();
+		for(std::size_t i = 0; i != sz; ++i) {
+			assert(global[i] == local[i]*world.size());
+		}
 	}
 
 	auto const sum_of_ranks = (world += world.rank());
@@ -81,7 +80,6 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-}catch(...){
+} catch(...) {
 	return 1;
 }
-

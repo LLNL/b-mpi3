@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
-#endif
 // © Alfredo A. Correa 2019-2020
 
 #ifndef MPI3_SHM_POINTER_HPP
@@ -11,9 +8,9 @@ mpic++ -xc++ $0 -o $0x&&mpirun -n 3 $0x&&rm $0x;exit
 
 #include<boost/operators.hpp> // dereferenceable, random_access_iteratable
 
-namespace boost{
-namespace mpi3{
-namespace shm{
+namespace boost {
+namespace mpi3 {
+namespace shm {
 
 template<class Ptr>
 struct pointer_traits : std::pointer_traits<Ptr>{
@@ -25,10 +22,9 @@ struct pointer_traits : std::pointer_traits<Ptr>{
 //template<class T> class allocator;
 
 template<class T, class RawPtr = T*>
-class ptr :
-	boost::dereferenceable<ptr<T>, T&>,
-	boost::random_access_iteratable<ptr<T>, T*, std::ptrdiff_t, T&>
-{
+class ptr
+: boost::dereferenceable<ptr<T>, T&>
+, boost::random_access_iteratable<ptr<T>, T*, std::ptrdiff_t, T&> {
 public:
 	using raw_pointer = RawPtr;
 	using pointer = ptr;
@@ -46,18 +42,35 @@ private:
 	template<class> friend class allocator;
 public:
 	ptr() = default;
-	ptr(std::nullptr_t) : offset_{0}{}
+	ptr(std::nullptr_t) : offset_{0} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 	template<class TT>//, typename = decltype(mpi3::shared_window<typename pointer::element_type>*(std::declval<ptr<TT>>().wP_))> 
-	ptr(ptr<TT> const& o) : wP_{o.wP_}, offset_{o.offset_}{}
-	ptr& operator=(std::nullptr_t){wP_ = nullptr; offset_ = 0; return *this;}
+	ptr(ptr<TT> const& o) : wP_{o.wP_}, offset_{o.offset_} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) TODO(correaa) make it conditionally implicit
+
+	ptr(ptr const&) = default;
+	ptr(ptr     &&) noexcept = default;
+
+	ptr& operator=(std::nullptr_t) {wP_ = nullptr; offset_ = 0; return *this;}
 //	ptr& operator=(ptr const&) = default;
-	template<class TT> ptr& operator=(ptr<TT> const& other){
+	template<class TT> ptr& operator=(ptr<TT> const& other) {
 		wP_     = other.wP_;
 		offset_ = other.offset_;
 		return *this;
 	}
+
+	ptr& operator=(ptr const& other) {
+		if(this == &other) {return *this;}  // lints bugprone-unhandled-self-assignment,cert-oop54-cpp
+		wP_     = other.wP_;
+		offset_ = other.offset_;
+		return *this;
+	}
+	ptr& operator=(ptr&& other) noexcept {
+		wP_     = std::move(other.wP_);
+		offset_ = other.offset_;
+		return *this;
+	}
+
 	~ptr() = default;
-	auto raw_pointer_cast() const{return wP_->base(0) + offset_;}
+	auto raw_pointer_cast() const {return std::next(wP_->base(0), offset_);}
 	friend auto raw_pointer_cast(pointer const& self){return self.raw_pointer_cast();}
 	reference operator*() const{return *raw_pointer_cast();}
 	ptr& operator+=(difference_type d){offset_+=d; return *this;}
@@ -219,24 +232,24 @@ pointer<T> uninitialized_fill_n(pointer<T> f, Size n, TT const& val){
 }*/
 #endif
 
-}}}
+}  // end namespace shm
+}  // end namespace mpi3
+}  // end namespace boost
 
-#if not __INCLUDE_LEVEL__
-#include "../../mpi3/main.hpp"
-#include "../../mpi3/ostream.hpp"
+//#if not __INCLUDE_LEVEL__
+//#include "../../mpi3/main.hpp"
+//#include "../../mpi3/ostream.hpp"
 
-namespace mpi3 = boost::mpi3; 
+//namespace mpi3 = boost::mpi3; 
 
-int mpi3::main(int, char*[], mpi3::communicator world){
-	using p = mpi3::shm::ptr<double>;
-	using cp = std::pointer_traits<p>::template rebind<double const>;//::other;
-//	whatis<cp>();
-	p P;
-	cp CP = P;
-	return 0;
-}
+//int mpi3::main(int, char*[], mpi3::communicator world){
+//	using p = mpi3::shm::ptr<double>;
+//	using cp = std::pointer_traits<p>::template rebind<double const>;//::other;
+////	whatis<cp>();
+//	p P;
+//	cp CP = P;
+//	return 0;
+//}
 
-#endif
-
-
+//#endif
 #endif

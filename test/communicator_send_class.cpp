@@ -14,12 +14,13 @@ mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-
 
 namespace mpi3 = boost::mpi3;
 
-struct A{
-private:
+struct A {  // NOLINT(readability-identifier-naming) example name
+ private:
 	std::string name_ = "unnamed";
 	int n_ = 0;
 	std::unique_ptr<double[]> data_;  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) notation
-public:
+
+ public:
 	A() = default;
 	explicit A(int n) : n_(n), data_{new double[n]}{}
 	A(A const& other) : name_(other.name_), n_(other.n_), data_{new double[other.n_]}{}
@@ -49,7 +50,7 @@ public:
 	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
-struct B{
+struct B {  // NOLINT(readability-identifier-naming) example name
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
 	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
 	std::unique_ptr<double[]> data;// NOLINT(misc-non-private-member-variables-in-classes, cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -72,22 +73,22 @@ struct B{
 
 // nonintrusive serialization
 template<class Archive>
-void save(Archive & ar, B const& b, const unsigned int /*version*/){
+void save(Archive & ar, B const& b, const unsigned int /*version*/) {
 	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data.get(), b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int /*version*/){ //NOLINT(google-runtime-references): serialization protocol
+void load(Archive & ar, B& b, const unsigned int /*version*/) { //NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
 	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	ar>> boost::serialization::make_array(b.data.get(), b.n_);
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 
 	assert( world.size() > 1 );
 
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0 : {
 			std::vector<std::vector<double>> buffer(10, std::vector<double>(20));
 			buffer[4][5] = 6.1;
@@ -99,7 +100,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			assert( buffer[4][5] == 6.1 );
 		}; break;
 	}
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0 : {
 			std::vector<double> buffer(10);
 			iota(begin(buffer), end(buffer), 0);
@@ -112,7 +113,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			assert(it == v.end() and v[3] == 3.);
 		}; break;
 	}
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0: {
 			std::map<int, std::vector<double>> m;
 			m[2] = std::vector<double>(2);
@@ -125,7 +126,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			assert(( v[1] == std::pair<int, std::vector<double>>{5, std::vector<double>(5)} ));
 		}; break;
 	}
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0 : {
 			std::vector<A> v(5, A(3));
 			v[2][2] = 3.14;
@@ -137,7 +138,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 			assert(v[2][2] == 3.14);
 		}; break;
 	}
-	switch(world.rank()){
+	switch(world.rank()) {
 		case 0 : {
 			std::vector<B> v(5, B(3));
 			v[2][2] = 3.14;

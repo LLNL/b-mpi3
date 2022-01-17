@@ -32,7 +32,8 @@
 *.app
 *.x
 *.hppx.cpp
-build/
+build*
+.build*
 
 # Editor backup
 *~

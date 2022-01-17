@@ -1,7 +1,8 @@
-#if COMPILATION// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-
-OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
-#endif
-// © Alfredo A. Correa 2018-2020
+//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+//#if COMPILATION
+//OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
+//#endif
+// Copyright 2018-2021 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
@@ -11,8 +12,8 @@ OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubs
 
 #include "../mpi3/detail/call.hpp"
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
 using dimensionality_type = int;
 static constexpr dimensionality_type dynamic_extent = -1;
@@ -23,56 +24,73 @@ template<>
 struct cartesian_communicator<dynamic_extent> : communicator{
 
 	cartesian_communicator() = default;
-	cartesian_communicator(cartesian_communicator& other) : communicator{other}{}
-	cartesian_communicator(cartesian_communicator&&) = default;
+
 	cartesian_communicator(cartesian_communicator const&) = delete;
+	cartesian_communicator(cartesian_communicator     &&) = default;
+	// vvv---  this is an unusual "duplicate" constructor
+	cartesian_communicator(cartesian_communicator& other) : communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) cannot be defaulted because bug in nvcc 11
 
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
 		assert(s.size() == p.size());
 		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
 	//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
-		// TODO try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
+		// TODO(correaa) try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
 	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
-	
+
 	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape)){}
 	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
 		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)){}
 
 	[[deprecated("use dimensionality() instead of dimension")]] 
-	int dimension() const{int ret; MPI_Cartdim_get(impl_, &ret); return ret;}
+	int dimension() const {int ret; MPI_Cartdim_get(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
-	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
+	// vvv nvcc 11 workaround, needs explicit definition of duplicate assigment
+	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
+		if(this == std::addressof(other)) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
 		communicator::operator=(other);
 		return *this;
 	}
 
-	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}
+	~cartesian_communicator() = default;
+
+	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
+
 	std::vector<int> coordinates() const{
 		std::vector<int> ret(dimensionality());
 		MPI_(Cart_coords)(impl_, rank(), dimensionality(), ret.data());
 		return ret;
 	}
+
 	auto topology() const{
 		auto maxdims = dimensionality();
-		struct topology_t{
-			std::vector<int> dimensions;
-			std::vector<int> periods;
-			std::vector<int> coordinates;
-			topology_t(std::size_t n) : dimensions(n), periods(n), coordinates(n){}
+		class topology_t {
+			std::vector<int> dimensions_;
+			std::vector<int> periods_;
+			std::vector<int> coordinates_;
+			friend mpi3::cartesian_communicator<dynamic_extent>;
+		 public:
+			explicit topology_t(std::size_t n) : dimensions_(n), periods_(n), coordinates_(n) {}
+
+			auto const& dimensions() const {return dimensions_;}
+			auto const& periods() const {return periods_;}
+			auto const& coordinates() const {return coordinates_;}
 		} ret(maxdims);
-		MPI_(Cart_get)(impl_, maxdims, ret.dimensions.data(), ret.periods.data(), ret.coordinates.data());
-		assert( ret.coordinates == coordinates() );
+
+		MPI_(Cart_get)(impl_, maxdims, ret.dimensions_.data(), ret.periods_.data(), ret.coordinates_.data());
+
+		assert( ret.coordinates() == coordinates() );
 		return ret;
 	}
-	std::vector<int> shape() const{return topology().dimensions;}
-	std::vector<bool> periods() const{auto ps = topology().periods; return {ps.begin(), ps.end()};}
-	auto num_elements() const{return size();}
+
+	std::vector<int>  shape()   const {return topology().dimensions();}
+	std::vector<bool> periods() const {auto ps = topology().periods(); return {ps.begin(), ps.end()};}
+	auto num_elements() const {return size();}
 
 	template<class Coord>
 	auto operator()(Coord const& coord){
@@ -82,18 +100,21 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	//	return operator[](rank);
 	}
 	// int MPI_Cart_map not implemented
-	cartesian_communicator sub(std::vector<int> const& remain_dims){
+	cartesian_communicator sub_aux(std::vector<int> const& remain_dims) {
 		assert( static_cast<dimensionality_type>(remain_dims.size()) == dimensionality() );
-		cartesian_communicator ret; MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); return ret;
+		cartesian_communicator ret; 
+		MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.impl_); 
+		return ret;
 	}
+
 	template<class RemainDim = std::initializer_list<bool>>
-	cartesian_communicator sub(RemainDim const& remain_dims) const{
-		return sub(std::vector<int>(remain_dims.begin(), remain_dims.end()));
+	cartesian_communicator sub(RemainDim const& remain_dims) {
+		return sub_aux(std::vector<int>(remain_dims.begin(), remain_dims.end()));
 	}
-	cartesian_communicator sub() const{
+	cartesian_communicator sub() {
 		assert( dimensionality()>1 );
-		std::vector<int> remain(dimensionality(), true); remain[0] = false;
-		return sub(remain);
+		std::vector<int> remain(dimensionality(), 1 /*true*/); remain[0] = 0/*false*/;
+		return sub_aux(remain);
 	}
 };
 
@@ -103,22 +124,25 @@ template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
 
 	cartesian_communicator() = default;
+
 	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
 	cartesian_communicator(cartesian_communicator const&) = delete;
-	cartesian_communicator(cartesian_communicator&&) = default;
+	cartesian_communicator(cartesian_communicator&&) noexcept = default;
+
+	~cartesian_communicator() = default;
 
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
 		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
 	}
 	constexpr static dimensionality_type dimensionality = D;
-	cartesian_communicator(communicator& other, std::array<int, D> dims) try: 
-		cartesian_communicator<>(other, division(other.size(), dims))
-	{}catch(std::runtime_error& e){
+	cartesian_communicator(communicator& other, std::array<int, D> dims)
+	try : cartesian_communicator<>(other, division(other.size(), dims)) {}
+	catch(std::runtime_error& e) {
 		std::ostringstream ss;
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
 	}
-	auto topology() const{
+	auto topology() const {
 		struct topology_t{
 			std::array<int, dimensionality> dimensions, periods, coordinates;
 		} ret;
@@ -128,32 +152,31 @@ struct cartesian_communicator : cartesian_communicator<>{
 		);
 		return ret;
 	}
-	auto dimensions() const{return topology().dimensions;}
+	auto dimensions() const {return topology().dimensions;}
+
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
-	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
-	cartesian_communicator& operator=(cartesian_communicator      & other){ // nvcc 11 workaround, needs explicit definition of duplicate assigment
+	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
+	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
+	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
+		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
 		cartesian_communicator<>::operator=(other);
 		return *this;
 	}
 
-	cartesian_communicator<D-1> sub() const{
+	cartesian_communicator<D-1> sub() {
 		static_assert( D != 1 , "!");
 		auto comm_sub = cartesian_communicator<>::sub();
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
-//		return cartesian_communicator<D-1>(comm_sub, comm_sub.shape());
 	}
-	cartesian_communicator sub(std::array<int, D> const& remain_dims){
+	cartesian_communicator sub(std::array<int, D> const& remain_dims) {
 		cartesian_communicator ret; MPI_Cart_sub(impl_, remain_dims.data(), &ret.get()); return ret;
 	}
-	cartesian_communicator<1> axis(int d) const{
+	cartesian_communicator<1> axis(int d) const {
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains = {}; remains[d] = true;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
-	//	return cartesian_communicator<>::sub(remains);
-	//	auto comm_sub = cartesian_communicator<>::sub(remains);
-	//	return static_cast<cartesian_communicator<1>&>(comm_sub);
-//		return cartesian_communicator<1>(comm_sub, {comm_sub.shape()[d]});				
+
 	}
 
 	cartesian_communicator<D - 1> hyperplane(int d) const{
@@ -386,5 +409,3 @@ try{
 }
 
 #endif
-#endif
-

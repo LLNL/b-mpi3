@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -g -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-lboost_serialization` && time mpirun -n 3 valgrind $0x&&rm $0x;exit
-#endif
 // © Alfredo A. Correa 2018-2020
 
 #if 1
@@ -8,18 +5,31 @@ mpic++ -g -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-
 #include "../../mpi3/main.hpp"
 
 #include<complex>
-#include<string>
 #include<future>
+#include<string>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
+
+	static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator) );
+
+	assert(  mpi3::grip(world.handle()) ==  world );
+	assert( &mpi3::grip(world.handle()) == &world );
+
+	assert(  mpi3::grip(MPI_COMM_WORLD) ==  world );
+	assert( &mpi3::grip(MPI_COMM_WORLD) != &world );
+
+//	assert( reinterpret_cast<mpi3::communicator&>(MPI_COMM_WORLD) == world );
+
 {
 	mpi3::communicator mty;
-	assert( mty.size() == 0 );
+	assert( mty.empty() );
+//  assert( mty.size() == 0 );
 	mpi3::communicator mty2 = mty;
-	assert( mty2.size() == 0 );
+	assert( mty2.empty() );
+//  assert( mty2.size() == 0 );
 }
 {
 	std::vector<mpi3::communicator> comms;
@@ -27,7 +37,9 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	comms.emplace_back(world);
 	comms.emplace_back(world);
 
-	std::vector<mpi3::communicator> comms2; for(auto& e:comms) comms2.emplace_back(e);
+	std::vector<mpi3::communicator> comms2;
+	comms2.reserve(3);
+	for(auto& e:comms) {comms2.emplace_back(e);}
 }
 {
 	int const NTHREADS = 10;
@@ -58,6 +70,6 @@ int mpi3::main(int, char*[], mpi3::communicator world){
 	}
 }
 	return 0;
-}
+} catch(...) {return 1;}
 #endif
 

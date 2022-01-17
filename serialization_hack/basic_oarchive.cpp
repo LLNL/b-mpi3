@@ -11,8 +11,9 @@
 #include <boost/config.hpp> // msvc 6.0 needs this for warning suppression
 
 #include <boost/assert.hpp>
-#include <set>
+
 #include <cstddef> // NULL
+#include <set>
 
 #include <boost/limits.hpp>
 
@@ -23,23 +24,23 @@
 // same modules are marked export and import.
 #define BOOST_SERIALIZATION_SOURCE
 #include <boost/serialization/config.hpp>
+#include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/state_saver.hpp>
 #include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/extended_type_info.hpp>
 
-#include <boost/archive/detail/decl.hpp>
+#include <boost/archive/archive_exception.hpp>
 #include <boost/archive/basic_archive.hpp>
+#include <boost/archive/detail/basic_oarchive.hpp>
 #include <boost/archive/detail/basic_oserializer.hpp>
 #include <boost/archive/detail/basic_pointer_oserializer.hpp>
-#include <boost/archive/detail/basic_oarchive.hpp>
-#include <boost/archive/archive_exception.hpp>
+#include <boost/archive/detail/decl.hpp>
 
 #ifdef BOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4251 4231 4660 4275)
 #endif
 
-using namespace boost::serialization;
+using namespace boost::serialization;  // NOLINT(google-build-using-namespace,google-global-names-in-headers) TODO(correaa) remove this global using namespace
 
 namespace boost {
 namespace archive {
@@ -54,18 +55,18 @@ class basic_oarchive_impl {
     // keyed on address, class_id
     struct aobject
     {
-        const void * address;
-        class_id_type class_id;
-        object_id_type object_id;
+        const void * address;  // NOLINT(misc-non-private-member-variables-in-classes, modernize-use-default-member-init) external code
+        class_id_type class_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        object_id_type object_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
 
         bool operator<(const aobject &rhs) const
         {
-            BOOST_ASSERT(NULL != address);
-            BOOST_ASSERT(NULL != rhs.address);
-            if( address < rhs.address )
-                return true;
-            if( address > rhs.address )
-                return false;
+            BOOST_ASSERT(nullptr != address);
+            BOOST_ASSERT(nullptr != rhs.address);
+            if( address < rhs.address ) {
+                return true; }
+            if( address > rhs.address ) {
+                return false; }
             return class_id < rhs.class_id;
         }
 //fatal error: definition of implicit copy constructor for 'aobject' is deprecated because it has a user-declared copy assignment operator [-Wdeprecated-copy] in clang
@@ -78,27 +79,27 @@ class basic_oarchive_impl {
 //        }
         aobject(
             const void *a,
-            class_id_type class_id_,
-            object_id_type object_id_
+            class_id_type class_id_,  // NOLINT(performance-unnecessary-value-param) external code
+            object_id_type object_id_  // NOLINT(performance-unnecessary-value-param) external code
         ) :
             address(a),
             class_id(class_id_),
             object_id(object_id_)
         {}
-        aobject() : address(NULL){}
+        aobject() : address(nullptr){}
     };
     // keyed on class_id, address
-    typedef std::set<aobject> object_set_type;
+    typedef std::set<aobject> object_set_type;  // NOLINT(modernize-use-using) external code
     object_set_type object_set;
 
     //////////////////////////////////////////////////////////////////////
     // information about each serialized class saved
     // keyed on type_info
-    struct cobject_type
+    struct cobject_type  // NOLINT(cppcoreguidelines-special-member-functions,hicpp-special-member-functions) external code
     {
-        const basic_oserializer * m_bos_ptr;
-        const class_id_type m_class_id;
-        bool m_initialized;
+        const basic_oserializer * m_bos_ptr;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const class_id_type m_class_id;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        bool m_initialized;  // NOLINT(misc-non-private-member-variables-in-classes) external code
         cobject_type(
             std::size_t class_id,
             const basic_oserializer & bos
@@ -107,10 +108,10 @@ class basic_oarchive_impl {
             m_class_id(class_id),
             m_initialized(false)
         {}
-        cobject_type(const basic_oserializer & bos)
+        explicit cobject_type(const basic_oserializer & bos)  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
             : m_bos_ptr(& bos)
         {}
-        cobject_type(
+        cobject_type(  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
             const cobject_type & rhs
         ) :
             m_bos_ptr(rhs.m_bos_ptr),
@@ -127,7 +128,7 @@ class basic_oarchive_impl {
         }
     };
     // keyed on type_info
-    typedef std::set<cobject_type> cobject_info_set_type;
+    typedef std::set<cobject_type> cobject_info_set_type;  // NOLINT(modernize-use-using) external code
     cobject_info_set_type cobject_info_set;
 
     // list of objects initially stored as pointers - used to detect errors
@@ -139,10 +140,10 @@ class basic_oarchive_impl {
     const void * pending_object;
     const basic_oserializer * pending_bos;
 
-    basic_oarchive_impl(unsigned int flags) :
+    explicit basic_oarchive_impl(unsigned int flags) :
         m_flags(flags),
-        pending_object(NULL),
-        pending_bos(NULL)
+        pending_object(nullptr),
+        pending_bos(nullptr)
     {}
 
     const cobject_type &
@@ -179,32 +180,32 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
     class bosarg : 
         public basic_oserializer
     {
-        bool class_info() const {
-            BOOST_ASSERT(false); 
+        bool class_info() const override {
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
         // returns true if objects should be tracked
-        bool tracking(const unsigned int) const {
-            BOOST_ASSERT(false);
+        bool tracking(const unsigned int /*flags*/) const override {
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
         // returns class version
-        version_type version() const {
-            BOOST_ASSERT(false);
+        version_type version() const override {
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return version_type(0);
         }
         // returns true if this class is polymorphic
-        bool is_polymorphic() const{
-            BOOST_ASSERT(false);
+        bool is_polymorphic() const override {
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
             return false;
         }
-        void save_object_data(      
+        void save_object_data(
             basic_oarchive & /*ar*/, const void * /*x*/
-        ) const {
-            BOOST_ASSERT(false);
+        ) const override {
+            BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
         }
     public:
-        bosarg(const serialization::extended_type_info & eti) :
+        explicit bosarg(const serialization::extended_type_info & eti) :
           boost::archive::detail::basic_oserializer(eti)
         {}
     };
@@ -212,14 +213,14 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
     #pragma warning(pop)
     #endif
     bosarg bos(ti);
-    cobject_info_set_type::const_iterator cit 
+    cobject_info_set_type::const_iterator cit  // NOLINT(hicpp-use-auto,modernize-use-auto)
         = cobject_info_set.find(cobject_type(bos));
     // it should already have been "registered" - see below
     if(cit == cobject_info_set.end()){
         // if an entry is not found in the table it is because a pointer
         // of a derived class has been serialized through its base class
         // but the derived class hasn't been "registered" 
-        return NULL;
+        return nullptr;
     }
     // return pointer to the real class
     return cit->m_bos_ptr;
@@ -264,7 +265,7 @@ basic_oarchive_impl::save_object(
             ar.vsave(class_id_optional_type(co.m_class_id));
             ar.vsave(tracking_type(bos.tracking(m_flags)));
             ar.vsave(version_type(bos.version()));
-            (const_cast<cobject_type &>(co)).m_initialized = true;
+            (const_cast<cobject_type &>(co)).m_initialized = true;  // NOLINT(cppcoreguidelines-pro-type-const-cast) external code
         }
     }
 
@@ -306,7 +307,7 @@ basic_oarchive_impl::save_object(
     // just save the object id
     ar.vsave(object_reference_type(oid));
     ar.end_preamble();
-    return;
+//    return;
 }
 
 // save a pointer to an object instance
@@ -325,36 +326,36 @@ basic_oarchive_impl::save_pointer(
         if((cobject_info_set.size() > original_count)){
             if(bos.is_polymorphic()){
                 const serialization::extended_type_info *eti = & bos.get_eti();
-                const char * key = NULL;
-                if(NULL != eti)
-                    key = eti->get_key();
-                if(NULL != key){
+                const char * key = nullptr;
+                if(nullptr != eti) {
+                    key = eti->get_key(); }
+                if(nullptr != key){
                     // the following is required by IBM C++ compiler which
                     // makes a copy when passing a non-const to a const.  This
                     // is permitted by the standard but rarely seen in practice
                     const class_name_type cn(key);
-                    if(cn.size() > (BOOST_SERIALIZATION_MAX_KEY_SIZE - 1))
+                    if(cn.size() > (BOOST_SERIALIZATION_MAX_KEY_SIZE - 1)) {
                         boost::serialization::throw_exception(
                             boost::archive::archive_exception(
                                 boost::archive::archive_exception::
                                     invalid_class_name)
-                            );
+                            ); }
                     // write out the external class identifier
                     ar.vsave(cn);
                 }
-                else
+                else {
                     // without an external class name
                     // we won't be able to de-serialize it so bail now
                     boost::serialization::throw_exception(
                         archive_exception(archive_exception::unregistered_class)
-                    );
+                    ); }
             }
         }
         if(bos.class_info()){
             ar.vsave(tracking_type(bos.tracking(m_flags)));
             ar.vsave(version_type(bos.version()));
         }
-        (const_cast<cobject_type &>(co)).m_initialized = true;
+        (const_cast<cobject_type &>(co)).m_initialized = true;  // NOLINT(cppcoreguidelines-pro-type-const-cast) external code
     }
     else{
         ar.vsave(class_id_reference_type(co.m_class_id));
@@ -418,7 +419,7 @@ basic_oarchive::basic_oarchive(unsigned int flags)
 {}
 
 BOOST_ARCHIVE_DECL 
-basic_oarchive::~basic_oarchive()
+basic_oarchive::~basic_oarchive()  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
 {}
 
 BOOST_ARCHIVE_DECL void 
@@ -443,7 +444,7 @@ basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
 }
 
 BOOST_ARCHIVE_DECL library_version_type
-basic_oarchive::get_library_version() const{
+basic_oarchive::get_library_version() const{  // NOLINT(readability-convert-member-functions-to-static) external code
     return BOOST_ARCHIVE_VERSION();
 }
 
