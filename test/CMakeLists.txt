@@ -141,7 +141,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   if (
        (TEST_FILE STREQUAL "cartesian.cpp"            )
   )
-    set(NPROC 12)
+    set(NPROC 6)
   endif()
 
   if (
