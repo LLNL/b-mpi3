@@ -56,9 +56,9 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	~cartesian_communicator() = default;
 
-	int dimensionality() const{int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
+	int dimensionality() const {int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
 
-	std::vector<int> coordinates() const{
+	std::vector<int> coordinates() const {
 		std::vector<int> ret(dimensionality());
 		MPI_(Cart_coords)(impl_, rank(), dimensionality(), ret.data());
 		return ret;
@@ -177,7 +177,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 
 	}
 
-	cartesian_communicator<D - 1> hyperplane(int d) const{
+	cartesian_communicator<D - 1> hyperplane(int d) const {
 		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
 		
 		cartesian_communicator<D - 1> ret;
@@ -185,9 +185,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		for(auto & rem : remains) {rem = true;}
 		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
-		int dim = -1;
-		MPI_Cartdim_get(ret.get(), &dim);
-		assert(dim == D - 1);
+		assert(ret.cartesian_communicator<>::dimensionality() == D - 1);
 		return ret;
 	}
 	
