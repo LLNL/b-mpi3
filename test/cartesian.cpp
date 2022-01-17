@@ -72,6 +72,33 @@ void division_tests2() {
 }
 }
 
+void test_axis(mpi3::cartesian_communicator<3>& comm) {
+////  cerr<<"+ I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
+
+//	auto comm_sub = comm.sub();
+//	static_assert( comm_sub.dimensionality == 2 , "!" );
+////  std::cout << "numelements " << comm_sub.num_elements() << std::endl;
+//	assert( comm_sub.num_elements() == 4 );
+
+//	assert( comm_sub.shape()[0] == 2 );
+//	assert( comm_sub.shape()[1] == 2 );
+	{
+		auto comm_sub0 = comm.axis(0);
+		assert( comm_sub0.shape()[0] == 3 );
+		assert( comm_sub0.size() == 3 );
+	}
+	{
+		auto comm_sub1 = comm.axis(1);
+		assert( comm_sub1.shape()[0] == 2 );
+		assert( comm_sub1.size() == 2 );
+	}
+	{
+		auto comm_sub2 = comm.axis(2);
+		assert( comm_sub2.shape()[0] == 2 );
+		assert( comm_sub2.size() == 2 );
+	}
+}
+
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 
 //	assert( world.size() == 12 );
@@ -153,48 +180,25 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	assert( comm.shape()[1] == 2 );
 	assert( comm.shape()[2] == 2 );
 
-////  cerr<<"+ I am rank "<< comm.rank() <<" and have coordinates "<< comm.coordinates()[0] <<", "<< comm.coordinates()[1] <<", "<< comm.coordinates()[2] <<'\n';
-
-//	auto comm_sub = comm.sub();
-//	static_assert( comm_sub.dimensionality == 2 , "!" );
-////  std::cout << "numelements " << comm_sub.num_elements() << std::endl;
-//	assert( comm_sub.num_elements() == 4 );
-
-//	assert( comm_sub.shape()[0] == 2 );
-//	assert( comm_sub.shape()[1] == 2 );
-	{
-		auto comm_sub0 = comm.axis(0);
-		assert( comm_sub0.shape()[0] == 3 );
-		assert( comm_sub0.size() == 3 );
-	}
-	{
-		auto comm_sub1 = comm.axis(1);
-		assert( comm_sub1.shape()[0] == 2 );
-		assert( comm_sub1.size() == 2 );
-	}
-	{
-		auto comm_sub2 = comm.axis(2);
-		assert( comm_sub2.shape()[0] == 2 );
-		assert( comm_sub2.size() == 2 );
-	}
+	test_axis(comm);
 
 	{
 		auto plane0 = comm.hyperplane(0);
-		static_assert( plane0.dimensionality == 2 , "!" );
+		static_assert( decltype(plane0)::dimensionality == 2 , "!" );
 		assert( plane0.num_elements() == 4 );
 		assert( plane0.shape()[0] == 2 );
 		assert( plane0.shape()[1] == 2 );
 	}
 	{
 		auto plane1 = comm.hyperplane(1);
-		static_assert( plane1.dimensionality == 2 , "!" );
+		static_assert( decltype(plane1)::dimensionality == 2 , "!" );
 		assert( plane1.num_elements() == 6 );
 		assert( plane1.shape()[0] == 3 );
 		assert( plane1.shape()[1] == 2 );
 	}
 	{
 		auto plane2 = comm.hyperplane(2);
-		static_assert( plane2.dimensionality == 2 , "!" );
+		static_assert( decltype(plane2)::dimensionality == 2 , "!" );
 		assert( plane2.num_elements() == 6 );
 		assert( plane2.shape()[0] == 3 );
 		assert( plane2.shape()[1] == 2 );
