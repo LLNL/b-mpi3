@@ -149,7 +149,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		);
 		return ret;
 	}
-	static constexpr dimensionality_type dimensions() const {return D;}
+	static constexpr dimensionality_type dimensions() {return D;}
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
