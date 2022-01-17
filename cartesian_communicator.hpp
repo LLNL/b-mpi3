@@ -117,8 +117,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 enum fill_t{fill = 0, _ = 0};
 
 template<dimensionality_type D>
-struct cartesian_communicator : cartesian_communicator<>{
-
+struct cartesian_communicator : cartesian_communicator<> {
 	cartesian_communicator() = default;
 
 	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
@@ -127,11 +126,12 @@ struct cartesian_communicator : cartesian_communicator<>{
 
 	~cartesian_communicator() = default;
 
-	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
+	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}) {
 		MPI_(Dims_create)(nnodes, D, suggest.data());
 		return suggest;
 	}
 	constexpr static dimensionality_type dimensionality = D;
+
 	cartesian_communicator(communicator& other, std::array<int, D> dims)
 	try : cartesian_communicator<>(other, division(other.size(), dims)) {}
 	catch(std::runtime_error& e) {
@@ -139,6 +139,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
 	}
+
 	auto topology() const {
 		struct topology_t {
 			std::array<int, dimensionality> dimensions, periods, coordinates;
@@ -149,6 +150,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		);
 		return ret;
 	}
+
 	static constexpr dimensionality_type dimensions() {return D;}
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
@@ -160,16 +162,6 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return *this;
 	}
 
-	cartesian_communicator<D-1> sub() {
-		static_assert( D != 1 , "!");
-		auto comm_sub = cartesian_communicator<>::sub();
-		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
-	}
-	cartesian_communicator sub(std::array<int, D> const& remain_dims) {
-		cartesian_communicator ret;
-		MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.get());
-		return ret;
-	}
 	cartesian_communicator<1> axis(int d) {
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
