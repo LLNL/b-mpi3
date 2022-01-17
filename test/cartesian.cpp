@@ -99,7 +99,7 @@ void test_axis(mpi3::cartesian_communicator<3>& comm) {
 	}
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {  // NOLINT(readability-function-cognitive-complexity)
 
 //	assert( world.size() == 12 );
 //	mpi3::cartesian_communicator<2> world23(world, {2, 3});
@@ -111,17 +111,18 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	division_tests1();
 	division_tests2();
 
-//{
-//	assert( world.size() == 12 );
-//	mpi3::cartesian_communicator<2> cart_comm(world, {2, 3});
-//	assert( cart_comm );
-//	assert( cart_comm.dimensions()[0] == 2 );
-//	assert( cart_comm.dimensions()[1] == 3 );
-//	auto row = cart_comm.axis(0);
-//	auto col = cart_comm.axis(1);
-//	assert( row.size() == 2 );
-//	assert( col.size() == 3 );
-//}
+{
+	assert( world.size() == 12 );
+	mpi3::cartesian_communicator<2> cart_comm(world, {3, 4});
+	assert( cart_comm );
+	assert( cart_comm.dimensions()[0] == 3 );
+	assert( cart_comm.dimensions()[1] == 4 );
+
+	auto row = cart_comm.axis(0);
+	auto col = cart_comm.axis(1);
+	assert( row.size() == 3 );
+	assert( col.size() == 4 );
+}
 
 //  vvvv TODO(correaa) this fails for MPICH
 //{
