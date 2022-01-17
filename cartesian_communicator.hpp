@@ -184,7 +184,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		
 		cartesian_communicator<D - 1> ret;
 		std::array<int, D> remains;
-		for(auto & rem : remains) rem = true;
+		for(auto & rem : remains) {rem = true;}
 		remains[d] = false;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		int dim;
@@ -408,4 +408,5 @@ try{
 	return 0;
 }
 
+#endif
 #endif
