@@ -115,7 +115,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	}
 };
 
-enum fill_t{fill = 0};
+enum fill_t{fill = 0, _ = 0};
 
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<>{
