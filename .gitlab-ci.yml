@@ -19,7 +19,7 @@ openmpi:
         - make
         - ctest --output-on-failure
 
-openmpi-clang:
+openmpi-clang++:
     stage: build
     script:
         - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libstdc++-11-dev libboost-serialization-dev
@@ -30,6 +30,20 @@ openmpi-clang:
         - clang++ --version
         - mpirun --version
         - CXX=clang++ cmake ..
+        - make
+        - ctest --output-on-failure
+
+openmpi-clang++20:
+    stage: build
+    script:
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libstdc++-11-dev libboost-serialization-dev
+        - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+        - cd test
+        - mkdir build && cd build
+        - export MPI_OVERSUBSCRIBE="--oversubscribe"
+        - clang++ --version
+        - mpirun --version
+        - CXX=clang++ cmake .. -DCMAKE_CXX_STANDARD=20
         - make
         - ctest --output-on-failure
 
