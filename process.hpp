@@ -4,14 +4,14 @@
 
 #include "../mpi3/communicator.hpp"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "config/NODISCARD.hpp"
 
 namespace boost {
 namespace mpi3 {
 
-using boost::optional;  // TODO(correaa) use std::optional in C++17
+using std::optional;
 
 class process {
 	communicator& comm_;

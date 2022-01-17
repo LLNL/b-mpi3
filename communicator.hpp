@@ -31,8 +31,6 @@
 //#define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-#include <boost/optional.hpp> // TODO(correaa) replace by std::optional (c++17)
-
 #define BOOST_PACKAGE_ARCHIVE_SOURCE
 
 #include <boost/archive/detail/common_iarchive.hpp>
@@ -50,7 +48,8 @@
 
 #include <boost/mpl/placeholders.hpp>
 
-#include<boost/any.hpp> // or <any> in C++17
+#include <any>
+#include <optional>
 
 // use this to avoid need for linking -lserialization
 #ifdef _MAKE_BOOST_SERIALIZATION_HEADER_ONLY
@@ -145,7 +144,7 @@ template<> struct overload_priority<0>{};
 class environment;
 class group;
 
-using boost::optional;
+using std::optional;
 
 struct error_handler;
 
@@ -177,8 +176,8 @@ struct message_header{
 struct graph_communicator;
 struct shared_communicator; // intracommunicator
 
-using boost::any;
-using boost::any_cast;
+using std::any;
+using std::any_cast;
 
 //class communicator_ptr{};
 
