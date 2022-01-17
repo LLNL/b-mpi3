@@ -114,8 +114,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator /*world*/) -> in
 
 //	mpi3::cartesian_communicator<2> empty;
 
-	division_tests1();
-	division_tests2();
+//	division_tests1();
+//	division_tests2();
 
 //{
 //	assert( world.size() == 12 );
