@@ -143,6 +143,12 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   if (
+       (TEST_FILE STREQUAL "cartesian.cpp"            )
+  )
+    set(NPROC 6)
+  endif()
+
+  if (
 	   (TEST_FILE STREQUAL "reduce_maxloc.cpp"  )
   )
     set(NPROC 4)
