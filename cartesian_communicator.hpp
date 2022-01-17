@@ -9,8 +9,7 @@
 
 #include "../mpi3/detail/call.hpp"
 
-namespace boost {
-namespace mpi3 {
+namespace boost::mpi3 {
 
 using dimensionality_type = int;
 static constexpr dimensionality_type dynamic_extent = -1;
@@ -129,7 +128,8 @@ struct cartesian_communicator : cartesian_communicator<>{
 	~cartesian_communicator() = default;
 
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}){
-		return MPI_(Dims_create)(nnodes, D, suggest.data()), suggest;
+		MPI_(Dims_create)(nnodes, D, suggest.data());
+		return suggest;
 	}
 	constexpr static dimensionality_type dimensionality = D;
 	cartesian_communicator(communicator& other, std::array<int, D> dims)
@@ -144,12 +144,12 @@ struct cartesian_communicator : cartesian_communicator<>{
 			std::array<int, dimensionality> dimensions, periods, coordinates;
 		} ret = {};
 		MPI_(Cart_get)(
-			impl_, dimensionality, 
+			impl_, dimensionality,
 			ret.dimensions.data(), ret.periods.data(), ret.coordinates.data()
 		);
 		return ret;
 	}
-	auto dimensions() const {return topology().dimensions;}
+	constexpr dimensions() const {return D;}
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
@@ -166,9 +166,11 @@ struct cartesian_communicator : cartesian_communicator<>{
 		return static_cast<cartesian_communicator<D-1>&>(comm_sub);
 	}
 	cartesian_communicator sub(std::array<int, D> const& remain_dims) {
-		cartesian_communicator ret; MPI_Cart_sub(impl_, remain_dims.data(), &ret.get()); return ret;
+		cartesian_communicator ret;
+		MPI_(Cart_sub)(impl_, remain_dims.data(), &ret.get());
+		return ret;
 	}
-	cartesian_communicator<1> axis(int d) const {
+	cartesian_communicator<1> axis(int d) {
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -177,32 +179,17 @@ struct cartesian_communicator : cartesian_communicator<>{
 
 	}
 
-	cartesian_communicator<D - 1> hyperplane(int d) const {
+	cartesian_communicator<D - 1> hyperplane(int d) {
 		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
-		
+
 		cartesian_communicator<D - 1> ret;
-		std::array<int, D> remains{};
-		for(auto & rem : remains) {rem = true;}
+		std::array<int, D> remains{}; remains.fill(true);
 		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		assert(ret.cartesian_communicator<>::dimensionality() == D - 1);
 		return ret;
 	}
-	
 };
 
-#ifdef __cpp_deduction_guides
-template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<bool>)
-	->cartesian_communicator<dynamic_extent>;
-template<class T> cartesian_communicator(T, std::initializer_list<int>, std::initializer_list<int>)
-	->cartesian_communicator<dynamic_extent>;
-template<class T> cartesian_communicator(T, std::initializer_list<int>)
-	->cartesian_communicator<dynamic_extent>;
-template<class... As> cartesian_communicator(As...)
-	->cartesian_communicator<dynamic_extent>;
-#endif
-
-}  // end namespace mpi3
-}  // end namespace boost
-
+}  // end namespace boost::mpi3
 #endif
