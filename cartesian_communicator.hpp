@@ -187,7 +187,7 @@ struct cartesian_communicator : cartesian_communicator<>{
 		for(auto & rem : remains) {rem = true;}
 		remains[d] = false;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
-		int dim;
+		int dim = -1;
 		MPI_Cartdim_get(ret.get(), &dim);
 		assert(dim == D - 1);
 		return ret;
