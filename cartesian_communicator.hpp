@@ -1,8 +1,5 @@
 //  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-//#if COMPILATION
-//OMPI_CXX=$CXXX OMPI_CXXFLAGS=$CXXFLAGS mpic++  $0 -o $0x&&mpirun -n 6 --oversubscribe $0x;exit
-//#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
 #define BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
@@ -184,9 +181,9 @@ struct cartesian_communicator : cartesian_communicator<>{
 		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
 		
 		cartesian_communicator<D - 1> ret;
-		std::array<int, D> remains;
+		std::array<int, D> remains{};
 		for(auto & rem : remains) {rem = true;}
-		remains[d] = false;
+		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		int dim = -1;
 		MPI_Cartdim_get(ret.get(), &dim);
@@ -210,21 +207,4 @@ template<class... As> cartesian_communicator(As...)
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ // def _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
-
-#include<iostream>
-
-#include "../mpi3/main.hpp"
-#include "../mpi3/version.hpp"
-#include "../mpi3/ostream.hpp"
-
-using std::cout;
-using std::cerr;
-namespace mpi3 = boost::mpi3;
-
-int mpi3::main(int, char*[], boost::mpi3::communicator world){
-	return 0;
-}
-
-#endif
 #endif
