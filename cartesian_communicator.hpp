@@ -206,7 +206,8 @@ template<class... As> cartesian_communicator(As...)
 	->cartesian_communicator<dynamic_extent>;
 #endif
 
-}}
+}  // end namespace mpi3
+}  // end namespace boost
 
 #if not __INCLUDE_LEVEL__ // def _TEST_BOOST_MPI3_CARTESIAN_COMMUNICATOR
 
