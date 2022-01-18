@@ -1,6 +1,3 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ $0 -c -o $0.o;exit
-#endif
 // Test for separate compilation / library usage.
 
 #include "../communicator.hpp"
