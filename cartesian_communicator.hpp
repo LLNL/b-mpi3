@@ -135,6 +135,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 	cartesian_communicator(communicator& other, std::array<int, D> dims)
 	try : cartesian_communicator<>(other, division(other.size(), dims)) {}
 	catch(std::runtime_error& e) {
+		std::cerr<< "runtime error " << e.what() <<std::endl;
 		std::ostringstream ss;
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
@@ -151,7 +152,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 		return ret;
 	}
 
-	static constexpr dimensionality_type dimensions() {return D;}
+	constexpr auto dimensions() const {return topology().dimensions;}
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
@@ -163,6 +164,8 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 
 	cartesian_communicator<1> axis(int d) {
+		assert( d >= 0 );
+		assert( d <  D );
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -172,13 +175,17 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 
 	cartesian_communicator<D - 1> hyperplane(int d) {
-		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
+		static_assert( D != 0 , "hyperplane not possible for 0D communicators");
+	#if defined(MPICH_VERSION)
+		static_assert( D != 1 , "hyperplane not possible for 1D communicators");  // they work in openMPI but do not work in MPICH
+	#endif
+		assert( d >= 0 );
+		assert( d <  D );
 
 		cartesian_communicator<D - 1> ret;
 		std::array<int, D> remains{}; remains.fill(true);
 		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
-		assert(ret.cartesian_communicator<>::dimensionality() == D - 1);
 		return ret;
 	}
 };
