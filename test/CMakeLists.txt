@@ -103,13 +103,14 @@ if (TEST_BOOST_SERIALIZATION)
   SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+#set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_EXTENSIONS OFF)
 
 foreach(TEST_FILE ${TEST_SRCS})
   SET(TEST_EXE "${TEST_FILE}.x")
   add_executable(${TEST_EXE} ${TEST_FILE})
+  target_compile_features(${TEST_EXE} PRIVATE cxx_std_17)
 
   if(ENABLE_CUDA)
     set_source_files_properties(${TEST_FILE} PROPERTIES LANGUAGE CUDA)
@@ -162,6 +163,9 @@ set_tests_properties(communicator_abort.cpp.x PROPERTIES WILL_FAIL true)
 
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)
+target_compile_features(library_check PUBLIC cxx_std_17)
+
 add_executable(library_main.x library_main.cpp)
+target_compile_features(library_main.x PRIVATE cxx_std_17)
 target_link_libraries(library_main.x library_check)
 
