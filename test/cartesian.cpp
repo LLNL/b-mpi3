@@ -89,7 +89,7 @@ try {  // this is an error in MPICH
 
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {  // NOLINT(readability-function-cognitive-complexity) test function
 	assert( world.size() == 6 );
 
 	division_tests1();
@@ -146,30 +146,23 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		assert( comm_sub1.shape()[0] == 2 );
 		assert( comm_sub1.size() == 2 );
 	}
+	{
+		auto plane0 = cart_comm.hyperplane(0);
+		static_assert( decltype(plane0)::dimensionality == 1 , "!" );
+		assert( plane0.size() == 2 );
+	}
+	{
+		auto plane1 = cart_comm.hyperplane(1);
+		static_assert( decltype(plane1)::dimensionality == 1 , "!" );
+		#if not defined(MPICH_VERSION)
+		{  // cartesian communicators of dimension 0 do not work in MPICH
+			assert( plane1.size() == 3 );
+			auto point = plane1.hyperplane(0);
+			assert( point.num_elements() == 1 );
+		}
+		#endif
+	}
 }
 
-
-////	{
-////		auto plane0 = comm.hyperplane(0);
-////		static_assert( decltype(plane0)::dimensionality == 2 , "!" );
-////		assert( plane0.num_elements() == 4 );
-////		assert( plane0.shape()[0] == 2 );
-////		assert( plane0.shape()[1] == 2 );
-////	}
-////	{
-////		auto plane1 = comm.hyperplane(1);
-////		static_assert( decltype(plane1)::dimensionality == 2 , "!" );
-////		assert( plane1.num_elements() == 6 );
-////		assert( plane1.shape()[0] == 3 );
-////		assert( plane1.shape()[1] == 2 );
-////	}
-////	{
-////		auto plane2 = comm.hyperplane(2);
-////		static_assert( decltype(plane2)::dimensionality == 2 , "!" );
-////		assert( plane2.num_elements() == 6 );
-////		assert( plane2.shape()[0] == 3 );
-////		assert( plane2.shape()[1] == 2 );
-////	}
-//}
 	return 0;
 } catch(...) {return 1;}

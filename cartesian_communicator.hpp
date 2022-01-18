@@ -164,7 +164,8 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 
 	cartesian_communicator<1> axis(int d) {
-		assert( d < D );
+		assert( d >= 0 );
+		assert( d <  D );
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -174,14 +175,17 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 
 	cartesian_communicator<D - 1> hyperplane(int d) {
-		static_assert( D != 1 , "hyperplane not possible for 1D communicators");
-		assert( d < D );
+		static_assert( D != 0 , "hyperplane not possible for 0D communicators");
+	#if defined(MPICH_VERSION)
+		static_assert( D != 1 , "hyperplane not possible for 1D communicators");  // they work in openMPI but do not work in MPICH
+	#endif
+		assert( d >= 0 );
+		assert( d <  D );
 
 		cartesian_communicator<D - 1> ret;
 		std::array<int, D> remains{}; remains.fill(true);
 		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
-		assert(ret.cartesian_communicator<>::dimensionality() == D - 1);
 		return ret;
 	}
 };
