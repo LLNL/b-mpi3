@@ -15,7 +15,7 @@ openmpi:
         - cd test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
-        - cmake ..
+        - cmake .. -DCMAKE_BUILD_TYPE=Debug
         - make
         - ctest --output-on-failure
 
@@ -29,7 +29,7 @@ openmpi-clang:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - mpirun --version
-        - CXX=clang++ cmake ..
+        - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug
         - make
         - ctest --output-on-failure
 
@@ -44,7 +44,7 @@ openmpi-clang20:
         - clang++ --version
         - mpirun --version
         - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
-        - make
+        - make VERBOSE=1
         - ctest --output-on-failure
 
 ompi-clang-tidy:
@@ -57,7 +57,7 @@ ompi-clang-tidy:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - clang-tidy --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
+        - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
         - make VERBOSE=1
         - ctest --output-on-failure
 
@@ -71,7 +71,7 @@ ompi-cppcheck:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - clang-tidy --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
+        - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
         - make VERBOSE=1
         - ctest --output-on-failure
 
@@ -86,7 +86,7 @@ ompi-clang-tidy-dev:
         - export MPI_OVERSUBSCRIBE="--oversubscribe"
         - clang++ --version
         - clang-tidy --version
-        - CXX=clang++ cmake .. -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
+        - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CLANG_TIDY="clang-tidy"
         - make VERBOSE=1
         - ctest --output-on-failure
 
@@ -122,7 +122,7 @@ mpich:
         - cd test
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE=""
-        - cmake ..
+        - cmake .. -DCMAKE_BUILD_TYPE=Debug
         - make
         - ctest --output-on-failure
 
@@ -154,7 +154,7 @@ mpich-valgrind:
         - mkdir build && cd build
         - export MPI_OVERSUBSCRIBE=""
         - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"
-        - cmake ..
+        - cmake .. -DCMAKE_BUILD_TYPE=Debug
         - make
         - ctest --output-on-failure
 
@@ -323,7 +323,7 @@ openmpi-icpc-runner:
     script:
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
         - mkdir build && cd build
-        - CXX=/opt/intel/oneapi/compiler/2021.2.0/linux/bin/intel64/icpc cmake ..
+        - CXX=/opt/intel/oneapi/compiler/2021.2.0/linux/bin/intel64/icpc cmake .. -DCMAKE_BUILD_TYPE=Debug
         - mpirun --version
         - make VERBOSE=1
         - ctest --output-on-failure --timeout 120
