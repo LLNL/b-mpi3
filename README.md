@@ -374,7 +374,7 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
 
 For more examples, look into `./mpi3/tests/`, `./mpi3/examples/` and `./mpi3/exercises/`.
 
-# Beyond MP, RMA and SHM
+# Beyond MP: RMA and SHM
 
 MPI provides a very low level abstraction to inter-process communication.
 Higher level of abstractions can be constructed on top of MPI and by using the wrapper the works is simplified considerably.
@@ -514,7 +514,7 @@ In a general library the source (first argument) is conceptually constant (unmod
 ```cpp
 struct communicator {
     ...
-    communicator duplicate() const;  // returns a new communicator, congruent to the current communicator
+    communicator bad_duplicate() const;  // returns a new communicator, congruent to the current communicator, 
 };
 ```
 Furthermore, we could be tempted to call it `copy` or even to make it part of the copy-constructor.
