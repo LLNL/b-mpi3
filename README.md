@@ -27,6 +27,9 @@ It adds features which were missing in Boost.MPI (which only covers MPI-1), with
 
 B.MPI3 optionally depends on Boost +1.53 for automatic serialization.
 
+## Contents
+[[_TOC_]]
+
 ## Introduction
 
 MPI is a large library for run-time parallelism where several paradigms coexist.
