@@ -500,6 +500,8 @@ Be aware that passing by `const`-reference `mpi3::communicator const&` is not ve
 
 This brings us to the important topic of communicator construction and assignment.
 
+More material: ["C++ and Beyond 2012: Herb Sutter - You don't know const and mutable"](https://web.archive.org/web/20170119232617/https://channel9.msdn.com/posts/C-and-Beyond-2012-Herb-Sutter-You-dont-know-blank-and-blank) and ["related"](https://web.archive.org/web/20160924183715/https://channel9.msdn.com/Shows/Going+Deep/C-and-Beyond-2012-Herb-Sutter-Concurrency-and-Parallelism).
+
 ### Duplication of communicator
 
 In C, custom structures do not have special member functions that indicate copying.
@@ -565,7 +567,7 @@ void h(mpi3::communicator const& comm);
 
 In the current system, this is not very useful since only a handful of operations, which do not include communication or duplication, can be done. 
 (An example is probing the `.size()` of the communicator.)
-Take into account that, for `h` it is also "too late" to produce a duplicate of the communicator.
+Take into account that, inside the `h` function it is also "too late" to produce a duplicate of the communicator.
 
 ## Communicator as an implementation detail
 
@@ -631,6 +633,7 @@ private:
 };
 ```
 
+I don't recommend doing this specifically; the code above is just to illustrate the point. 
 I can not give a general recipe beyond this point, because there are many possible choices on how to make class thread safe (e.g. data-safe) or thread safe to some specific level (operation-safe).
 Ideally concurrent data structure should be able to do some of the work without the synchronization bottleneck.
 The whole point is that the library gives you this option, to trade-off safety and efficiency to the desired degree but no more.
