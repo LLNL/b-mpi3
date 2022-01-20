@@ -22,7 +22,7 @@ B.MPI3 is written from scratch in C++14 and it has been tested with many MPI lib
 (Any standard compliant MPI library can be used.)
 
 B.MPI3 is not an official Boost library, but is designed following the principles of Boost and the STL.
-B.MPI3 is not a derivative of Boost.MPI and it is unrelated to the, now deprecated, official MPI-C++ interface.
+B.MPI3 is not a derivative of Boost.MPI and it is unrelated to the, [now deprecated](https://web.archive.org/web/20170421220544/http://blogs.cisco.com/performance/the-mpi-c-bindings-what-happened-and-why/), official MPI-C++ interface.
 It adds features which were missing in Boost.MPI (which only covers MPI-1), with an iterator-based interface and MPI-3 features (RMA and Shared memory).
 
 B.MPI3 optionally depends on Boost +1.53 for automatic serialization.
