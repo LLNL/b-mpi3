@@ -466,7 +466,7 @@ The modern C++ language has several tools to deal with thread safety: the C++11 
 ### Data and threads
 
 Even if MPI operations are called outside concurrent sections it is still your responsibility to make sure that the *data* involved in communication is synchronized; this is always the case.
-Clear ownership and scoping of *data* helps a lot toward the thread safety.
+Clear ownership and scoping of *data* helps a lot towards thread safety.
 Avoiding mutable shared data between threads also helps.
 Perhaps as a last resort, data can be locked with mutex objects to be written or accessed one thread at time.
 
@@ -476,7 +476,7 @@ The library doesn't control or owns the communicated data for the most part, the
 
 The C-MPI interface briefly mentions thread-safety, for example most MPI operations are accompanied by the following note (e.g. https://www.mpich.org/static/docs/latest/www3/MPI_Send.html):
 
-> ### Thread and Interrupt Safety
+> **Thread and Interrupt Safety**
 >
 > This routine is thread-safe. This means that this routine may be safely used by multiple threads without the need for any  user-provided thread locks. However, the routine is not interrupt safe. Typically, this is due to the use of memory allocation routines such as malloc or other non-MPICH runtime routines that are themselves not interrupt-safe. 
 
