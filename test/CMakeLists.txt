@@ -50,49 +50,50 @@ endif()
 # This list is only a subset of files.  It might be useful to divide some of the tests into
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
-async_interaction.cpp
-cartesian.cpp
-communicator_abort.cpp
-communicator_all_gather.cpp
-communicator_all_gatherv.cpp
-communicator_all_gatherv_output_iterator.cpp
-communicator_all_reduce.cpp
-communicator_barrier.cpp
-communicator_broadcast.cpp
-communicator_divide.cpp
-gather2.cpp
-group.cpp
-communicator_cctor.cpp
-communicator_ibroadcast.cpp
-communicator_igather.cpp
-communicator_list.cpp
-communicator_mutable.cpp
-communicator_operator.cpp
-communicator_passby.cpp
-communicator_reduce.cpp
-communicator_reduce_in_place.cpp
-communicator_scatter.cpp
-communicator_set_error_handler.cpp
-communicator_split.cpp
-environment_thread.cpp
-empty_main.cpp
-window_put_get.cpp
-reduce_maxloc.cpp
-ring.cpp
-shared_mutex.cpp
-simple_send_receive.cpp
-simple_broadcast.cpp
-type_commit.cpp
+	async_interaction.cpp
+	cartesian.cpp
+	communicator_abort.cpp
+	communicator_all_gather.cpp
+	communicator_all_gatherv.cpp
+	communicator_all_gatherv_output_iterator.cpp
+	communicator_all_reduce.cpp
+	communicator_barrier.cpp
+	communicator_broadcast.cpp
+	communicator_divide.cpp
+	gather2.cpp
+	group.cpp
+	communicator_cctor.cpp
+	communicator_ibroadcast.cpp
+	communicator_igather.cpp
+	communicator_list.cpp
+	communicator_main.cpp
+	communicator_mutable.cpp
+	communicator_operator.cpp
+	communicator_passby.cpp
+	communicator_reduce.cpp
+	communicator_reduce_in_place.cpp
+	communicator_scatter.cpp
+	communicator_set_error_handler.cpp
+	communicator_split.cpp
+	environment_thread.cpp
+	empty_main.cpp
+	window_put_get.cpp
+	reduce_maxloc.cpp
+	ring.cpp
+	shared_mutex.cpp
+	simple_send_receive.cpp
+	simple_broadcast.cpp
+	type_commit.cpp
 )
 
 # List of tests that need to link with boost_serialization
 SET(NEED_BOOST_SERIALIZATION_SRCS
-   communicator_send.cpp
-   communicator_send_class_nonintrusive.cpp
-   communicator_send_receive.cpp
-   communicator_send_class.cpp
-   communicator_ireceive.cpp
-   communicator_gather.cpp
+	communicator_send.cpp
+	communicator_send_class_nonintrusive.cpp
+	communicator_send_receive.cpp
+	communicator_send_class.cpp
+	communicator_ireceive.cpp
+	communicator_gather.cpp
 #   process.cpp
 #   process_vector.cpp
 )
@@ -102,10 +103,6 @@ set(TEST_BOOST_SERIALIZATION TRUE)
 if (TEST_BOOST_SERIALIZATION)
   SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
 endif()
-
-#set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(CMAKE_CXX_EXTENSIONS OFF)
 
 foreach(TEST_FILE ${TEST_SRCS})
   SET(TEST_EXE "${TEST_FILE}.x")
@@ -168,4 +165,3 @@ target_compile_features(library_check PUBLIC cxx_std_17)
 add_executable(library_main.x library_main.cpp)
 target_compile_features(library_main.x PRIVATE cxx_std_17)
 target_link_libraries(library_main.x library_check)
-
