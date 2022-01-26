@@ -18,7 +18,7 @@ B-MPI3 also provides allocators and facilities to manipulate MPI-mediated Remote
 For example, pointers are not utilized directly and it is replaced by an iterator-based interface and most data, in particular custom type objects are serialized automatically into messages by the library.
 B-MPI3 interacts well with the C++ standard library, containers and custom data types (classes).
 
-B.MPI3 is written from scratch in C++14 and it has been tested with many MPI library implementations and compilers, OpenMPI +1.9, MPICH +3.2.1, MVAPICH or Spectrum MPI, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04.
+B.MPI3 is written from [scratch](https://octo-repo-visualization.vercel.app/?repo=llnl%2Fb-mpi3) in C++17 and it has been tested with many MPI library implementations and compilers, OpenMPI +1.9, MPICH +3.2.1, MVAPICH or Spectrum MPI, using the following compilers gcc +5.4.1, clang +6.0, PGI 18.04.
 (Any standard compliant MPI library can be used.)
 
 B.MPI3 is not an official Boost library, but is designed following the principles of Boost and the STL.
@@ -225,12 +225,12 @@ For example `communicator::send`, `::receive` and `::barrier`.
 The functions `::rank` and `::size` allows each process to determine their unique identity inside the communicator.
 
 ```cpp
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world) {
     assert(world.size() == 2);
-	if(world.rank() == 0){
+	if(world.rank() == 0) {
 	   std::vector<double> v = {1.,2.,3.};
 	   world.send(v.begin(), v.end(), 1); // send to rank 1
-	}else if(world.rank() == 1){
+	} else if(world.rank() == 1) {
 	   std::vector<double> v(3);
 	   world.receive(v.begin(), v.end(), 0); // receive from rank 1
 	   assert( v == std::vector{1.,2.,3.} );
@@ -253,12 +253,12 @@ Alternatively, value-based interface can be used.
 We will show the terse syntax, using the process objects.
 
 ```cpp
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char**, mpi3::communicator world) {
     assert(world.size() == 2);
-	if(world.rank() == 0){
+	if(world.rank() == 0) {
 	   double v = 5.;
 	   world[1] << v;
-	}else if(world.rank() == 1){
+	} else if(world.rank() == 1) {
 	   double v = -1.;
 	   world[0] >> v;
 	   assert(v == 5.);
@@ -294,12 +294,12 @@ This is minimal example using `put` and `get` functions.
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int, char*[], mpi3::communicator world){
+int mpi3::main(int, char*[], mpi3::communicator world) {
 
 	std::vector<double> darr(world.rank()?0:100);
 	mpi3::window<double> w = world.make_window(darr.data(), darr.size());
 	w.fence();
-	if(world.rank() == 0){
+	if(world.rank() == 0) {
 		std::vector<double> a = {5., 6.};
 		w.put(a.begin(), a.end(), 0);
 	}
@@ -345,7 +345,7 @@ These are special type of memory windows.
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int argc, char* argv[], mpi3::communicator world) {
 
 	mpi3::shared_communicator node = world.split_shared();
 	mpi3::shared_window<int> win = node.make_shared_window<int>(node.rank()==0?1:0);
@@ -393,7 +393,7 @@ it prevents certain blocks of code to be executed by more than one process (rank
 
 namespace mpi3 = boost::mpi3; using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
+int mpi3::main(int, char**, mpi3::communicator world) {
 
 	mpi3::mutex m(world);
 	{
