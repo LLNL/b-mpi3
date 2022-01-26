@@ -12,8 +12,7 @@
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) {
+auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int try {
 	assert( world.size() == 3 );
 	return 0;
-}
-
+} catch(...) {return 1;}
