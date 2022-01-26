@@ -56,7 +56,12 @@ struct [[nodiscard]] request {
 	}
 	void wait() {  // TODO(correaa) make wait const
 	//  assert(valid());  // TODO(correaa) investigate why this is failing
-		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_);}  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+		if(impl_ != MPI_REQUEST_NULL) {
+			status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
+			int s = MPI_Wait(&impl_, &ret.impl_);
+			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
+			return ret;
+		}
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
