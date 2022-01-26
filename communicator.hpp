@@ -560,7 +560,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void barrier() const {MPI_(Barrier)(impl_);}
+	void     barrier() {MPI_(Barrier)(impl_);}
+	request ibarrier() {
+		request ret;
+		MPI_(Ibarrier)(this->handle(), &ret.impl_);
+		return ret;
+	}
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -2893,11 +2898,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		comm.send_value(t);
 		return comm;
 	}
-
-
 };
 
-inline void barrier(communicator const& self){self.barrier();}
+inline void  barrier(communicator& self) {       self. barrier();}
+inline auto ibarrier(communicator& self) {return self.ibarrier();}
 
 inline communicator::communicator(group const& g, int tag){
 	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
