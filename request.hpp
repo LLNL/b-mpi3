@@ -20,6 +20,8 @@ struct [[nodiscard]] request {
 	// in mpich MPI_Request is same as int
 	MPI_Request impl_ = MPI_REQUEST_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
+	auto handle() {return impl_;}
+
 	request() = default;
 	request(request const& other) = delete;
 	request(request&& other) noexcept : impl_{std::exchange(other.impl_, MPI_REQUEST_NULL)}{}
