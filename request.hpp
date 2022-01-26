@@ -58,7 +58,7 @@ struct [[nodiscard]] request {
 	//  assert(valid());  // TODO(correaa) investigate why this is failing
 		if(impl_ != MPI_REQUEST_NULL) {
 			status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
-			int s = MPI_Wait(&impl_, &ret.impl_);
+			int s = MPI_Wait(&impl_, &ret.impl_);  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) non-blocking call was used to create the object
 			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
 		}
 	}
