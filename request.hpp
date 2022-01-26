@@ -60,7 +60,6 @@ struct [[nodiscard]] request {
 			status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
 			int s = MPI_Wait(&impl_, &ret.impl_);
 			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
-			return ret;
 		}
 	}
 	status get() {
