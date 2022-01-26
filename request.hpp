@@ -54,9 +54,9 @@ struct [[nodiscard]] request {
 			std::terminate();
 		}
 	}
-	void wait() const {
-	//	assert(valid());  // TODO(correaa) investigate why this is failing
-		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_);}//, MPI_STATUS_IGNORE);}  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+	void wait() {  // TODO(correaa) make wait const
+	//  assert(valid());  // TODO(correaa) investigate why this is failing
+		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_);}  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
