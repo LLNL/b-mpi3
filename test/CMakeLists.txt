@@ -75,6 +75,7 @@ set(TEST_SRCS
 	communicator_scatter.cpp
 	communicator_set_error_handler.cpp
 	communicator_split.cpp
+	ibarrier.cpp
 	environment_thread.cpp
 	empty_main.cpp
 	window_put_get.cpp
@@ -101,7 +102,7 @@ SET(NEED_BOOST_SERIALIZATION_SRCS
 # Build tests that need boost serialization
 set(TEST_BOOST_SERIALIZATION TRUE)
 if (TEST_BOOST_SERIALIZATION)
-  SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
+	SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
 endif()
 
 foreach(TEST_FILE ${TEST_SRCS})
