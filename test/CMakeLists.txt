@@ -85,6 +85,7 @@ set(TEST_SRCS
 	simple_send_receive.cpp
 	simple_broadcast.cpp
 	type_commit.cpp
+	uniform_abort.cpp
 )
 
 # List of tests that need to link with boost_serialization
