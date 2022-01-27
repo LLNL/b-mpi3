@@ -6,11 +6,11 @@
 #define BOOST_JUST_HPP
 
 #include<array>
-#include<utility> // std::forward
+#include<utility>  // std::forward
 
 namespace boost {
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) : 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) :
 #define BOOST_JUST_REPRODUCE_OPERATOR(OperatoR) \
 	template<class T...> \
 	auto OperatorR(T&&... t)
@@ -114,7 +114,7 @@ struct just<bool>{
 #ifdef _TEST_BOOST_JUST
 
 //struct number : boost::just<double&>::type{
-//	BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
+//  BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
 //};
 
 #include<iostream>
