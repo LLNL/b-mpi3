@@ -560,12 +560,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
-	void     barrier() {MPI_(Barrier)(impl_);}
-	request ibarrier() {
-		request ret;
-		MPI_(Ibarrier)(this->handle(), &ret.impl_);
-		return ret;
-	}
+	void  barrier() {             MPI_( Barrier)(handle())                        ;}
+	auto ibarrier() {request ret; MPI_(Ibarrier)(handle(), &ret.impl_); return ret;}
+
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -579,7 +576,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 
-	auto operator[](int rank) -> process;  // TODO(correaa) add overload for const&
+	auto operator[](int rank) -> process;
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
