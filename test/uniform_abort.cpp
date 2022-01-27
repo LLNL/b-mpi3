@@ -72,7 +72,7 @@ void timedout_throw(mpi3::communicator& comm, Duration d) {
 
 	if(rbarrier.completed()) {
 		std::cout<< "non essential message: throwing from rank "<< comm.rank() <<" before timeout"<<std::endl;
-		throw;  // cppcheck-suppress rethrowNoCurrentException
+		throw;  // cppcheck-suppress [rethrowNoCurrentException,unmatchedSuppression] ; experimental line
 	}
 	std::terminate();
 }
