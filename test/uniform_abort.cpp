@@ -10,7 +10,7 @@ namespace mpi3 = boost::mpi3;
 
 // failures
 
-void uniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
+void uniform_fail(mpi3::communicator const& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
     using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
@@ -18,7 +18,7 @@ void uniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFunct
 	throw std::logic_error{"global but unsynchronized error"};
 }
 
-void nonuniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
+void nonuniform_fail(mpi3::communicator const& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
     using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
@@ -30,7 +30,7 @@ void nonuniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFu
 
 // handlers
 
-void unconditional_abort(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
+void unconditional_abort(mpi3::communicator const& comm) {  // cppcheck-suppress unusedFunction
 	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
 	comm.abort();
 }
@@ -72,7 +72,7 @@ void timedout_throw(mpi3::communicator& comm, Duration d) {
 
 	if(rbarrier.completed()) {
 		std::cout<< "non essential message: throwing from rank "<< comm.rank() <<" before timeout"<<std::endl;
-		throw;
+		throw;  // cppcheck-suppress rethrowNoCurrentException
 	}
 	std::terminate();
 }
@@ -89,11 +89,11 @@ template<class Duration>
 
 	if(rbarrier.completed()) {
 		if(comm.root()) {
-			std::cout<< "not essential message: terminate from rank "<< comm.rank() <<" after others joined before timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds"<<std::endl;
+			std::cout<<"not essential message: terminate from rank "<< comm.rank() <<" after others joined before timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds"<<std::endl;
 			comm.abort(911);
 		}
 	} else {
-		std::cout<< "non essential message: terminate from rank "<< comm.rank() <<" after timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds, not all processes failed within that time."<<std::endl;
+		std::cout<<"non essential message: terminate from rank "<< comm.rank() <<" after timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds, not all processes failed within that time."<<std::endl;
 	}
 
 	comm.abort(911);
