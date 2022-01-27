@@ -45,16 +45,16 @@ struct shared_communicator : communicator {
 		auto Tag = std::to_string(utag);
 		std::string const& base_name = comm.name();
 
-		// !!! switch-case don't work here because in some MPI impls there are repeats in the cases !!!
+		// switch-case doesn't work here because in some MPI impls there are "repeats" in the cases
 		if(communicator_type::shared == t) {
 			#if __linux__
-			set_name(base_name +":shared/pu"+ std::to_string(::sched_getcpu())); //same as ::getcpu() TODO(correaa)
+			set_name(base_name +":shared/pu"+ std::to_string(::sched_getcpu()));  // same as ::getcpu() TODO(correaa)
 			#else
 			set_name(base_name +":shared/pu"+ Tag);
 			#endif
-		} else if(communicator_type::core     ==t) {
+		} else if(communicator_type::core == t) {
 			#if __linux__
-			set_name(base_name +":core/pu"+ std::to_string(::sched_getcpu())); //same as ::getcpu() TODO(correaa)
+			set_name(base_name +":core/pu"+ std::to_string(::sched_getcpu()));  // same as ::getcpu() TODO(correaa)
 			#else
 			set_name(base_name +":core/pu"+ Tag);
 			#endif
