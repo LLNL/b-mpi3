@@ -38,7 +38,7 @@ class ptr
  private:
 	using window_type = mpi3::shared_window<std::decay_t<element_type>>;
 	window_type* wP_{};
-	difference_type offset_;
+	difference_type offset_{};
 	template<class, class> friend class ptr;
 	template<class> friend class allocator;
 
@@ -46,7 +46,7 @@ class ptr
 	ptr() = default;
 
 	// cppcheck-suppress noExplicitConstructor
-	ptr(std::nullptr_t) : offset_{0} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+	ptr(std::nullptr_t) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 
 	template<class TT>//, typename = decltype(mpi3::shared_window<typename pointer::element_type>*(std::declval<ptr<TT>>().wP_))> 
 	// cppcheck-suppress noExplicitConstructor
@@ -77,24 +77,24 @@ class ptr
 
 	~ptr() = default;
 	auto raw_pointer_cast() const {return std::next(wP_->base(0), offset_);}
-	friend auto raw_pointer_cast(pointer const& self){return self.raw_pointer_cast();}
-	reference operator*() const{return *raw_pointer_cast();}
-	ptr& operator+=(difference_type d){offset_+=d; return *this;}
-	ptr& operator-=(difference_type d){offset_-=d; return *this;}
-	ptr& operator++(){++offset_; return *this;}
-	ptr& operator--(){--offset_; return *this;}
-	friend auto operator-(pointer const& self, pointer const& other){
+	friend auto raw_pointer_cast(pointer const& self) {return self.raw_pointer_cast();}
+	reference operator*() const {return *raw_pointer_cast();}
+	ptr& operator+=(difference_type d) {offset_+=d; return *this;}
+	ptr& operator-=(difference_type d) {offset_-=d; return *this;}
+	ptr& operator++() {++offset_; return *this;}
+	ptr& operator--() {--offset_; return *this;}
+	friend auto operator-(pointer const& self, pointer const& other) {
 		assert( self.wP_ == other.wP_ );
 		return self.offset_ - other.offset_;
 	}
-	raw_pointer operator->() const{return raw_pointer_cast();}
-	reference operator[](difference_type d) const{return raw_pointer_cast()[d];}
-	explicit operator raw_pointer() const{return raw_pointer_cast();}
-	explicit operator bool() const{return wP_;}
-	bool operator==(pointer const& o) const{assert(wP_==o.wP_); return offset_==o.offset_;}
-	bool operator< (pointer const& o) const{assert(wP_==o.wP_); return offset_< o.offset_;}
-	bool operator> (pointer const& o) const{assert(wP_==o.wP_); return offset_> o.offset_;}
-	auto to_address() const{return to_address(raw_pointer_cast());}
+	raw_pointer operator->() const {return raw_pointer_cast();}
+	reference operator[](difference_type d) const {return raw_pointer_cast()[d];}
+	explicit operator raw_pointer() const {return raw_pointer_cast();}
+	explicit operator bool() const {return wP_;}
+	bool operator==(pointer const& o) const {assert(wP_==o.wP_); return offset_==o.offset_;}
+	bool operator< (pointer const& o) const {assert(wP_==o.wP_); return offset_< o.offset_;}
+	bool operator> (pointer const& o) const {assert(wP_==o.wP_); return offset_> o.offset_;}
+	auto to_address() const {return to_address(raw_pointer_cast());}
 /*	template<class Size, class ForwardIt>
 	auto copy_n(Size n, ForwardIt d_first) const{
 		w_->fence(); 

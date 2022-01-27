@@ -98,7 +98,7 @@ template<class Duration>
 	std::abort();  // necessary to avoid error for returning in a [[noreturn]] function
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int {
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int {  // NOLINT(bugprone-exception-escape) part of the test is that there is no `try` here
 	assert( world.size() == 4 );
 
 // unconditional abort
