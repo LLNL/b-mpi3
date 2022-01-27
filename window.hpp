@@ -215,18 +215,19 @@ class window<void> {
 };
 
 template<class T>
-class window : public window<void>{
-protected:
+class window : public window<void> {
+ protected:
 	window() = default;
-public:
+
+ public:
 	template<class Size = mpi3::size_t>
-	window(communicator const& c, T* b, Size n = 0) : window<void>{c, b, n}{}
-	T* base() const{return static_cast<T*>(window<void>::base());}
-	mpi3::size_t size() const{return window<void>::size()/sizeof(T);}
+	window(communicator const& c, T* b, Size n = 0) : window<void>{c, b, n} {}  // cppcheck-suppress missingReturn ; bug in cppcheck 2.5
+	T* base() const {return static_cast<T*>(window<void>::base());}
+	mpi3::size_t size() const {return window<void>::size()/sizeof(T);}
 };
 
 template<class T>
-class panel{
+class panel {
 	window<T>& w_;
 	int rank_;
 	panel(window<T>& w, int rank) : w_(w), rank_(rank){}
