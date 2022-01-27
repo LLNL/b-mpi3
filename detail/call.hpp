@@ -42,6 +42,7 @@ template<class FT, FT* F, class... Args, decltype(static_cast<enum error>((*F)(s
 	int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	auto const e = static_cast<enum error>((*F)(args..., &ret));  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // non-blocking calls have wait in request destructor
 	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
+	// cppcheck-suppress uninitvar
 	return ret;
 }
 

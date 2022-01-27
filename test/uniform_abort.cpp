@@ -10,7 +10,7 @@ namespace mpi3 = boost::mpi3;
 
 // failures
 
-void uniform_fail(mpi3::communicator& comm) {
+void uniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
     using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
@@ -18,11 +18,11 @@ void uniform_fail(mpi3::communicator& comm) {
 	throw std::logic_error{"global but unsynchronized error"};
 }
 
-void nonuniform_fail(mpi3::communicator& comm) {
+void nonuniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
     using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
-	if(comm.rank() > 2){
+	if(comm.rank() > 1) {
 		std::cout<< "nonuniform_fail in n = "<< comm.rank() <<" is about to fail" <<std::endl;
 		throw std::logic_error{"nonglobal error"};
 	}
@@ -30,12 +30,12 @@ void nonuniform_fail(mpi3::communicator& comm) {
 
 // handlers
 
-void unconditional_abort(mpi3::communicator& comm) {
+void unconditional_abort(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
 	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
 	comm.abort();
 }
 
-void barriered_abort(mpi3::communicator& comm) {
+void barriered_abort(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
 	comm.barrier();
 	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
 	comm.abort();
@@ -98,13 +98,9 @@ template<class Duration>
 	std::abort();  // necessary to avoid error for returning in a [[noreturn]] function
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int {
+	assert( world.size() == 4 );
 
-	std::set_terminate([]{
-	    using namespace std::chrono_literals;
-		mpi3_timed_terminate(20s);
-	});
-//	mpi3::set_timeout_terminate(5s);
 // unconditional abort
 #if 0
 	// (-) prints only one message, (+) program terminates immediately
@@ -165,7 +161,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 #endif
 
 // timedout_abort
-#if 1
+#if 0
 	// (+) prints all available messages, (+) program terminates very quickly
 	try {
 		uniform_fail(world);
@@ -185,26 +181,34 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 #endif
 
-// timedout_throw
+// timedout_terminate
 #if 0
 	// (+) prints all available messages, (+) program terminates very quickly
+	std::set_terminate([]{
+	    using namespace std::chrono_literals;
+		mpi3_timed_terminate(20s);
+	});
+
 	try {
 		uniform_fail(world);
 	} catch(std::logic_error&) {
-	    using namespace std::chrono_literals;
-		timedout_throw(world, 20s);
+		throw;
 	}
 #endif
 
-//#if 1
-//	// (+) prints all available messages, (~) program terminates after timeout
-//	try {
-//		nonuniform_fail(world);
-//	} catch(std::logic_error&) {
-//	    using namespace std::chrono_literals;
-//		timedout_throw(world, 20s);
-//	}
-//#endif
+#if 1
+	// (+) prints all available messages, (~) program terminates after timeout
+	std::set_terminate([]{
+	    using namespace std::chrono_literals;
+		mpi3_timed_terminate(20s);
+	});
+
+	try {
+		nonuniform_fail(world);
+	} catch(std::logic_error&) {
+		std::terminate();
+	}
+#endif
 
 	// I am putting a collective here to produce an deadlock if some abort strategy leaks processes
 	{
@@ -215,4 +219,5 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-} catch(...) {return 1;}
+}
+// catch(...) {return 1;}

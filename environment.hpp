@@ -106,11 +106,11 @@ class environment {
 		initialize_thread(required);
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-	explicit environment(int& argc, char**& argv){
+	explicit environment(int& argc, char**& argv) {  // cppcheck-suppress constParameter ; bug in cppcheck 2.3 or it can't see through the MPI C-API
 		initialize(argc, argv); // initialize(argc, argv); // TODO have an environment_mt/st version?
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-	explicit environment(int& argc, char**& argv, thread_level required){
+	explicit environment(int& argc, char**& argv, thread_level required) {  // cppcheck-suppress constParameter ; bug in cppcheck 2.3
 		initialize(argc, argv, required);
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}

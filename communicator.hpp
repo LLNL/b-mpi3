@@ -234,7 +234,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	auto get()         const {return impl_;}  // TODO(correaa) deprecate
 	impl_t& get() {return this->impl_;}
 
-	class ptr {
+	class ptr {  // cppcheck-suppress noConstructor ; bug in cppcheck 2.3
 		communicator* ptr_;
 	 public:
 		explicit ptr(communicator* ptr) : ptr_{ptr} {}
@@ -283,7 +283,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	class keyval {
 		static int delete_fn(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
 			delete static_cast<T*>(attr_val);  // NOLINT(cppcoreguidelines-owning-memory)
-			attr_val = nullptr;
+		//	attr_val = nullptr;
 			return MPI_SUCCESS;
 		}
 		static int copy_fn(
@@ -297,7 +297,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		}
 
 	 public:
-		int impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
+		int impl_ = {};  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
 		using mapped_type = T;
 
@@ -629,6 +629,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		assert(s == MPI_SUCCESS);
 	}
 	communicator divide_low(int n) {
+		assert(n != 0);
 		return split(
 			(rank() < size()/n*(n-size()%n))?
 				rank()/(size()/n):
@@ -1589,9 +1590,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class T>
 	auto broadcast_value(std::vector<T>& t, int root = 0){
-		auto size = t.size();
-		broadcast_value(size, root);
-		t.resize(size);
+		auto t_size = t.size();
+		broadcast_value(t_size, root);
+		t.resize(t_size);
 		return broadcast_n(t.data(), t.size(), root);
 	}
 
@@ -2328,7 +2329,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		auto e = all_gatherv_n(first, count, buff.data(), counts, displs);
 		assert( e == std::next(buff.data(), buff.size()) );
 		using std::move;
-		return move(buff.begin(), buff.end(), d_first);
+		return move(buff.begin(), buff.end(), d_first);  // cppcheck-suppress returnDanglingLifetime ; cppcheck 2.3 bug
 	}
 	template<typename It1, typename Size, typename It2, typename CountsIt, typename DisplsIt>
 	auto all_gatherv_n(
@@ -2710,8 +2711,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int root
 	) {
 		return gather_n(
-			first, std::distance(first, last), 
-			d_first, std::distance(d_last, d_last), 
+			first, std::distance(first, last),
+			d_first, std::distance(d_first, d_last),
 			root
 		);
 	}
@@ -2727,7 +2728,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		return gather_n(
 			first, std::distance(first, last),
-			d_first, std::distance(d_last, d_last),
+			d_first, std::distance(d_first, d_last),
 			root
 		);
 	}

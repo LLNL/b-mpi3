@@ -123,9 +123,9 @@ struct just<bool>{
 #include<cassert>
 
 template<class T>
-class A : boost::just<T>::type{};
+class A : boost::just<T>::type {};
 
-int main(){
+int main() {
 	A<int> a;
 
 	A<int[8]> b;
@@ -133,28 +133,26 @@ int main(){
 	assert( std::is_array<int[8]>::value == true );
 
 	{
-	
 		double d=5;
 		boost::wrapper<double> n(d);
 		n+=4;
-		std::cout << n << std::endl;
-		std::cout << d << std::endl;
+		std::cout<< n <<std::endl;
+		std::cout<< d <<std::endl;
 	}
 	{
 		double d = 5.;
 		boost::wrapper<double&> n(d);
-		double a = 6.;
-		std::cout << n << std::endl;
-		n = a;
+		double aa = 6.;
+		std::cout<< n <<std::endl;
+		n = aa;
 		n+= 5.;
 		assert(&n == &d);
-		std::cout << n << std::endl;
-		std::cout << d << std::endl;
+		std::cout<< n <<std::endl;
+		std::cout<< d <<std::endl;
 	}
 
 	{
 		double d = 5.;
-		std::vector<double> v(10);
 		std::vector<boost::reference<double>> v3;
 		v3.push_back(d);
 		v3.push_back(d);
@@ -163,11 +161,11 @@ int main(){
 	}
 
 	{
-		double a = 5.;
-		double& b = a;
-		assert( &b == &a );
-	//	boost::just<double&> c = a;
-	//	c = 6.;		
+		double aa = 5.;
+		double& aa_ref = aa;
+		assert( &aa_ref == &aa );
+	//  boost::just<double&> c = a;
+	//  c = 6.;	
 	}
 
 }

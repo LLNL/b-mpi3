@@ -139,6 +139,12 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   if (
+       (TEST_FILE STREQUAL "uniform_abort.cpp"            )
+  )
+    set(NPROC 4)
+  endif()
+
+  if (
        (TEST_FILE STREQUAL "cartesian.cpp"            )
   )
     set(NPROC 6)
@@ -159,6 +165,7 @@ foreach(TEST_FILE ${TEST_SRCS})
 endforeach()
 
 set_tests_properties(communicator_abort.cpp.x PROPERTIES WILL_FAIL true)
+set_tests_properties(uniform_abort.cpp.x      PROPERTIES WILL_FAIL true)
 
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)

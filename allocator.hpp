@@ -35,7 +35,8 @@ struct /*__attribute__((aligned(0)))*/ allocator{
 
 	allocator() = default;
 
-	template<class U> allocator(allocator<U> const&/*other*/) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) : allocator convention is explicit
+	// cppcheck-suppress noExplicitConstructor
+	template<class U> allocator(allocator<U> const&/*other*/) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) : allocator convention
 
 	pointer allocate(size_type n) {
 		if(n <= max_size()) {

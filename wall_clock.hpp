@@ -2,7 +2,7 @@
 //#if COMPILATION
 //mpic++ -x c++ $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
 //#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_WALL_CLOCK_HPP
 #define BOOST_MPI3_WALL_CLOCK_HPP
@@ -52,8 +52,8 @@ class wall_timer {
 
 	~wall_timer() {  // NOLINT(bugprone-exception-escape) TODO(correaa) may be it should be able to throw
 		auto const diff = wall_clock::now() - start_;
-		auto const min = comm_.min(diff.count());
-		auto const max = comm_.max(diff.count());
+		auto const min = comm_.min(diff.count());  // cppcheck-suppress unreadVariable ; bug in cppcheck 2.3
+		auto const max = comm_.max(diff.count());  // cppcheck-suppress unreadVariable ; bug in cppcheck 2.3
 		auto const total = (comm_ += diff.count());
 		auto const avg = total/comm_.size();
 		auto const speed_up = max / total;
