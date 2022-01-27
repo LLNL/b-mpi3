@@ -455,7 +455,7 @@ basic_iarchive_impl::load_pointer(
                 boost::serialization::throw_exception(
                     archive_exception(archive_exception::unregistered_class)
                 ); }
-            bpis_ptr = (*finder)(*eti);  // cppcheck-suppress nullPointerRedundantCheck ; legacy code
+            bpis_ptr = (*finder)(*eti);  // cppcheck-suppress [nullPointerRedundantCheck,nullPointer] ; legacy code
         }
         BOOST_ASSERT(nullptr != bpis_ptr);
         // class_id_type new_cid = register_type(bpis_ptr->get_basic_serializer());

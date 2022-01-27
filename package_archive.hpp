@@ -168,7 +168,7 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 		s.resize(size);
 		p_.unpack_n(&s.front(), size);  // TODO(correaa) use s.data() in C++17
 	}
-	void load(std::wstring &ws){
+	void load(std::wstring &ws) {  // cppcheck-suppression constParameter; TODO(correaa) implement?
     	const std::size_t size = ws.size();
 		*this->This() << size;
 	//	++tokens_; //	this->This()->newtoken();

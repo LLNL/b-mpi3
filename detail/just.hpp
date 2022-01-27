@@ -8,7 +8,7 @@
 #include<array>
 #include<utility> // std::forward
 
-namespace boost{
+namespace boost {
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage) : 
 #define BOOST_JUST_REPRODUCE_OPERATOR(OperatoR) \
@@ -16,7 +16,7 @@ namespace boost{
 	auto OperatorR(T&&... t)
 
 template<class T>
-struct wrapper /*: T*/{
+struct wrapper /*: T*/ {
 	using type = T;
 	T value;  // NOLINT(misc-non-private-member-variables-in-classes) : wrapper
 
@@ -34,26 +34,25 @@ struct wrapper /*: T*/{
 
 	template<class Arg>
 	auto operator[](Arg&& arg) const
-	->decltype(value[std::forward<Arg>(arg)]){
-		return value[std::forward<Arg>(arg)];
-	}
+	->decltype(value[std::forward<Arg>(arg)]) {
+		return value[std::forward<Arg>(arg)]; }
 
-	auto operator*()->decltype(*std::declval<T>()){return *value;} 
+	auto operator*()->decltype(*std::declval<T>()) {return *value;} 
 };
 
 template<class T>
 using reference = wrapper<T&>;
 
 template<class T>
-struct just : 
+struct just :
 	std::conditional<
-		std::is_class<T>::value, 
-			T, 
+		std::is_class<T>::value,
+			T,
 			typename std::conditional<std::is_array<T>::value,
 				std::array<typename std::remove_extent<T>::type, std::extent<T>::value>,
 				wrapper<T>
 			>::type
-	> /*no ::type here*/{
+	> /*no ::type here*/ {
 };
 
 
@@ -159,15 +158,6 @@ int main() {
 		v3[0] = 4.;
 		std::cout << v3[0] << " " << v3[1] << std::endl;
 	}
-
-	{
-		double aa = 5.;
-		double& aa_ref = aa;
-		assert( &aa_ref == &aa );
-	//  boost::just<double&> c = a;
-	//  c = 6.;	
-	}
-
 }
 #endif
 
