@@ -43,32 +43,32 @@ struct shared_communicator : communicator {
 		auto utag = reinterpret_cast<unsigned int const&>(tag);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
 		this->broadcast_n(&utag, 1, 0);
 		auto Tag = std::to_string(utag);
-		std::string const& base = comm.name();
+		std::string const& base_name = comm.name();
 
 		// !!! switch-case don't work here because in some MPI impls there are repeats in the cases !!!
 		if(communicator_type::shared == t) {
 			#if __linux__
-			set_name(base+":shared/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
+			set_name(base_name +":shared/pu"+ std::to_string(::sched_getcpu())); //same as ::getcpu() TODO(correaa)
 			#else
-			set_name(base+":shared/pu" + Tag);
+			set_name(base_name +":shared/pu"+ Tag);
 			#endif
 		} else if(communicator_type::core     ==t) {
 			#if __linux__
-			set_name(base+":core/pu" + std::to_string(::sched_getcpu())); //same as ::getcpu() // TODO
+			set_name(base_name +":core/pu"+ std::to_string(::sched_getcpu())); //same as ::getcpu() TODO(correaa)
 			#else
-			set_name(base+":core/pu" + Tag);
+			set_name(base_name +":core/pu"+ Tag);
 			#endif
 		}
-		else if(communicator_type::hw_thread==t) {set_name(base+":hw_thread"+Tag);}
-		else if(communicator_type::l1_cache ==t) {set_name(base+":l1_cache" +Tag);}
-		else if(communicator_type::l2_cache ==t) {set_name(base+":l2_cache" +Tag);}
-		else if(communicator_type::l3_cache ==t) {set_name(base+":l3_cache" +Tag);}
-		else if(communicator_type::socket   ==t) {set_name(base+":socket"   +Tag);}
-		else if(communicator_type::numa     ==t) {set_name(base+":numa"     +Tag);}
-		else if(communicator_type::board    ==t) {set_name(base+":board"    +Tag);}
-		else if(communicator_type::host     ==t) {set_name(base+":host"     +Tag);}
-		else if(communicator_type::cu       ==t) {set_name(base+":cu"       +Tag);}
-		else if(communicator_type::cluster  ==t) {set_name(base+":cluster"  +Tag);}
+		else if(communicator_type::hw_thread==t) {set_name(base_name +":hw_thread"+Tag);}
+		else if(communicator_type::l1_cache ==t) {set_name(base_name +":l1_cache" +Tag);}
+		else if(communicator_type::l2_cache ==t) {set_name(base_name +":l2_cache" +Tag);}
+		else if(communicator_type::l3_cache ==t) {set_name(base_name +":l3_cache" +Tag);}
+		else if(communicator_type::socket   ==t) {set_name(base_name +":socket"   +Tag);}
+		else if(communicator_type::numa     ==t) {set_name(base_name +":numa"     +Tag);}
+		else if(communicator_type::board    ==t) {set_name(base_name +":board"    +Tag);}
+		else if(communicator_type::host     ==t) {set_name(base_name +":host"     +Tag);}
+		else if(communicator_type::cu       ==t) {set_name(base_name +":cu"       +Tag);}
+		else if(communicator_type::cluster  ==t) {set_name(base_name +":cluster"  +Tag);}
 	}
 	friend class communicator;
 
