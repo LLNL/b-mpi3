@@ -230,7 +230,7 @@ template<class T>
 class panel {
 	window<T>& w_;
 	int rank_;
-	panel(window<T>& w, int rank) : w_(w), rank_(rank){}
+	panel(window<T>& w, int rank) : w_(w), rank_(rank) {}
 //	friend window;
 };
 
