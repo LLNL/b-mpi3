@@ -15,11 +15,14 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
 	static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator) );
 
-	assert(  mpi3::grip(world.handle()) ==  world );
-	assert( &mpi3::grip(world.handle()) == &world );
+{
+	mpi3::communicator& w2 = mpi3::grip(world.handle());
+	assert(  w2 ==  world );
+	assert( &w2 == &world );
 
 	assert(  mpi3::grip(MPI_COMM_WORLD) ==  world );
 	assert( &mpi3::grip(MPI_COMM_WORLD) != &world );
+}
 
 //	assert( reinterpret_cast<mpi3::communicator&>(MPI_COMM_WORLD) == world );
 
