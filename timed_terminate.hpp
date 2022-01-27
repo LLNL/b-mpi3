@@ -10,10 +10,10 @@ namespace boost {
 namespace mpi3 {
 
 template<class Duration>
-[[noreturn]] static void timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
+[[noreturn]] void timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
 	auto rbarrier = comm.ibarrier();
 	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}  // spin
 
 	if(rbarrier.completed()) {
 		if(comm.root()) {comm.abort(911);}
