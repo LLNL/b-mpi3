@@ -20,7 +20,7 @@ namespace mpi3 {
 
 namespace detail {
 
-class basic_package_iprimitive{
+class basic_package_iprimitive {
  protected:
 	package& p_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes) TODO(correaa)
 
@@ -31,16 +31,16 @@ class basic_package_iprimitive{
 	// use_array_optimization;
 	// workaround without using mpl lambdas
 	struct use_array_optimization {
-		template<class T>  
-		struct apply : 
+		template<class T>
+		struct apply :
 			public mpl::bool_<mpi3::detail::is_basic<T>::value>
-		{};  
+		{};
 	};
 	template<class T>
 #if(BOOST_VERSION < 106100)
-	void load_array(boost::serialization::array<T>& t, unsigned int /*version*/ = 0){ // for boost pre 1.63
+	void load_array(boost::serialization::array<T>& t, unsigned int /*version*/ = 0) {   // for boost pre 1.63
 #else
-	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int /*version*/ = 0){
+	void load_array(boost::serialization::array_wrapper<T>& t, unsigned int /*version*/ = 0) {
 #endif
 		p_.unpack_n(t.address(), t.count()); 
 	}
@@ -49,7 +49,7 @@ class basic_package_iprimitive{
 	explicit basic_package_iprimitive(mpi3::detail::package& p) : p_(p){}
 };
 
-class basic_package_oprimitive{
+class basic_package_oprimitive {
  protected:
 	package& p_;  // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes) TODO(correaa)
 
@@ -75,11 +75,11 @@ class basic_package_oprimitive{
 	void save(const boost::archive::class_id_optional_type&){}
 	basic_memory_oprimitive(size_t& os) : os_(os){}
 #endif
-	explicit basic_package_oprimitive(mpi3::detail::package& p) : p_(p){}
+	explicit basic_package_oprimitive(mpi3::detail::package& p) : p_{p} {}
 };
 
 template<class Archive>
-class basic_package_iarchive : public boost::archive::detail::common_iarchive<Archive>{
+class basic_package_iarchive : public boost::archive::detail::common_iarchive<Archive> {
 	friend class boost::archive::detail::interface_iarchive<Archive>;
 	using detail_common_iarchive = boost::archive::detail::common_iarchive<Archive>;
 
@@ -100,7 +100,7 @@ class basic_package_iarchive : public boost::archive::detail::common_iarchive<Ar
 };
 
 template<class Archive>
-class basic_package_oarchive : public boost::archive::detail::common_oarchive<Archive>{
+class basic_package_oarchive : public boost::archive::detail::common_oarchive<Archive> {
 	friend class boost::archive::detail::interface_oarchive<Archive>;
 	using detail_common_oarchive = boost::archive::detail::common_oarchive<Archive>;
 
@@ -132,9 +132,9 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
  public:
 	template<class T>
 	void load(T& t){basic_package_iprimitive::load(t);}
-// empty functions follow, so that metadata is communicated
+//  empty functions follow, so that metadata is communicated
 	void load(boost::archive::version_type& /*version*/) {}
-//	void save(const boost::serialization::item_version_type&){/*save(static_cast<const unsigned int>(t));*/}
+//  void save(const boost::serialization::item_version_type&){/*save(static_cast<const unsigned int>(t));*/}
 	void load(boost::archive::tracking_type& /*tracking*/) {/*save(static_cast<const unsigned int>(t));*/}
 	void load(boost::archive::object_id_type& /*object_id*/) {}
 	void load(boost::archive::object_reference_type& /*object_reference*/) {}
@@ -143,7 +143,7 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 	void load(boost::archive::class_id_reference_type& /*class_id_reference*/) {}
 	void load(boost::archive::class_name_type& /*class_name*/) {}
 
-	void load(boost::serialization::collection_size_type& t){
+	void load(boost::serialization::collection_size_type& t) {
 		unsigned int x = 0;
 		load(x);
 		t = serialization::collection_size_type(x);
@@ -166,17 +166,17 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 		std::size_t size; //  *this->This() >> size;
 		p_.unpack_n(&size, 1);
 		s.resize(size);
-		p_.unpack_n(&s.front(), size);  // TODO(correaa) use s.data() in C++17
+		p_.unpack_n(s.data(), size);
 	}
 	void load(std::wstring &ws) {  // cppcheck-suppression constParameter ; TODO(correaa) implement?
     	const std::size_t size = ws.size();
 		*this->This() << size;
-	//	++tokens_; //	this->This()->newtoken();
-	//	os_ += ws.size()*sizeof(wchar_t);//	os << s;
+	//  ++tokens_; //	this->This()->newtoken();
+	//  os_ += ws.size()*sizeof(wchar_t);//	os << s;
 		assert(0);
 	}
 
-	package_iarchive_impl(mpi3::detail::package& p, unsigned int flags) : // size_t& os, size_t& tokens, unsigned int flags) :
+	package_iarchive_impl(mpi3::detail::package& p, unsigned int flags) :  // size_t& os, size_t& tokens, unsigned int flags) :
 		basic_package_iprimitive(p),
 		basic_package_iarchive<Archive>(flags)
 	{}
