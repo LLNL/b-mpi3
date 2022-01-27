@@ -1,0 +1,218 @@
+// Copyright 2018-2021 Alfredo A. Correa
+#include "../../mpi3/main.hpp"
+#include "../../mpi3/communicator.hpp"
+
+#include <chrono>
+#include <stdexcept>  // std::runtime_error
+#include <thread>
+
+namespace mpi3 = boost::mpi3;
+
+// failures
+
+void uniform_fail(mpi3::communicator& comm) {
+    using namespace std::chrono_literals;
+	std::this_thread::sleep_for(comm.rank() * 1s);
+
+	std::cout<< "uniform_fail in n = "<< comm.rank() <<" is about to fail" <<std::endl;
+	throw std::logic_error{"global but unsynchronized error"};
+}
+
+void nonuniform_fail(mpi3::communicator& comm) {
+    using namespace std::chrono_literals;
+	std::this_thread::sleep_for(comm.rank() * 1s);
+
+	if(comm.rank() > 2){
+		std::cout<< "nonuniform_fail in n = "<< comm.rank() <<" is about to fail" <<std::endl;
+		throw std::logic_error{"nonglobal error"};
+	}
+}
+
+// handlers
+
+void unconditional_abort(mpi3::communicator& comm) {
+	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
+	comm.abort();
+}
+
+void barriered_abort(mpi3::communicator& comm) {
+	comm.barrier();
+	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
+	comm.abort();
+}
+
+template<class Duration>
+void abort_after(mpi3::communicator& comm, Duration d) {
+	auto const t0 = mpi3::wall_time();
+	while((mpi3::wall_time() - t0) < d) {}
+	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<" after others join"<<std::endl;
+	comm.abort();
+}
+
+template<class Duration>
+void timedout_abort(mpi3::communicator& comm, Duration d) {
+	auto rbarrier = comm.ibarrier();
+	auto const t0 = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+
+	if(not rbarrier.completed()) {
+		std::cout<< "non essential message: aborting from rank "<< comm.rank() <<" after timeout"<<std::endl;
+	} else {
+		std::cout<< "not essential message: aborting from rank "<< comm.rank() <<" after others join"<<std::endl;
+	}
+
+	comm.abort();
+}
+
+template<class Duration>
+void timedout_throw(mpi3::communicator& comm, Duration d) {
+	auto rbarrier = comm.ibarrier();
+	auto const t0 = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+
+	if(rbarrier.completed()) {
+		std::cout<< "non essential message: throwing from rank "<< comm.rank() <<" before timeout"<<std::endl;
+		throw;
+	}
+	std::terminate();
+}
+
+template<class Duration>
+[[noreturn]] void mpi3_timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
+	std::cout<< "terminate called" << std::endl;
+	auto rbarrier = comm.ibarrier();
+	auto const t0 = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+
+	if(rbarrier.completed()) {
+		if(comm.root()) {
+			std::cout<< "not essential message: terminate from rank "<< comm.rank() <<" after others joined before timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds"<<std::endl;
+			comm.abort(911);
+		}
+	} else {
+		std::cout<< "non essential message: terminate from rank "<< comm.rank() <<" after timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds, not all processes failed within that time."<<std::endl;
+	}
+
+	comm.abort(911);
+	// never call std::terminate from here
+	std::abort();  // necessary to avoid error for returning in a [[noreturn]] function
+}
+
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
+
+	std::set_terminate([]{
+	    using namespace std::chrono_literals;
+		mpi3_timed_terminate(20s);
+	});
+//	mpi3::set_timeout_terminate(5s);
+// unconditional abort
+#if 0
+	// (-) prints only one message, (+) program terminates immediately
+	try {
+		uniform_fail(world);
+	} catch(std::logic_error&) {
+		unconditional_abort(world);
+	}
+#endif
+
+#if 0
+	// (-) prints only one message, (+) program terminates immediately
+	try {
+		nonuniform_fail(world);  // non-uniform error
+	} catch(std::logic_error& e) {
+		unconditional_abort(world);
+	}
+#endif
+
+// barriered abort
+#if 0
+	// (-) prints all available messages, (+) program terminates immediately
+	try {
+		uniform_fail(world);
+	} catch(std::logic_error& e) {
+		barriered_abort(world);
+	}
+#endif
+
+#if 0
+	// (+) prints all available messages, (-) it DEADLOCKS (here or later)
+	try {
+		nonuniform_fail(world);
+	} catch(std::logic_error& e) {
+		barriered_abort(world);
+	}
+#endif
+
+// abort after hard sleep
+#if 0
+	// (+) prints all available messages, (~) program terminates after hard timeout
+	try {
+		uniform_fail(world);  // non-uniform error
+	} catch(std::logic_error&) {
+	    using namespace std::chrono_literals;
+		abort_after(world, 20s);
+	}
+#endif
+
+#if 0
+	// (+) prints all available messages, (~) program terminates after hard timeout
+	try {
+		nonuniform_fail(world);  // non-uniform error
+	} catch(std::logic_error&) {
+	    using namespace std::chrono_literals;
+		abort_after(world, 20s);
+	}
+#endif
+
+// timedout_abort
+#if 1
+	// (+) prints all available messages, (+) program terminates very quickly
+	try {
+		uniform_fail(world);
+	} catch(std::logic_error&) {
+	    using namespace std::chrono_literals;
+		timedout_abort(world, 20s);
+	}
+#endif
+
+#if 0
+	// (+) prints all available messages, (~) program terminates after timeout
+	try {
+		nonuniform_fail(world);
+	} catch(std::logic_error&) {
+	    using namespace std::chrono_literals;
+		timedout_abort(world, 20s);
+	}
+#endif
+
+// timedout_throw
+#if 0
+	// (+) prints all available messages, (+) program terminates very quickly
+	try {
+		uniform_fail(world);
+	} catch(std::logic_error&) {
+	    using namespace std::chrono_literals;
+		timedout_throw(world, 20s);
+	}
+#endif
+
+//#if 1
+//	// (+) prints all available messages, (~) program terminates after timeout
+//	try {
+//		nonuniform_fail(world);
+//	} catch(std::logic_error&) {
+//	    using namespace std::chrono_literals;
+//		timedout_throw(world, 20s);
+//	}
+//#endif
+
+	// I am putting a collective here to produce an deadlock if some abort strategy leaks processes
+	{
+		int n = 1;
+		int total = 0;
+		world.all_reduce_n(&n, 1, &total);
+		assert(total == world.size());
+	}
+
+	return 0;
+} catch(...) {return 1;}
