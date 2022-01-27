@@ -10,7 +10,7 @@ namespace mpi3 = boost::mpi3;
 
 // failures
 
-void uniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
+void uniform_fail(mpi3::communicator& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
     using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
@@ -82,7 +82,10 @@ template<class Duration>
 	std::cout<< "terminate called" << std::endl;
 	auto rbarrier = comm.ibarrier();
 	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {
+	    using namespace std::chrono_literals;
+		std::this_thread::sleep_for(1s);
+	}
 
 	if(rbarrier.completed()) {
 		if(comm.root()) {
@@ -182,7 +185,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int { 
 #endif
 
 // timedout_terminate
-#if 0
+#if 1
 	// (+) prints all available messages, (+) program terminates very quickly
 	std::set_terminate([]{
 	    using namespace std::chrono_literals;
@@ -196,7 +199,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int { 
 	}
 #endif
 
-#if 1
+#if 0
 	// (+) prints all available messages, (~) program terminates after timeout
 	std::set_terminate([]{
 	    using namespace std::chrono_literals;
