@@ -25,9 +25,11 @@ private:
 
  public:
 	explicit allocator(mpi3::shared_communicator* comm = std::addressof(static_cast<mpi3::shared_communicator&>(mpi3::environment::get_self_instance()))) : comm_{comm} {}  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast) TODO(correaa) check
+	// cppcheck-suppress noExplicitConstructor
 	template<class U> allocator(allocator<U> const& o) : comm_{o.comm_} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) common practice
-	allocator(allocator const&) = default;
-	allocator(allocator     &&) noexcept = default;
+
+	allocator(allocator const&) = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
+	allocator(allocator     &&) noexcept = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
 
 	~allocator() = default;
 	pointer allocate(size_type n, const void* /*hint*/ = nullptr) const{

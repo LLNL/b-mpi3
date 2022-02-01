@@ -1,4 +1,4 @@
-// © Alfredo A. Correa 2019-2020
+// Copyright 2019-2022 Alfredo A. Correa
 
 #ifndef MPI3_SHM_POINTER_HPP
 #define MPI3_SHM_POINTER_HPP
@@ -13,7 +13,7 @@ namespace mpi3 {
 namespace shm {
 
 template<class Ptr>
-struct pointer_traits : std::pointer_traits<Ptr>{
+struct pointer_traits : std::pointer_traits<Ptr> {
 	static auto to_address(Ptr const& p){
 		return std::addressof(*p);
 	}
@@ -25,7 +25,7 @@ template<class T, class RawPtr = T*>
 class ptr
 : boost::dereferenceable<ptr<T>, T&>
 , boost::random_access_iteratable<ptr<T>, T*, std::ptrdiff_t, T&> {
-public:
+ public:
 	using raw_pointer = RawPtr;
 	using pointer = ptr;
 	using element_type = typename std::pointer_traits<raw_pointer>::element_type;
@@ -34,20 +34,26 @@ public:
 	template<class U> using rebind = ptr<U>;
 	using value_type = typename std::iterator_traits<raw_pointer>::value_type;
 	using iterator_category = typename std::iterator_traits<raw_pointer>::iterator_category;
-private:
+
+ private:
 	using window_type = mpi3::shared_window<std::decay_t<element_type>>;
-	window_type* wP_;
-	difference_type offset_;
+	window_type* wP_{};
+	difference_type offset_{};
 	template<class, class> friend class ptr;
 	template<class> friend class allocator;
-public:
+
+ public:
 	ptr() = default;
-	ptr(std::nullptr_t) : offset_{0} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+
+	// cppcheck-suppress noExplicitConstructor
+	ptr(std::nullptr_t) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+
 	template<class TT>//, typename = decltype(mpi3::shared_window<typename pointer::element_type>*(std::declval<ptr<TT>>().wP_))> 
+	// cppcheck-suppress noExplicitConstructor
 	ptr(ptr<TT> const& o) : wP_{o.wP_}, offset_{o.offset_} {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) TODO(correaa) make it conditionally implicit
 
-	ptr(ptr const&) = default;
-	ptr(ptr     &&) noexcept = default;
+	ptr(ptr const&) = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
+	ptr(ptr     &&) noexcept = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
 
 	ptr& operator=(std::nullptr_t) {wP_ = nullptr; offset_ = 0; return *this;}
 //	ptr& operator=(ptr const&) = default;
@@ -71,24 +77,24 @@ public:
 
 	~ptr() = default;
 	auto raw_pointer_cast() const {return std::next(wP_->base(0), offset_);}
-	friend auto raw_pointer_cast(pointer const& self){return self.raw_pointer_cast();}
-	reference operator*() const{return *raw_pointer_cast();}
-	ptr& operator+=(difference_type d){offset_+=d; return *this;}
-	ptr& operator-=(difference_type d){offset_-=d; return *this;}
-	ptr& operator++(){++offset_; return *this;}
-	ptr& operator--(){--offset_; return *this;}
-	friend auto operator-(pointer const& self, pointer const& other){
+	friend auto raw_pointer_cast(pointer const& self) {return self.raw_pointer_cast();}
+	reference operator*() const {return *raw_pointer_cast();}
+	ptr& operator+=(difference_type d) {offset_+=d; return *this;}
+	ptr& operator-=(difference_type d) {offset_-=d; return *this;}
+	ptr& operator++() {++offset_; return *this;}
+	ptr& operator--() {--offset_; return *this;}
+	friend auto operator-(pointer const& self, pointer const& other) {
 		assert( self.wP_ == other.wP_ );
 		return self.offset_ - other.offset_;
 	}
-	raw_pointer operator->() const{return raw_pointer_cast();}
-	reference operator[](difference_type d) const{return raw_pointer_cast()[d];}
-	explicit operator raw_pointer() const{return raw_pointer_cast();}
-	explicit operator bool() const{return wP_;}
-	bool operator==(pointer const& o) const{assert(wP_==o.wP_); return offset_==o.offset_;}
-	bool operator< (pointer const& o) const{assert(wP_==o.wP_); return offset_< o.offset_;}
-	bool operator> (pointer const& o) const{assert(wP_==o.wP_); return offset_> o.offset_;}
-	auto to_address() const{return to_address(raw_pointer_cast());}
+	raw_pointer operator->() const {return raw_pointer_cast();}
+	reference operator[](difference_type d) const {return raw_pointer_cast()[d];}
+	explicit operator raw_pointer() const {return raw_pointer_cast();}
+	explicit operator bool() const {return wP_;}
+	bool operator==(pointer const& o) const {assert(wP_==o.wP_); return offset_==o.offset_;}
+	bool operator< (pointer const& o) const {assert(wP_==o.wP_); return offset_< o.offset_;}
+	bool operator> (pointer const& o) const {assert(wP_==o.wP_); return offset_> o.offset_;}
+	auto to_address() const {return to_address(raw_pointer_cast());}
 /*	template<class Size, class ForwardIt>
 	auto copy_n(Size n, ForwardIt d_first) const{
 		w_->fence(); 

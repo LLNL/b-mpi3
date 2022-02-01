@@ -28,9 +28,9 @@ struct port {
 	~port() noexcept{ try{if(is_open()) {close();}}catch(...){} }
 
 	void open() {
-		std::array<char, MPI_MAX_PORT_NAME> name{};
-		int status = MPI_Open_port(MPI_INFO_NULL, name.data());
-		name_ = std::string{name.data()};
+		std::array<char, MPI_MAX_PORT_NAME> name_buffer{};
+		int status = MPI_Open_port(MPI_INFO_NULL, name_buffer.data());
+		name_ = std::string{name_buffer.data()};
 		if(status != 0) {throw std::runtime_error("can't open port " + name_);}
 	}
 	void open(std::string const& name) {name_ = name;}

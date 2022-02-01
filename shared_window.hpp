@@ -30,8 +30,8 @@ struct shared_window : window<T> {
 	{}
 
 
-	shared_window(shared_window const&) = default;
-	shared_window(shared_window&& other) noexcept = default;
+	shared_window(shared_window const&) = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
+	shared_window(shared_window &&) noexcept = default;  // cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3
 
 	shared_window& operator=(shared_window const&) = delete;
 	shared_window& operator=(shared_window     &&) = delete;

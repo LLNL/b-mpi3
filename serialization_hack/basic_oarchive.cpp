@@ -108,6 +108,7 @@ class basic_oarchive_impl {
             m_class_id(class_id),
             m_initialized(false)
         {}
+		// cppcheck-suppress uninitMemberVar
         explicit cobject_type(const basic_oserializer & bos)  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
             : m_bos_ptr(& bos)
         {}

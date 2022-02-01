@@ -6,17 +6,17 @@
 #define BOOST_JUST_HPP
 
 #include<array>
-#include<utility> // std::forward
+#include<utility>  // std::forward
 
-namespace boost{
+namespace boost {
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) : 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage) :
 #define BOOST_JUST_REPRODUCE_OPERATOR(OperatoR) \
 	template<class T...> \
 	auto OperatorR(T&&... t)
 
 template<class T>
-struct wrapper /*: T*/{
+struct wrapper /*: T*/ {
 	using type = T;
 	T value;  // NOLINT(misc-non-private-member-variables-in-classes) : wrapper
 
@@ -34,26 +34,25 @@ struct wrapper /*: T*/{
 
 	template<class Arg>
 	auto operator[](Arg&& arg) const
-	->decltype(value[std::forward<Arg>(arg)]){
-		return value[std::forward<Arg>(arg)];
-	}
+	->decltype(value[std::forward<Arg>(arg)]) {
+		return value[std::forward<Arg>(arg)]; }
 
-	auto operator*()->decltype(*std::declval<T>()){return *value;} 
+	auto operator*()->decltype(*std::declval<T>()) {return *value;} 
 };
 
 template<class T>
 using reference = wrapper<T&>;
 
 template<class T>
-struct just : 
+struct just :
 	std::conditional<
-		std::is_class<T>::value, 
-			T, 
+		std::is_class<T>::value,
+			T,
 			typename std::conditional<std::is_array<T>::value,
 				std::array<typename std::remove_extent<T>::type, std::extent<T>::value>,
 				wrapper<T>
 			>::type
-	> /*no ::type here*/{
+	> /*no ::type here*/ {
 };
 
 
@@ -115,7 +114,7 @@ struct just<bool>{
 #ifdef _TEST_BOOST_JUST
 
 //struct number : boost::just<double&>::type{
-//	BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
+//  BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
 //};
 
 #include<iostream>
@@ -123,9 +122,9 @@ struct just<bool>{
 #include<cassert>
 
 template<class T>
-class A : boost::just<T>::type{};
+class A : boost::just<T>::type {};
 
-int main(){
+int main() {
 	A<int> a;
 
 	A<int[8]> b;
@@ -133,43 +132,32 @@ int main(){
 	assert( std::is_array<int[8]>::value == true );
 
 	{
-	
 		double d=5;
 		boost::wrapper<double> n(d);
 		n+=4;
-		std::cout << n << std::endl;
-		std::cout << d << std::endl;
+		std::cout<< n <<std::endl;
+		std::cout<< d <<std::endl;
 	}
 	{
 		double d = 5.;
 		boost::wrapper<double&> n(d);
-		double a = 6.;
-		std::cout << n << std::endl;
-		n = a;
+		double aa = 6.;
+		std::cout<< n <<std::endl;
+		n = aa;
 		n+= 5.;
 		assert(&n == &d);
-		std::cout << n << std::endl;
-		std::cout << d << std::endl;
+		std::cout<< n <<std::endl;
+		std::cout<< d <<std::endl;
 	}
 
 	{
 		double d = 5.;
-		std::vector<double> v(10);
 		std::vector<boost::reference<double>> v3;
 		v3.push_back(d);
 		v3.push_back(d);
 		v3[0] = 4.;
 		std::cout << v3[0] << " " << v3[1] << std::endl;
 	}
-
-	{
-		double a = 5.;
-		double& b = a;
-		assert( &b == &a );
-	//	boost::just<double&> c = a;
-	//	c = 6.;		
-	}
-
 }
 #endif
 

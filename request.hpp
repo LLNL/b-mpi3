@@ -20,9 +20,14 @@ struct [[nodiscard]] request {
 	// in mpich MPI_Request is same as int
 	MPI_Request impl_ = MPI_REQUEST_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
+	auto handle() {return impl_;}  // NOLINT(readability-make-member-function-const) MPI_Request is a handle (pointer-like semantics)
+
 	request() = default;
-	request(request const& other) = delete;
-	request(request&& other) noexcept : impl_{std::exchange(other.impl_, MPI_REQUEST_NULL)}{}
+	[[nodiscard]] auto valid() const noexcept -> bool {return impl_ != MPI_REQUEST_NULL;}
+
+	request(request const&) = delete;
+
+	request(request&& other) noexcept : impl_{std::exchange(other.impl_, MPI_REQUEST_NULL)} {}
 
 	request& operator=(request const&) = delete;
 	request& operator=(request&& other) noexcept {
@@ -34,13 +39,13 @@ struct [[nodiscard]] request {
 		MPI_(Request_get_status)(impl_, &ret, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 		return ret != 0;
 	}
-	status get_status() const{
+	status get_status() const {
 		int ignore = -1;
 		return MPI_(Request_get_status)(impl_, &ignore);
 	}
-	void swap(request& other){std::swap(impl_, other.impl_);}
-	void cancel(){MPI_Cancel(&impl_);}
-	bool valid() const{return impl_ != MPI_REQUEST_NULL;}
+	void swap(request& other) {std::swap(impl_, other.impl_);}
+	void cancel() {MPI_Cancel(&impl_);}
+
 	~request() noexcept {  // TODO(correaa) check it can be no noexcept and cancellable
 		try {
 			wait();
@@ -49,8 +54,13 @@ struct [[nodiscard]] request {
 			std::terminate();
 		}
 	}
-	void wait() {
-		if(impl_ != MPI_REQUEST_NULL) {MPI_(Wait)(&impl_, MPI_STATUS_IGNORE);}  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+	void wait() {  // TODO(correaa) make wait const
+	//  assert(valid());  // TODO(correaa) investigate why this is failing
+		if(impl_ != MPI_REQUEST_NULL) {
+			status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
+			int s = MPI_Wait(&impl_, &ret.impl_);  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) non-blocking call was used to create the object
+			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
+		}
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization

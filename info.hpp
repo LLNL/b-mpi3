@@ -28,6 +28,7 @@ struct info :
 
 	~info() = default;
 
+	// cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3, initialize_list ctor must be implicit
 	info(std::initializer_list<std::pair<std::string, std::string>> il) {
 		for(auto const& e : il) {set(e.first, e.second);}
 	}
