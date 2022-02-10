@@ -1686,7 +1686,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class T, class Op = std::plus<> >
 	auto reduce_value(T const& t, Op op = {}, int root = 0){
-		T ret = T(0);
+		auto ret = static_cast<T>(0);
 		reduce_value(t, ret, op, root); // if(rank() == root) return optional<T>(ret);
 		return ret;
 	}
