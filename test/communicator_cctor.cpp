@@ -1,6 +1,5 @@
-// © Alfredo A. Correa 2018-2020
+// Copyright 2018-2022 Alfredo A. Correa
 
-#if 1
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/main.hpp"
 
@@ -75,5 +74,3 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 }
 	return 0;
 } catch(...) {return 1;}
-#endif
-
