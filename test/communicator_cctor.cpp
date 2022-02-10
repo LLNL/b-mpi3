@@ -9,7 +9,6 @@
 #include<string>
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
