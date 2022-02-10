@@ -1,11 +1,12 @@
+// Copyright 2018-2022 Alfredo A. Correa
+
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/ostream.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try{
+auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 
 	mpi3::ostream wout(world);
 	
