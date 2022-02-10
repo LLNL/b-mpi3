@@ -34,4 +34,4 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-}catch(...) {return 1;}
+} catch(...) {return 1;}
