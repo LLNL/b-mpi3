@@ -56,7 +56,7 @@ struct error_category : std::error_category {
 };
 
 inline auto make_error_code(error err) noexcept{
-	return std::error_code{int(err), error_category::instance()};
+	return std::error_code{static_cast<int>(err), error_category::instance()};
 }
 
 }  // end namespace mpi3
