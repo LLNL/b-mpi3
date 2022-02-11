@@ -129,7 +129,7 @@ class basic_oarchive_impl {
         }
     };
     // keyed on type_info
-    typedef std::set<cobject_type> cobject_info_set_type;  // NOLINT(modernize-use-using) external code
+    typedef std::set<cobject_type> cobject_info_set_type;  // NOLINT(modernize-use-using) third-party code
     cobject_info_set_type cobject_info_set;
 
     // list of objects initially stored as pointers - used to detect errors
@@ -138,8 +138,8 @@ class basic_oarchive_impl {
 
     // address of the most recent object serialized as a poiner
     // whose data itself is now pending serialization
-    const void * pending_object;
-    const basic_oserializer * pending_bos;
+    const void * pending_object;            // NOLINT(modernize-use-default-member-init) third-party code
+    const basic_oserializer * pending_bos;  // NOLINT(modernize-use-default-member-init) third-party code
 
     explicit basic_oarchive_impl(unsigned int flags) :
         m_flags(flags),
@@ -265,8 +265,8 @@ basic_oarchive_impl::save_object(
         if( ! co.m_initialized){
             ar.vsave(class_id_optional_type(co.m_class_id));
             ar.vsave(tracking_type(bos.tracking(m_flags)));
-            ar.vsave(version_type(bos.version()));
-            (const_cast<cobject_type &>(co)).m_initialized = true;  // NOLINT(cppcoreguidelines-pro-type-const-cast) external code
+            ar.vsave(version_type(bos.version()));  // NOLINT(google-readability-casting) third-party code
+            (const_cast<cobject_type &>(co)).m_initialized = true;  // NOLINT(cppcoreguidelines-pro-type-const-cast) third-party code
         }
     }
 
@@ -354,7 +354,7 @@ basic_oarchive_impl::save_pointer(
         }
         if(bos.class_info()){
             ar.vsave(tracking_type(bos.tracking(m_flags)));
-            ar.vsave(version_type(bos.version()));
+            ar.vsave(version_type(bos.version()));  // NOLINT(google-readability-casting) third-party code
         }
         (const_cast<cobject_type &>(co)).m_initialized = true;  // NOLINT(cppcoreguidelines-pro-type-const-cast) external code
     }

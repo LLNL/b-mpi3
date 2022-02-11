@@ -17,7 +17,7 @@
 #include <set>
 #include <vector>
 
-#include <boost/config.hpp>
+#include <boost/config.hpp>  // NOLINT(readability-duplicate-include) third party code
 #if defined(BOOST_NO_STDC_NAMESPACE)
 namespace std{ 
     using ::size_t; 
@@ -143,11 +143,11 @@ class basic_iarchive_impl {
             initialized = rhs.initialized;
             return *this;
         }
-        const basic_iserializer * bis_ptr;  // NOLINT(misc-non-private-member-variables-in-classes) external code
-        const basic_pointer_iserializer * bpis_ptr;  // NOLINT(misc-non-private-member-variables-in-classes) external code
-        version_type file_version;  // NOLINT(misc-non-private-member-variables-in-classes) external code
-        tracking_type tracking_level;  // NOLINT(misc-non-private-member-variables-in-classes) external code
-        bool initialized;  // NOLINT(misc-non-private-member-variables-in-classes) external code
+        const basic_iserializer * bis_ptr;           // NOLINT(misc-non-private-member-variables-in-classes) third party code
+        const basic_pointer_iserializer * bpis_ptr;  // NOLINT(misc-non-private-member-variables-in-classes,modernize-use-default-member-init) third party code
+        version_type file_version;                   // NOLINT(misc-non-private-member-variables-in-classes) third party code
+        tracking_type tracking_level;                // NOLINT(misc-non-private-member-variables-in-classes) third party code
+        bool initialized;                            // NOLINT(misc-non-private-member-variables-in-classes,modernize-use-default-member-init) third party code
 
         explicit cobject_id(const basic_iserializer & bis_) :
             bis_ptr(& bis_),
@@ -338,7 +338,7 @@ basic_iarchive_impl::load_preamble(
         else{
             // override tracking with indicator from class information
             co.tracking_level = co.bis_ptr->tracking(m_flags);
-            co.file_version = version_type(
+            co.file_version = version_type(  // NOLINT(google-readability-casting) third pary code
                 co.bis_ptr->version()
             );
         }
