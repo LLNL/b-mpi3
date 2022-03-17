@@ -579,10 +579,11 @@ Such class could have operations that modify its state and others that do not.
 The correct design is to mark the function in the latter category as `const`.
 
 ```cpp
-class distributed_data {
+struct distributed_data {
     void set() { ... }
     void print() const { ... }
-private:
+
+ private:
     mpi3::communicator comm_;
 };
 ```
@@ -603,10 +604,11 @@ Note that making the communicator member a pointer `mpi3::communicator* comm_;` 
 This leads to a more modern design which would use the keyword `mutable`.
 
 ```cpp
-class distributed_data {
+struct distributed_data {
     void set() { ... }
     void print() const { ... }
-private:
+
+ public:
     mutable mpi3::communicator comm_;
 };
 ```
@@ -624,10 +626,11 @@ For that you need to implement your own synchronization or locking mechanism.
 There is no single recipe for that, you can use a single mutex to lock access for the communicator alone or both the communicator and data.
 
 ```cpp
-class distributed_data {
+struct distributed_data {
     void set() { ... }
     void print() const { std::lock_guard<std::mutex> guard{mtx_}; ... use comm_ ... }
-private:
+
+ private:
 	mutable std::mutex mtx_;
     mutable mpi3::communicator comm_;
 };
@@ -648,9 +651,10 @@ So far we have shown the `duplicate` interface function as a mechanism for dupli
 A reasonable copy constructor of the class containing a communicator would be:
 
 ```cpp
-class distributed_data {
+struct distributed_data {
     distributed_data(distributed_data const& other) : comm_{other.comm_.duplicate()} {}
-private:
+
+ private:
     ...
     mutable mpi3::communicator comm_;
 };
@@ -675,9 +679,10 @@ This function does internally call `MPI_Comm_dup`, and like `duplicate()` it can
 This makes the copy constructor of the containing class more standard, or even can be  implemented as `= default;`.
 
 ```cpp
-class distributed_data {
+struct distributed_data {
     distributed_data(distributed_data const& other) : comm_{other.comm_} {}  // or = default;
     ...
+ private:
     mutable mpi3::communicator comm_;
 };
 ```
