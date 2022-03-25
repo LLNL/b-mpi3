@@ -5,7 +5,7 @@
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
+auto mpi3::main(int/*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 	cout <<"Before barrier, I am "<< world.rank() <<" of "<< world.size() << std::endl;
 	world.barrier();
 	cout <<"After barrier, I am "<< world.rank() <<" of "<< world.size() << std::endl;
