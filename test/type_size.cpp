@@ -1,7 +1,4 @@
-#if COMPILATION_INSTRUCTIONS
-mpic++ -O3 -std=c++14 -Wall -Wfatal-errors $0 -o $0x.x && time mpirun -np 4 $0x.x $@ && rm -f $0x.x; exit
-#endif
-//  (C) Copyright Alfredo A. Correa 2018.
+//  (C) Copyright Alfredo A. Correa 2018-2022
 
 #define BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
 
