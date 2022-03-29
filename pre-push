@@ -9,5 +9,5 @@
 (mkdir -p .build.g++mpich && cd .build.g++mpich && CXX=g++      cmake ..  -DMPI_EXECUTABLE_SUFFIX=.mpich                                                                                                                                && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
 (mkdir -p .build.g++mpichvalgrind && cd .build.g++mpichvalgrind && CXX=g++ VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"  cmake ..  -DMPI_EXECUTABLE_SUFFIX=.mpich                                                                                                                                && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
 
-. /opt/intel/oneapi/setvars.sh
-(mkdir -p .build.oneapi      && cd .build.oneapi      && CXX=icpc  MPICXX=mpiicpc    cmake ..                                 && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
+#. /opt/intel/oneapi/setvars.sh
+#(mkdir -p .build.oneapi      && cd .build.oneapi      && CXX=/opt/intel/oneapi/compiler/latest/linux/bin/intel64/icpc  MPICXX=mpiicpc    cmake ..                                 && make -j $(($(nproc) - 2)) VERBOSE=1 && ctest -j 12 --output-on-failure) || exit 666
