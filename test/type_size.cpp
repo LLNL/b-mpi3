@@ -2,8 +2,8 @@
 
 #define BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
 
-#include "../../../boost/mpi3/main.hpp"
-#include "../../../boost/mpi3/communicator.hpp"
+#include "../main.hpp"
+#include "../communicator.hpp"
 
 namespace mpi3 = boost::mpi3;
 
