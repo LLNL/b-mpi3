@@ -6,10 +6,8 @@
 #include "../../../boost/mpi3/communicator.hpp"
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
-
+int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	{
 		mpi3::type t = mpi3::int_;
 		assert( t.size() == sizeof(int) );
@@ -44,10 +42,10 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 	{
 		mpi3::type t = mpi3::float_int;
 		assert( t.size() == sizeof(std::pair<float, int>) );
-		struct{
+		struct {
 			float a;
 			int b;
-		} foo;
+		} foo{};
 
 		foo.a = 1.2;
 		foo.b = 5;
@@ -60,7 +58,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 
 	{
 		using T = std::complex<double>;
-		T buffer[100];
+		T buffer[100];  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) test legacy type
 
 		switch(world.rank()) {
 			break; case 0: {
@@ -76,5 +74,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 	}
 
 	return 0;
+} catch(...) {
+	return 1;
 }
 

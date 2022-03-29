@@ -13,8 +13,8 @@
 #include <thrust/complex.h>
 #endif
 
-#include <map>
 #include <complex>
+#include <map>
 #include <typeindex>
 
 namespace boost {
@@ -122,12 +122,12 @@ struct type {
 		return impl_;
 	}
 
-	auto operator&() const& -> type const*  {return this;}
-	auto operator&()     && -> MPI_Datatype {
+	auto operator&() const& -> type const*  {return this;}   // NOLINT(google-runtime-operator)
+	auto operator&()     && -> MPI_Datatype {                // NOLINT(google-runtime-operator)
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
 	}
-	auto operator&()      & -> MPI_Datatype {
+	auto operator&()      & -> MPI_Datatype {                // NOLINT(google-runtime-operator)
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
 	}
