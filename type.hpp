@@ -1,8 +1,5 @@
-//  -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4;-*-
-//#if COMPILATION 
-//mpicxx -x c++ $0 -o $0x -lboost_serialization&&mpirun -n 2 $0x&&rm $0x;exit
-//#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -12,7 +9,12 @@
 #include "./core.hpp"
 #include "detail/datatype.hpp"
 
+#if defined(__NVCC__)
+#include <thrust/complex.h>
+#endif
+
 #include <map>
+#include <complex>
 #include <typeindex>
 
 namespace boost {
@@ -114,11 +116,22 @@ struct type {
 		return *this;
 	}
 
-	void swap(type& other){std::swap(impl_, other.impl_);}
+	void swap(type& other) {std::swap(impl_, other.impl_);}
 	explicit operator MPI_Datatype() const& {
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
 	}
+
+	auto operator&() const& -> type const*  {return this;}
+	auto operator&()     && -> MPI_Datatype {
+		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		return impl_;
+	}
+	auto operator&()      & -> MPI_Datatype {
+		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		return impl_;
+	}
+
 	committed_type commit()&& {
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return committed_type{std::exchange(impl_, MPI_DATATYPE_NULL)};
@@ -256,8 +269,18 @@ static type const int_int        {MPI_2INT           }; static type const& _2int
 static type const long_double_int{MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-statically-constructed-objects)
 // NOLINTEND(fuchsia-statically-constructed-objects)
 
-template<class T>
-type make_type();
+template<class T> auto make_type() -> type;
+
+template<> inline auto make_type<         char>() -> type {return type{MPI_CHAR         };}
+template<> inline auto make_type<unsigned char>() -> type {return type{MPI_UNSIGNED_CHAR};}
+
+template<> inline auto make_type<std::complex<float >>() -> type {return type{MPI_CXX_FLOAT_COMPLEX };}
+template<> inline auto make_type<std::complex<double>>() -> type {return type{MPI_CXX_DOUBLE_COMPLEX};}
+
+#if defined(__NVCC__)
+template<> inline auto make_type<thrust::complex<float >>() -> type {return type{MPI_CXX_FLOAT_COMPLEX };}
+template<> inline auto make_type<thrust::complex<double>>() -> type {return type{MPI_CXX_DOUBLE_COMPLEX};}
+#endif
 
 template<> inline type make_type<double>() {return mpi3::double_;}
 template<> inline type make_type<int   >() {return mpi3::int_   ;}
