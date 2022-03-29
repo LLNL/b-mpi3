@@ -48,9 +48,15 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 		mpi3::type t = mpi3::float_int;
 		assert( t.size() == sizeof(std::pair<float, int>) );
 		struct{
-			float a; 
+			float a;
 			int b;
 		} foo;
+
+		foo.a = 1.2;
+		foo.b = 5;
+		assert( foo.a == 1.2 );
+		assert( foo.b == 5   );
+
 		assert( t.size() == sizeof(float) + sizeof(int) );
 		assert( t.extent() == sizeof(foo) );
 		assert( t.lower_bound() == 0 );
