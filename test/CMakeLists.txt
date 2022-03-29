@@ -85,6 +85,7 @@ set(TEST_SRCS
 	simple_send_receive.cpp
 	simple_broadcast.cpp
 	type_commit.cpp
+	type_size.cpp
 	uniform_abort.cpp
 )
 
