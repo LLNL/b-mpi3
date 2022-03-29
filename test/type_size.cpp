@@ -51,8 +51,6 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 
 		foo.a = 1.2;
 		foo.b = 5;
-		assert( foo.a == 1.2 );
-		assert( foo.b == 5   );
 
 		assert( t.size() == sizeof(float) + sizeof(int) );
 		assert( t.extent() == sizeof(foo) );
