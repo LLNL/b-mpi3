@@ -1,13 +1,9 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-//#if COMPILATION
-//mpicxx -x c++ -O3 -std=c++11 -Wfatal-errors -lboost_serialization $0 -o $0x&&mpirun -n 4 $0x&&rm $0x;exit
-//#endif
-// Copyright 2017-2021 Alfredo A. Correa
+// Copyright 2017-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
 
-// #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
 #ifdef __CUDACC__
@@ -33,7 +29,7 @@ struct vlp {  // value location pair
 namespace detail {
 
 using float_int       = std::pair<float      , int>;
-using long_int        = std::pair<long       , int>;  // NOLINT(google-runtime-int) : long <-> int64
+using long_int        = std::pair<long       , int>;  // NOLINT(google-runtime-int) : long  <-> int64
 using double_int      = std::pair<double     , int>;
 using short_int       = std::pair<short      , int>;  // NOLINT(google-runtime-int) : short <-> int16
 using int_int         = std::pair<int        , int>;
@@ -160,29 +156,4 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
 }  // end namespace detail
 }  // end namespace mpi3
 }  // end namespace boost
-
-#if not __INCLUDE_LEVEL__ //_TEST_BOOST_MPI3_DETAIL_DATATYPE
-
-#include<cassert>
-#include<iostream>
-#include<string>
-
-#include<boost/type_index.hpp>
-
-namespace mpi3 = boost::mpi3;
-using std::cout;
-
-int main() {
-	using mpi3::detail::is_basic;
-
-	static_assert(     is_basic<int>{}, "");
-	static_assert(     is_basic<double>{}, "");
-	static_assert(     is_basic<mpi3::detail::float_int>{}, "");
-
-	static_assert( not is_basic<std::string>{}, "");
-
-	assert( mpi3::detail::basic_datatype<double>{} == MPI_DOUBLE );
-}
-
-#endif
 #endif
