@@ -7,7 +7,7 @@
 
 namespace mpi3 = boost::mpi3;
 
-int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
+int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {  // NOLINT(readability-function-cognitive-complexity)
 	{
 		using mpi3::detail::is_basic;
 
