@@ -30,7 +30,7 @@ namespace boost {
 namespace serialization { 
 namespace typeid_system {
 
-#define EXTENDED_TYPE_INFO_TYPE_KEY 1  // NOLINT(cppcoreguidelines-macro-usage) external code
+#define EXTENDED_TYPE_INFO_TYPE_KEY 1  // NOLINT(cppcoreguidelines-macro-usage,modernize-macro-to-enum) external code
 
 struct type_compare
 {
