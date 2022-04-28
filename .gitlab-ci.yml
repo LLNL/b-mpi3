@@ -90,6 +90,30 @@ ompi-clang-tidy-dev:
         - make VERBOSE=1
         - ctest --output-on-failure
 
+#        - export CC=mpicc
+#        - export CXX=mpic++
+#        - export CCFLAGS="`mpic++ --showme:incdirs`"
+#        - export CXXFLAGS="`mpic++ --showme:incdirs`"
+#        - echo $CXXFLAGS
+
+#openmpi-valgrind:
+#    stage: build
+#    script:
+#        - apt update  -qq
+#        - apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make g++ libboost-serialization-dev valgrind
+#        - cd ..
+#        - ln -s boost-mpi3 mpi3
+#        - cd mpi3/test
+#        - mkdir build
+#        - cd build
+#        - export MPI_OVERSUBSCRIBE=--oversubscribe
+#        - export VALGRIND_EXE="valgrind --suppressions=communicator_main.cpp.openmpi.supp"
+#        - cmake ..
+#        - pwd
+#        - mpirun --version
+#        - make -j 4
+#        - ctest -VV --output-on-failure
+
 mpich:
     stage: build
     script:
@@ -205,6 +229,7 @@ openmpi-icpc-runner:
 
 cuda-11.4-std17:
     image: nvidia/cuda:11.4.0-devel
+    allow_failure: true
     stage: test
     script:
       - export DEBIAN_FRONTEND=noninteractive
@@ -223,47 +248,49 @@ cuda-11.4-std17:
       - cmake --build . --verbose
       - ctest --output-on-failure
 
-#inq-cuda-11.2-compileonly:
-#    image: nvidia/cuda:11.2.0-devel
-#    stage: test
-#    script:
-#      - export DEBIAN_FRONTEND=noninteractive
-#      - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
-#      - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
-#      - mkdir /opt/cmake
-#      - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-#      - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-#      - cmake --version
-#      - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
-#      - cd inq
-#      - cd external_libs/mpi3
-#      - git checkout $CI_COMMIT_BRANCH
-#      - cd ../..
-#      - mkdir build && cd build
-#      - /usr/local/cuda/bin/nvcc -V
-#      - CUDACXX=/usr/local/cuda/bin/nvcc CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_ARCHITECTURES=70
-#      - make silicon
+inq-cuda-11.2-compileonly:
+    image: nvidia/cuda:11.2.0-devel
+    allow_failure: true
+    stage: test
+    script:
+      - export DEBIAN_FRONTEND=noninteractive
+      - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
+      - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
+      - mkdir /opt/cmake
+      - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+      - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+      - cmake --version
+      - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
+      - cd inq
+      - cd external_libs/mpi3
+      - git checkout $CI_COMMIT_BRANCH
+      - cd ../..
+      - mkdir build && cd build
+      - /usr/local/cuda/bin/nvcc -V
+      - CUDACXX=/usr/local/cuda/bin/nvcc CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_ARCHITECTURES=70
+      - make silicon
 
-#inq-cuda-11.4-compileonly:
-#    image: nvidia/cuda:11.4.0-devel
-#    stage: test
-#    script:
-#      - export DEBIAN_FRONTEND=noninteractive
-#      - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
-#      - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
-#      - mkdir /opt/cmake
-#      - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-#      - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
-#      - cmake --version
-#      - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
-#      - cd inq
-#      - cd external_libs/mpi3
-#      - git checkout $CI_COMMIT_BRANCH
-#      - cd ../..
-#      - mkdir build && cd build
-#      - /usr/local/cuda/bin/nvcc -V
-#      - CUDACXX=/usr/local/cuda/bin/nvcc CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_ARCHITECTURES=70
-#      - make silicon
+inq-cuda-11.4-compileonly:
+    image: nvidia/cuda:11.4.0-devel
+    allow_failure: true
+    stage: test
+    script:
+      - export DEBIAN_FRONTEND=noninteractive
+      - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
+      - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
+      - mkdir /opt/cmake
+      - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+      - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+      - cmake --version
+      - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
+      - cd inq
+      - cd external_libs/mpi3
+      - git checkout $CI_COMMIT_BRANCH
+      - cd ../..
+      - mkdir build && cd build
+      - /usr/local/cuda/bin/nvcc -V
+      - CUDACXX=/usr/local/cuda/bin/nvcc CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_ARCHITECTURES=70
+      - make silicon
 
 #qmcpack-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel
