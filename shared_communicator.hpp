@@ -35,7 +35,7 @@ struct shared_communicator : communicator {
 	explicit shared_communicator(communicator&& c) : communicator(std::move(c)) {}
 	explicit shared_communicator(communicator& comm, int key = 0) {
 		MPI_(Comm_split_type)(&comm, MPI_COMM_TYPE_SHARED, key, MPI_INFO_NULL, &impl_);
-		name(comm.name()+":"+mpi3::processor_name());
+		set_name(comm.name() +":"+ mpi3::processor_name());
 	}
 	shared_communicator(communicator& comm, mpi3::communicator_type t, int key = 0) {
 		MPI_(Comm_split_type)(&comm, static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
