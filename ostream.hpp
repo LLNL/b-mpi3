@@ -55,6 +55,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 						output<<"\e[0m\n";
 						doing_table = true;
 					}
+					headed_row(messages);
 				} else {
 					doing_formatting = false;
 					if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
