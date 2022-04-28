@@ -131,7 +131,7 @@ cuda-11.4-std17:
     stage: build
     script:
       - export DEBIAN_FRONTEND=noninteractive
-      - curl -s https://packages.gitlab.com/gpg.key | sudo apt-key add -
+      - curl -s https://packages.gitlab.com/gpg.key | apt-key add -
       - apt-get update && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make libboost-serialization-dev wget
       - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
       - mkdir /opt/cmake
