@@ -14,14 +14,14 @@ auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int 
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.0, +1.0);
+    std::uniform_real_distribution<> dis{-1.0, +1.0};
 
 	world.set_name("world");
 
 	mpi3::ostream wout{world};
 
-//  wout << mpi3::communicator_logging; // TODO
-//  wout << mpi3::smart_formatting('\n', '\t');     // TODO
+//  wout << mpi3::communicator_logging;  // TODO
+//  wout << mpi3::smart_formatting('\n', '\t');  // TODO
 
 	wout << "Program starts" << std::endl;
 	wout << "Hello! for world using "<< world.size() <<" processes" << std::endl;
