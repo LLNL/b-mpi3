@@ -28,6 +28,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 	 public:
 		explicit streambuf(communicator& comm, std::ostream& strm = std::cout)
 		: comm_{comm}, output{strm} {}
+
 		int sync() override {
 			// following code can be improved by a custom reduce operation
 			if(comm_.at_root()) {
@@ -45,16 +46,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 				) {
 					if(not doing_formatting) {doing_formatting = true; output << '\n';}
 					if(doing_table) {doing_table = false; output << '\n';}
-					for(auto const& m : messages) {
-						std::string range = comm_.name();
-						if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
-							if(size(m.first) == 1) {range = range + "[" + std::to_string(lower(m.first))  + "]";}
-							else                   {range = range + "[" + std::to_string(m.first.lower()) + "-" + std::to_string(m.first.upper()) + "]";}
-						}
-						output<<"\e[1;32m"<< std::setw(16) << std::left << range;
-						output<<"→ \e[0m"<< m.second;
-					}
-					if(messages.iterative_size() > 1) {output << '\n';}
+					collapse_lines(messages);
 				} else if(std::all_of(messages.begin(), messages.end(), [](auto const& e) {return e.second.empty() or e.second.back() == '\t';})) {
 					if(not doing_formatting) {doing_formatting = true; output << '\n';}
 					if(not doing_table) {
@@ -102,6 +94,20 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 			output.flush();
 			comm_.barrier();
 			return 0;
+		}
+
+	 private:
+		void collapse_lines(boost::icl::interval_map<int, std::string> const& messages) {
+			for(auto const& m : messages) {
+				std::string range = comm_.name();
+				if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
+					if(size(m.first) == 1) {range = range + "[" + std::to_string(lower(m.first))  + "]";}
+					else                   {range = range + "[" + std::to_string(m.first.lower()) + "-" + std::to_string(m.first.upper()) + "]";}
+				}
+				output<<"\e[1;32m"<< std::setw(16) << std::left << range;
+				output<<"→ \e[0m"<< m.second;
+			}
+			if(messages.iterative_size() > 1) {output << '\n';}
 		}
 	};
 
