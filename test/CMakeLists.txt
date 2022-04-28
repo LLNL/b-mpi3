@@ -65,6 +65,7 @@ set(TEST_SRCS
 	communicator_cctor.cpp
 	communicator_ibroadcast.cpp
 	communicator_igather.cpp
+	communicator_grip_handle.cpp
 	communicator_list.cpp
 	communicator_main.cpp
 	communicator_mutable.cpp
