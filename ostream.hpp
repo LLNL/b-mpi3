@@ -58,16 +58,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 					headed_row(messages);
 				} else {
 					doing_formatting = false;
-					if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
-					else {
-						for(auto const& m : messages) {
-							for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
-								output<< m.second
-								;
-							}
-						}
-					}
-					output<<std::flush;
+					unformatted_one_or_all(messages);
 				}
 			} else {
 				comm_.send_n(str().begin(), str().size(), 0);
@@ -83,8 +74,8 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 			for(auto const& m : messages) {
 				std::string range = comm_.name();
 				if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
-					if(size(m.first) == 1) {range = range + "[" + std::to_string(lower(m.first))  + "]";}
-					else                   {range = range + "[" + std::to_string(m.first.lower()) + "-" + std::to_string(m.first.upper()) + "]";}
+					if(size(m.first) == 1) {range += ("["+ std::to_string(lower(m.first))                                      +"]");}
+					else                   {range += ("["+ std::to_string(lower(m.first)) +"-"+ std::to_string(upper(m.first)) +"]");}
 				}
 				output<<"\e[1;32m"<< std::setw(16) << std::left << range;
 				output<<"→ \e[0m"<< m.second;
@@ -110,6 +101,18 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 				}
 			}
 			output<<'\n'<< std::flush;
+		}
+		void unformatted_one_or_all(boost::icl::interval_map<int, std::string> const& messages) const {
+			if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
+			else {
+				for(auto const& m : messages) {
+					for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
+						output<< m.second
+						;
+					}
+				}
+			}
+			output<<std::flush;
 		}
 	};
 
