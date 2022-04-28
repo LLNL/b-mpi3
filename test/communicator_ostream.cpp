@@ -4,8 +4,8 @@
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/ostream.hpp"
 
-#include <random>
 #include <fstream>
+#include <random>
 
 namespace mpi3 = boost::mpi3;
 
@@ -18,10 +18,9 @@ auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int 
 
 	world.set_name("world");
 
-	mpi3::ostream wout{world};
+	mpi3::ostream wout{world, std::cout};
 
-//  wout << mpi3::communicator_logging;  // TODO
-//  wout << mpi3::smart_formatting('\n', '\t');  // TODO
+//  wout << mpi3::set_communicator_logging << mpi3::set_smart_formatting('\n', '\t');  // TODO
 
 	wout << "Program starts" << std::endl;
 	wout << "Hello! for world using "<< world.size() <<" processes" << std::endl;
