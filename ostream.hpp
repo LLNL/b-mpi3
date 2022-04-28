@@ -84,12 +84,16 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 					output<<'\n'<< std::flush;
 				} else {
 					doing_formatting = false;
-					for(auto const& m : messages) {
-						for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
-							output<< m.second
-							;
+					if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
+					else {
+						for(auto const& m : messages) {
+							for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
+								output<< m.second
+								;
+							}
 						}
 					}
+					output<<std::flush;
 				}
 			} else {
 				comm_.send_n(str().begin(), str().size(), 0);

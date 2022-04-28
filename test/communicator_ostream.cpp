@@ -37,6 +37,7 @@ auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int 
 	wout << "-------------------" << std::endl;
 
 	wout << "raw_stuff " << world.rank() << std::flush;
+	wout << "\nsomething random"                << std::flush;
 
 	wout << "Program Ends" << std::endl;
 
