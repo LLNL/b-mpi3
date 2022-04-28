@@ -922,7 +922,7 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) {
 	std::vector<double> xsend(10); iota(begin(xsend), end(xsend), 0);
 	std::vector<double> xrecv(xsend.size(), -1);
 
-	world.send_receive(cbegin(xsend), cend(xsend), (world.rank()/2)*2 + (world.rank()+1)%2), begin(xrecv));
+	world.send_receive(cbegin(xsend), cend(xsend), (world.rank()/2)*2 + (world.rank()+1)%2, begin(xrecv));
 
 	assert(xrecv[5] == 5);
 	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
