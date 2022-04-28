@@ -69,6 +69,7 @@ set(TEST_SRCS
 	communicator_main.cpp
 	communicator_mutable.cpp
 	communicator_operator.cpp
+	communicator_ostream.cpp
 	communicator_passby.cpp
 	communicator_reduce.cpp
 	communicator_reduce_in_place.cpp
