@@ -55,25 +55,6 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 						output<<"\e[0m\n";
 						doing_table = true;
 					}
-
-					std::size_t last_idx2 = 0;
-					std::size_t last_idx  = 0;
-					while(
-						std::all_of(messages.begin(), messages.end(), [last_idx2, &messages](auto const& e) {return last_idx2 != e.second.size() and e.second[last_idx2] == messages.begin()->second[last_idx2];})) {
-						if(messages.begin()->second[last_idx2] == ' ') {last_idx = last_idx2 + 1;}
-						++last_idx2;
-					}
-					output << std::setw(16) << std::left <<  std::setfill(' ') << messages.begin()->second.substr(0, last_idx);
-
-					for(auto const& m : messages) {
-						for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
-							output
-								<< std::setw(16) << std::setfill(' ') << std::left 
-								<< m.second.substr(last_idx, m.second.size() - last_idx - 1) // .substr(last_idx, last_idx + 5 /*m.second.size() - 4*/)
-							;
-						}
-					}
-					output<<'\n'<< std::flush;
 				} else {
 					doing_formatting = false;
 					if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
@@ -97,7 +78,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 		}
 
 	 private:
-		void collapse_lines(boost::icl::interval_map<int, std::string> const& messages) {
+		void collapse_lines(boost::icl::interval_map<int, std::string> const& messages) const {
 			for(auto const& m : messages) {
 				std::string range = comm_.name();
 				if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
@@ -108,6 +89,26 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 				output<<"→ \e[0m"<< m.second;
 			}
 			if(messages.iterative_size() > 1) {output << '\n';}
+		}
+		void headed_row(boost::icl::interval_map<int, std::string> const& messages) const {
+			std::size_t last_idx2 = 0;
+			std::size_t last_idx  = 0;
+			while(
+				std::all_of(messages.begin(), messages.end(), [last_idx2, &messages](auto const& e) {return last_idx2 != e.second.size() and e.second[last_idx2] == messages.begin()->second[last_idx2];})) {
+				if(messages.begin()->second[last_idx2] == ' ') {last_idx = last_idx2 + 1;}
+				++last_idx2;
+			}
+			output << std::setw(16) << std::left <<  std::setfill(' ') << messages.begin()->second.substr(0, last_idx);
+
+			for(auto const& m : messages) {
+				for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
+					output
+						<< std::setw(16) << std::setfill(' ') << std::left 
+						<< m.second.substr(last_idx, m.second.size() - last_idx - 1) // .substr(last_idx, last_idx + 5 /*m.second.size() - 4*/)
+					;
+				}
+			}
+			output<<'\n'<< std::flush;
 		}
 	};
 
