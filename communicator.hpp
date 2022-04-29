@@ -2981,8 +2981,13 @@ inline mpi3::communicator& deref(MPI_Comm const& handle) {
 	return reinterpret_cast<mpi3::communicator&>(const_cast<MPI_Comm&>(handle));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
 }
 
-inline mpi3::communicator& grip(MPI_Comm const& handle) {
+
+inline mpi3::communicator& grip_communicator(MPI_Comm const& handle) {
 	return reinterpret_cast<mpi3::communicator&>(const_cast<MPI_Comm&>(handle));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+}
+
+[[deprecated]] inline mpi3::communicator& grip(MPI_Comm const& handle) {
+	return grip_communicator(handle);
 }
 
 }  // end namespace mpi3

@@ -65,6 +65,7 @@ set(TEST_SRCS
 	communicator_cctor.cpp
 	communicator_ibroadcast.cpp
 	communicator_igather.cpp
+	communicator_grip_handle.cpp
 	communicator_list.cpp
 	communicator_main.cpp
 	communicator_mutable.cpp
@@ -131,17 +132,18 @@ foreach(TEST_FILE ${TEST_SRCS})
 
   set(NPROC 3)
   if (
-	   (TEST_FILE STREQUAL "communicator_divide.cpp"  )
-    OR (TEST_FILE STREQUAL "communicator_operator.cpp")
-    OR (TEST_FILE STREQUAL "communicator_scatter.cpp" )
-    OR (TEST_FILE STREQUAL "cartesian.cpp"            )
-	OR (TEST_FILE STREQUAL "simple_send_receive.cpp"  )
+	   (TEST_FILE STREQUAL "communicator_divide.cpp"     )
+    OR (TEST_FILE STREQUAL "communicator_operator.cpp"   )
+    OR (TEST_FILE STREQUAL "communicator_scatter.cpp"    )
+    OR (TEST_FILE STREQUAL "cartesian.cpp"               )
+	OR (TEST_FILE STREQUAL "simple_send_receive.cpp"     )
   )
     set(NPROC 6)
   endif()
 
   if (
-       (TEST_FILE STREQUAL "uniform_abort.cpp"            )
+       (TEST_FILE STREQUAL "uniform_abort.cpp"           )
+    OR (TEST_FILE STREQUAL "communicator_grip_handle.cpp")
   )
     set(NPROC 4)
   endif()
