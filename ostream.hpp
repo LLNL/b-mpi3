@@ -1,4 +1,5 @@
-/* -*- indent-tabs-mode: t -*- */
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2020-2022 Alfredo A. Correa
 
 #ifndef MPI3_OSTREAM_HPP
 #define MPI3_OSTREAM_HPP
@@ -8,6 +9,7 @@
 
 #include<boost/icl/split_interval_map.hpp>
 
+#include<iomanip>
 #include<iostream>
 #include<sstream>
 
@@ -20,9 +22,13 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 		std::ostream& output;
 		std::string msg_;
 
+		bool doing_table = false;
+		bool doing_formatting = false;
+
 	 public:
 		explicit streambuf(communicator& comm, std::ostream& strm = std::cout)
 		: comm_{comm}, output{strm} {}
+
 		int sync() override {
 			// following code can be improved by a custom reduce operation
 			if(comm_.at_root()) {
@@ -34,13 +40,25 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 					m.receive(msg_.begin());
 					messages.insert(std::make_pair(i, msg_));
 				}
-				for(auto& m : messages) {
-					output << comm_.name();
-					if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
-						if(size(m.first) == 1) {output<<"["<< lower(m.first) <<"]";}
-						else                   {output<<"["<< m.first        <<"]";}
+				if(
+					std::all_of(messages.begin(), messages.end(), [](auto const& e) {return e.second.empty();}) or
+					std::all_of(messages.begin(), messages.end(), [](auto const& e) {return e.second.empty() or e.second.back() == '\n';})
+				) {
+					if(not doing_formatting) {doing_formatting = true; output << '\n';}
+					if(doing_table) {doing_table = false; output << '\n';}
+					collapse_lines(messages);
+				} else if(std::all_of(messages.begin(), messages.end(), [](auto const& e) {return e.second.empty() or e.second.back() == '\t';})) {
+					if(not doing_formatting) {doing_formatting = true; output << '\n';}
+					if(not doing_table) {
+						output<<"\e[1;31m"<< std::setw(18) << (comm_.name() + "↓");
+						for(int i = 0; i != comm_.size(); ++i) {output << std::setw(20) << ("↓"+ std::to_string(i) +"↓");}
+						output<<"\e[0m\n";
+						doing_table = true;
 					}
-					output<<"\t: "<< m.second;
+					headed_row(messages);
+				} else {
+					doing_formatting = false;
+					unformatted_one_or_all(messages);
 				}
 			} else {
 				comm_.send_n(str().begin(), str().size(), 0);
@@ -49,6 +67,52 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 			output.flush();
 			comm_.barrier();
 			return 0;
+		}
+
+	 private:
+		void collapse_lines(boost::icl::interval_map<int, std::string> const& messages) const {
+			for(auto const& m : messages) {
+				std::string range = comm_.name();
+				if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
+					if(size(m.first) == 1) {range += ("["+ std::to_string(lower(m.first))                                      +"]");}
+					else                   {range += ("["+ std::to_string(lower(m.first)) +"-"+ std::to_string(upper(m.first)) +"]");}
+				}
+				output<<"\e[1;32m"<< std::setw(16) << std::left << range;
+				output<<"→ \e[0m"<< m.second;
+			}
+			if(messages.iterative_size() > 1) {output << '\n';}
+		}
+		void headed_row(boost::icl::interval_map<int, std::string> const& messages) const {
+			std::size_t last_idx2 = 0;
+			std::size_t last_idx  = 0;
+			while(
+				std::all_of(messages.begin(), messages.end(), [last_idx2, &messages](auto const& e) {return last_idx2 != e.second.size() and e.second[last_idx2] == messages.begin()->second[last_idx2];})) {
+				if(messages.begin()->second[last_idx2] == ' ') {last_idx = last_idx2 + 1;}
+				++last_idx2;
+			}
+			output << std::setw(16) << std::left <<  std::setfill(' ') << messages.begin()->second.substr(0, last_idx);
+
+			for(auto const& m : messages) {
+				for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
+					output
+						<< std::setw(16) << std::setfill(' ') << std::left 
+						<< m.second.substr(last_idx, m.second.size() - last_idx - 1) // .substr(last_idx, last_idx + 5 /*m.second.size() - 4*/)
+					;
+				}
+			}
+			output<<'\n'<< std::flush;
+		}
+		void unformatted_one_or_all(boost::icl::interval_map<int, std::string> const& messages) const {
+			if(messages.iterative_size() == 1) {output << messages.begin()->second << '\n';}
+			else {
+				for(auto const& m : messages) {
+					for(auto i = m.first.lower(); i != m.first.upper() + 1; ++i) {
+						output<< m.second
+						;
+					}
+				}
+			}
+			output<<std::flush;
 		}
 	};
 
@@ -70,43 +134,4 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 }  // end namespace mpi3
 }  // end namespace boost
 
-//#ifdef _TEST_MPI3_OSTREAM
-
-//#include "../mpi3/main.hpp"
-
-//namespace mpi3 = boost::mpi3;
-
-//int mpi3::main(int, char*[], mpi3::communicator world){
-
-//	mpi3::ostream wout(world);
-//	wout << "hello" << std::endl;
-//	wout << "hello, I am rank " << world.rank() << " in " << world.name() << std::endl;
-//	wout << "hello, my rank/2 is " << world.rank()/2 << std::endl;
-//	wout << (not world.root()?"not root":"") << std::endl;
-//	mpi3::communicator firsttwo = (world < 2);
-//	if(firsttwo) firsttwo.name("firsttwo");
-
-//	if(firsttwo){
-//		mpi3::ostream fout(firsttwo);
-//		fout << "hola, I am rank " << firsttwo.rank() << " in " << firsttwo.name() << " and also rank " << world.rank() << " in " << world.name() << std::endl;
-//	}
-
-//	return 0;
-//}
-
-///* output: 
-//world: hello
-//world[0]: hello, I am rank 0 in world
-//world[1]: hello, I am rank 1 in world
-//world[2]: hello, I am rank 2 in world
-//world[3]: hello, I am rank 3 in world
-//world[0-1]: hello, my rank/2 is 0
-//world[2-3]: hello, my rank/2 is 1
-//firsttwo[0]: hola, I am rank 0 in firsttwo
-//firsttwo[1]: hola, I am rank 1 in firsttwo
-//firsttwo[2]: hola, I am rank 2 in firsttwo
-//*/
-
-//#endif
 #endif
-

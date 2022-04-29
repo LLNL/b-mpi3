@@ -484,7 +484,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator split(int color, int key) {
 		communicator ret;
 		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
-		if(ret) {ret.name(name() + std::to_string(color));}
+		if(ret) {ret.set_name(name() + std::to_string(color));}
 		if(ret) {ret.attribute("color") = color;}
 		return ret;
 	}
@@ -2833,14 +2833,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_(Comm_get_name)(impl_, comm_name.data(), &len);
 		return {comm_name.data(), static_cast<std::size_t>(len)};
 	}
-	void set_name(std::string const& s){
-		int status = MPI_Comm_set_name(impl_, s.c_str());
-		if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
-	}
-	std::string name() const{
-		return get_name();
-	}
-	void name(std::string const& s) {set_name(s);}
+	void set_name(std::string const& s) {MPI_(Comm_set_name)(impl_, s.c_str());}
+	std::string name() const {return get_name();}
+
+	[[deprecated]] void name(std::string const& s) {set_name(s);}
 
 	static mpi3::communicator& parent() {
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");

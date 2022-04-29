@@ -185,7 +185,7 @@ class environment {
 	}
 
 	[[nodiscard]] communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
-		communicator ret{get_world_instance()}; ret.name("world");
+		communicator ret{get_world_instance()}; ret.set_name("world");
 		return ret;
 	}
 
