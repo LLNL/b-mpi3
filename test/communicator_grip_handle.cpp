@@ -15,7 +15,7 @@ int main(int argc, char** argv) try {
 	MPI_Comm_dup(MPI_COMM_WORLD, &W);
 	{
 		bmpi3::communicator& w = bmpi3::grip_communicator(W);
-		// cppcheck-suppress assertWithSideEffect
+		// cppcheck-suppress[assertWithSideEffect,unmatchedSuppression]
 		assert(w.handle() == W);
 
 		std::vector<double> const xsend(10,  5.);
