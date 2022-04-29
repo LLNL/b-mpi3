@@ -11,8 +11,6 @@ namespace bmpi3 = boost::mpi3;
 int main(int argc, char** argv) {
 
 	MPI_Init(&argc, &argv);
-	MPI_Comm comm = ;
-
 	{
 
 	bmpi3::communicator& world = bmpi3::grip(MPI_COMM_WORLD);
