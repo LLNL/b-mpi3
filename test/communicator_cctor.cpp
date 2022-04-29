@@ -14,12 +14,12 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator) );
 
 {
-	mpi3::communicator& w2 = mpi3::grip(world.handle());
+	mpi3::communicator& w2 = mpi3::grip_communicator(world.handle());
 	assert(  w2 ==  world );
 	assert( &w2 == &world );
 
-	assert(  mpi3::grip(MPI_COMM_WORLD) ==  world );
-	assert( &mpi3::grip(MPI_COMM_WORLD) != &world );
+	assert(  mpi3::grip_communicator(MPI_COMM_WORLD) ==  world );
+	assert( &mpi3::grip_communicator(MPI_COMM_WORLD) != &world );
 }
 
 //	assert( reinterpret_cast<mpi3::communicator&>(MPI_COMM_WORLD) == world );
@@ -42,7 +42,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	comms2.reserve(3);
 //  for(auto& e:comms) {comms2.emplace_back(e);}  // ok, but old style
 //  std::copy(comms.begin(), comms.end(), std::back_inserter(comms2));  // doesn't work because it calls cctor
-	std::transform(comms.begin(), comms.end(), std::back_inserter(comms2), [](auto&& e){return e;});  // calls dup ctor
+	std::transform(comms.begin(), comms.end(), std::back_inserter(comms2), [](auto&& e) {return e;});  // calls dup ctor
 }
 {
 	int const NTHREADS = 10;

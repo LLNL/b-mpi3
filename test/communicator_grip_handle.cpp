@@ -8,13 +8,13 @@
 
 namespace bmpi3 = boost::mpi3;
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm W{};
 	MPI_Comm_dup(MPI_COMM_WORLD, &W);
 	{
-		bmpi3::communicator& w = bmpi3::grip(W);
+		bmpi3::communicator& w = bmpi3::grip_communicator(W);
 		assert(w.handle() == W);
 
 		std::vector<double> const xsend(10,  5.);
@@ -37,4 +37,4 @@ int main(int argc, char** argv) {
 	MPI_Finalize();
 
 	return 0;
-}
+} catch(...) {return 1;}
