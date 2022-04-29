@@ -17,14 +17,12 @@ int main(int argc, char** argv) {
 		bmpi3::communicator& w = bmpi3::grip(W);
 		assert(w.handle() == W);
 
-		assert(w.size() == 2);
-
 		std::vector<double> const xsend(10,  5.);
 		std::vector<double>       xrecv(10, -1.);
 
 		switch( w.rank() ) {
 			case 0: {
-				w.receive(begin(xrecv), end(xrecv), 1); 
+				w.receive(begin(xrecv), end(xrecv), 1);
 				assert(xrecv[5] ==  5.);
 				break;
 			}
@@ -34,7 +32,6 @@ int main(int argc, char** argv) {
 				break;
 			}
 		}
-
 	}
 	MPI_Comm_free(&W);
 	MPI_Finalize();
