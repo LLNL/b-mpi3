@@ -27,7 +27,7 @@ auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int 
 
 	wout << "Hello! I am rank "<< world.rank()<< " in " << world.name() << std::endl;
 
-	wout << (not world.root()?"this precess is NOT root":"this process is root") << std::endl;
+	wout << (world.root()?"this precess is root":"this process is NOT root") << std::endl;
 
 	wout << "rank "         << world.rank()                                << '\t' << std::flush;
 	wout << "small random " << dis(gen)                                    << '\t' << std::flush;
