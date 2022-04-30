@@ -20,7 +20,7 @@ auto mpi3::main(int /*argv*/, char** /*argc*/, mpi3::communicator world) -> int 
 
 	mpi3::ostream wout{world, std::cout};
 
-//  wout << mpi3::set_communicator_logging; // TODO
+//  wout << mpi3::set_communicator_logging;  // TODO
 
 	wout << "Program starts" << std::endl;
 	wout << "Hello! for world using "<< world.size() <<" processes" << std::endl;
