@@ -57,22 +57,20 @@ using byte = std::byte;
 #endif
 
 class packed {
-	unsigned char t;
+	unsigned char t{};
 
  public:
     explicit packed(unsigned char t_) : t{t_}{};
     packed() = default;
-//    packed(packed const&) = default;
 
- //   packed& operator=(const packed& rhs) = default;
-//	packet& operator=(
+//  packed& operator=(const packed& rhs) = default;
 	packed& operator=(unsigned char const& rhs) {t = rhs; return *this;}
 
     explicit operator const unsigned char&() const {return t;}
     explicit operator       unsigned char&()       {return t;}
 
-    bool operator==(packed const& rhs) const{return t == rhs.t;}
-    bool operator< (packed const& rhs) const{return t < rhs.t;}
+    bool operator==(packed const& rhs) const {return t == rhs.t;}
+    bool operator< (packed const& rhs) const {return t <  rhs.t;}
 };
 
 template<class T> struct basic_datatype;
@@ -88,62 +86,62 @@ template<> struct basic_datatype<TypE> {           \
 }
 
 // basic data types http://beige.ucs.indiana.edu/I590/node100.html
-MPI3_DECLARE_DATATYPE(char                   , MPI_CHAR);
-MPI3_DECLARE_DATATYPE(unsigned char          , MPI_UNSIGNED_CHAR);
+MPI3_DECLARE_DATATYPE(char                   , MPI_CHAR              );
+MPI3_DECLARE_DATATYPE(unsigned char          , MPI_UNSIGNED_CHAR     );
 
 #if(__cplusplus >= 201703L)
-MPI3_DECLARE_DATATYPE(byte                   , MPI_BYTE);
+MPI3_DECLARE_DATATYPE(byte                   , MPI_BYTE              );
 #endif
-MPI3_DECLARE_DATATYPE(wchar                  , MPI_WCHAR);
+MPI3_DECLARE_DATATYPE(wchar                  , MPI_WCHAR             );
 
-MPI3_DECLARE_DATATYPE(short                  , MPI_SHORT);
-MPI3_DECLARE_DATATYPE(unsigned short         , MPI_UNSIGNED_SHORT);
-MPI3_DECLARE_DATATYPE(int                    , MPI_INT);
-MPI3_DECLARE_DATATYPE(unsigned int           , MPI_UNSIGNED);
-MPI3_DECLARE_DATATYPE(long                   , MPI_LONG);
-MPI3_DECLARE_DATATYPE(unsigned long          , MPI_UNSIGNED_LONG);
-MPI3_DECLARE_DATATYPE(float                  , MPI_FLOAT);
-MPI3_DECLARE_DATATYPE(double                 , MPI_DOUBLE);
-MPI3_DECLARE_DATATYPE(long double            , MPI_LONG_DOUBLE);
-MPI3_DECLARE_DATATYPE(long long int          , MPI_LONG_LONG_INT);
+MPI3_DECLARE_DATATYPE(short                  , MPI_SHORT             );
+MPI3_DECLARE_DATATYPE(unsigned short         , MPI_UNSIGNED_SHORT    );
+MPI3_DECLARE_DATATYPE(int                    , MPI_INT               );
+MPI3_DECLARE_DATATYPE(unsigned int           , MPI_UNSIGNED          );
+MPI3_DECLARE_DATATYPE(long                   , MPI_LONG              );
+MPI3_DECLARE_DATATYPE(unsigned long          , MPI_UNSIGNED_LONG     );
+MPI3_DECLARE_DATATYPE(float                  , MPI_FLOAT             );
+MPI3_DECLARE_DATATYPE(double                 , MPI_DOUBLE            );
+MPI3_DECLARE_DATATYPE(long double            , MPI_LONG_DOUBLE       );
+MPI3_DECLARE_DATATYPE(long long int          , MPI_LONG_LONG_INT     );
 
-MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_CXX_FLOAT_COMPLEX);
+MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_CXX_FLOAT_COMPLEX );
 MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_CXX_DOUBLE_COMPLEX);
 
-MPI3_DECLARE_DATATYPE(float_float            , MPI_CXX_FLOAT_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(float_float            , MPI_CXX_FLOAT_COMPLEX ); static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_CXX_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
-MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_CXX_DOUBLE_COMPLEX);
+MPI3_DECLARE_DATATYPE(decltype(std::tuple<double, double>{}), MPI_CXX_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 #ifdef __CUDACC__
 MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_CXX_DOUBLE_COMPLEX);
 #endif
 
-MPI3_DECLARE_DATATYPE(float_int              , MPI_FLOAT_INT);
-MPI3_DECLARE_DATATYPE(long_int               , MPI_LONG_INT);
-MPI3_DECLARE_DATATYPE(double_int             , MPI_DOUBLE_INT);
-MPI3_DECLARE_DATATYPE(short_int              , MPI_SHORT_INT);
-MPI3_DECLARE_DATATYPE(int_int                , MPI_2INT);
-MPI3_DECLARE_DATATYPE(long_double_int        , MPI_LONG_DOUBLE_INT);
+MPI3_DECLARE_DATATYPE(float_int              , MPI_FLOAT_INT         );
+MPI3_DECLARE_DATATYPE(long_int               , MPI_LONG_INT          );
+MPI3_DECLARE_DATATYPE(double_int             , MPI_DOUBLE_INT        );
+MPI3_DECLARE_DATATYPE(short_int              , MPI_SHORT_INT         );
+MPI3_DECLARE_DATATYPE(int_int                , MPI_2INT              );
+MPI3_DECLARE_DATATYPE(long_double_int        , MPI_LONG_DOUBLE_INT   );
 
-MPI3_DECLARE_DATATYPE(vlp<float>             , MPI_FLOAT_INT);
-MPI3_DECLARE_DATATYPE(vlp<long>              , MPI_LONG_INT);
-MPI3_DECLARE_DATATYPE(vlp<double>            , MPI_DOUBLE_INT);
-MPI3_DECLARE_DATATYPE(vlp<short>             , MPI_SHORT_INT);
-MPI3_DECLARE_DATATYPE(vlp<int>               , MPI_2INT);
-MPI3_DECLARE_DATATYPE(vlp<long double>       , MPI_LONG_DOUBLE_INT);
+MPI3_DECLARE_DATATYPE(vlp<float>             , MPI_FLOAT_INT         );
+MPI3_DECLARE_DATATYPE(vlp<long>              , MPI_LONG_INT          );
+MPI3_DECLARE_DATATYPE(vlp<double>            , MPI_DOUBLE_INT        );
+MPI3_DECLARE_DATATYPE(vlp<short>             , MPI_SHORT_INT         );
+MPI3_DECLARE_DATATYPE(vlp<int>               , MPI_2INT              );
+MPI3_DECLARE_DATATYPE(vlp<long double>       , MPI_LONG_DOUBLE_INT   );
 
-//BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t  , MPI_AINT);
-//BOOST_MPI3_DECLARE_DATATYPE(std::size_t    , MPI_AINT);
-MPI3_DECLARE_DATATYPE(void*                  , MPI_AINT);
+//BOOST_MPI3_DECLARE_DATATYPE(std::intptr_t  , MPI_AINT              );
+//BOOST_MPI3_DECLARE_DATATYPE(std::size_t    , MPI_AINT              );
+MPI3_DECLARE_DATATYPE(void*                  , MPI_AINT              );
 
 //BOOST_MPI3_DECLARE_DATATYPE(bool, MPI_INT);
-MPI3_DECLARE_DATATYPE(bool                   , MPI_CXX_BOOL);
+MPI3_DECLARE_DATATYPE(bool                   , MPI_CXX_BOOL          );
 
-MPI3_DECLARE_DATATYPE(packed                 , MPI_PACKED);
+MPI3_DECLARE_DATATYPE(packed                 , MPI_PACKED            );
 
-// LB 
+// LB
 // UB
 
 #undef BOOST_MPI3_DECLARE_DATATYPE
