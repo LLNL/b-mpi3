@@ -544,7 +544,7 @@ This syntax also makes very explicit what the operation really does.
 As indicated earlier, a useful communicator is one that is mutable.
 Therefore when passing a communicator to a function we have two main options, either pass by reference (non-const reference) or by value.
 
-```
+```cpp
 void f(mpi3::communicator& comm);
 void g(mpi3::communicator  comm);
 ```
@@ -561,7 +561,7 @@ Case `g` is different in the sense that it knows that it has exclusive access to
 
 For completeness we can also imagine a function declared as pass-by-const-reference.
 
-```
+```cpp
 void h(mpi3::communicator const& comm);
 ```
 
@@ -592,7 +592,7 @@ However such design doesn't work, because for `print` to do any actual communica
 
 One option is to make `print` non-`const`, this is bad because we will lose any concept of mutability just because an implementation detail.
 The other option to remove const by force,
-```
+```cpp
     void print() const { const_cast<mpi3::communicator&>(comm_).do_something()... }
 ```
 which would work but it is not very idiomatic.
@@ -646,7 +646,7 @@ This would force, from a design perspective, an unacceptable operation cost.
 
 ### Not a copy-constructor, but a duplicate-constructor
 
-So far we have shown the `duplicate` interface function as a mechanism for duplicating communicators (used as `auto new_comm{comm.duplicate()}`), which is nice because it makes the operation very explicit, but it also makes it difficult to integrate with other parts of C++.
+So far we have shown the `duplicate` interface function as a mechanism for duplicating communicators (used as `auto new_comm{comm.duplicate()}`), which is nice because it makes the operation very explicit, but it also makes it difficult to integrate generically with other parts of C++.
 
 A reasonable copy constructor of the class containing a communicator would be:
 
@@ -670,11 +670,11 @@ However the language is general enough to allow a constructor by non-const refer
 The signature of this constructor is this one:
 
 ```cpp
-communicator::communicator(communicator      & other) {...}
+communicator::communicator(communicator      & other) {...}      // "duplicate" constructor?
 communicator::communicator(communicator const&      ) = delete;  // no copy constructor
 ```
 
-There is no standard name for this type of constructor, I choose to call it "duplicate"-constructor, or mutable-copy-constructor.
+There is no standard name for this type of constructor, I choose to call it here "duplicate"-constructor, or mutable-copy-constructor.
 This function does internally call `MPI_Comm_dup`, and like `duplicate()` it can only be called with a source that is mutable.
 This makes the copy constructor of the containing class more standard, or even can be  implemented as `= default;`.
 
