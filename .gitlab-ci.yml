@@ -3,7 +3,6 @@ image: debian:testing
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  CXXFLAGS: "-O3"
   OMPI_ALLOW_RUN_AS_ROOT: 1
   OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
@@ -36,7 +35,7 @@ openmpi-clang:
 openmpi-clang20:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libstdc++-13-dev libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libstdc++-12-dev libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
@@ -50,7 +49,7 @@ openmpi-clang20:
 ompi-clang-tidy:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang libstdc++-13-dev clang-tidy cmake make libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake make libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
@@ -64,7 +63,7 @@ ompi-clang-tidy:
 ompi-cppcheck:
     stage: build
     script:
-        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-13-dev cppcheck cmake make libboost-serialization-dev
+        - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev cppcheck cmake make libboost-serialization-dev
         - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
         - cd test
         - mkdir build && cd build
