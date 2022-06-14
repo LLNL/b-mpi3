@@ -51,69 +51,70 @@ archive_exception::archive_exception(  // NOLINT(cppcoreguidelines-pro-type-memb
 {
     unsigned int length = 0;
     switch(code){
-    case no_exception:
+    case no_exception:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "uninitialized exception");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unregistered_class:
         length = append(length, "unregistered class");
         if(nullptr != e1){
-            length = append(length, " - ");
+            length = append(length, " - ");  // cppcheck-suppress [unreadVariable] ; external code
             length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         }    
         break;
-    case invalid_signature:
+    case invalid_signature:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "invalid signature");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
-    case unsupported_version:
+    case unsupported_version:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "unsupported version");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
-    case pointer_conflict:
+    case pointer_conflict:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "pointer conflict");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case incompatible_native_format:
         length = append(length, "incompatible native format");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         if(nullptr != e1){
-            length = append(length, " - ");
+            length = append(length, " - ");  // cppcheck-suppress [unreadVariable] ; external code
             length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         }
         break;
-    case array_size_too_short:
+    case array_size_too_short:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "array size too short");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
-    case input_stream_error:
+    case input_stream_error:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "input stream error");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
-    case invalid_class_name:
+    case invalid_class_name:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "class name too long");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unregistered_cast:
         length = append(length, "unregistered void cast ");
         length = append(length, (nullptr != e1) ? e1 : "?");
-        length = append(length, "<-");
+        length = append(length, "<-");  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, (nullptr != e2) ? e2 : "?");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case unsupported_class_version:
-        length = append(length, "class version ");
+        length = append(length, "class version ");  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, (nullptr != e1) ? e1 : "<unknown class>");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case other_exception:
         // if get here - it indicates a derived exception 
         // was sliced by passing by value in catch
+        // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "unknown derived exception");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     case multiple_code_instantiation:
         length = append(length, "code instantiated in more than one module");
         if(nullptr != e1){
-            length = append(length, " - ");
+            length = append(length, " - ");  // cppcheck-suppress [unreadVariable] ; external code
             length = append(length, e1);  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         }
         break;
-    case output_stream_error:
+    case output_stream_error:  // cppcheck-suppress [unreadVariable] ; external code
         length = append(length, "output stream error");  // NOLINT(clang-analyzer-deadcode.DeadStores) external code
         break;
     default:
         BOOST_ASSERT(false);  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) external code
-        length = append(length, "programming error");
+        length = append(length, "programming error");  // cppcheck-suppress [unreadVariable] ; external code
         break;
     }
 }
