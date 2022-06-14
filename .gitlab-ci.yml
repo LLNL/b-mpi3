@@ -239,10 +239,10 @@ cuda-11.7-openmpi:
     - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
-    - nvcc --version
+    - /usr/local/cuda-11.7/bin/nvcc --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - CUDACXX=nvcc cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
     - cmake --build . --verbose
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -293,8 +293,8 @@ inq-cuda-11.7-openmpi-compileonly:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - /usr/local/cuda/bin/nvcc -V
-    - CUDACXX=/usr/local/cuda/bin/nvcc CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_ARCHITECTURES=70
+    - /usr/local/cuda-11.7/bin/nvcc -V
+    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
     - make silicon
   needs: ["cuda-11.7-openmpi"]
 
