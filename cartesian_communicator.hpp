@@ -27,21 +27,21 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	cartesian_communicator(cartesian_communicator& other) : communicator{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) cannot be defaulted because bug in nvcc 11
 
 	template<class Shape, class Period>
-	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p){
+	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p) {
 		assert(s.size() == p.size());
 		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
 	//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
 		// TODO(correaa) try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 	template<class Shape>
-	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)){}
+	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)) {}
 
-	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape) 
-		: cartesian_communicator(comm_old, std::vector<int>(shape)){}
+	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape)
+		: cartesian_communicator(comm_old, std::vector<int>(shape)) {}
 	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period) 
-		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)){}
+		: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)) {}
 
-	[[deprecated("use dimensionality() instead of dimension")]] 
+	[[deprecated("use dimensionality() instead of dimension")]]
 	int dimension() const {int ret; MPI_Cartdim_get(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
