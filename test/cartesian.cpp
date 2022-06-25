@@ -1,4 +1,4 @@
-// © Alfredo Correa 2021
+// Copyright 2021-2022 Alfredo A. Correa
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/cartesian_communicator.hpp"
@@ -162,6 +162,16 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		}
 		#endif
 	}
+}
+{
+	mpi3::cartesian_communicator<2> cart_comm(world, {3, 2});
+
+	std::cout<< cart_comm.rank({5, 3}) <<std::endl;
+
+//	switch(world.rank()) {
+//		case 1: std::cout<< world.rank() <<" "<< cart_comm.coordinates()[0] <<", "<< cart_comm.coordinates()[1] <<std::endl;
+//		case 5: std::cout<< world.rank() <<" "<< cart_comm.coordinates()[0] <<", "<< cart_comm.coordinates()[1] <<std::endl;
+//	}
 }
 
 	return 0;

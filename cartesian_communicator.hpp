@@ -63,7 +63,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 		return ret;
 	}
 
-	auto topology() const{
+	auto topology() const {
 		auto maxdims = dimensionality();
 		class topology_t {
 			std::vector<int> dimensions_;
@@ -171,8 +171,20 @@ struct cartesian_communicator : cartesian_communicator<> {
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
-
 	}
+
+	using coordinates_type = std::array<int, D>;
+
+	using cartesian_communicator<>::rank;
+	auto rank(coordinates_type cs) const -> int {return MPI_(Cart_rank)(impl_, cs.data());}
+	auto coordinates(int r) const -> coordinates_type {
+		coordinates_type ret; MPI_(Cart_coords)(impl_, r, ret.data()); return ret;
+	}
+	auto coordinates() const -> coordinates_type {
+		coordinates_type ret; MPI_(Cart_coords)(impl_, this->rank(), D, ret.data()); return ret;
+	}
+	template<class... Indices>
+	auto operator()(Indices... idx) {return (*this)[rank(std::array<int, D>{idx...})];}
 
 	cartesian_communicator<D - 1> hyperplane(int d) {
 		static_assert( D != 0 , "hyperplane not possible for 0D communicators");
