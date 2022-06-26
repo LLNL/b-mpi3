@@ -266,7 +266,7 @@ openmpi-cuda-11.7:
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - CUDACXX=nvcc cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
     - cmake --build . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
