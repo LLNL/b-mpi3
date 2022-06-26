@@ -182,6 +182,16 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 //		case 5: std::cout<< world.rank() <<" "<< cart_comm.coordinates()[0] <<", "<< cart_comm.coordinates()[1] <<std::endl;
 //	}
 }
+{
+	mpi3::cartesian_communicator<1> comm_1D(world, {world.size()});
+	assert( comm_1D.periods()[0] == true );
+	assert( comm_1D.rank({-1}) == comm_1D.size() - 1 );
 
+	auto next_rank = comm_1D.rank({comm_1D.coordinates()[0] + 1});
+	auto prev_rank = comm_1D.rank({comm_1D.coordinates()[0] - 1});
+
+	assert(comm_1D.rank() != next_rank );
+	assert(comm_1D.rank() != prev_rank );
+}
 	return 0;
 } catch(...) {return 1;}

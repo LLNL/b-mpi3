@@ -29,12 +29,18 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p) {
 		assert(s.size() == p.size());
-		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), false, &impl_);
+		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), /*reorder*/ true, &impl_);
 	//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
 		// TODO(correaa) try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
+
 	template<class Shape>
-	cartesian_communicator(communicator& comm_old, Shape const& s) : cartesian_communicator(comm_old, s, std::vector<int>(s.size(), true)) {}
+	cartesian_communicator(communicator& comm_old, Shape const& s)
+	: cartesian_communicator{
+		comm_old,
+		s,
+		std::vector<int>(s.size(), true)
+	} {}
 
 	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape)
 		: cartesian_communicator(comm_old, std::vector<int>(shape)) {}
@@ -132,10 +138,13 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 	constexpr static dimensionality_type dimensionality = D;
 
-	cartesian_communicator(communicator& other, std::array<int, D> dims)
-	try : cartesian_communicator<>(other, division(other.size(), dims)) {}
+	explicit cartesian_communicator(
+		communicator& other,
+		std::array<int, D> dims = {},
+		std::array<int, D> periods = std::apply([](auto... e) {return std::array{(static_cast<void>(e),1)...};}, std::array<int, D>{})
+	)
+	try : cartesian_communicator<>{other, division(other.size(), dims), periods} {}
 	catch(std::runtime_error& e) {
-		std::cerr<< "runtime error " << e.what() <<std::endl;
 		std::ostringstream ss;
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains "+ss.str()+" from communicator of size "+std::to_string(other.size())+" because "+e.what()};
@@ -176,7 +185,17 @@ struct cartesian_communicator : cartesian_communicator<> {
 	using coordinates_type = std::array<int, D>;
 
 	using cartesian_communicator<>::rank;
-	auto rank(coordinates_type cs) const -> int {return MPI_(Cart_rank)(impl_, cs.data());}
+	auto rank(coordinates_type cs) const -> int {
+		auto const ps = periods();
+		auto const s  = shape();
+		for(std::size_t i = 0; i != D; ++i) {
+			if(ps[i] == false) {
+				assert( cs[i] >= 0    );
+				assert( cs[i] <  s[i] );
+			}
+		}
+		return MPI_(Cart_rank)(impl_, cs.data());
+	}
 	auto coordinates(int r) const -> coordinates_type {
 		coordinates_type ret; MPI_(Cart_coords)(impl_, r, D, ret.data()); return ret;
 	}
