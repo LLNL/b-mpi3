@@ -166,6 +166,9 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 {
 	mpi3::cartesian_communicator<2> cart_comm(world, {3, 2});
 
+	assert( cart_comm.rank() == cart_comm.rank(cart_comm.coordinates()) );
+	assert( cart_comm.coordinates() == cart_comm.coordinates(cart_comm.rank()) );
+
 	assert( cart_comm(2, 1).rank() == cart_comm.rank({2, 1}) );
 	assert( std::apply(cart_comm, cart_comm.coordinates()).rank() == cart_comm.rank() );
 
