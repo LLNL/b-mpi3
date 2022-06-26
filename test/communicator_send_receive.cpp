@@ -49,7 +49,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		assert(buffer2[5] == right);
 	}
 	{
-		std::vector<int> buffer(10);  buffer[5] = world.rank();
+		std::vector<int> buffer (10); buffer [5] = world.rank();
 		std::vector<int> buffer2(10); buffer2[5] = -1;
 		world.send_receive(
 			buffer .begin(), buffer .end(), left , 
@@ -61,6 +61,14 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		std::list<std::complex<double>> b(10, std::complex<double>{});//std::to_string(1.*world.rank()));
 		world.send_receive_n(b.begin(), b.size(), left, right);
 	//	assert( *b.begin() == std::to_string(1.*right) );
+	}
+	{
+		std::vector<int> buffer (10); buffer [5] = world.rank();
+	    auto right =  world.rank() + 1; if(right >= world.size()) {right = 0               ;}
+    	auto left  =  world.rank() - 1; if(left  <             0) {left  = world.size() - 1;}
+		world.send_receive_replace(buffer.begin(), buffer.end(), left, right);
+	//  MPI_Sendrecv_replace(buffer, 10, MPI_INT, left, 123, right, 123, MPI_COMM_WORLD, &status);
+		assert( buffer[5] == right );
 	}
 	return 0;
 }catch(...){
