@@ -178,11 +178,9 @@ struct cartesian_communicator : cartesian_communicator<> {
 	using cartesian_communicator<>::rank;
 	auto rank(coordinates_type cs) const -> int {return MPI_(Cart_rank)(impl_, cs.data());}
 	auto coordinates(int r) const -> coordinates_type {
-		coordinates_type ret; MPI_(Cart_coords)(impl_, r, ret.data()); return ret;
+		coordinates_type ret; MPI_(Cart_coords)(impl_, r, D, ret.data()); return ret;
 	}
-	auto coordinates() const -> coordinates_type {
-		coordinates_type ret; MPI_(Cart_coords)(impl_, this->rank(), D, ret.data()); return ret;
-	}
+	auto coordinates() const -> coordinates_type {return coordinates(rank());}
 	template<class... Indices>
 	auto operator()(Indices... idx) {return (*this)[rank(std::array<int, D>{idx...})];}
 
