@@ -189,6 +189,9 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 
 	auto next_rank = comm_1D.rank({comm_1D.coordinates()[0] + 1});
 	auto prev_rank = comm_1D.rank({comm_1D.coordinates()[0] - 1});
+
+	assert(comm_1D.rank() != next_rank );
+	assert(comm_1D.rank() != prev_rank );
 }
 	return 0;
 } catch(...) {return 1;}
