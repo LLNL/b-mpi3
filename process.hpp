@@ -62,6 +62,8 @@ process& operator<<(process& self, T const& t) {
 
 inline auto communicator::operator[](int rank) -> process {return {*this, rank};}
 
+//inline auto communicator::iterator::operator*() const -> process {return {*commP_, rank_};}
+
 template<class T>
 auto operator&(communicator& comm, T&& t)
 ->decltype(comm.all_to_all(begin(std::forward<T>(t))), std::forward<T>(t)) {

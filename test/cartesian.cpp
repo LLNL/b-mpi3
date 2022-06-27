@@ -193,5 +193,48 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	assert(comm_1D.rank() != next_rank );
 	assert(comm_1D.rank() != prev_rank );
 }
+{
+	auto const periodic = mpi3::cartesian_communicator<1>{world}; // implivit , {}, {true}};
+	{
+		auto const [source, dest] = periodic.shift<0>(+1);
+		assert( source == ((periodic.rank() - 1 + periodic.size()) % periodic.size()) );
+		assert( dest   == ((periodic.rank() + 1) % periodic.size()) );
+	}
+	{
+		auto const [source, dest] = periodic.shift<0>( 0);
+		assert( source == periodic.rank() );
+	    assert( dest   == periodic.rank() );
+	}
+	{
+		auto const [source, dest] = periodic.shift<0>(-1);
+	    assert( source == ((periodic.rank() + 1) % periodic.size()) );
+     	assert( dest   == ((periodic.rank() - 1 + periodic.size()) % world.size()) );
+    }
+}
+{
+	auto const nonperiodic = mpi3::cartesian_communicator<1>{world, {}, {false}};
+	{
+		auto const [source, dest] = nonperiodic.shift<0>(+1);
+
+		if( nonperiodic.rank() >  0                     ) {assert( source == nonperiodic.rank() - 1);}
+		if( nonperiodic.rank() == 0                     ) {assert( source == MPI_PROC_NULL         );}
+
+		if( nonperiodic.rank() <  nonperiodic.size() - 1) {assert( dest   == nonperiodic.rank() + 1);}
+		if( nonperiodic.rank() == nonperiodic.size() - 1) {assert( dest   == MPI_PROC_NULL         );}
+	}
+	{
+		auto const [source, dest] = nonperiodic.shift<0>( 0);
+		assert( source == nonperiodic.rank() );
+	    assert( dest   == nonperiodic.rank() );
+	}
+	{
+		auto const [source, dest] = nonperiodic.shift<0>(-1);
+		if( nonperiodic.rank() <  nonperiodic.size() - 1) {assert( source == nonperiodic.rank() + 1);}
+		if( nonperiodic.rank() == nonperiodic.size() - 1) {assert( source == MPI_PROC_NULL         );}
+
+		if( nonperiodic.rank() >  0                     ) {assert( dest   == nonperiodic.rank() - 1);}
+		if( nonperiodic.rank() == 0                     ) {assert( dest   == MPI_PROC_NULL         );}
+    }
+}
 	return 0;
 } catch(...) {return 1;}
