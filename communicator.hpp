@@ -730,6 +730,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			b, pos
 		);
 	}
+
 	template<class It, class Size>
 	auto send_receive_replace_n(
 		It first, Size size,
@@ -769,7 +770,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			first, count, dest,
 			d_first, d_count, source,
 				detail::iterator_category_t<It1>{},  // It2???
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{}, 
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 			sendtag, recvtag
 		);
 	}
@@ -949,6 +950,15 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
 			/*sendtag*/ 0, /*recvtag*/ MPI_ANY_TAG
 		);
+	}
+
+	template<typename It, typename Size>
+	auto send_receive_n(It first, Size n, std::pair<int, int> dest_source, std::pair<int, int> send_recv_tag = {0, MPI_ANY_TAG}) {
+		return send_receive_n(first, n, dest_source.first, dest_source.second, send_recv_tag.first, send_recv_tag.second);
+	}
+	template<typename It>
+	auto send_receive  (It first, It last, std::pair<int, int> dest_source, std::pair<int, int> send_recv_tag = {0, MPI_ANY_TAG}) {
+		return send_receive  (first, last, dest_source.first, dest_source.second, send_recv_tag.first, send_recv_tag.second);
 	}
 
 	status probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
