@@ -230,20 +230,21 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	explicit operator bool() const{return not is_empty();}
 
 	using reference = process;
-	struct iterator {
-		iterator() = default;
-		explicit iterator(std::nullptr_t n) : commP_{n} {}
-		auto operator++() -> iterator& {++rank_; return *this;}
-		auto operator--() -> iterator& {--rank_; return *this;}
-		auto operator*() const -> reference;
+//	struct iterator_t {
+////		iterator_t() = default;
+////		explicit iterator_t(std::nullptr_t n) : commP_{n} {}
+////		auto operator++() -> iterator_t& {++rank_; return *this;}
+////		auto operator--() -> iterator_t& {--rank_; return *this;}
+////		auto operator*() const -> reference;
 
-	 private:
-		communicator* commP_ = nullptr;
-		int rank_ = MPI_PROC_NULL;
+////	 private:
+////		communicator* commP_ = nullptr;
+////		int rank_ = MPI_PROC_NULL;
 
-		friend class communicator;
-		iterator(communicator* self, int rank) : commP_{self}, rank_{rank} {}
-	};
+////		friend class communicator;
+////		iterator_t(communicator* self, int rank) : commP_{self}, rank_{rank} {}
+//	};
+//  using iterator = iterator_t;
 
 //	auto begin() -> iterator {return {this, 0     };}
 //	auto end  () -> iterator {return {this, size()};}
