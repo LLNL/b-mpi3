@@ -220,9 +220,31 @@ inq-openmpi:
 #        - make VERBOSE=1
 #        - ctest --output-on-failure --timeout 120
 
-cuda-11.7-openmpi:
+#cuda-11.4-std17:
+#    image: nvidia/cuda:11.4.0-devel
+#    allow_failure: true
+#    stage: test
+#    script:
+#      - export DEBIAN_FRONTEND=noninteractive
+#      - apt install curl
+#      - curl -s https://packages.gitlab.com/gpg.key | apt-key add -
+#      - apt-get update && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make libboost-serialization-dev wget
+#      - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
+#      - mkdir /opt/cmake
+#      - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+#      - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+#      - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+#      - cd test
+#      - nvcc --version
+#      - mkdir build && cd build
+#      - export MPI_OVERSUBSCRIBE="--oversubscribe"
+#      - CUDACXX=nvcc cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+#      - cmake --build . --verbose
+#      - ctest --output-on-failure
+
+openmpi-cuda-11.7:
   stage: build
-  allow_failure: true
+  allow_failure: false
   image: debian:stable
   script:
     - export DEBIAN_FRONTEND=noninteractive
@@ -232,18 +254,14 @@ cuda-11.7-openmpi:
     - add-apt-repository contrib
     - apt-get update
     - apt-get -y install cuda
-    - apt-get update && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make libboost-serialization-dev wget
-    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
-    - mkdir /opt/cmake
-    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+    - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
+    - /usr/local/cuda-11.7/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
-    - /usr/local/cuda-11.7/bin/nvcc --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
-    - cmake --build . --verbose
+    - cmake --build . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
 
@@ -296,7 +314,7 @@ inq-cuda-11.7-openmpi-compileonly:
     - /usr/local/cuda-11.7/bin/nvcc -V
     - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
     - make silicon
-  needs: ["cuda-11.7-openmpi"]
+  needs: ["openmpi-cuda-11.7"]
 
 #inq-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel

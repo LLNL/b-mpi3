@@ -122,6 +122,8 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 enum fill_t{fill = 0, _ = 0};
 
+struct circular_communicator;
+
 template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<> {
 	cartesian_communicator() = default;
@@ -141,9 +143,9 @@ struct cartesian_communicator : cartesian_communicator<> {
 	explicit cartesian_communicator(
 		communicator& other,
 		std::array<int, D> dims = {},
-		std::array<int, D> periods = std::apply([](auto... e) {return std::array{(static_cast<void>(e),1)...};}, std::array<int, D>{})
+		std::array<bool, D> periods = std::apply([](auto... e) {return std::array{(static_cast<void>(e),true)...};}, std::array<int, D>{})
 	)
-	try : cartesian_communicator<>{other, division(other.size(), dims), periods} {}
+	try : cartesian_communicator<>{other, division(other.size(), dims), std::apply([](auto... e) {return std::array<int, D>{e...};}, periods)} {}
 	catch(std::runtime_error& e) {
 		std::ostringstream ss;
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
@@ -172,7 +174,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 		return *this;
 	}
 
-	cartesian_communicator<1> axis(int d) {
+	cartesian_communicator<1> axis(int d) {  // TODO(correaa) return a circular_communicator
 		assert( d >= 0 );
 		assert( d <  D );
 		cartesian_communicator<1> ret;
@@ -180,6 +182,14 @@ struct cartesian_communicator : cartesian_communicator<> {
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
+	}
+
+	template<int DD> auto axis() -> circular_communicator;
+
+	template<int Direction> auto shift(int displacement) const {
+		std::pair<int, int> source_dest;
+		MPI_(Cart_shift)(impl_, Direction, displacement, &source_dest.first, &source_dest.second);
+		return source_dest;
 	}
 
 	using coordinates_type = std::array<int, D>;
@@ -218,6 +228,63 @@ struct cartesian_communicator : cartesian_communicator<> {
 		return ret;
 	}
 };
+
+struct circular_communicator : cartesian_communicator<1> {
+	circular_communicator() = default;
+
+	circular_communicator(circular_communicator& other) = default; // : cartesian_communicator<1>{other}{}
+	circular_communicator(circular_communicator const&) = delete;
+	circular_communicator(circular_communicator&&) noexcept = default;
+
+	~circular_communicator() = default;
+
+	explicit circular_communicator(communicator& other)
+	: cartesian_communicator<1>{other, {}, {true}} {}
+
+	auto operator=(cartesian_communicator const&) -> circular_communicator& = delete;
+	auto operator=(circular_communicator     && other) noexcept -> circular_communicator& {
+		cartesian_communicator<1>::operator=(std::move(other));
+		return *this;
+	}
+	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
+	auto operator=(circular_communicator      & other) -> circular_communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
+		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
+		cartesian_communicator<1>::operator=(other);
+		return *this;
+	}
+
+	auto coordinate() const {return std::get<0>(this->coordinates());}
+	auto coordinate(int rank) const {return std::get<0>(this->coordinates(rank));}
+
+	using cartesian_communicator<1>::rank;
+	auto rank(int coordinate) const {return cartesian_communicator<1>::rank({coordinate});}
+
+	template<typename It>
+	auto rotate(It first, It last) {
+		return this->send_receive(
+			first, last,
+			this->rank(this->coordinate() - 1), this->rank(this->coordinate() + 1)
+		);
+	}
+	template<typename It>
+	auto unrotate(It first, It last) {
+		return this->send_receive(
+			first, last,
+			this->rank(this->coordinate() - 1), this->rank(this->coordinate() + 1)
+		);
+	}
+
+};
+
+template<int D> template<int DD>
+auto cartesian_communicator<D>::axis() -> circular_communicator {
+	circular_communicator ret;
+	std::array<int, D> remains{}; remains.fill(false);
+	std::get<DD>(remains) = true;
+	MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
+	return ret;
+}
+
 
 }  // end namespace boost::mpi3
 #endif

@@ -229,6 +229,26 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	explicit operator bool() const{return not is_empty();}
 
+	using reference = process;
+//	struct iterator_t {
+////		iterator_t() = default;
+////		explicit iterator_t(std::nullptr_t n) : commP_{n} {}
+////		auto operator++() -> iterator_t& {++rank_; return *this;}
+////		auto operator--() -> iterator_t& {--rank_; return *this;}
+////		auto operator*() const -> reference;
+
+////	 private:
+////		communicator* commP_ = nullptr;
+////		int rank_ = MPI_PROC_NULL;
+
+////		friend class communicator;
+////		iterator_t(communicator* self, int rank) : commP_{self}, rank_{rank} {}
+//	};
+//  using iterator = iterator_t;
+
+//	auto begin() -> iterator {return {this, 0     };}
+//	auto end  () -> iterator {return {this, size()};}
+
 	auto& handle() {return impl_;}
 	auto get_mutable()       {return impl_;}
 	auto get()         const {return impl_;}  // TODO(correaa) deprecate
@@ -236,6 +256,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	class ptr {  // cppcheck-suppress noConstructor ; bug in cppcheck 2.3
 		communicator* ptr_;
+
 	 public:
 		explicit ptr(communicator* ptr) : ptr_{ptr} {}
 		operator MPI_Comm() const {return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
@@ -578,7 +599,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void set_error_handler(error_handler const& eh);
 	error_handler get_error_handler() const;
 
-	auto operator[](int rank) -> process;
+	auto operator[](int rank) -> reference;
 
  protected:
 	template<class T> void set_attribute(int kv_idx, T const& t) {
