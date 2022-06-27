@@ -316,7 +316,6 @@ inq-cuda-11.7-openmpi-compileonly:
     - make silicon
   needs:
     - openmpi-cuda-11.7
-    - inq-openmpi
 
 #inq-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel
