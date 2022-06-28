@@ -192,6 +192,11 @@ struct cartesian_communicator : cartesian_communicator<> {
 		return source_dest;
 	}
 
+	template<int Direction, typename... As>
+	auto send_receive_shift(As... as, int displacement = 1) {
+		send_receive(as..., shift<Direction>(displacement));
+	}
+
 	using coordinates_type = std::array<int, D>;
 
 	using cartesian_communicator<>::rank;
@@ -259,22 +264,20 @@ struct circular_communicator : cartesian_communicator<1> {
 	using cartesian_communicator<1>::rank;
 	auto rank(int coordinate) const {return cartesian_communicator<1>::rank({coordinate});}
 
-	template<typename It>
-	auto rotate(It first, It last) {
-		return this->send_receive(
-			first, last,
-			this->rank(this->coordinate() - 1), this->rank(this->coordinate() + 1)
-		);
-	}
-	template<typename It>
-	auto unrotate(It first, It last) {
-		return this->send_receive(
-			first, last,
-			this->rank(this->coordinate() - 1), this->rank(this->coordinate() + 1)
-		);
-	}
+	template<typename... As>
+	auto   rotate(As... as, int displacement) {return this->send_receive(as..., this->shift<0>(-displacement));}
+	template<typename... As>
+	auto   rotate(As... as) {return this->send_receive(as..., this->shift<0>(-1));}
 
+	template<typename... As>
+	auto unrotate(As... as, int displacement) {return this->send_receive(as..., this->shift<0>(+displacement));}
+	template<typename... As>
+	auto unrotate(As... as) {return this->send_receive(as..., this->shift<0>(+1));}
 };
+
+template<int Dimension> using torus = cartesian_communicator<Dimension>;
+
+using ring = circular_communicator;
 
 template<int D> template<int DD>
 auto cartesian_communicator<D>::axis() -> circular_communicator {
