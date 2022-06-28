@@ -128,7 +128,7 @@ template<dimensionality_type D>
 struct cartesian_communicator : cartesian_communicator<> {
 	cartesian_communicator() = default;
 
-	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other}{}
+	cartesian_communicator(cartesian_communicator& other) : cartesian_communicator<>{other} {}
 	cartesian_communicator(cartesian_communicator const&) = delete;
 	cartesian_communicator(cartesian_communicator&&) noexcept = default;
 
@@ -237,7 +237,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 struct circular_communicator : cartesian_communicator<1> {
 	circular_communicator() = default;
 
-	circular_communicator(circular_communicator& other) = default; // : cartesian_communicator<1>{other}{}
+	circular_communicator(circular_communicator& other) : cartesian_communicator<1>{other} {}  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) icpc needs this definition explicitly
 	circular_communicator(circular_communicator const&) = delete;
 	circular_communicator(circular_communicator&&) noexcept = default;
 
