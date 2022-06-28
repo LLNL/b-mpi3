@@ -24,7 +24,7 @@ icpc-openmpi:
   stage: build
   allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev libopenmpi-dev libopenmpi-dev openmpi-bin libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev libopenmpi-dev openmpi-bin
     - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
     - chmod +x webimage.sh
     - ./webimage.sh -x -f webimage_extracted --log extract.log
@@ -50,7 +50,7 @@ icpc-intelmpi:
   stage: build
   allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev
     - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
     - chmod +x webimage.sh
     - ./webimage.sh -x -f webimage_extracted --log extract.log
@@ -70,7 +70,6 @@ icpc-intelmpi:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - make
   needs: ["openmpi"]
-
 
 openmpi-clang:
   stage: build
