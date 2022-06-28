@@ -350,11 +350,7 @@ inq-cuda-11.7-openmpi-compileonly:
     - add-apt-repository contrib
     - apt-get update
     - apt-get -y install cuda
-    - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
-    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
-    - mkdir /opt/cmake
-    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+    - apt-get update && apt-get install --no-install-recommends -y --quiet cmake libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ pkg-config make git ca-certificates wget
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
@@ -367,6 +363,11 @@ inq-cuda-11.7-openmpi-compileonly:
     - make silicon
   needs:
     - openmpi-cuda-11.7
+
+#    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
+#    - mkdir /opt/cmake
+#    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+#    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 
 #inq-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel
