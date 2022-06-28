@@ -23,7 +23,7 @@ openmpi:
 icpc-openmpi:
   stage: build
   allow_failure: true
-  stript:
+  script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl make libboost-test-dev libboost-serialization-dev libopenmpi-dev libopenmpi-dev openmpi-bin libboost-serialization-dev
     - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
     - chmod +x webimage.sh
