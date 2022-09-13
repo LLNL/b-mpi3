@@ -86,12 +86,17 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	{
 		mpi3::circular_communicator circle{world};
 		std::vector<int> buffer(10); buffer [5] = circle.coordinate();
-		circle.send_receive(buffer.begin(), buffer.end(), circle.rank(circle.coordinate() - 1), circle.rank(circle.coordinate() + 1));
+		circle.send_receive(
+			buffer.begin(), buffer.end(),
+			circle.rank(circle.coordinate() - 1),
+			circle.rank(circle.coordinate() + 1)
+		);
 		assert( buffer[5] == right );
 	}
 	try {
 		mpi3::ring circle{world};
 		std::vector<int> buffer(10); buffer [5] = circle.coordinate();
+
 		circle.rotate(buffer.begin(), buffer.end());
 	//  assert( buffer[5] == circle.rank(circle.coordinate() - 1) );
 	} catch(std::exception& e) {std::cout << e.what() <<std::endl;}
