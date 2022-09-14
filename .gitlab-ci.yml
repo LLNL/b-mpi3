@@ -41,7 +41,7 @@ icpc-openmpi:
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -67,7 +67,7 @@ icpc-intelmpi:
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make
   needs: ["openmpi"]
 
