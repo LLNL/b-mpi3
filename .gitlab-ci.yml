@@ -262,7 +262,7 @@ inq-openmpi:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - ../configure --prefix=$HOME
+    - ../configure --prefix=$HOME --disable-debug
     - make
     - make install
     - ctest --output-on-failure
