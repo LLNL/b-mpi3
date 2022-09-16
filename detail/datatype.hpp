@@ -154,28 +154,4 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
 }  // end namespace mpi3
 }  // end namespace boost
 
-#if not __INCLUDE_LEVEL__ //_TEST_BOOST_MPI3_DETAIL_DATATYPE
-
-#include<cassert>
-#include<iostream>
-#include<string>
-#include<boost/type_index.hpp>
-
-namespace mpi3 = boost::mpi3;
-using std::cout;
-
-int main() {
-	using mpi3::detail::is_basic;
-
-	static_assert( is_basic<int>{}, "");
-	static_assert( is_basic<double>{}, "");
-	static_assert( is_basic<mpi3::detail::float_int>{}, "");
-
-	static_assert( not is_basic<std::string>{}, "");
-
-	assert( mpi3::detail::basic_datatype<double>{} == MPI_DOUBLE );
-}
-
 #endif
-#endif
-
