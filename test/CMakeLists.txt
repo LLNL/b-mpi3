@@ -60,6 +60,7 @@ set(TEST_SRCS
 	communicator_barrier.cpp
 	communicator_broadcast.cpp
 	communicator_divide.cpp
+	datatype.cpp
 	gather2.cpp
 	group.cpp
 	communicator_cctor.cpp
