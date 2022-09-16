@@ -12,7 +12,7 @@ mpic++ -g -O3 -Wall -Wextra $0 -o $0x -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY`#-
 
 namespace mpi3 = boost::mpi3;
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator) -> int try{
+auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator /*world*/) -> int try{
 	using mpi3::detail::is_basic;
 
 	static_assert( is_basic<int>{} );
