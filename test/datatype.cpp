@@ -15,11 +15,11 @@ namespace mpi3 = boost::mpi3;
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator) -> int try{
 	using mpi3::detail::is_basic;
 
-	static_assert( is_basic<int>{}, "");
-	static_assert( is_basic<double>{}, "");
-	static_assert( is_basic<mpi3::detail::float_int>{}, "");
+	static_assert( is_basic<int>{} );
+	static_assert( is_basic<double>{} );
+	static_assert( is_basic<mpi3::detail::float_int>{} );
 
-	static_assert( not is_basic<std::string>{}, "");
+	static_assert( not is_basic<std::string>{} );
 
 	assert( mpi3::detail::basic_datatype<double>{} == MPI_DOUBLE );
 
