@@ -54,7 +54,7 @@ using byte = std::byte;
 #endif
 
 class packed {
-	unsigned char t;
+	unsigned char t{};
 
  public:
     explicit packed(unsigned char t_) : t{t_} {};
