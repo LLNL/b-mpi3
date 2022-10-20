@@ -59,6 +59,7 @@ icpc-openmpi:
 
 icpc-intelmpi:
   stage: build
+  image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev
