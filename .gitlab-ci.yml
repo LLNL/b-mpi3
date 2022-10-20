@@ -20,55 +20,56 @@ openmpi:
     - make
     - ctest --output-on-failure
 
+#    - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
+#    - chmod +x webimage.sh
+#    - ./webimage.sh -x -f webimage_extracted --log extract.log
+#    - rm -rf webimage.sh
+#    - ls -1 webimage_extracted/
+#    - WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
+#    - webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=intel.oneapi.lin.dpcpp-cpp-compiler-pro                            --eula=accept --log-dir=.
+#    - rm -rf webimage_extracted
+#    - . /opt/intel/oneapi/setvars.sh
+
+
 icpc-openmpi:
   stage: build
+  image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev libopenmpi-dev openmpi-bin
-    - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
-    - chmod +x webimage.sh
-    - ./webimage.sh -x -f webimage_extracted --log extract.log
-    - rm -rf webimage.sh
-    - ls -1 webimage_extracted/
-    - WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
-    - webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=intel.oneapi.lin.dpcpp-cpp-compiler-pro                            --eula=accept --log-dir=.
-    - rm -rf webimage_extracted
-    - . /opt/intel/oneapi/setvars.sh
-    - ln --symbolic --force . ../multi
-    - export CC=icc; export CXX=icpc;
-    - $CXX -v
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
-    - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
-    - make
+    - icpc --version
+    - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
+    - make --jobs 2 || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
 
+#    - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
+#    - chmod +x webimage.sh
+#    - ./webimage.sh -x -f webimage_extracted --log extract.log
+#    - rm -rf webimage.sh
+#    - ls -1 webimage_extracted/
+#    - WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
+#    - webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=intel.oneapi.lin.dpcpp-cpp-compiler-pro:intel.oneapi.lin.mpi.devel --eula=accept --log-dir=.
+#    - rm -rf webimage_extracted
+#    - . /opt/intel/oneapi/setvars.sh
+#    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+
 icpc-intelmpi:
   stage: build
+  image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev
-    - curl --output webimage.sh --url https://registrationcenter-download.intel.com/akdlm/irc_nas/18479/l_HPCKit_p_2022.1.2.117_offline.sh --retry 5 --retry-delay 5
-    - chmod +x webimage.sh
-    - ./webimage.sh -x -f webimage_extracted --log extract.log
-    - rm -rf webimage.sh
-    - ls -1 webimage_extracted/
-    - WEBIMAGE_NAME=$(ls -1 webimage_extracted/)
-    - webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=intel.oneapi.lin.dpcpp-cpp-compiler-pro:intel.oneapi.lin.mpi.devel --eula=accept --log-dir=.
-    - rm -rf webimage_extracted
-    - . /opt/intel/oneapi/setvars.sh
-    - ln --symbolic --force . ../multi
-    - export CC=icc; export CXX=icpc;
-    - $CXX -v
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
-    - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
+    - icpc --version
+    - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make
+    - ctest --output-on-failure
   needs: ["openmpi"]
 
 openmpi-clang:
@@ -222,7 +223,7 @@ qmcpack-cuda-runner:
     - ctest -R ppconvert --output-on-failure
     - ctest -R afqmc     --output-on-failure
   needs:
-    - openmpi-cuda-11.7
+    - openmpi-cuda-11
 
 #qmcpack-icpc-runner:
 #  stage: test
@@ -321,7 +322,7 @@ inq-openmpi:
 #      - cmake --build . --verbose
 #      - ctest --output-on-failure
 
-openmpi-cuda-11.7:
+openmpi-cuda-11:
   stage: build
   allow_failure: false
   image: debian:stable
@@ -334,12 +335,12 @@ openmpi-cuda-11.7:
     - apt-get update
     - apt-get -y install cuda
     - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
-    - /usr/local/cuda-11.7/bin/nvcc --version
+    - /usr/local/cuda-11/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
     - cmake --build . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -366,7 +367,7 @@ openmpi-cuda-11.7:
 #      - cmake --build . --verbose
 #      - ctest --output-on-failure
 
-inq-cuda-11.7-openmpi-compileonly:
+inq-cuda-11-openmpi-compileonly:
   stage: build
   allow_failure: true
   image: debian:stable
@@ -390,11 +391,11 @@ inq-cuda-11.7-openmpi-compileonly:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - /usr/local/cuda-11.7/bin/nvcc -V
-    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.7/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
+    - /usr/local/cuda-11/bin/nvcc -V
+    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
     - make silicon
   needs:
-    - openmpi-cuda-11.7
+    - openmpi-cuda-11
 
 #inq-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel
