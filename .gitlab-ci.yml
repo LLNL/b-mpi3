@@ -56,6 +56,7 @@ icpc-openmpi:
 #    - webimage_extracted/"$WEBIMAGE_NAME"/bootstrapper -s --action install --components=intel.oneapi.lin.dpcpp-cpp-compiler-pro:intel.oneapi.lin.mpi.devel --eula=accept --log-dir=.
 #    - rm -rf webimage_extracted
 #    - . /opt/intel/oneapi/setvars.sh
+#    - export MPI_OVERSUBSCRIBE="--oversubscribe"
 
 icpc-intelmpi:
   stage: build
@@ -66,7 +67,6 @@ icpc-intelmpi:
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
-    - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - icpc --version
     - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make
