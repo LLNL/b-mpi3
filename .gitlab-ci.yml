@@ -40,7 +40,6 @@ icpc-openmpi:
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
-    - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - icpc --version
     - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make --jobs 2 || make VERBOSE=1
