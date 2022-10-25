@@ -43,7 +43,7 @@ struct communicator {
 				case ncclSystemError: assert(0);
 				case ncclInternalError: assert(0);
 				case ncclInvalidArgument: assert(0);
-				case ncclInvalidUsage: assert(0);
+				case ncclInvalidUsage: assert(0 && "likely \"Duplicate GPU detected\", for example if rank 0 and rank 1 both on CUDA device 1000");
 				case ncclRemoteError: assert(0);
 				case ncclNumResults: assert(0);
 			}
