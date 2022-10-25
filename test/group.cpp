@@ -27,7 +27,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
 	static_assert(std::is_same<decltype(&wg), MPI_Group>{}, "!");
 
-	// mpi3::group const& wgc = wg;
+	[[maybe_unused]] mpi3::group const& wgc = wg;
 	static_assert(std::is_same<decltype(&wgc), mpi3::group const*>{}, "!");
 
 	// static_assert( std::is_same<decltype(*&wg), mpi3::group&>{}, "!" );
