@@ -9,7 +9,6 @@
 #include "../../mpi3/nccl/detail/basic_reduction.hpp"
 
 #include <thrust/system/cuda/memory.h>
-//#include <thrust/system/cuda/pointer.h>  // for thrust::cuda::pointer
 
 #include <functional>  // for plus
 #include <iostream>
@@ -56,16 +55,16 @@ struct communicator {
 			detail::datatype(*raw_pointer_cast(first)),
 			detail::reduction(op), impl_, NULL
 		);
-//		switch(r) {
-//			case ncclSuccess: break;
-//			case ncclUnhandledCudaError: assert(0);
-//			case ncclSystemError: assert(0);
-//			case ncclInternalError: assert(0);
-//			case ncclInvalidArgument: assert(0);
-//			case ncclInvalidUsage: assert(0);
-//			case ncclRemoteError: assert(0);
-//			case ncclNumResults: assert(0);
-//		}
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
 		return dest + count;
 	}
 
@@ -73,7 +72,16 @@ struct communicator {
 	auto send_n(P first, Size n, int peer) {
 		// ncclGroupStart();
 		[[maybe_unused]] ncclResult_t r = ncclSend(thrust::raw_pointer_cast(first), n, detail::datatype(*raw_pointer_cast(first)), peer, impl_, NULL);
-		assert( r == ncclSuccess );
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
 		// ncclGroupEnd();
 		// cudaStreamSynchronize(NULL);
 		return first + n;
@@ -82,7 +90,16 @@ struct communicator {
 	auto receive_n(P first, Size n, int peer) {
 		// ncclGroupStart();
 		[[maybe_unused]] ncclResult_t r = ncclRecv(thrust::raw_pointer_cast(first), n, detail::datatype(*raw_pointer_cast(first)), peer, impl_, NULL);
-		assert( r == ncclSuccess );
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
 		// ncclGroupEnd();
 		// cudaStreamSynchronize(NULL);
 		return first + n;
@@ -94,7 +111,16 @@ struct communicator {
 	int rank() const {
 		int ret;
 		[[maybe_unused]] ncclResult_t r = ncclCommUserRank(impl_, &ret);
-	//	assert(r == ncclSuccess);
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
 		return ret;
 	}
 	int count() const {
@@ -112,6 +138,7 @@ struct communicator {
 		}
 		return ret;
 	}
+	[[deprecated("in NCCL nomenclature size is called count")]] int size() const {return count();}
 
  private:
 	ncclComm_t operator&() {return impl_;}
