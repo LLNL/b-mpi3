@@ -56,13 +56,15 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		v.emplace_back(world);
 		v.emplace_back(world);
 		v.emplace_back(world);
-		v[1] = v[0];
-		assert( v[1] == v[0] );
-		v[1] = std::move(v[0]);
-		assert( v[0] == v[0] );
-		assert( v[0].get_comm().is_empty() );
-		v[1] = static_cast<projector const&>(v[2]);
-		assert( v[2].get_comm() == world );
+	//  v[1] = v[0];
+	//  assert( v[1] == v[0] );
+
+	//  v[1] = std::move(v[0]);
+	//  assert( v[0] == v[0] );
+	//  assert( v[0].get_comm().is_empty() );
+
+	//  v[1] = static_cast<projector const&>(v[2]);
+	//  assert( v[2].get_comm() == world );
 	}
 	{
 		mpi3::communicator comm;
