@@ -1,8 +1,17 @@
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2022 Alfredo A. Correa
+
+#ifndef MPI3_NCCL_COMMUNICATOR_HPP_
+#define MPI3_NCCL_COMMUNICATOR_HPP_
+
 #include "../../mpi3/communicator.hpp"
+#include "../../mpi3/nccl/detail/basic_datatype.hpp"
+#include "../../mpi3/nccl/detail/basic_reduction.hpp"
 
 #include <thrust/system/cuda/memory.h>
 //#include <thrust/system/cuda/pointer.h>  // for thrust::cuda::pointer
 
+#include <functional>  // for plus
 #include <iostream>
 
 #include <nccl.h>
@@ -13,13 +22,8 @@ namespace nccl {
 
 namespace detail {
 
-template<class T> struct basic_datatype;
-
-template<> struct basic_datatype<int64_t> : std::integral_constant<ncclDataType_t, ncclInt64 > {};
-template<> struct basic_datatype<double > : std::integral_constant<ncclDataType_t, ncclDouble> {};
-template<> struct basic_datatype<float  > : std::integral_constant<ncclDataType_t, ncclFloat > {};
-
-template<class T> auto datatype(T const&) -> decltype(basic_datatype<T>::value) {return basic_datatype<T>::value;}
+template<class T> auto datatype(T const&) -> decltype(basic_datatype<T>) {return basic_datatype<T>;}
+template<class T> auto reduction(T const&) -> decltype(basic_reduction<T>) {return basic_reduction<T>;}
 
 }
 
@@ -45,12 +49,12 @@ struct communicator {
 			}
 		}
 	}
-	template<class P1, class Size, class P2, typename = decltype(thrust::raw_pointer_cast(P1{}), thrust::raw_pointer_cast(P2{}))>
-	auto all_reduce_n(P1 first, Size count, P2 dest) {
+	template<class Op = std::plus<>, class P1, class Size, class P2, typename = decltype(*thrust::raw_pointer_cast(P2{}) = Op{}(*thrust::raw_pointer_cast(P1{}), *thrust::raw_pointer_cast(P1{})))>
+	auto all_reduce_n(P1 first, Size count, P2 dest, Op op = {}) {
 		[[maybe_unused]] ncclResult_t r = ncclAllReduce(
 			thrust::raw_pointer_cast(first), thrust::raw_pointer_cast(dest), count, 
-			detail::datatype(*raw_pointer_cast(first)), 
-			ncclSum, impl_, NULL
+			detail::datatype(*raw_pointer_cast(first)),
+			detail::reduction(op), impl_, NULL
 		);
 //		switch(r) {
 //			case ncclSuccess: break;
@@ -117,3 +121,4 @@ struct communicator {
 }  // end namespace nccl
 }  // end namespace mpi3
 }  // end namespace boost
+#endif  // MPI3_NCCL_COMMUNICATOR_HPP_
