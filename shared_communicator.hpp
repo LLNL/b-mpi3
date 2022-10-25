@@ -74,8 +74,8 @@ struct shared_communicator : communicator {
 
  public:
 	shared_communicator& operator=(shared_communicator const&) = delete;
-	shared_communicator& operator=(shared_communicator     &&) = default;
-	shared_communicator& operator=(shared_communicator      &) = default;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator)
+	shared_communicator& operator=(shared_communicator     &&) = delete;
+	shared_communicator& operator=(shared_communicator      &) = delete;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator)
 
 	~shared_communicator() = default;
 

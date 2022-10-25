@@ -246,7 +246,8 @@ struct circular_communicator : cartesian_communicator<1> {
 	explicit circular_communicator(communicator& other)
 	: cartesian_communicator<1>{other, {}, {true}} {}
 
-	auto operator=(cartesian_communicator const&) -> circular_communicator& = delete;
+	auto operator=(circular_communicator const&) -> circular_communicator& = delete;
+	auto operator=(circular_communicator     &&) -> circular_communicator& = delete;
 //  auto operator=(circular_communicator     && other) noexcept -> circular_communicator& {
 //  	cartesian_communicator<1>::operator=(std::move(other));
 //  	return *this;

@@ -19,8 +19,8 @@ struct projector {
 	projector(projector const&) = default;
 	projector(projector     &&) = default;
 
-	auto operator=(projector const&) -> projector& = default;
-	auto operator=(projector     &&) -> projector& = default;
+	auto operator=(projector const&) -> projector& = delete;
+	auto operator=(projector     &&) -> projector& = delete;
 //	auto operator=(projector      &) -> projector& = default;
 
 	friend auto operator==(projector const& a, projector const& b) {return a.n_ == b.n_;} //  a.comm_ == b.comm_;}
