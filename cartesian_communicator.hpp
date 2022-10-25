@@ -51,7 +51,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	int dimension() const {int ret; MPI_Cartdim_get(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
-	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
+	cartesian_communicator& operator=(cartesian_communicator     &&) = delete;
 	// vvv nvcc 11 workaround, needs explicit definition of duplicate assigment
 //  cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
 //  	if(this == std::addressof(other)) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
