@@ -140,8 +140,9 @@ struct communicator {
 	}
 	[[deprecated("in NCCL nomenclature size is called count")]] int size() const {return count();}
 
+	[[deprecated("using comm handle, try implementating")]] ncclComm_t operator&() {return impl_;}
+
  private:
-	ncclComm_t operator&() {return impl_;}
 	ncclComm_t impl_;
 };
 
