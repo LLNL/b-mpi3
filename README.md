@@ -697,6 +697,36 @@ struct distributed_data {
 
 (Thanks Arthur O'Dwyer for the critical reading of this section.)
 
+## NCCL (GPU communication)
+
+If the underlying MPI distribution is GPU-aware, in principle you can pass GPU pointers to the communication routines. 
+This is generally faster than copying back and forth to CPU.
+
+Nvidia's NCCL conceptually implements a subset of MPI operations and it might be faster than GPU-aware MPI.
+To obtain an NCCL communicator you pass an MPI communicator.
+
+```cpp
+	mpi3::nccl::communicator gpu_comm{mpi_comm};
+```
+
+The original MPI communicator is assumed be working with non-overlapping devices (e.g. one process per GPU).
+This can be achieved by `cudaSetDevice(world.rank() % num_devices);` generally at the start of the program or autommically by using certain ways to run the MPI program (e.g. `lrun` tries to attach each MPI process to a different GPU device).
+
+With some limitations, the NCCL communicator can be used to perform operations on GPU memory without the need to obtaining raw pointers. 
+By default it works with `thrust[::cuda]::device_ptr` or `thrust[::cuda]::universal_ptr`.
+For example this produces a reduction in GPU across processes (even processes in different nodes):
+
+```cpp
+//  thust::device_vector<int64_t, thrust::cuda::universal_allocator<int64_t>> A(1000, world.rank());
+	thrust::device_vector<int64_t, thrust::cuda::allocator<int64_t>> A(1000, world.rank());
+
+	magnesium.all_reduce_n(A.data(), A.size(), A.data());
+```
+
+Like B-MPI3 communicator the NCCL communicator is destroyed automatically when leaving the scope.
+The implementation is preliminary, the NCCL communicator is moveable but not copyable.
+Congruent NCCL communicators can be constructed from the same (or congruent) B-MPI3 communicator (at the cost of a regular MPI broadcast).
+
 # Conclusion
 
 The goal is to provide a type-safe, efficient, generic interface for MPI.
