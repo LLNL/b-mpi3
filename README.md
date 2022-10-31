@@ -717,15 +717,17 @@ By default it works with `thrust[::cuda]::device_ptr` or `thrust[::cuda]::univer
 For example this produces a reduction in GPU across processes (even processes in different nodes):
 
 ```cpp
-//  thust::device_vector<int64_t, thrust::cuda::universal_allocator<int64_t>> A(1000, world.rank());
-	thrust::device_vector<int64_t, thrust::cuda::allocator<int64_t>> A(1000, world.rank());
+//  thust::device_vector<int64_t, thrust::cuda::universal_allocator<int64_t>> A(1000, gpu_comm.rank());
+	thrust::device_vector<int64_t, thrust::cuda::allocator<int64_t>> A(1000, gpu_comm.rank());
 
-	magnesium.all_reduce_n(A.data(), A.size(), A.data());
+	gpu_comm.all_reduce_n(A.data(), A.size(), A.data());
 ```
 
 Like B-MPI3 communicator the NCCL communicator is destroyed automatically when leaving the scope.
-The implementation is preliminary, the NCCL communicator is moveable but not copyable.
+
+The implementation is preliminary, the NCCL communicator is moveable but not copyable (or duplicable).
 Congruent NCCL communicators can be constructed from the same (or congruent) B-MPI3 communicator (at the cost of a regular MPI broadcast).
+There is not mechanism to create NCCL subcommunicators from other NCCL communicators, except using MPI subcommunicators as constructor arguments.
 
 # Conclusion
 
