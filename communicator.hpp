@@ -2074,7 +2074,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return scatter_n_from(std::addressof(v), 1, first, root);
 	}
 	template<class It1, class V = typename std::iterator_traits<It1>::value_type>
-	V scatter(It1 first, It1 last, int root = 0) {
+	V scatter(It1 first, [[maybe_unused]] It1 last, int root = 0) {
 		if(rank()==root) {assert(std::distance(first, last) == size());}
 		V v;
 		scatter_value_from(v, first, root);

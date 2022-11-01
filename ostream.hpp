@@ -50,9 +50,13 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 				} else if(std::all_of(messages.begin(), messages.end(), [](auto const& e) {return e.second.empty() or e.second.back() == '\t';})) {
 					if(not doing_formatting) {doing_formatting = true; output << '\n';}
 					if(not doing_table) {
-						output<<"\e[1;31m"<< std::setw(18) << (comm_.name() + "↓");
+						output//<<"\e[1;31m"
+							<< std::setw(18) << (comm_.name() + "↓")
+						;
 						for(int i = 0; i != comm_.size(); ++i) {output << std::setw(20) << ("↓"+ std::to_string(i) +"↓");}
-						output<<"\e[0m\n";
+						output//<<"\e[0m"
+							<<'\n'
+						;
 						doing_table = true;
 					}
 					headed_row(messages);
@@ -77,8 +81,8 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 					if(size(m.first) == 1) {range += ("["+ std::to_string(lower(m.first))                                      +"]");}
 					else                   {range += ("["+ std::to_string(lower(m.first)) +"-"+ std::to_string(upper(m.first)) +"]");}
 				}
-				output<<"\e[1;32m"<< std::setw(16) << std::left << range;
-				output<<"→ \e[0m"<< m.second;
+				output<</*"\e[1;32m"<<*/ std::setw(16) << std::left << range;
+				output<<"→ "<</*"\e[0m"<<*/ m.second;
 			}
 			if(messages.iterative_size() > 1) {output << '\n';}
 		}
