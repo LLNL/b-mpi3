@@ -130,6 +130,28 @@ class communicator {
 		// cudaStreamSynchronize(NULL);
 		return first + n;
 	}
+	template<
+		class P, typename = decltype(detail::datatype(*P{})),
+		class Size
+	>
+	auto broadcast_n(P first, Size n, int root = 0) {
+		// ncclGroupStart();
+		using thrust::raw_pointer_cast;
+		ncclResult_t r = ncclBcast(first, n, detail::datatype(*first), root, impl_, NULL);
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
+		// ncclGroupEnd();
+		// cudaStreamSynchronize(NULL);
+		return first + n;
+	}
 
  private:
 	template<class Complex, class Value> static constexpr bool is_numeric_complex_of =
@@ -150,7 +172,7 @@ class communicator {
 		std::enable_if_t<is_numeric_complex_of<std::decay_t<Complex>, std::decay_t<Value>>, int> =0
 	>
 	auto send_n(P first, Size n, int peer) {
-		send_n(reinterpret_pointer_cast<typename PT::template rebind<Value>>(first), n*2, peer);
+		send_n(thrust::reinterpret_pointer_cast<typename PT::template rebind<Value>>(first), n*2, peer);
 		return first + n;
 	}
 	template<
@@ -164,7 +186,7 @@ class communicator {
 		std::enable_if_t<is_numeric_complex_of<std::decay_t<Complex>, std::decay_t<Value>>, int> =0
 	>
 	auto receive_n(P first, Size n, int peer) {
-		receive_n(reinterpret_pointer_cast<typename PT::template rebind<Value>>(first), n*2, peer);
+		receive_n(thrust::reinterpret_pointer_cast<typename PT::template rebind<Value>>(first), n*2, peer);
 		return first + n;
 	}
 
@@ -202,6 +224,7 @@ class communicator {
 //	}
 	template<class Size>
 	auto all_reduce_n(thrust::cuda::pointer<thrust::complex<double>> first, Size n, thrust::cuda::pointer<thrust::complex<double>> dest) {
+		using thrust::reinterpret_pointer_cast;
 		all_reduce_n(
 			reinterpret_pointer_cast<thrust::cuda::pointer<double>>(first), n*2,
 			reinterpret_pointer_cast<thrust::cuda::pointer<double>>(dest ), std::plus<>{}
@@ -209,6 +232,7 @@ class communicator {
 	}
 	template<class Size>
 	auto all_reduce_n(thrust::cuda::universal_pointer<thrust::complex<double>> first, Size n, thrust::cuda::universal_pointer<thrust::complex<double>> dest) {
+		using thrust::reinterpret_pointer_cast;
 		all_reduce_n(
 			reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(first), n*2,
 			reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(dest ), std::plus<>{}
