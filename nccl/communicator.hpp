@@ -64,8 +64,45 @@ class communicator {
 			}
 		}
 	}
+
+	communicator(communicator const&) = delete;
+//  [[deprecated("experimental")]]
+	communicator(communicator& other) : impl_{nullptr} {
+		if(other.empty()) {return;}
+		ncclUniqueId nccl_id = other.root()?get_unique_id():ncclUniqueId{};
+		{
+			ncclResult_t r = ncclBcast(&nccl_id, sizeof(ncclUniqueId), ncclChar, 0, other.impl_, NULL);
+			switch(r) {
+				case ncclSuccess: break;
+				case ncclUnhandledCudaError: assert(0);
+				case ncclSystemError: assert(0);
+				case ncclInternalError: assert(0);
+				case ncclInvalidArgument: assert(0);
+				case ncclInvalidUsage: assert(0);
+				case ncclRemoteError: assert(0);
+				case ncclNumResults: assert(0);
+			}
+		}
+		cudaStreamSynchronize(NULL);
+		// TODO(correaa) may need mpi.barrier(); here
+		{
+			ncclResult_t r = ncclCommInitRank(&impl_, other.count(), nccl_id, other.rank());
+			switch(r) {
+				case ncclSuccess: break;
+				case ncclUnhandledCudaError: assert(0);
+				case ncclSystemError: assert(0);
+				case ncclInternalError: assert(0);
+				case ncclInvalidArgument: assert(0);
+				case ncclInvalidUsage: assert(0 && "likely \"Duplicate GPU detected\", for example if rank 0 and rank 1 both on CUDA device 1000");
+				case ncclRemoteError: assert(0);
+				case ncclNumResults: assert(0);
+			}
+		}
+	}
 	communicator(communicator&& other) : impl_{std::exchange(other.impl_, nullptr)} {}
 	// moved from communicators are left in a partially formed, since there is no assigmment it cannot be used
+
+	auto duplicate() {return communicator{*this};}
 
 	template<
 		class Op = std::plus<>,
@@ -131,13 +168,13 @@ class communicator {
 		return first + n;
 	}
 	template<
-		class P, typename = decltype(detail::datatype(*P{})),
+		class P, //typename = decltype(detail::datatype(*raw_pointer_cast(P{}))),
 		class Size
 	>
-	auto broadcast_n(P first, Size n, int root = 0) {
+	P broadcast_n(P first, Size n, int root = 0) {
 		// ncclGroupStart();
 		using thrust::raw_pointer_cast;
-		ncclResult_t r = ncclBcast(first, n, detail::datatype(*first), root, impl_, NULL);
+		ncclResult_t r = ncclBcast(raw_pointer_cast(first), n, detail::datatype(*raw_pointer_cast(first)), root, impl_, NULL);
 		switch(r) {
 			case ncclSuccess: break;
 			case ncclUnhandledCudaError: assert(0);
@@ -244,7 +281,8 @@ class communicator {
 			ncclCommDestroy(impl_);  // call ncclCommFinalize internally if necessary
 		}
 	}
-	int rank() const {
+
+	int rank() const {  // aka user_rank()
 		int ret;
 		ncclResult_t r = ncclCommUserRank(impl_, &ret);
 		switch(r) {
@@ -275,6 +313,10 @@ class communicator {
 		return ret;
 	}
 	[[deprecated("in NCCL nomenclature `.size` is called `.count`")]] int size() const {return count();}
+	[[nodiscard]] bool    empty() const {return not count();}
+	[[nodiscard]] bool is_empty() const {return not count();}
+
+	[[nodiscard]] bool root() const {return not rank();}
 
 	[[deprecated("using comm handle, try implementating")]] ncclComm_t operator&() {return impl_;}
 

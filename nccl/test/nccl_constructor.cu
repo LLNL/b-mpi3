@@ -9,12 +9,17 @@
 
 namespace mpi3 = boost::mpi3;
 
+class universal_communicator : mpi3::communicator, mpi3::nccl::communicator {
+};
+
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
-	assert(WORLD.size() == 4);  
+	assert(WORLD.size() == 4);
 
 	cudaSetDevice(WORLD.rank());
 
 	auto HEMI = WORLD / 2;
+
+	using Comm = mpi3::nccl::communicator;
 
 	mpi3::nccl::communicator magnesium{HEMI};
 	assert(magnesium.rank() == HEMI.rank());
@@ -45,8 +50,11 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 	std::vector<int> singleton(1);
 	if(magnesium.rank() == 0) { singleton[0] = 99; }
 	magnesium.broadcast_n(singleton.data(), 1);
-//  cudaStreamSynchronize(NULL);
+	cudaStreamSynchronize(NULL);
 	assert( singleton[0] == 99 );
+
+	auto magnesium2{magnesium};
+	assert( magnesium2.size() == magnesium.size() );
 
 	return 0;
 }
