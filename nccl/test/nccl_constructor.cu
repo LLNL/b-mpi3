@@ -19,7 +19,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 
 	auto HEMI = WORLD / 2;
 
-	using Comm = mpi3::nccl::comm
+	using Comm = mpi3::nccl::communicator;
 
 	mpi3::nccl::communicator magnesium{HEMI};
 	assert(magnesium.rank() == HEMI.rank());
