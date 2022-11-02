@@ -131,12 +131,13 @@ class communicator {
 		return first + n;
 	}
 	template<
-		class S1, typename = decltype(detail::datatype(*S1{})),
+		class P, typename = decltype(detail::datatype(*raw_pointer_cast(P{}))),
 		class Size
 	>
-	auto broadcast_n(S1 first, Size n, int root = 0) {
+	auto broadcast_n(P first, Size n, int root = 0) {
 		// ncclGroupStart();
-		ncclResult_t r = ncclBcast(/*thrust::raw_pointer_cast(*/first/*)*/, n, detail::datatype(*first), root, impl_, NULL);
+		using thrust::raw_pointer_cast;
+		ncclResult_t r = ncclBcast(raw_pointer_cast(first), n, detail::datatype(*first), root, impl_, NULL);
 		switch(r) {
 			case ncclSuccess: break;
 			case ncclUnhandledCudaError: assert(0);
