@@ -28,21 +28,18 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 
 	std::cout<<"[WORLD rank"<< WORLD.rank() <<" HEMI rank"<< HEMI.rank() <<"] result:"<< H[0] <<std::endl;
 
-//  assert( magnesium.count() == 2 );
+	assert( magnesium.count() == 2 );
 
-//  auto magnesium2 = std::move(magnesium);
-//  assert( magnesium2.count() == 2 );
-
-	switch(magnesium.rank()) {
-	case 0: {
-		magnesium.send_n(A.data(), A.size(), 1);
-	}
-	case 1: {
-		thrust::device_vector<T, thrust::cuda::allocator<T>> B(1000, T{});
-		magnesium.receive_n(B.data(), B.size(), 0);
-		assert( A == B );
-	}
-	}
+//	switch(magnesium.rank()) {
+//	case 0: {
+//		magnesium.send_n(A.data(), A.size(), 1);
+//	}
+//	case 1: {
+//		thrust::device_vector<T, thrust::cuda::allocator<T>> B(1000, T{});
+//		magnesium.receive_n(B.data(), B.size(), 0);
+//		assert( A == B );
+//	}
+//	}
 
 	int i = 0;
 	if(not magnesium.rank()) { i = 99; }
