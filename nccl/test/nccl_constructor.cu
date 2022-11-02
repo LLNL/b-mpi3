@@ -10,7 +10,7 @@
 namespace mpi3 = boost::mpi3;
 
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
-	assert(WORLD.size() == 4);  
+	assert(WORLD.size() == 4);
 
 	cudaSetDevice(WORLD.rank());
 
@@ -47,6 +47,8 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 	magnesium.broadcast_n(singleton.data(), 1);
 //  cudaStreamSynchronize(NULL);
 	assert( singleton[0] == 99 );
+
+	auto magnesium2{magnesium};
 
 	return 0;
 }
