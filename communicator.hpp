@@ -1818,7 +1818,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot reduce n");}
 	}
-	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp>
+	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp, typename = decltype(static_cast<void*>(detail::data(std::declval<It2>())))>
 	auto all_reduce_n(
 		It1 first, 
 			detail::contiguous_iterator_tag /*tag*/,
@@ -1841,7 +1841,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class VC1 = detail::value_category_t<typename std::iterator_traits<It1>::value_type>,
 		class VC2 = detail::value_category_t<typename std::iterator_traits<It2>::value_type>
 	>
-	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}){
+	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}) {
 		return all_reduce_n(
 			first,
 				detail::iterator_category_t<It1>{},
