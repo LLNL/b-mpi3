@@ -1,4 +1,6 @@
 #include "../../../mpi3/nccl/communicator.hpp"
+#include "../../../mpi3/nccl/universal_communicator.hpp"
+
 #include "../../../mpi3/main.hpp"
 
 #include <thrust/system/cuda/memory.h>
@@ -9,9 +11,6 @@
 
 namespace mpi3 = boost::mpi3;
 
-class universal_communicator : mpi3::communicator, mpi3::nccl::communicator {
-};
-
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 	assert(WORLD.size() == 4);
 
@@ -19,9 +18,9 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 
 	auto HEMI = WORLD / 2;
 
-	using Comm = mpi3::nccl::communicator;
+	using Communicator = mpi3::nccl::universal_communicator;
 
-	mpi3::nccl::communicator magnesium{HEMI};
+	Communicator magnesium{HEMI};
 	assert(magnesium.rank() == HEMI.rank());
 
 	using T = thrust::complex<double>;  // int64_t;
@@ -33,18 +32,22 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 
 	std::cout<<"[WORLD rank"<< WORLD.rank() <<" HEMI rank"<< HEMI.rank() <<"] result:"<< H[0] <<std::endl;
 
-	assert( magnesium.count() == 2 );
+	assert( magnesium.size() == 2 );
 
-//	switch(magnesium.rank()) {
-//	case 0: {
-//		magnesium.send_n(A.data(), A.size(), 1);
-//	}
-//	case 1: {
-//		thrust::device_vector<T, thrust::cuda::allocator<T>> B(1000, T{});
-//		magnesium.receive_n(B.data(), B.size(), 0);
-//		assert( A == B );
-//	}
-//	}
+	std::vector<double> V(100, 1.);
+	magnesium.all_reduce_n(V.data(), V.size(), V.data());
+	assert( V[10] == magnesium.size() );
+
+	switch(magnesium.rank()) {
+	case 0: {
+		magnesium.send_n(A.data(), A.size(), 1);
+	}
+	case 1: {
+		thrust::device_vector<T, thrust::cuda::allocator<T>> B(1000, T{});
+		magnesium.receive_n(B.data(), B.size(), 0);
+		assert( A == B );
+	}
+	}
 
 //	thrust::device_vector<int, thrust::cuda::allocator<int>> singleton(1);
 	std::vector<int> singleton(1);
