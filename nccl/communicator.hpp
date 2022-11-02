@@ -130,6 +130,27 @@ class communicator {
 		// cudaStreamSynchronize(NULL);
 		return first + n;
 	}
+	template<
+		class S1, typename = decltype(detail::datatype(*S1{})),
+		class Size
+	>
+	auto broadcast_n(S1 first, Size n, int root = 0) {
+		// ncclGroupStart();
+		ncclResult_t r = ncclBcast(/*thrust::raw_pointer_cast(*/first/*)*/, n, detail::datatype(*first), root, impl_, NULL);
+		switch(r) {
+			case ncclSuccess: break;
+			case ncclUnhandledCudaError: assert(0);
+			case ncclSystemError: assert(0);
+			case ncclInternalError: assert(0);
+			case ncclInvalidArgument: assert(0);
+			case ncclInvalidUsage: assert(0);
+			case ncclRemoteError: assert(0);
+			case ncclNumResults: assert(0);
+		}
+		// ncclGroupEnd();
+		// cudaStreamSynchronize(NULL);
+		return first + n;
+	}
 
  private:
 	template<class Complex, class Value> static constexpr bool is_numeric_complex_of =
