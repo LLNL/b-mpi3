@@ -211,12 +211,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator(communicator&&) = default;
 
 	communicator& operator=(communicator const&) = delete;
-	communicator& operator=(communicator& other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
+
+	[[deprecated("consider avoiding assigment")]]
+	auto operator=(communicator& other) -> communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
 		communicator tmp{other};
 		swap(tmp);
 		return *this;
 	}
-	communicator& operator=(communicator     && other) noexcept {
+	auto operator=(communicator     && other) noexcept -> communicator& {
 		communicator tmp{std::move(other)};
 		swap(tmp);
 		return *this;
@@ -227,27 +229,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return this==std::addressof(o) or compare(o) == detail::equality::congruent;
 	}
 
-	explicit operator bool() const{return not is_empty();}
+	explicit operator bool() const {return not is_empty();}
 
 	using reference = process;
-//	struct iterator_t {
-////		iterator_t() = default;
-////		explicit iterator_t(std::nullptr_t n) : commP_{n} {}
-////		auto operator++() -> iterator_t& {++rank_; return *this;}
-////		auto operator--() -> iterator_t& {--rank_; return *this;}
-////		auto operator*() const -> reference;
-
-////	 private:
-////		communicator* commP_ = nullptr;
-////		int rank_ = MPI_PROC_NULL;
-
-////		friend class communicator;
-////		iterator_t(communicator* self, int rank) : commP_{self}, rank_{rank} {}
-//	};
-//  using iterator = iterator_t;
-
-//	auto begin() -> iterator {return {this, 0     };}
-//	auto end  () -> iterator {return {this, size()};}
 
 	auto& handle() {return impl_;}
 	auto get_mutable()       {return impl_;}
