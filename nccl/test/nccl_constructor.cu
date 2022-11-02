@@ -14,12 +14,12 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 
 	cudaSetDevice(WORLD.rank());
 
-	auto HEMI = WORLD < 2;
+	auto HEMI = WORLD / 2;
 
 	mpi3::nccl::communicator magnesium{HEMI};
 	assert(magnesium.rank() == HEMI.rank());
 
-	using T = int64_t;  // thrust::complex<double>;  // int64_t;
+	using T = thrust::complex<double>;  // int64_t;
 //  thust::device_vector<T, thrust::cuda::universal_allocator<T>> A(1000, world.rank());
 	thrust::device_vector<T, thrust::cuda::allocator<T>> A(1000, T{1.*WORLD.rank()});
 
