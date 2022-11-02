@@ -223,16 +223,18 @@ class communicator {
 //	}
 	template<class Size>
 	auto all_reduce_n(thrust::cuda::pointer<thrust::complex<double>> first, Size n, thrust::cuda::pointer<thrust::complex<double>> dest) {
+		using thrust::reinterpret_pointer_cast;
 		all_reduce_n(
-			thrust::reinterpret_pointer_cast<thrust::cuda::pointer<double>>(first), n*2,
-			thurst::reinterpret_pointer_cast<thrust::cuda::pointer<double>>(dest ), std::plus<>{}
+			reinterpret_pointer_cast<thrust::cuda::pointer<double>>(first), n*2,
+			reinterpret_pointer_cast<thrust::cuda::pointer<double>>(dest ), std::plus<>{}
 		);
 	}
 	template<class Size>
 	auto all_reduce_n(thrust::cuda::universal_pointer<thrust::complex<double>> first, Size n, thrust::cuda::universal_pointer<thrust::complex<double>> dest) {
+		using thrust::reinterpret_pointer_cast;
 		all_reduce_n(
-			thurst::reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(first), n*2,
-			thurst::reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(dest ), std::plus<>{}
+			reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(first), n*2,
+			reinterpret_pointer_cast<thrust::cuda::universal_pointer<double>>(dest ), std::plus<>{}
 		);
 	}
 
