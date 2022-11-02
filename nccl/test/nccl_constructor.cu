@@ -41,7 +41,8 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 //	}
 //	}
 
-	thrust::device_vector<int, thrust::cuda::allocator<int>> singleton(1);
+//	thrust::device_vector<int, thrust::cuda::allocator<int>> singleton(1);
+	std::vector<int> singleton(1);
 	if(magnesium.rank() == 0) { singleton[0] = 99; }
 
 	magnesium.broadcast_n(singleton.data(), 1);
