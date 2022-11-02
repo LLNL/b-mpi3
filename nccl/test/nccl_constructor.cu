@@ -12,7 +12,7 @@ namespace mpi3 = boost::mpi3;
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator WORLD) {
 	assert(WORLD.size() == 4);  
 
-//	cudaSetDevice(world_rank); // GPU N binds to MPI rank N
+	cudaSetDevice(world.rank());
 
 	auto HEMI = WORLD < 2;
 
