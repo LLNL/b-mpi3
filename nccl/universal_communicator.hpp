@@ -28,7 +28,7 @@ struct universal_communicator : mpi3::communicator, private mpi3::nccl::communic
  private:
 	template<class P>
 	using comm_system = typename std::conditional<
-		std::is_same_v<typename ::thrust::iterator_system<P>::type, thrust::device_system_tag>,
+		std::is_same_v<typename ::thrust::iterator_system<P>::type, thrust::cuda_cub::tag>,
 		mpi3::nccl::communicator,
 		mpi3::      communicator
 	>::type;
