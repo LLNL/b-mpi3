@@ -52,12 +52,18 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) = default;
+
+	#ifdef __NVCC__
 	// vvv nvcc 11 workaround, needs explicit definition of duplicate assigment
+	[[deprecated]]
 	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
 		if(this == std::addressof(other)) {return *this;}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
 		communicator::operator=(other);
 		return *this;
 	}
+	#else
+	[[deprecated]] cartesian_communicator& operator=(cartesian_communicator      &) = default;  // NOLINT(clang-diagnostic-deprecated-declarations,cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) "duplicate" assignment
+	#endif
 
 	~cartesian_communicator() = default;
 
@@ -167,12 +173,18 @@ struct cartesian_communicator : cartesian_communicator<> {
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator     &&) noexcept = default;
+
+	#ifdef __NVCC__
 	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
+	[[deprecated]]
 	cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
 		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
 		cartesian_communicator<>::operator=(other);
 		return *this;
 	}
+	#else
+	[[deprecated]] cartesian_communicator& operator=(cartesian_communicator      &) = default;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
+	#endif
 
 	cartesian_communicator<1> axis(int d) {  // TODO(correaa) return a circular_communicator
 		assert( d >= 0 );
@@ -180,13 +192,13 @@ struct cartesian_communicator : cartesian_communicator<> {
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
 		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
+		MPI_(Cart_sub)(impl_, remains.data(), &ret.get()); 
 		return ret;
 	}
 
 	template<int DD> auto axis() -> circular_communicator;
 
-	template<int Direction> auto shift(int displacement) const {
+	template<int Direction> auto shift(int displacement) const { 
 		std::pair<int, int> source_dest;
 		MPI_(Cart_shift)(impl_, Direction, displacement, &source_dest.first, &source_dest.second);
 		return source_dest;
@@ -251,12 +263,16 @@ struct circular_communicator : cartesian_communicator<1> {
 		cartesian_communicator<1>::operator=(std::move(other));
 		return *this;
 	}
+	#ifdef __NVCC__
 	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
 	auto operator=(circular_communicator      & other) -> circular_communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
 		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
-		cartesian_communicator<1>::operator=(other);
+		cartesian_communicator<1>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
 		return *this;
 	}
+	#else
+	auto operator=(circular_communicator& other) -> circular_communicator& = default;  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
+	#endif
 
 	auto coordinate() const {return std::get<0>(this->coordinates());}
 	auto coordinate(int rank) const {return std::get<0>(this->coordinates(rank));}
