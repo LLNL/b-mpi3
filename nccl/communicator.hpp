@@ -45,7 +45,7 @@ class communicator {
 	}
 
  public:
-	communicator(mpi3::communicator& mpi) : impl_{nullptr} {
+	explicit communicator(mpi3::communicator& mpi) : impl_{nullptr} {
 		if(mpi.empty()) {return;}
 		ncclUniqueId nccl_id = mpi.root()?get_unique_id():ncclUniqueId{};
 		mpi.broadcast_n(reinterpret_cast<char*>(&nccl_id), sizeof(ncclUniqueId));
