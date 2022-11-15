@@ -123,6 +123,11 @@ foreach(TEST_FILE ${TEST_SRCS})
   target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Wall -Wextra>)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
+  # TODO(correaa) simplify include directories
+  target_include_directories(${TEST_EXE} PUBLIC "../include")
+  target_include_directories(${TEST_EXE} PUBLIC "../include/mpi3")
+  target_include_directories(${TEST_EXE} PUBLIC "../include/mpi3/dummy")
+
   #target_link_libraries(${TEST_EXE} PRIVATE mpi3)
 
   list(FIND NEED_BOOST_SERIALIZATION_SRCS ${TEST_FILE} NEED_BOOST_SERIALIZATION)
@@ -177,6 +182,11 @@ set_tests_properties(uniform_abort.cpp.x      PROPERTIES WILL_FAIL true)
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)
 target_compile_features(library_check PUBLIC cxx_std_17)
+
+# TODO(correaa) simplify include directories
+target_include_directories(library_check PUBLIC "../include")
+target_include_directories(library_check PUBLIC "../include/mpi3")
+target_include_directories(library_check PUBLIC "../include/mpi3/dummy")
 
 add_executable(library_main.x library_main.cpp)
 target_compile_features(library_main.x PRIVATE cxx_std_17)
