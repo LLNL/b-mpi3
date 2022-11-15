@@ -123,6 +123,8 @@ foreach(TEST_FILE ${TEST_SRCS})
   target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Wall -Wextra>)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
+  target_link_libraries(${TEST_EXE} PRIVATE mpi3)
+
   list(FIND NEED_BOOST_SERIALIZATION_SRCS ${TEST_FILE} NEED_BOOST_SERIALIZATION)
   if (NOT (${NEED_BOOST_SERIALIZATION} EQUAL -1))
     target_compile_options(${TEST_EXE} PUBLIC -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY)
