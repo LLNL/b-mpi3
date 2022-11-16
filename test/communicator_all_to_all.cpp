@@ -21,7 +21,6 @@ int mpi3::main(int, char*[], mpi3::communicator world) {
 
 	std::vector<int> recv_buff(world.size(), 99.);
 	{
-
 		assert((int)recv_buff.size() == world.size());
 		world.all_to_all(send_buff.begin(), recv_buff.begin());
 
