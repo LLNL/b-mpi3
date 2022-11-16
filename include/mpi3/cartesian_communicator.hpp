@@ -252,9 +252,9 @@ struct circular_communicator : cartesian_communicator<1> {
 		return *this;
 	}
 	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
-	auto operator=(circular_communicator      & other) -> circular_communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
+	[[deprecated]] auto operator=(circular_communicator      & other) -> circular_communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
 		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
-		cartesian_communicator<1>::operator=(other);
+		cartesian_communicator<1>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
 		return *this;
 	}
 
