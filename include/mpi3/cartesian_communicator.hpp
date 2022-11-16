@@ -170,7 +170,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 	// vvv  nvcc 11 workaround, needs explicit definition of duplicate assigment
 	[[deprecated]] cartesian_communicator& operator=(cartesian_communicator      & other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assignment
 		if(this == std::addressof(other)) {return *this;}  // lints cert-oop54-cpp
-		cartesian_communicator<>::operator=(other);
+		cartesian_communicator<>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
 		return *this;
 	}
 
