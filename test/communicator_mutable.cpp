@@ -19,7 +19,7 @@ struct projector {
 	projector(projector const&) = default;
 	projector(projector     &&) = default;
 
-	auto operator=(projector const&) -> projector& = default;
+	auto operator=(projector const&) -> projector& = default;  // NOLINT(clang-diagnostic-deprecated-declarations)
 	auto operator=(projector     &&) -> projector& = default;
 //	auto operator=(projector      &) -> projector& = default;
 
