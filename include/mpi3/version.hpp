@@ -26,7 +26,7 @@ struct version_t {
 	int major;
 	int minor;
 	version_t() = default;
-	constexpr version_t(int major, int minor = 0) : major{major}, minor{minor} {}
+	constexpr explicit version_t(int major, int minor = 0) : major{major}, minor{minor} {}
 	friend std::ostream& operator<<(std::ostream& os, version_t const& self) {
 		return os << self.major << '.' << self.minor;
 	}
@@ -34,18 +34,20 @@ struct version_t {
 		return std::tie(major, minor) < std::tie(other.major, other.minor);
 	}
 	constexpr bool operator>(version_t const& o) const { return o < *this; }
+
 	constexpr bool operator==(version_t const& o) const { return not operator<(o) and not operator>(o); }
+	constexpr bool operator!=(version_t const& o) const { return not operator==(o);}
+
 	constexpr bool operator>=(version_t const& o) const { return operator>(o) or operator==(o); }
 	constexpr bool operator<=(version_t const& o) const { return operator<(o) or operator==(o); }
 };
 
-constexpr version_t Version() { return {MPI_VERSION, MPI_SUBVERSION}; }
+constexpr auto Version() { return version_t{MPI_VERSION, MPI_SUBVERSION}; }
+static constexpr auto VERSION = version_t{MPI_VERSION, MPI_SUBVERSION};
 
 inline version_t version() {
 	version_t ret;
-	MPI_(Get_version)
-	(&ret.major, &ret.minor);
-	assert(ret == Version());
+	MPI_(Get_version)(&ret.major, &ret.minor);
 	return ret;
 }
 

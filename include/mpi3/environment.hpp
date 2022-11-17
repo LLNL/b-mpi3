@@ -50,6 +50,11 @@ inline void myterminate() {
 
 inline void initialize(int& argc, char**& argv) {
 
+	if(mpi3::version() != mpi3::Version()) {
+		std::cerr << "WARNING: MPI version inconsistency\n";
+		std::cerr << "Compile version (" << mpi3::version() <<") and linked version (" << mpi3::Version() << ") do not agree. Likely a link error.";
+	}
+
 	if([[maybe_unused]] char const* ompi_size_cstr = std::getenv("OMPI_COMM_WORLD_SIZE")) {  // NOLINT(concurrency-mt-unsafe)
 #ifndef OMPI_MAJOR_VERSION
 		if(char const* ompi_rank_cstr = std::getenv("OMPI_COMM_WORLD_RANK")) {  // NOLINT(concurrency-mt-unsafe)
@@ -94,9 +99,9 @@ inline void initialize(int& argc, char**& argv) {
 
 	if([[maybe_unused]] char const* ompi_size_cstr = std::getenv("OMPI_COMM_WORLD_SIZE")) {  // NOLINT(concurrency-mt-unsafe)
 		char const* ompi_rank_cstr = std::getenv("OMPI_COMM_WORLD_RANK");  // NOLINT(concurrency-mt-unsafe)
-		if(nprocs != std::strtol(ompi_size_cstr) and std::string{ompi_rank_cstr} == "0" and rank == 0) {
+		if(std::to_string(nprocs) != ompi_size_cstr and std::string{ompi_rank_cstr} == "0" and rank == 0) {
 			std::cerr << "WARNING: MPI size inconsistency?\n";
-			std::cerr << "running program " << *argv << " in " << nprocs << " processes but allocated with " << ompi_size_cstr << " processes \n\n";
+			std::cerr << "running program " << *argv << " in " << std::to_string(nprocs) << " processes but allocated with " << ompi_size_cstr << " processes \n\n";
 			MPI_Barrier(MPI_COMM_WORLD);
 			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(1s);
@@ -104,9 +109,9 @@ inline void initialize(int& argc, char**& argv) {
 	}
 	if([[maybe_unused]] char const* pmi_size_cstr = std::getenv("PMI_SIZE")) {  // NOLINT(concurrency-mt-unsafe)
 		char const* pmi_rank_cstr = std::getenv("PMI_RANK");  // NOLINT(concurrency-mt-unsafe)
-		if(nprocs != std::strtol(pmi_size_cstr) and std::string{pmi_rank_cstr} == "0" and rank == 0) {
+		if(std::to_string(nprocs) != pmi_size_cstr and std::string{pmi_rank_cstr} == "0" and rank == 0) {
 			std::cerr << "WARNING: MPI size inconsistency?\n";
-			std::cerr << "running program " << *argv << " in " << nprocs << " processes but allocated with " << pmi_size_cstr << " processes \n\n";
+			std::cerr << "running program " << *argv << " in " << std::to_string(nprocs) << " processes but allocated with " << pmi_size_cstr << " processes \n\n";
 			MPI_Barrier(MPI_COMM_WORLD);
 			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(1s);
