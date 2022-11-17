@@ -2,7 +2,7 @@
 //#if COMPILATION
 //$CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
 //#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
@@ -12,10 +12,12 @@
 #include "./wall_clock.hpp"
 
 #include "./detail/call.hpp"
+#include "./version.hpp"
 
 #include<mpi.h>
 
 #include<string>
+#include<iostream>
 
 namespace boost {
 namespace mpi3 {
@@ -35,14 +37,73 @@ inline void finalize() noexcept {
 	if(s != MPI_SUCCESS) {std::terminate();}//{throw std::runtime_error{"cannot finalize"};}
 }
 inline void myterminate() {
-	std::cerr << "myterminate handler called" << '\n';
+	std::cerr<<"myterminate handler called"<<'\n';
 	finalize();
 	std::abort();
 }
 
 inline void initialize(int& argc, char**& argv) {
+
+	if([[maybe_unused]] const char* ompi_size_cstr = std::getenv("OMPI_COMM_WORLD_SIZE")) {
+		#ifndef OMPI_MAJOR_VERSION
+		if(const char* ompi_rank_cstr = std::getenv("OMPI_COMM_WORLD_RANK")) {
+			if(std::string{ompi_rank_cstr} == "0") {
+				std::cerr<<"WARNING: MPI environment inconsistency?\n";
+				std::cerr<<"running program "<< argv[0] <<" compiled with " << boost::mpi3::library_version_short() << " but allocated with OMPI (np = "<< ompi_size_cstr <<"). Try running with `mpirun.mpich` or load MPICH module.\n\n";
+			}
+		} else {
+			std::cerr<<"WARNING: MPI environment inconsistency?\n";
+			std::cerr<<"running program "<< argv[0] <<" compiled with " << boost::mpi3::library_version_short() << " but allocated with OMPI (np = "<< ompi_size_cstr <<"). Try running with `mpirun.mpich` or load MPICH module.\n\n";
+		}
+		using namespace std::chrono_literals;
+	    std::this_thread::sleep_for(1s);
+		#endif
+	}
+	if([[maybe_unused]] const char* pmi_size_cstr  = std::getenv("PMI_SIZE")) {
+		#ifndef MPICH_VERSION
+		if(const char* pmi_rank_cstr = std::getenv("PMI_RANK")) {
+			if(std::string{pmi_rank_cstr} == "0") {
+				std::cerr<<"WARNING: MPI environment inconsistency?\n";
+				std::cerr<<"running program "<< argv[0] <<" compiled with " << boost::mpi3::library_version_short() << " but allocated with PMI (Hydra or MPICH) (np = "<< pmi_size_cstr <<"). Try running with `mpirun.openmpi` or load OpenMPI module.\n\n";
+			}
+		} else {
+			std::cerr<<"WARNING: MPI environment inconsistency?\n";
+			std::cerr<<"running program "<< argv[0] <<" compiled with " << boost::mpi3::library_version_short() << " but allocated with PMI (Hydra or MPICH) (np = "<< pmi_size_cstr <<"). Try running with `mpirun.openmpi` or load OpenMPI module.\n\n";
+		}
+		using namespace std::chrono_literals;
+	    std::this_thread::sleep_for(1s);
+		#endif
+	}
+
 	int s = MPI_Init(&argc, &argv);
 	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot initialize"};}
+
+    int nprocs;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	if([[maybe_unused]] const char* ompi_size_cstr = std::getenv("OMPI_COMM_WORLD_SIZE")) {
+		const char* ompi_rank_cstr = std::getenv("OMPI_COMM_WORLD_RANK");
+		if(nprocs != std::atoi(ompi_size_cstr) and std::string{ompi_rank_cstr} == "0" and rank == 0) {
+			std::cerr<<"WARNING: MPI size inconsistency?\n";
+			std::cerr<<"running program "<< argv[0] <<" in "<< nprocs <<" processes but allocated with "<< ompi_size_cstr <<" processes \n\n";
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
+		using namespace std::chrono_literals;
+	    std::this_thread::sleep_for(1s);
+	}
+	if([[maybe_unused]] const char* pmi_size_cstr  = std::getenv("PMI_SIZE")) {
+		const char* pmi_rank_cstr = std::getenv("PMI_RANK");
+		if(nprocs != std::atoi(pmi_size_cstr) and std::string{pmi_rank_cstr} == "0" and rank == 0) {
+			std::cerr<<"WARNING: MPI size inconsistency?\n";
+			std::cerr<<"running program "<< argv[0] <<" in "<< nprocs <<" processes but allocated with "<< pmi_size_cstr <<" processes \n\n";
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
+		using namespace std::chrono_literals;
+	    std::this_thread::sleep_for(1s);
+	}
 }
 
 inline thread_level initialize(int& argc, char**& argv, thread_level required) {
