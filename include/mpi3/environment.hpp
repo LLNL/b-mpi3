@@ -32,6 +32,8 @@ enum class thread_level : int {
 using thread = thread_level;
 
 inline void finalize() noexcept {
+	if(int count = std::uncaught_exceptions()) {std::cerr<<"finalizing MPI environment with "<< count << " uncaught exceptions";}
+
 	std::set_terminate(&std::abort);
 	int s = MPI_Finalize();
 	if(s != MPI_SUCCESS) {std::terminate();}//{throw std::runtime_error{"cannot finalize"};}
@@ -90,9 +92,9 @@ inline void initialize(int& argc, char**& argv) {
 			std::cerr<<"WARNING: MPI size inconsistency?\n";
 			std::cerr<<"running program "<< argv[0] <<" in "<< nprocs <<" processes but allocated with "<< ompi_size_cstr <<" processes \n\n";
 			MPI_Barrier(MPI_COMM_WORLD);
+			using namespace std::chrono_literals;
+	    	std::this_thread::sleep_for(1s);
 		}
-		using namespace std::chrono_literals;
-	    std::this_thread::sleep_for(1s);
 	}
 	if([[maybe_unused]] const char* pmi_size_cstr  = std::getenv("PMI_SIZE")) {
 		const char* pmi_rank_cstr = std::getenv("PMI_RANK");
@@ -100,9 +102,9 @@ inline void initialize(int& argc, char**& argv) {
 			std::cerr<<"WARNING: MPI size inconsistency?\n";
 			std::cerr<<"running program "<< argv[0] <<" in "<< nprocs <<" processes but allocated with "<< pmi_size_cstr <<" processes \n\n";
 			MPI_Barrier(MPI_COMM_WORLD);
+			using namespace std::chrono_literals;
+		    std::this_thread::sleep_for(1s);
 		}
-		using namespace std::chrono_literals;
-	    std::this_thread::sleep_for(1s);
 	}
 }
 
