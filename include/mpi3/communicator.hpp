@@ -731,6 +731,16 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
+#ifdef MPICH_VERSION
+ private:
+	template<class It, class Size, class It2>
+	auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) {
+		MPI_I(sendrecv_replace)(first, count/comm.size(), mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, MPI_ANY_SOURCE, MPI_ANY_TAG, &comm, &reqs[iproc]);
+	}
+
+ public:
+#endif
+
 	template<class It, class Size>
 	auto send_receive_replace_n(
 		It first, Size size,
@@ -790,6 +800,24 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
+//  private:
+
+//  public:
+//  	template<class It, class Size>
+// 	auto isend_receive_replace_n(
+// 		It first, Size size,
+// 		int dest, int source, // = MPI_ANY_SOURCE, 
+// 		int sendtag = 0, int recvtag = MPI_ANY_TAG
+// 	) {
+// 		using value_type = typename std::iterator_traits<It>::value_type;
+// 		return isend_receive_replace_n(
+// 			first,
+// 				detail::iterator_category_t<It>{},
+// 				detail::value_category_t<value_type>{},
+// 			size,
+// 			dest, source, sendtag, recvtag
+// 		);
+// 	}
 
  private:
 	template<class It, typename Size, class It2>
@@ -1480,11 +1508,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/
 	){
-		assert( count % size() == 0 );
+		auto const sz = size();
+		assert( sz != 0 and count % sz == 0 );
 		MPI_(Alltoall)(
-			detail::data(first), count/size(),
+			detail::data(first), count/sz,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), count/size(),
+			detail::data(d_first), count/sz,
 			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 			impl_
 		);
@@ -1507,12 +1536,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
 		), first + count) {
-		assert( count % size() == 0 );
-		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
+		auto const sz = size();
+		assert(sz > 0);
+		assert( count % sz == 0 );
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
 		MPI_(Alltoall)(
-			in_place, 0*count/size(),
+			in_place, 0*count/sz,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(first), count/size(),
+			detail::data(first), count/sz,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
 		);
@@ -1522,7 +1553,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
  public:
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(It1 first, Size count, It2 d_first) {
-		assert( count % size() == 0 );
+		assert( count % size() == 0 );  // NOLINT(clang-analyzer-core.DivideZero) TODO(correaa) add size cache to immutable communicator
 		return
 			all_to_all_n(
 				first,
@@ -1545,7 +1576,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 				count
 			))
 	{
-		assert( count % size() == 0 );
+		assert( count % size() == 0 );  // NOLINT(clang-analyzer-core.DivideZero) TODO(correaa) add size cache to immutable communicator
 		return 
 			all_to_all_n(
 				first, 
