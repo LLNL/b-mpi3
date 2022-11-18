@@ -12,21 +12,21 @@
 #include <iostream>
 #include <tuple>  // tie
 
-#define BOOST_MPI3_MAJOR_VERSION 0
-#define BOOST_MPI3_MINOR_VERSION 81
-#define BOOST_MPI3_PATCH_VERSION 0
-#define BOOST_MPI3_VERSION_STRING "Boost.MPI3/0.81"
+#define BOOST_MPI3_MAJOR_VERSION 0  // NOLINT(cppcoreguidelines-macro-usage)
+#define BOOST_MPI3_MINOR_VERSION 81  // NOLINT(cppcoreguidelines-macro-usage)
+#define BOOST_MPI3_PATCH_VERSION 0  // NOLINT(cppcoreguidelines-macro-usage)
+#define BOOST_MPI3_VERSION_STRING "Boost.MPI3/0.81"  // NOLINT(cppcoreguidelines-macro-usage)
 
-#define BOOST_MPI3_VERSION 0 * 100 + BOOST_MPI3_MINOR_VERSION * 10
+#define BOOST_MPI3_VERSION (BOOST_MPI3_MAJOR_VERSION * 100 + BOOST_MPI3_MINOR_VERSION * 10)
 
 namespace boost {
 namespace mpi3 {
 
 struct version_t {
-	int major;
-	int minor;
-	version_t() = default;
-	constexpr explicit version_t(int major, int minor = 0) : major{major}, minor{minor} {}
+	int major;  // NOLINT(misc-non-private-member-variables-in-classes)
+	int minor;  // NOLINT(misc-non-private-member-variables-in-classes)
+//	version_t() = default;
+//	constexpr explicit version_t(int major, int minor = 0) : major{major}, minor{minor} {}  // NOLINT(bugprone-easily-swappable-parameters)
 	friend std::ostream& operator<<(std::ostream& os, version_t const& self) {
 		return os << self.major << '.' << self.minor;
 	}
@@ -42,29 +42,27 @@ struct version_t {
 	constexpr bool operator<=(version_t const& o) const { return operator<(o) or operator==(o); }
 };
 
-constexpr auto Version() { return version_t{MPI_VERSION, MPI_SUBVERSION}; }
+inline constexpr auto Version() -> version_t { return {MPI_VERSION, MPI_SUBVERSION}; }  // NOLINT(readability-identifier-naming)
 static constexpr auto VERSION = version_t{MPI_VERSION, MPI_SUBVERSION};
 
 inline version_t version() {
-	version_t ret;
+	version_t ret{};
 	MPI_(Get_version)(&ret.major, &ret.minor);
 	return ret;
 }
 
-inline std::string library_version() {
-	int  len;
-	char mpi_lib_ver[MPI_MAX_LIBRARY_VERSION_STRING];
-	MPI_(Get_library_version)
-	(mpi_lib_ver, &len);
-	return std::string(mpi_lib_ver, len);
+inline auto library_version() -> std::string {
+	std::array<char, MPI_MAX_LIBRARY_VERSION_STRING> mpi_lib_ver{};
+	int  len = 0;
+	MPI_(Get_library_version)(mpi_lib_ver.data(), &len);
+	return {mpi_lib_ver.data(), static_cast<std::string::size_type>(len)};
 }
 
-inline std::string library_version_short() {
+inline auto library_version_short() -> std::string {
 	std::string ret = library_version();
 	{
 		auto found = ret.find('\n');
-		if(found != std::string::npos)
-			ret = std::string(ret.c_str(), found);
+		if(found != std::string::npos) {ret = std::string(ret.c_str(), found);}
 	}
 	{
 		auto found = ret.find(',');
