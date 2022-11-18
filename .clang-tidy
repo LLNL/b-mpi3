@@ -31,6 +31,4 @@ CheckOptions:
   - { key: readability-identifier-naming.TemplateParameterCase, value: CamelCase  }
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.'
-AnalyzeTemporaryDtors: false
 FormatStyle: file
-
