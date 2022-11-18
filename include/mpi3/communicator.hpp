@@ -735,7 +735,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
  private:
 	template<class It, class Size, class It2>
 	auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) {
-		MPI_I(sendrecv_replace)(first, count/comm.size(), mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, MPI_ANY_SOURCE, MPI_ANY_TAG, &comm, &reqs[iproc]);
+		auto const sz = size();
+		assert(sz != 0);
+		MPI_I(sendrecv_replace)(first, count/sz, mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, source, MPI_ANY_TAG, &*this, &reqs[iproc]);
 	}
 
  public:
