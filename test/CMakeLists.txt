@@ -61,6 +61,7 @@ set(TEST_SRCS
 	communicator_broadcast.cpp
 	communicator_divide.cpp
 	datatype.cpp
+  deino_all_to_all.cpp
 	gather2.cpp
 	group.cpp
 	communicator_cctor.cpp
