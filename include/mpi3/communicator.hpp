@@ -217,8 +217,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	//	swap(tmp);
 		return *this;
 	}
-	auto operator=(communicator     && other) noexcept -> communicator& {
-		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF) {
+	auto operator=(communicator     && other) noexcept -> communicator& {  // TODO(correaa) tidy this operator
+		if(impl_ != MPI_COMM_NULL) {
 			try {
 				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
 			//	MPI_Comm_free(&impl_);
@@ -1564,6 +1564,22 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
+	template<class It1, typename Size>
+	auto all_to_all_inplace_n(It1 first, Size count) {
+		auto const sz = size();
+		assert(sz > 0);
+		assert( count % sz == 0 );
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
+		MPI_(Alltoall)(
+			in_place, 0*count/sz,
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(first), count/sz,
+			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			impl_
+		);
+		return first + count;
+	}
+
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(It1 first, Size count, It2 d_first) {
 		assert( count % size() == 0 );  // NOLINT(clang-analyzer-core.DivideZero) TODO(correaa) add size cache to immutable communicator
