@@ -211,14 +211,16 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator(communicator&&) = default;
 
 	communicator& operator=(communicator const&) = delete;
-	[[deprecated]] communicator& operator=(communicator& other) {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
+	[[deprecated]] auto operator=(communicator& other) -> communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
 		communicator tmp{other};
-		swap(tmp);
+		operator=(std::move(tmp));
+	//	swap(tmp);
 		return *this;
 	}
-	communicator& operator=(communicator     && other) noexcept {
-		communicator tmp{std::move(other)};
-		swap(tmp);
+	auto operator=(communicator     && other) noexcept -> communicator& {
+		impl_ = std::exchange(other.impl_, MPI_COMM_NULL);
+		// communicator tmp{std::move(other)};
+		// swap(tmp);
 		return *this;
 	}
 
@@ -734,10 +736,13 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 #ifdef MPICH_VERSION
  private:
 	template<class It, class Size, class It2>
-	auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) {
+	[[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
+	-> decltype(detail::data(first), std::declval<mpi3::request>()){
 		auto const sz = size();
 		assert(sz != 0);
-		MPI_I(sendrecv_replace)(first, count/sz, mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, source, MPI_ANY_TAG, &*this, &reqs[iproc]);
+		mpi3::request r;
+		MPI_I(sendrecv_replace)(detail::data(first), count/sz, mpi3::detail::basic_datatype<typename std::iterator_traits<It>::value_type>(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
+		return r;
 	}
 
  public:
