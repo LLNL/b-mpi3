@@ -41,7 +41,7 @@ icpc-openmpi:
     - cd test
     - mkdir build && cd build
     - icpc --version
-    - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
+    - CXX=icpc CXXFLAGS="-diag-disable=2196,1786,1478" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764  #1786 warning deprecated
     - make --jobs 2 || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -67,7 +67,7 @@ icpc-intelmpi:
     - cd test
     - mkdir build && cd build
     - icpc --version
-    - CXX=icpc CXXFLAGS="-diag-disable=2196" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
+    - CXX=icpc CXXFLAGS="-diag-disable=2196,1786,1478" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
     - make
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -222,8 +222,7 @@ qmcpack-cuda-runner:
     - make -j4 ppconvert afqmc test_afqmc_matrix test_afqmc_numerics test_afqmc_slaterdeterminantoperations test_afqmc_walkers test_afqmc_hamiltonians test_afqmc_hamiltonian_operations test_afqmc_phmsd test_afqmc_wfn_factory test_afqmc_prop_factory test_afqmc_estimators qmc-afqmc-performance
     - ctest -R ppconvert --output-on-failure
     - ctest -R afqmc     --output-on-failure
-  needs:
-    - openmpi-cuda-11
+  needs: ["openmpi-cuda-11", "qmcpack-openmpi"]
 
 #qmcpack-icpc-runner:
 #  stage: test

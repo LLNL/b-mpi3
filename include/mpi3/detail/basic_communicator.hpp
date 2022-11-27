@@ -40,8 +40,8 @@ class basic_communicator{
 	basic_communicator(basic_communicator&& other) noexcept :
 		impl_{std::exchange(other.impl_, MPI_COMM_NULL)} {}
 
-	void swap(basic_communicator& o) noexcept {std::swap(impl_, o.impl_);}
-	friend void swap(basic_communicator& self, basic_communicator& other) noexcept {self.swap(other);}
+	// [[deprecated]] void swap(basic_communicator& o) noexcept {std::swap(impl_, o.impl_);}
+	// [[deprecated]] friend void swap(basic_communicator& self, basic_communicator& other) noexcept {self.swap(other);}
 
 	template<class T>
 	int pack_size(int count, detail::basic_tag /*tag*/) {

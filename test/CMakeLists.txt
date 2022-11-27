@@ -61,6 +61,7 @@ set(TEST_SRCS
 	communicator_broadcast.cpp
 	communicator_divide.cpp
 	datatype.cpp
+  deino_all_to_all.cpp
 	gather2.cpp
 	group.cpp
 	communicator_cctor.cpp
@@ -119,7 +120,7 @@ foreach(TEST_FILE ${TEST_SRCS})
     set_source_files_properties(${TEST_FILE} PROPERTIES LANGUAGE CUDA)
   endif()
 
-  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
+  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror  -Wno-error=deprecated-declarations>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
   target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Wall -Wextra>)
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
