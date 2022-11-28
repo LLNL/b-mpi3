@@ -9,7 +9,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	using dd = std::tuple<double, double>;
 
 	std::vector<dd> v_local(10, dd{world.rank(), world.rank() + 1});
-	std::vector<dd> v(world.root()?v_local.size()*world.size():0);
+	std::vector<dd> v(world.root()?v_local.size()*static_cast<std::size_t>(world.size()):0);
 	auto last = world.gather(begin(v_local), end(v_local), begin(v));
 	if(world.root()){
 		assert(last == end(v)); 

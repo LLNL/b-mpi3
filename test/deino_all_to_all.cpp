@@ -34,10 +34,10 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
     world.set_name("world");
 	std::size_t chunk = 5;
 
-	auto sb = std::vector<int>(world.size() * chunk);
+	auto sb = std::vector<int>(static_cast<std::size_t>(world.size()) * chunk);
     std::iota(sb.begin(), sb.end(), 40000 + world.rank()*100);
 
-	auto rb = std::vector<int>(world.size() * chunk);
+	auto rb = std::vector<int>(static_cast<std::size_t>(world.size()) * chunk);
 
 	world.all_to_all_n(sb.data(), sb.size(), rb.data());
 //    do_all_to_all_n(world, sb.data(), sb.size(), rb.data());

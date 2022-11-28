@@ -47,7 +47,7 @@ struct error_handler {
 		int len;  // NOLINT(cppcoreguidelines-init-variables,-warnings-as-errors) delayed init
 		std::array<char, MPI_MAX_ERROR_STRING> estring{};
 		MPI_Error_string(*err, estring.data(), &len);
-		std::string w(estring.data(), len);
+		std::string w(estring.data(), static_cast<std::string::size_type>(len));
 		throw std::runtime_error{"error code"+ std::to_string(*err) +" "+ w};
 //		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 //		throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);

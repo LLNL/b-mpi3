@@ -1,4 +1,5 @@
-//  (C) Copyright Alfredo A. Correa 2018-2022
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #define BOOST_MPI3_DISALLOW_AUTOMATIC_POD_COMMUNICATION
 
@@ -47,7 +48,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 			int b;
 		} foo{};
 
-		foo.a = 1.2;
+		foo.a = 1.2F;
 		foo.b = 5;
 
 		assert( t.size() == sizeof(float) + sizeof(int) );
@@ -74,7 +75,5 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	}
 
 	return 0;
-} catch(...) {
-	return 1;
-}
+} catch(...) {return 1;}
 

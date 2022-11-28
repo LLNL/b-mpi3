@@ -23,7 +23,7 @@ struct shared_window : window<T> {
 	//	window<T>{}//, comm_{comm}
 	{
 		void* base_ptr = nullptr;
-		MPI_(Win_allocate_shared)(n*sizeof(T), disp_unit, MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_);
+		MPI_(Win_allocate_shared)(n*static_cast<mpi3::size_t>(sizeof(T)), disp_unit, MPI_INFO_NULL, comm.get(), &base_ptr, &this->impl_);
 	}
 	explicit shared_window(shared_communicator& comm, int disp_unit = alignof(T)) : 
 		shared_window(comm, 0, disp_unit)

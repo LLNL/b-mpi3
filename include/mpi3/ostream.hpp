@@ -36,7 +36,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 				messages.insert(std::make_pair(0, str()));
 				for(int i = 1; i != comm_.size(); ++i) {
 					match m = comm_.matched_probe(i);
-					msg_.resize(m.count<char>());
+					msg_.resize(static_cast<std::size_t>(m.count<char>()));
 					m.receive(msg_.begin());
 					messages.insert(std::make_pair(i, msg_));
 				}

@@ -293,7 +293,10 @@ basic_iarchive_impl::delete_created_pointers()
         if(i->loaded_as_pointer){
             // borland complains without this minor hack
             const int j = i->class_id;
+            #pragma clang diagnostic push
+            #pragma clang diagnostic note "-Wsign-conversion"  // vvv external code
             const cobject_id & co = cobject_id_vector[j];
+            #pragma clang diagnostic pop
             //const cobject_id & co = cobject_id_vector[i->class_id];
             // with the appropriate input serializer, 
             // delete the indicated object
@@ -464,7 +467,10 @@ basic_iarchive_impl::load_pointer(
         cobject_id_vector[i].bpis_ptr = bpis_ptr;
     }
     int i = cid;
+    #pragma clang diagnostic push
+    #pragma clang diagnostic note "-Wsign-conversion"  // vvv external code
     cobject_id & co = cobject_id_vector[i];
+    #pragma clang diagnostic pop
     bpis_ptr = co.bpis_ptr;
 
     load_preamble(ar, co);

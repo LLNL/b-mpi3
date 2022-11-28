@@ -63,13 +63,11 @@ class basic_communicator{
 		uvector<detail::packed>& p, int pos  // NOLINT(misc-unused-parameters) bug in clang-tidy 12
 	) {
 		using value_type = typename std::iterator_traits<It>::value_type;
-		int s = MPI_Pack(
-			detail::data(first), count,
-			detail::basic_datatype<value_type>{},
-			p.data(), p.size(),
+		MPI_(Pack)(
+			detail::data(first), static_cast<int>(count), detail::basic_datatype<value_type>{},
+			p.data(), static_cast<int>(p.size()),  // TODO(correaa) use safe cast
 			&pos, impl_
 		);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot pack_n");}
 		return pos;
 	}
 	template<class It, typename Size>
@@ -86,19 +84,19 @@ class basic_communicator{
 		);
 	}
 	template<class It, typename Size>
-	auto pack_n(It first, Size count, uvector<detail::packed>& p){
-		assert( p.size() < std::numeric_limits<int>::max() );
+	auto pack_n(It first, Size count, uvector<detail::packed>& p) {
+		assert(p.size() < std::numeric_limits<int>::max());
 		int pos = static_cast<int>(p.size());
-		p.resize(p.size() + pack_size<typename std::iterator_traits<It>::value_type>(count));
+		p.resize(p.size() + static_cast<std::size_t>(pack_size<typename std::iterator_traits<It>::value_type>(static_cast<int>(count))));
 		return pack_n(first, count, p, pos);
 	}
 	template<class It>
 	auto pack(
 		It first, It second,
-			detail::random_access_iterator_tag /*random_access*/,
-			detail::value_unspecified_tag /*value_unspecified*/,
+		detail::random_access_iterator_tag /*random_access*/,
+		detail::value_unspecified_tag /*value_unspecified*/,
 		uvector<detail::packed>& b
-	){
+	) {
 		return pack_n(first, std::distance(first, second), b);
 	}
 
@@ -125,18 +123,17 @@ class basic_communicator{
 	auto unpack_n(
 		uvector<detail::packed>& b, int pos,
 		It first,
-			detail::contiguous_iterator_tag /*contiguous*/,
-			detail::basic_tag /*basic*/,
+		/**/ detail::contiguous_iterator_tag /*contiguous*/,
+		/**/ detail::basic_tag /*basic*/,
 		Size count
 	){
 		using value_type = typename std::iterator_traits<It>::value_type;
-		int s = MPI_Unpack(
-			b.data(), b.size(), &pos, 
-			detail::data(first), count, 
+		MPI_(Unpack)(
+			b.data(), static_cast<int>(b.size()), &pos, 
+			detail::data(first), static_cast<int>(count),  // TODO(correaa) use safe cast
 			detail::basic_datatype<value_type>{}, 
 			impl_
 		);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot unpack_n");}
 		return pos;
 	}
 	template<class It>
@@ -257,8 +254,8 @@ class basic_communicator{
 	template<class It, typename Size>
 	auto receive_n(
 		It dest,
-			detail::forward_iterator_tag /*forward*/,
-			detail::basic_tag /*basic*/,
+		/**/ detail::forward_iterator_tag /*forward*/,
+		/**/ detail::basic_tag /*basic*/,
 		Size n,
 		int source, int tag
 	) {
