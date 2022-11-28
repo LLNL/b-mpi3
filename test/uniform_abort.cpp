@@ -1,4 +1,6 @@
-// Copyright 2018-2021 Alfredo A. Correa
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
+
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
 

@@ -5,8 +5,9 @@
 
 #include "../mpi3/handle.hpp"
 
-#include<iostream>
-#include <tuple> // tie
+#include <algorithm>  // for std::for_each
+#include <iostream>
+#include <tuple>  // for std::tie
 
 namespace boost {
 namespace mpi3 {
@@ -30,7 +31,8 @@ struct info :
 
 	// cppcheck-suppress noExplicitConstructor ; bug in cppcheck 2.3, initialize_list ctor must be implicit
 	info(std::initializer_list<std::pair<std::string, std::string>> il) {
-		for(auto const& e : il) {set(e.first, e.second);}
+		std::for_each(il.begin(), il.end(), [this](auto const& e) {set(e.first, e.second);});
+	//  for(auto const& e : il) {set(e.first, e.second);}
 	}
 
 //  void                        delete_(std::string const& key) {call<&MPI_Info_delete>(key);}
@@ -54,10 +56,10 @@ struct info :
 		auto key = call<&MPI_Info_get_nthkey>(n);
 		return {key, operator[](key)};
 	}
-	friend std::ostream& operator<<(std::ostream& os, info const& self){
-		for(int i = 0; i != self.get_nkeys(); ++i){
+	friend std::ostream& operator<<(std::ostream& os, info const& self) {
+		for(int i = 0; i != self.get_nkeys(); ++i) {  // NOLINT(altera-unroll-loops) TODO(correaa) use algorithm
 			auto p = self[i];
-			os << p.first << " : " << p.second << '\n';
+			os<< p.first <<" : "<< p.second <<'\n';
 		}
 		return os;
 	}

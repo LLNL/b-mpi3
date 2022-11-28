@@ -57,10 +57,10 @@ class group {
 	}
 
 	group include(std::initializer_list<int> il) const {
-		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
+		group ret; MPI_(Group_incl)(impl_, static_cast<int>(il.size()), il.begin(), &ret.impl_); return ret;
 	}
 	group exclude(std::initializer_list<int> il) const {
-		group ret; MPI_(Group_excl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
+		group ret; MPI_(Group_excl)(impl_, static_cast<int>(il.size()), il.begin(), &ret.impl_); return ret;  // TODO(correaa) use safe cast
 	}
 	auto rank() const -> int {int rank = -1; MPI_(Group_rank)(impl_, &rank); return rank;}
 	auto root() const -> bool {assert(not empty()); return rank() == 0;}

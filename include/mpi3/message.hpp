@@ -20,12 +20,14 @@ class message {
 	template<class It, typename Size>
 	auto receive_n(
 		It it,
-			detail::contiguous_iterator_tag /*contiguous*/,
-			detail::basic_tag /*basic*/,
+		/**/ detail::contiguous_iterator_tag /*contiguous*/,
+		/**/ detail::basic_tag /*basic*/,
 		Size count
 	) {
-		int s = MPI_Mrecv(detail::data(it), count, detail::basic_datatype<typename std::iterator_traits<It>::value_type>{}, &impl_, MPI_STATUS_IGNORE);
-		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot message receive"};}
+		MPI_(Mrecv)(
+			detail::data(it), static_cast<int>(count), detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},  // TODO(correaa) use safe cast
+			&impl_, MPI_STATUS_IGNORE
+		);
 	}
 	template<class It, typename Size>
 	auto receive_n(It it, Size count) {

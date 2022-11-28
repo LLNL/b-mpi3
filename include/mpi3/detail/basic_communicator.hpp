@@ -101,18 +101,17 @@ class basic_communicator{
 	){
 		return pack_n(first, std::distance(first, second), b);
 	}
+
 	template<class It>
 	auto pack(
-		It first, It second,
-			detail::input_iterator_tag /*input*/,
+		It first, It last,
+		/**/ detail::input_iterator_tag /*input*/,
 		uvector<detail::packed>& b
-	){
-		while(first != second) {
-			pack_n(std::addressof(*first), 1, b);
-			++first;
-		}
+	) {
+		std::for_each(first, last, [this, &b](auto& e) { pack_n(std::addressof(e), 1, b); });
 		return b.size();
 	}
+
 	template<class It>
 	auto pack(It first, It second, uvector<detail::packed>& b){
 		return pack(
@@ -155,10 +154,11 @@ class basic_communicator{
 		It first, It last,
 			detail::forward_iterator_tag /*forward*/
 	) {
-		while(first != last){
-			pos = unpack_n(b, pos, std::addressof(*first), 1);
-			++first;
-		}
+		std::for_each(first, last, [&b, &pos, this](auto& e) {pos = unpack_n(b, pos, std::addressof(e), 1);});
+		// while(first != last){
+		// 	pos = unpack_n(b, pos, std::addressof(*first), 1);
+		// 	++first;
+		// }
 		return pos;
 	}
 	template<class It>
@@ -169,7 +169,7 @@ class basic_communicator{
 		return unpack(
 			b, pos, 
 			first, last, 
-				detail::iterator_category_t<It>{}
+			/**/ detail::iterator_category_t<It>{}
 		);
 	}
 	template<class It>
@@ -200,8 +200,8 @@ class basic_communicator{
 		Size count,
 		int dest, int tag
 	) {
-		MPI_Send(
-			detail::data(first), count, 
+		MPI_(Send)(
+			detail::data(first), static_cast<int>(count),  // TODO(correaa) use safe cast
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, 
 			impl_
@@ -268,7 +268,7 @@ class basic_communicator{
 	}
 	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
-		auto count = m.count<detail::packed>();
+		auto const count = static_cast<std::size_t>(m.count<detail::packed>());
 		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);

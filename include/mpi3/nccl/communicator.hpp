@@ -1,5 +1,5 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2022 Alfredo A. Correa
+// Copyright 2022- Alfredo A. Correa
 
 #ifndef MPI3_NCCL_COMMUNICATOR_HPP_
 #define MPI3_NCCL_COMMUNICATOR_HPP_

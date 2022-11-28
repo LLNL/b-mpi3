@@ -29,7 +29,8 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	template<class Shape, class Period>
 	cartesian_communicator(communicator& comm_old, Shape const& s, Period const& p) {
 		assert(s.size() == p.size());
-		MPI_(Cart_create)(comm_old.get(), s.size(), s.data(), p.data(), /*reorder*/ true, &impl_);
+		using dimensionality_type = int;
+		MPI_(Cart_create)(comm_old.get(), static_cast<dimensionality_type>(s.size()), s.data(), p.data(), /*reorder*/ true, &impl_);
 	//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
 		// TODO(correaa) try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
@@ -64,7 +65,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	int dimensionality() const {int ret; MPI_(Cartdim_get)(impl_, &ret); return ret;}  // NOLINT(cppcoreguidelines-init-variables) delayed init
 
 	std::vector<int> coordinates() const {
-		std::vector<int> ret(dimensionality());
+		std::vector<int> ret(static_cast<std::vector<int>::size_type>(dimensionality()));
 		MPI_(Cart_coords)(impl_, rank(), dimensionality(), ret.data());
 		return ret;
 	}
@@ -115,7 +116,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	}
 	cartesian_communicator sub() {
 		assert( dimensionality()>1 );
-		std::vector<int> remain(dimensionality(), 1 /*true*/); remain[0] = 0/*false*/;
+		std::vector<int> remain(static_cast<std::size_t>(dimensionality()), 1 /*true*/); remain[0] = 0/*false*/;
 		return sub_aux(remain);
 	}
 };
@@ -179,7 +180,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 		assert( d <  D );
 		cartesian_communicator<1> ret;
 		std::array<int, D> remains{}; remains.fill(false);
-		remains[d] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+		remains[static_cast<std::size_t>(d)] = true;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
 	}
@@ -203,7 +204,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 	auto rank(coordinates_type cs) const -> int {
 		auto const ps = periods();
 		auto const s  = shape();
-		for(std::size_t i = 0; i != D; ++i) {
+		for(std::size_t i = 0; i != D; ++i) {  // NOLINT(altera-unroll-loops) TODO(correaa) use algorithm
 			if(ps[i] == false) {
 				assert( cs[i] >= 0    );
 				assert( cs[i] <  s[i] );
@@ -228,7 +229,8 @@ struct cartesian_communicator : cartesian_communicator<> {
 
 		cartesian_communicator<D - 1> ret;
 		std::array<int, D> remains{}; remains.fill(true);
-		remains[d] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+
+		remains[static_cast<std::size_t>(d)] = false;  // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
 	}
