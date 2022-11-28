@@ -1,17 +1,18 @@
-// Copyright 2017-2021 Alfredo A. Correa
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2017-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ERROR_HPP
 #define BOOST_MPI3_ERROR_HPP
 
 #include<mpi.h>
 
-#include<array>
-#include<system_error>
+#include <array>
+#include <system_error>
 
-namespace boost{
-namespace mpi3{
+namespace boost {
+namespace mpi3 {
 
-static_assert(sizeof(MPI_SUCCESS) <= sizeof(int), "!");
+static_assert(sizeof(MPI_SUCCESS) <= sizeof(int));
 
 enum class error : int {  // decltype(MPI_SUCCESS) {
 	success                = MPI_SUCCESS,
@@ -43,7 +44,7 @@ auto inline string(enum error err) {
 	std::array<char, MPI_MAX_ERROR_STRING> estring{};
 	int len;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	MPI_Error_string(static_cast<int>(err), estring.data(), &len);
-	return std::string(estring.data(), len);
+	return std::string(estring.data(), static_cast<std::string::size_type>(len));
 }
 
 struct error_category : std::error_category {
@@ -55,14 +56,14 @@ struct error_category : std::error_category {
 	}
 };
 
-inline auto make_error_code(error err) noexcept{
+inline auto make_error_code(error err) noexcept {
 	return std::error_code{static_cast<int>(err), error_category::instance()};
 }
 
 }  // end namespace mpi3
 }  // end namespace boost
 
-namespace std{
+namespace std {
 	template<> struct is_error_code_enum<::boost::mpi3::error> : true_type{};
 } // end namespace std
 

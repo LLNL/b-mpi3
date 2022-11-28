@@ -139,9 +139,8 @@ template<class ContiguousIterator, class Size>
 std::vector<int> wait_some_n(ContiguousIterator it, Size n){
 	int outcount = -1;
 	std::vector<int> indices(n);
-	unsigned int s = MPI_Waitsome(n, &detail::data(it)->impl_, &outcount, indices.data(), MPI_STATUSES_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
-	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait some");}
-	indices.resize(outcount);
+	MPI_(Waitsome)(n, &detail::data(it)->impl_, &outcount, indices.data(), MPI_STATUSES_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+	indices.resize(static_cast<std::size_t>(outcount));
 	return indices;
 }
 

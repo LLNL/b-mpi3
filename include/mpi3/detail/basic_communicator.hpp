@@ -200,8 +200,8 @@ class basic_communicator{
 		Size count,
 		int dest, int tag
 	) {
-		MPI_Send(
-			detail::data(first), count, 
+		MPI_(Send)(
+			detail::data(first), static_cast<int>(count),  // TODO(correaa) use safe cast
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, tag, 
 			impl_
@@ -268,7 +268,7 @@ class basic_communicator{
 	}
 	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
-		std::size_t count = m.count<detail::packed>();
+		auto const count = static_cast<std::size_t>(m.count<detail::packed>());
 		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);

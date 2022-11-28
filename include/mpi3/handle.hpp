@@ -2,17 +2,15 @@
 #ifndef BOOST_MPI3_DETAIL_HANDLE_HPP
 #define BOOST_MPI3_DETAIL_HANDLE_HPP
 
-//#include<boost/exception/to_string.hpp>
-
-#include<cassert>
-#include<stdexcept> // runtime_error
-#include<string>
+#include <cassert>
+#include <stdexcept> // runtime_error
+#include <string>
 
 #include<mpi.h>
 
-namespace boost{
-namespace mpi3{
-namespace detail{
+namespace boost {
+namespace mpi3 {
+namespace detail {
 
 template<class Self, class Impl>
 struct caller {
@@ -55,12 +53,13 @@ struct caller {
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 		return {valuelen, flag};
 	}
-	template<int(*F)(Impl, char const*, int, char*, int*)> std::pair<std::string, int> call(std::string const& key, int valuelen) const {
+	template<int(*F)(Impl, char const*, int, char*, int*)>
+	std::pair<std::string, int> call(std::string const& key, int valuelen) const {
 		std::array<char,  MPI_MAX_INFO_VAL> value{};
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int status = F(impl(), key.c_str(), valuelen, value.data(), &flag);
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
-		return {std::string(value.data(), valuelen), flag};
+		return {std::string(value.data(), static_cast<std::string::size_type>(valuelen)), flag};
 	}
 	template<int(*F)(Impl, char const*)> void call(std::string const& key) const {
 		int status = F(impl(), key.c_str());
