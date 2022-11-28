@@ -61,6 +61,7 @@
 #define BOOST_ARCHIVE_DECL
 #define BOOST_SERIALIZATION_DECL
 #endif
+// NOLINTBEGIN(hicpp-use-auto,modernize-use-auto)  external code
 #include "../mpi3/serialization_hack/archive_exception.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/basic_archive.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/basic_iarchive.cpp"  // NOLINT(bugprone-suspicious-include) hack
@@ -69,6 +70,8 @@
 #include "../mpi3/serialization_hack/basic_oserializer.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/extended_type_info.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"  // NOLINT(bugprone-suspicious-include) hack
+// NOLINTEND(hicpp-use-auto,modernize-use-auto)
+
 #endif
 
 #include "../mpi3/package_archive.hpp"
@@ -2330,19 +2333,19 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	It gather_value(T const& t, It first, int root) {
 		return gather_n(std::addressof(t), 1, first, root);
 	}
-	template<class T> 
+	template<class T>
 	std::vector<T> gather_value(T const& t, int root = 0) {
-		std::vector<T> ret((rank() == root)?static_cast<std::size_t>(size()):0);
+		std::vector<T> ret((rank() == root) ? static_cast<std::size_t>(size()) : 0);
 		gather_value(t, ret.begin(), root);
 		return ret;
 	}
 
  protected:
-	template<class It, typename Size> 
-	void advance(It& it, Size count){std::advance(it, count);}
+	template<class It, typename Size>
+	void advance(It& it, Size count) { std::advance(it, count); }
 
-	template<class It, typename Size> 
-	void advance(It& it, Size s, int r){std::advance(it, rank()==r?s:0);}
+	template<class It, typename Size>
+	void advance(It& it, Size s, int r) { std::advance(it, rank() == r ? s : 0); }
 
 	template<
 		class GatherMode,
