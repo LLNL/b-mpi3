@@ -32,7 +32,8 @@ struct wall_clock {
 template<class Duration = std::chrono::duration<double>>
 void wall_sleep_for(Duration d) {
 	auto then = wall_clock::now();
-	while(wall_clock::now() - then < d){}
+	// spin now
+	while(wall_clock::now() - then < d) {}  // NOLINT(altera-unroll-loops) this is time loop
 }
 
 class wall_timer {

@@ -540,7 +540,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert( dims.size() == periods.size() );
-		return MPI_(Cart_map)(impl_, dims.size(), dims.data(), periods.data());
+		return MPI_(Cart_map)(impl_, static_cast<int>(dims.size()), dims.data(), periods.data());  // TODO(correaa) use safe cast
 	}
 	int cartesian_map(std::vector<int> const& dimensions) const {
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
