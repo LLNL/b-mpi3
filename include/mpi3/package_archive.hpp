@@ -293,11 +293,11 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 	#ifdef __clang__
 	#define CALLABLE_WHEN(ConsumedORUnconsumed)    [[clang::callable_when(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
 	#define CONSUMABLE(ConsumedORUnconsumed)       [[clang::consumable(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
-	#define RETURN_TYPESTATE(ConsumedORUnconsumed) [[clang::return_typestate(ConsumedORUnconsumed)]]
+	#define RETURN_TYPESTATE(ConsumedORUnconsumed) [[clang::return_typestate(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
 	#else
-	#define CALLABLE_WHEN(ConsumedORUnconsumed)
-	#define CONSUMABLE(ConsumedORUnconsumed)
-	#define RETURN_TYPESTATE(ConsumedORUnconsumed)
+	#define CALLABLE_WHEN(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
+	#define CONSUMABLE(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
+	#define RETURN_TYPESTATE(ConsumedORUnconsumed) // NOLINT(cppcoreguidelines-macro-usage)
 	#endif
 
 	template<class T = void>
