@@ -1,4 +1,5 @@
-/* -*- indent-tabs-mode: t -*- */
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2017-2022 Alfredo A. Correa
 
 #ifndef MPI3_PACKAGE_ARCHIVE_HPP
 #define MPI3_PACKAGE_ARCHIVE_HPP
@@ -328,7 +329,7 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 	};
 };
 
-}  // namespace boost
+}  // end namespace mpi3
 }  // end namespace boost
 
 // maybe needed for optimization to take effect?
