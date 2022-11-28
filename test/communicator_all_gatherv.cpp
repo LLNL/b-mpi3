@@ -1,7 +1,5 @@
-//#if COMPILATION_INSTRUCTIONS
-//mpic++ $0 -o $0x -lboost_serialization&&mpirun -n 3 $0x&&rm $0x;exit
-//#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
@@ -33,21 +31,23 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	std::vector<T> v(1000, T{-99., -99.});
 	auto d_last = world.all_gatherv_n(begin(v_local), v_local.size(), begin(v));
 
-	int predict_size = 0;
-	for(auto i = 0; i != world.size(); ++i) {predict_size += i + 5;}
+	// int predict_size = 0;
+	// for(auto i = 0; i != world.size(); ++i) {predict_size += i + 5;}
+	int predict_size = world.size()*(world.size() - 1)/2 + 5*world.size();
+
 	assert( std::distance(begin(v), d_last) == predict_size );
 
-	assert(( v[ 0] == T{0.,0.} ));
-	assert(( v[ 4] == T{0.,0.} ));
-	assert(( v[ 5] == T{1.,1.} ));
-	assert(( v[10] == T{1.,1.} ));
-	assert(( v[11] == T{2.,2.} ));
-	assert(( v[17] == T{2.,2.} ));
+	assert(( v[ 0] == T{0.0, 0.0} ));
+	assert(( v[ 4] == T{0.0, 0.0} ));
+	assert(( v[ 5] == T{1.0, 1.0} ));
+	assert(( v[10] == T{1.0, 1.0} ));
+	assert(( v[11] == T{2.0, 2.0} ));
+	assert(( v[17] == T{2.0, 2.0} ));
 }
 {
 	using T = std::tuple<double, double>;
 	std::vector<T> v_local(world.rank() + 5, T{world.rank(), world.rank()});
-	std::vector<T> v(1000, T{-99., -99.});
+	std::vector<T> v(1000, T{-99.0, -99.0});
 	auto d_last = world.all_gatherv(begin(v_local), end(v_local), begin(v));
 	assert( d_last < end(v) );
 }
@@ -56,10 +56,10 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	using T = double;
 	assert( world.size() == 3 );
 	std::vector<T> v_loc;
-	switch(world.rank()){
-		case 0: v_loc = {0., 0., 0.}        ; break;
-		case 1: v_loc = {1., 1., 1., 1.}    ; break;
-		case 2: v_loc = {2., 2., 2., 2., 2.}; break;
+	switch(world.rank()) {
+		case 0: v_loc = {0.0, 0.0, 0.0}          ; break;
+		case 1: v_loc = {1.0, 1.0, 1.0, 1.0}     ; break;
+		case 2: v_loc = {2.0, 2.0, 2.0, 2.0, 2.0}; break;
 	}
 // gather communication
 	std::vector<T> v;

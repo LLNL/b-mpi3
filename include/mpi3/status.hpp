@@ -1,8 +1,5 @@
 /* -*- indent-tabs-mode: t -*- */
-//#if COMPILATION_INSTRUCTIONS 
-//(echo "#include\""$0"\"" > $0x.cpp) && mpic++ -O3 -std=c++14 `#-Wfatal-errors` -D_TEST_BOOST_MPI3_STATUS $0x.cpp -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x $0x.cpp; exit
-//#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_STATUS_HPP
 #define BOOST_MPI3_STATUS_HPP
@@ -74,50 +71,4 @@ struct [[nodiscard]] status {
 
 }  // end namespace mpi3
 }  // end namespace boost
-
-#ifdef _TEST_BOOST_MPI3_STATUS
-
-#include "../mpi3/main.hpp"
-#include "../mpi3/request.hpp"
-
-#include<iostream>
-
-namespace mpi3 = boost::mpi3;
-using std::cout;
-
-int mpi3::main(int argc, char* argv[], mpi3::communicator& world){
-	std::vector<int> bufsizes = {1, 100, 10000, 1000000};
-	mpi3::communicator& comm = world;
-
-	int dest = comm.size() - 1;
-	for(int cs = 0; cs != bufsizes.size(); ++cs){
-		if(comm.rank() == 0){
-			int n = bufsizes[cs];
-			std::vector<char> buf(n);
-			mpi3::request req = comm.isend(buf.begin(), buf.end(), dest, cs + n + 1);
-			req.cancel();
-		//	mpi3::status s = 
-			req.wait();
-		//	if(not s.cancelled()) cout << "failed to cancel request\n";
-		//	else 
-			n = 0;
-			comm.send_n(&n, 1, dest, 123);
-			n = cs + n + 1;
-			comm.send_n(&n, 1, dest, 123);
-		}else if(comm.rank() == dest){
-			int n = -1;
-			int tag = 0;
-			comm.receive_n(&n, 1, 0, 123);
-			comm.receive_n(&tag, 1, 0, 123);
-			if(n > 0){
-				std::vector<char> btemp(n);
-				comm.receive_n(btemp.data(), n, 0, tag); 
-			}
-		}
-		comm.barrier();
-	}
-}
-
 #endif
-#endif
-

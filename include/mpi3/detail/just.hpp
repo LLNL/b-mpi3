@@ -1,6 +1,5 @@
-#ifdef compile_instructions
-(echo "#include\""$0"\"" > $0x.cpp) && echo $0x.cpp && time clang++ -std=c++14 -Wfatal-errors -D_TEST_BOOST_JUST -lboost_system $0x.cpp -o $0x.cpp.x -lstdc++fs && ./$0x.cpp.x $@ && (xdg-open ${0%.*}.pdf 2>/dev/null &) && rm -f $0x.cpp $0x.cpp.x ; exit;
-#endif
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_JUST_HPP
 #define BOOST_JUST_HPP
@@ -54,8 +53,6 @@ struct just :
 			>::type
 	> /*no ::type here*/ {
 };
-
-
 
 template<class T>
 using just_t = typename just<T>::type;
@@ -111,53 +108,52 @@ struct just<bool>{
 #define BOOST_INHERIT_UNARY_CONSTRUCTOR(MyclasS, MybaseclasS) \
 	template<typename A> MyclasS(A& arg) : MybaseclasS(arg) {}
 
-#ifdef _TEST_BOOST_JUST
+// #ifdef _TEST_BOOST_JUST
 
-//struct number : boost::just<double&>::type{
-//  BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
-//};
+// //struct number : boost::just<double&>::type{
+// //  BOOST_INHERIT_UNARY_CONSTRUCTOR(number, boost::just<double&>::type)
+// //};
 
-#include<iostream>
-#include<vector>
-#include<cassert>
+// #include<iostream>
+// #include<vector>
+// #include<cassert>
 
-template<class T>
-class A : boost::just<T>::type {};
+// template<class T>
+// class A : boost::just<T>::type {};
 
-int main() {
-	A<int> a;
+// int main() {
+// 	A<int> a;
 
-	A<int[8]> b;
-	assert( std::is_class<int[8]>::value == false );
-	assert( std::is_array<int[8]>::value == true );
+// 	A<int[8]> b;
+// 	assert( std::is_class<int[8]>::value == false );
+// 	assert( std::is_array<int[8]>::value == true );
 
-	{
-		double d=5;
-		boost::wrapper<double> n(d);
-		n+=4;
-		std::cout<< n <<std::endl;
-		std::cout<< d <<std::endl;
-	}
-	{
-		double d = 5.;
-		boost::wrapper<double&> n(d);
-		double aa = 6.;
-		std::cout<< n <<std::endl;
-		n = aa;
-		n+= 5.;
-		assert(&n == &d);
-		std::cout<< n <<std::endl;
-		std::cout<< d <<std::endl;
-	}
+// 	{
+// 		double d=5;
+// 		boost::wrapper<double> n(d);
+// 		n+=4;
+// 		std::cout<< n <<std::endl;
+// 		std::cout<< d <<std::endl;
+// 	}
+// 	{
+// 		double d = 5.;
+// 		boost::wrapper<double&> n(d);
+// 		double aa = 6.;
+// 		std::cout<< n <<std::endl;
+// 		n = aa;
+// 		n+= 5.;
+// 		assert(&n == &d);
+// 		std::cout<< n <<std::endl;
+// 		std::cout<< d <<std::endl;
+// 	}
 
-	{
-		double d = 5.;
-		std::vector<boost::reference<double>> v3;
-		v3.push_back(d);
-		v3.push_back(d);
-		v3[0] = 4.;
-		std::cout << v3[0] << " " << v3[1] << std::endl;
-	}
-}
-#endif
-
+// 	{
+// 		double d = 5.;
+// 		std::vector<boost::reference<double>> v3;
+// 		v3.push_back(d);
+// 		v3.push_back(d);
+// 		v3[0] = 4.;
+// 		std::cout << v3[0] << " " << v3[1] << std::endl;
+// 	}
+// }
+// #endif

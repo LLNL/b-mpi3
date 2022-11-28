@@ -83,18 +83,17 @@ struct type {
 
  public:
 	template<
-		class MultiIt, class Stride = typename MultiIt::stride_type, 
-		std::size_t D = MultiIt::dimensionality, std::enable_if_t<(D>=2), int> =0,
+		class MultiIt, class Stride = typename MultiIt::stride_type,
+		std::size_t D = MultiIt::dimensionality, std::enable_if_t<(D >= 2), int> = 0,
 		typename E = typename MultiIt::element, typename = decltype(detail::basic_datatype<E>::value_f()),
-		std::enable_if_t<detail::is_basic<E>{}, int> =0
-	>
+		std::enable_if_t<detail::is_basic<E>{}, int> = 0>
 	explicit type(MultiIt first) : type{first.base()} {
-		auto const strides = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->strides());
-		auto const sizes   = apply([](auto... e){return std::array<Stride, D-1>{e...};}, first->sizes()  );
-		for(Stride i = 1; i != Stride{strides.size()}+1; ++i) {
-			(*this) = this->vector(sizes[sizes.size()-i], 1, strides[strides.size()-i]).resize(0, strides[strides.size()-i]*sizeof(E));
+		auto const strides = apply([](auto... e) { return std::array<Stride, D - 1>{static_cast<Stride>(e)...}; }, first->strides());  // NOLINT(altera-id-dependent-backward-branch) TODO(correaa) investigate
+		auto const sizes   = apply([](auto... e) { return std::array<Stride, D - 1>{static_cast<Stride>(e)...}; }, first->sizes()  );  // NOLINT(altera-id-dependent-backward-branch) TODO(correaa) investigate
+		for(Stride i = 1; i != Stride{strides.size()} + 1; ++i) {  // NOLINT(altera-id-dependent-backward-branch,altera-unroll-loops) TODO(correaa) use an algorithm
+			(*this) = this->vector(sizes[sizes.size() - i], 1, strides[strides.size() - i]).resize(0, strides[strides.size() - i] * sizeof(E));
 		}
-		(*this) = this->vector(1, 1, first.stride()*sizeof(E)).resize(0, first.stride()*sizeof(E));
+		(*this) = this->vector(1, 1, first.stride() * sizeof(E)).resize(0, first.stride() * sizeof(E));
 	}
 
  private:
@@ -174,12 +173,13 @@ struct type {
 	//	array_of_types.reserve(il.size());
 		MPI_Aint current_disp = 0;
 		std::string new_name = "{";
-		for(auto const& e : il){
+		std::for_each(il.begin(), il.end(), [&il, &disp, &current_disp, &new_name](auto const& e) {
 			disp.push_back(current_disp);
 			current_disp += e.size();
-			new_name+=(&e!=il.begin()?", ":"") + e.name();
-	//		array_of_types.push_back(e.impl_);
-		}
+			new_name+=(&e != il.begin()?", ":"") + e.name();
+			// array_of_types.push_back(e.impl_);
+		});
+
 		MPI_Type_create_struct(
 			static_cast<int>(il.size()),
 			blocklen.data(),
@@ -187,6 +187,7 @@ struct type {
 			&il.begin()->impl_,
 			&ret.impl_
 		);
+
 		ret.name(new_name);
 		return ret;
 	}

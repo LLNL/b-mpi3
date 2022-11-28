@@ -1,5 +1,5 @@
 /*-*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4-*-*/
-// © Alfredo A. Correa 2018-2022
+// Copyright 2018-2022 Alfredo A. Correa
 
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/environment.hpp"

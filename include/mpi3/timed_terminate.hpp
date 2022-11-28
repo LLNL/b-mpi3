@@ -13,7 +13,8 @@ template<class Duration>
 [[noreturn]] void timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
 	auto rbarrier = comm.ibarrier();
 	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}  // spin
+	// now spin  
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}  // NOLINT(altera-id-dependent-backward-branch) investigate (w/clang-tidy 14)
 
 	if(rbarrier.completed()) {
 		if(comm.root()) {comm.abort(911);}

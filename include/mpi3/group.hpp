@@ -57,7 +57,7 @@ class group {
 	}
 
 	group include(std::initializer_list<int> il) const {
-		group ret; MPI_(Group_incl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
+		group ret; MPI_(Group_incl)(impl_, static_cast<int>(il.size()), il.begin(), &ret.impl_); return ret;
 	}
 	group exclude(std::initializer_list<int> il) const {
 		group ret; MPI_(Group_excl)(impl_, il.size(), il.begin(), &ret.impl_); return ret;
