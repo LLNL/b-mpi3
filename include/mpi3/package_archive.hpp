@@ -291,27 +291,17 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 	}
 
 	#ifdef __clang__
-	#define CALLABLE_WHEN(ConsumedORUnconsumed) [[clang::callable_when(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
-	#define CALLABLE_WHEN_CONSUMED      CALLABLE_WHEN(consumed)
-	#define CALLABLE_WHEN_UNCONSUMED    CALLABLE_WHEN(unconsumed)
-	#define CONSUMABLE(ConsumedORUnconsumed) [[clang::consumable(ConsumedORUnconsumed)]]
-	#define CONSUMABLE_CONSUMED         CONSUMABLE(consumed)
-	#define CONSUMABLE_UNCONSUMED       CONSUMABLE(unconsumed)
-	#define RETURN_TYPESTATE [[clang::return_typestate(consumed)]]
-	#define RETURN_TYPESTATE_CONSUMED   [[clang::return_typestate(consumed)]]
-	#define RETURN_TYPESTATE_UNCONSUMED [[clang::return_typestate(unconsumed)]]
+	#define CALLABLE_WHEN(ConsumedORUnconsumed)    [[clang::callable_when(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
+	#define CONSUMABLE(ConsumedORUnconsumed)       [[clang::consumable(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
+	#define RETURN_TYPESTATE(ConsumedORUnconsumed) [[clang::return_typestate(ConsumedORUnconsumed)]]
 	#else
 	#define CALLABLE_WHEN(ConsumedORUnconsumed)
-	#define CALLABLE_WHEN_CONSUMED
-	#define CALLABLE_WHEN_UNCONSUMED
-	#define CONSUMABLE_CONSUMED
-	#define CONSUMABLE_UNCONSUMED
-	#define RETURN_TYPESTATE_CONSUMED
-	#define RETURN_TYPESTATE_UNCONSUMED
+	#define CONSUMABLE(ConsumedORUnconsumed)
+	#define RETURN_TYPESTATE(ConsumedORUnconsumed)
 	#endif
 
 	template<class T = void>
-	struct CONSUMABLE_UNCONSUMED
+	struct CONSUMABLE(unconsumed)
 	iterator {
 		using iterator_category = std::output_iterator_tag;
 		using value_type = void;
@@ -320,17 +310,17 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 		using reference = void;
 		using oarchive_type = package_oarchive;
 
-		RETURN_TYPESTATE_UNCONSUMED
+		RETURN_TYPESTATE(unconsumed)
 		explicit iterator(package_oarchive& oa) : out_archive_{&oa} {}
 
 		iterator& operator=(T const& value) { *out_archive_ << value; return *this; }
 
-		RETURN_TYPESTATE_CONSUMED CALLABLE_WHEN_UNCONSUMED
+		RETURN_TYPESTATE(consumed) CALLABLE_WHEN(unconsumed)
 		auto operator*() -> iterator& {return *this;}
 
-		RETURN_TYPESTATE_UNCONSUMED
+		RETURN_TYPESTATE(unconsumed)
 		auto operator++() -> iterator& {return *this;}
-		RETURN_TYPESTATE_UNCONSUMED
+		RETURN_TYPESTATE(unconsumed)
 		auto operator++(int) -> iterator& {return *this;}
 
 	 private:
