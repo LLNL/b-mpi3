@@ -293,10 +293,7 @@ basic_iarchive_impl::delete_created_pointers()
         if(i->loaded_as_pointer){
             // borland complains without this minor hack
             const int j = i->class_id;
-            #pragma clang diagnostic push
-            #pragma clang diagnostic note "-Wsign-conversion"  // vvv external code
-            const cobject_id & co = cobject_id_vector[j];
-            #pragma clang diagnostic pop
+            const cobject_id & co = cobject_id_vector[static_cast<std::size_t>(j)];
             //const cobject_id & co = cobject_id_vector[i->class_id];
             // with the appropriate input serializer, 
             // delete the indicated object
@@ -310,7 +307,7 @@ basic_iarchive_impl::register_type(
     const basic_iserializer & bis
 ){
     class_id_type cid(cobject_info_set.size());
-    cobject_type co(cid, bis);
+    cobject_type co(static_cast<std::size_t>(cid), bis);
     std::pair<cobject_info_set_type::const_iterator, bool>
         result = cobject_info_set.insert(co);
 
@@ -321,7 +318,7 @@ basic_iarchive_impl::register_type(
     cid = result.first->m_class_id;
     // borland complains without this minor hack
     const int tid = cid;
-    cobject_id & coid = cobject_id_vector[tid];
+    cobject_id & coid = cobject_id_vector[static_cast<std::size_t>(tid)];
     coid.bpis_ptr = bis.get_bpis_ptr();
     return cid;
 }
@@ -383,7 +380,7 @@ basic_iarchive_impl::load_object(
 
     const class_id_type cid = register_type(bis);
     const int i = cid;
-    cobject_id & co = cobject_id_vector[i];
+    cobject_id & co = cobject_id_vector[static_cast<std::size_t>(i)];
 
     load_preamble(ar, co);
 
@@ -464,13 +461,10 @@ basic_iarchive_impl::load_pointer(
         // class_id_type new_cid = register_type(bpis_ptr->get_basic_serializer());
         BOOST_VERIFY(register_type(bpis_ptr->get_basic_serializer()) == cid);
         int i = cid;
-        cobject_id_vector[i].bpis_ptr = bpis_ptr;
+        cobject_id_vector[static_cast<std::size_t>(i)].bpis_ptr = bpis_ptr;
     }
     int i = cid;
-    #pragma clang diagnostic push
-    #pragma clang diagnostic note "-Wsign-conversion"  // vvv external code
-    cobject_id & co = cobject_id_vector[i];
-    #pragma clang diagnostic pop
+    cobject_id & co = cobject_id_vector[static_cast<std::size_t>(i)];
     bpis_ptr = co.bpis_ptr;
 
     load_preamble(ar, co);
@@ -501,7 +495,7 @@ basic_iarchive_impl::load_pointer(
         m_pending.version = co.file_version;
 
         // predict next object id to be created
-        const unsigned int ui = object_id_vector.size();
+        const unsigned int ui = static_cast<unsigned int>(object_id_vector.size());
 
         serialization::state_saver<object_id_type> w_end(m_moveable_objects.end);
 
