@@ -47,7 +47,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 {
 	std::size_t const NTHREADS = 10;
 	std::vector<std::future<int>> fs;
-	for(int i=0; i != NTHREADS; ++i){
+	for(int i=0; i != NTHREADS; ++i) {  // NOLINT(altera-unroll-loops)
 #if 0 // this is problematic because copy (mpi_comm_dup) is not thread safe
 		fs.emplace_back(std::async([&world](){
 			auto comm = world; // hangs here
@@ -66,7 +66,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 #endif
 		std::cout << "created thread" << std::endl;
 	}
-	for(std::size_t i = 0; i != NTHREADS; ++i) {
+	for(std::size_t i = 0; i != NTHREADS; ++i) {  // NOLINT(altera-unroll-loops)
 		auto five = fs[i].get();
 		assert( five == 5 );
 		std::cout << "joined thread" << std::endl;

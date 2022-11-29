@@ -1,7 +1,5 @@
-#if COMPILATION_INSTRUCTIONS // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-mpic++ -O3 -std=c++14 -Wfatal-errors -D_MAKE_BOOST_SERIALIZATION_HEADER_ONLY `#-lboost_serialization` $0 -o $0x.x && time mpirun -n 2 $0x.x $@ && rm -f $0x.x; exit
-#endif
-// © Copyright Alfredo A. Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #include "../../mpi3/main.hpp"
 #include "../../mpi3/communicator.hpp"
@@ -27,7 +25,7 @@ struct A {  // NOLINT(readability-identifier-naming) example name
 	A(A&&) = delete;
 	~A() = default;
 
-	auto operator=(A&&) = delete;
+	// auto operator=(A&&) = delete;
 	auto operator=(A const& other) -> A& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
@@ -62,7 +60,7 @@ struct B {  // NOLINT(readability-identifier-naming) example name
 	B(B const& other) : name_{other.name_}, n_{other.n_}, data{std::make_unique<double[]>(n_)} {} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B(B&&) = delete;
 
-	auto operator=(B&&) = delete;
+	// auto operator=(B&&) = delete;
 	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
@@ -156,7 +154,5 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 	}
 
 	return 0;
-}catch(...){
-	return 1;
-}
+} catch(...) { return 1; }
 

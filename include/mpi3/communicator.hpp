@@ -890,8 +890,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
 		It first,
-			detail::forward_iterator_tag /*tag*/,
-			detail::value_unspecified_tag /*tag*/,
+		/**/ detail::forward_iterator_tag  /*tag*/,
+		/**/ detail::value_unspecified_tag /*tag*/,
 		Size count,
 		int dest, int source,
 		int sendtag, int recvtag
@@ -912,8 +912,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 		(void)st;
 		package_iarchive pia(p2);
-		while(p2) {pia >> *first++;}
-		return first;
+		// while(p2) {pia >> *first++;}
+		// return first;
+		return std::copy_n(
+			package_iarchive::iterator<typename std::iterator_traits<It>::value_type>(pia), 
+			count, first
+		);
 	}
 
 	template<class It, typename Size>
@@ -1144,8 +1148,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		detail::package p(*this);
 		p.receive(source, tag);
 		package_iarchive pia(p);
-		while(count--) {pia >> *dest++;}
-		return dest;
+		return std::copy_n(package_iarchive::iterator<typename std::iterator_traits<It>::value_type>{pia}, count, dest);
 	}
 
 	template<class It, typename Size,
@@ -1185,16 +1188,16 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return dest + count;
 	}
 	template<class It>
-	auto receive(
+	[[deprecated]] auto receive(
 		It dest,
-			detail::forward_iterator_tag /*tag*/,
-			detail::value_unspecified_tag /*tag*/,
+		/**/ detail::forward_iterator_tag /*tag*/,
+		/**/ detail::value_unspecified_tag /*tag*/,
 		int source, int tag
 	) {
 		detail::package p(*this);
 		p.receive(source, tag);
 		package_iarchive pia(p);
-		while(p) {pia >> *dest++;}
+		while(p) {pia >> *dest++;}  // NOLINT(altera-unroll-loops) deprecating
 		return dest;
 	}
 	template<class It>
@@ -1207,7 +1210,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return matched_probe(source, tag).receive_n(dest);
 	}
 	template<class It>
-	auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+	[[deprecated]] auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(
 			dest,
 				detail::iterator_category_t<It>{},
@@ -1218,8 +1221,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class It>
 	auto receive(
 		It d_first, It d_last,
-			detail::random_access_iterator_tag /*tag*/,
-			detail::value_unspecified_tag /*tag*/,
+		/**/ detail::random_access_iterator_tag /*tag*/,
+		/**/ detail::value_unspecified_tag /*tag*/,
 		int source, int tag
 	) {
 		return receive_n(d_first, std::distance(d_first, d_last), source, tag);
@@ -1238,8 +1241,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class It>
 	auto receive(
 		It d_first, It d_last,
-			detail::forward_iterator_tag /*tag*/,
-			detail::basic_tag /*tag*/,
+		/**/ detail::forward_iterator_tag /*tag*/,
+		/**/ detail::basic_tag /*tag*/,
 		int source, int tag
 	) {
 		mpi3::uvector<typename std::iterator_traits<It>::value_type> buffer(std::distance(d_first, d_last));
@@ -2497,8 +2500,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
 		d_count *= size();
-		while(d_count--) {pia >> *(d_first++);}
-		return d_first;
+		return std::copy_n(package_iarchive::iterator<typename std::iterator_traits<It2>::value_type>(pia), d_count, d_first);
 	}
 	template<typename It1, typename Size, typename It2>
 	auto all_gather_n(It1 first, Size count, It2 d_first) {
@@ -2535,12 +2537,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class It1, typename Size1, class It2, class Size2>
 	auto all_gather_n(
 		It1 first,
-			detail::forward_iterator_tag /*tag*/,
-			detail::value_unspecified_tag /*tag*/,
+		/**/ detail::forward_iterator_tag /*tag*/,
+		/**/ detail::value_unspecified_tag /*tag*/,
 		Size1 count,
 		It2 d_first,
-			detail::forward_iterator_tag /*tag*/,
-			detail::value_unspecified_tag /*tag*/,
+		/**/ detail::forward_iterator_tag /*tag*/,
+		/**/ detail::value_unspecified_tag /*tag*/,
 		Size2 d_count
 	) {
 		detail::package po(*this);
@@ -2557,9 +2559,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		pi.resize(total);
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
-		d_count*=size();
-		while(d_count--) {pia >> *(d_first++);}
-		return d_first;
+		d_count *= size();
+		return std::copy_n(package_iarchive::iterator<typename std::iterator_traits<It2>::value_type>(pia), d_count, d_first);
 	}
 	template<typename It1, typename It2>
 	auto all_gatherv(
@@ -2686,7 +2687,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		if(rank() == root) {
 			package_iarchive pia(pi);
 			d_count *= size();
-			while(d_count--) {pia >> *(d_first++);}
+			return std::copy_n(
+				package_iarchive::iterator<typename std::iterator_traits<It2>::value_type>(pia), 
+				d_count,
+				d_first
+			);
+		//  while(d_count--) {pia >> *(d_first++);}
 		}
 		return d_first;
 	}

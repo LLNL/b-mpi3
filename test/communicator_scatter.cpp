@@ -1,11 +1,11 @@
-// -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-
-// © Alfredo A. Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
-#include "../../mpi3/environment.hpp"
-#include "../../mpi3/communicator.hpp"
+#include <mpi3/communicator.hpp>
+#include <mpi3/environment.hpp>
 
-#include<list>
-#include<numeric> // iota
+#include <list>
+#include <numeric>  // for std::iota
 
 namespace mpi3 = boost::mpi3;
 
@@ -97,4 +97,4 @@ auto main() -> int try {
 	}
 #endif
 	return 0;
-}catch(...){return 1;}
+} catch(...) { return 1; }

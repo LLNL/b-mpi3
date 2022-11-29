@@ -1,10 +1,8 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2019-2022 Alfredo A. Correa
 
-// #include "../../mpi3/main.hpp"
-// #include "../../mpi3/process.hpp"
-#include "mpi3/main.hpp"
-#include "mpi3/request.hpp"
+#include <mpi3/main.hpp>
+#include <mpi3/request.hpp>
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
