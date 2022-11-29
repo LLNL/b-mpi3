@@ -71,7 +71,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 	}
 
 	auto topology() const {
-		auto maxdims = dimensionality();
+		auto const maxdims = static_cast<std::size_t>(dimensionality());  // TODO(correaa) use safe cast
 		class topology_t {
 			std::vector<int> dimensions_;
 			std::vector<int> periods_;
@@ -85,7 +85,7 @@ struct cartesian_communicator<dynamic_extent> : communicator{
 			auto const& coordinates() const {return coordinates_;}
 		} ret(maxdims);
 
-		MPI_(Cart_get)(impl_, maxdims, ret.dimensions_.data(), ret.periods_.data(), ret.coordinates_.data());
+		MPI_(Cart_get)(impl_, static_cast<dimensionality_type>(maxdims), ret.dimensions_.data(), ret.periods_.data(), ret.coordinates_.data());
 
 		assert( ret.coordinates() == coordinates() );
 		return ret;

@@ -17,17 +17,18 @@ namespace mpi3 = boost::mpi3;
 struct A {  // NOLINT(readability-identifier-naming) example name
  private:
 	std::string name_ = "unnamed";
-	int n_ = 0;
+	std::size_t n_ = 0;
 	std::unique_ptr<double[]> data_;  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) notation
 
  public:
 	A() = default;
-	explicit A(int n) : n_(n), data_{new double[n]}{}
-	A(A const& other) : name_(other.name_), n_(other.n_), data_{new double[other.n_]}{}
-	~A() = default;
+	explicit A(std::size_t n) : n_{n}, data_{new double[n_]} {}
+	A(A const& other) : name_{other.name_}, n_{other.n_}, data_{new double[n_]} {}
 	A(A&&) = delete;
+	~A() = default;
+
 	auto operator=(A&&) = delete;
-	auto operator=(A const& other) -> A&{
+	auto operator=(A const& other) -> A& {
 		if(this == &other){return *this;}
 		name_ = other.name_;
 		n_ = other.n_; 
@@ -35,7 +36,8 @@ struct A {  // NOLINT(readability-identifier-naming) example name
 		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	auto operator[](std::ptrdiff_t i) -> double&{return data_.get()[i];}
+
+	auto operator[](std::ptrdiff_t i) -> double& { return data_.get()[i]; }
 	// intrusive serialization
 	template<class Archive>
 	void save(Archive & ar, const unsigned int /*version*/) const{
@@ -52,12 +54,14 @@ struct A {  // NOLINT(readability-identifier-naming) example name
 
 struct B {  // NOLINT(readability-identifier-naming) example name
 	std::string name_ = "unnamed"; // NOLINT(misc-non-private-member-variables-in-classes) exposed for serialization
-	int n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
+	std::size_t n_ = 0;                    // NOLINT(misc-non-private-member-variables-in-classes)
 	std::unique_ptr<double[]> data;// NOLINT(misc-non-private-member-variables-in-classes, cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+
 	B() = default;
-	explicit B(int n) : n_(n), data(std::make_unique<double[]>(n)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-	B(B const& other) : name_(other.name_), n_(other.n_), data(std::make_unique<double[]>(other.n_)){} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+	explicit B(std::size_t n) : n_{n}, data{std::make_unique<double[]>(n_)} {} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+	B(B const& other) : name_{other.name_}, n_{other.n_}, data{std::make_unique<double[]>(n_)} {} // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	B(B&&) = delete;
+
 	auto operator=(B&&) = delete;
 	auto operator=(B const& other) -> B& {
 		if(this == &other){return *this;}

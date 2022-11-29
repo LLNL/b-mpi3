@@ -45,7 +45,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	std::transform(comms.begin(), comms.end(), std::back_inserter(comms2), [](auto&& e) {return e;});  // calls dup ctor
 }
 {
-	int const NTHREADS = 10;
+	std::size_t const NTHREADS = 10;
 	std::vector<std::future<int>> fs;
 	for(int i=0; i != NTHREADS; ++i){
 #if 0 // this is problematic because copy (mpi_comm_dup) is not thread safe
@@ -66,7 +66,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 #endif
 		std::cout << "created thread" << std::endl;
 	}
-	for(int i=0; i != NTHREADS; ++i){
+	for(std::size_t i = 0; i != NTHREADS; ++i) {
 		auto five = fs[i].get();
 		assert( five == 5 );
 		std::cout << "joined thread" << std::endl;

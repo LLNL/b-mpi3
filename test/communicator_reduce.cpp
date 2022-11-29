@@ -6,21 +6,22 @@
 
 namespace mpi3 = boost::mpi3;
 
-void part1(mpi3::communicator& world)
-	{
-		int count = 120;
-		std::vector<int> send_buffer(count);
-		iota(send_buffer.begin(), send_buffer.end(), 0);
+void part1(mpi3::communicator& world) {
+	std::size_t      count = 120;
+	std::vector<int> send_buffer(count);
+	iota(send_buffer.begin(), send_buffer.end(), 0);
 
-		std::vector<int> recv_buffer;//(count, -1);
-		if(world.rank() == 0){recv_buffer.resize(count, -1);}
-		world.reduce_n(send_buffer.begin(), send_buffer.size(), recv_buffer.begin(), std::plus<>{}, 0);
-		if(world.rank() == 0){
-			for(std::size_t i = 0; i != recv_buffer.size(); ++i){
-				assert(std::size_t(recv_buffer[i]) == i*world.size());
-			}
+	std::vector<int> recv_buffer;  //(count, -1);
+	if(world.rank() == 0) {
+		recv_buffer.resize(count, -1);
+	}
+	world.reduce_n(send_buffer.begin(), send_buffer.size(), recv_buffer.begin(), std::plus<>{}, 0);
+	if(world.rank() == 0) {
+		for(std::size_t i = 0; i != recv_buffer.size(); ++i) {
+			assert(std::size_t(recv_buffer[i]) == i * static_cast<std::size_t>(world.size()));
 		}
 	}
+}
 
 void part2(mpi3::communicator& world)
 	{
