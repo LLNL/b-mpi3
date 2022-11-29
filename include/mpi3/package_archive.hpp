@@ -270,10 +270,68 @@ package_oarchive_impl(mpi3::detail::package& p, unsigned int flags)  // size_t& 
 
 }  // namespace detail
 
+#ifdef __clang__
+#define CALLABLE_WHEN(ConsumedORUnconsumed)    [[clang::callable_when(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
+#define CONSUMABLE(ConsumedORUnconsumed)       [[clang::consumable(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
+#define RETURN_TYPESTATE(ConsumedORUnconsumed) [[clang::return_typestate(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
+#define SET_TYPESTATE(ConsumedORUnconsumedORUnknown)    [[clang::set_typestate(ConsumedORUnconsumedORUnknown)]]  // NOLINT(cppcoreguidelines-macro-usage)
+#else
+#define CALLABLE_WHEN(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
+#define CONSUMABLE(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
+#define RETURN_TYPESTATE(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
+#define SET_TYPESTATE(ConsumedORUnconsumedORUnknown)  // NOLINT(cppcoreguidelines-macro-usage)
+#endif
+
+template<class Category, class ValueType, class Pointer, class Reference>
+struct CONSUMABLE(unconsumed) basic_iterator {
+	using iterator_category = Category;
+	using value_type = ValueType;
+	using difference_type = std::ptrdiff_t;
+	using pointer = Pointer;
+	using reference = Reference;
+};
+
 struct package_iarchive
 : public detail::package_iarchive_impl<package_iarchive> {
 	explicit package_iarchive(mpi3::detail::package& p, unsigned int flags = 0)
 	: package_iarchive_impl<package_iarchive>(p, flags) {}
+
+	template<class T>
+	struct CONSUMABLE(unconsumed)
+	iterator {
+			using iterator_category = std::input_iterator_tag;
+		using value_type = void;
+		using difference_type = std::ptrdiff_t;
+		using pointer = T const*;
+		using reference = T const&;
+
+		RETURN_TYPESTATE(unconsumed)
+		explicit iterator(package_iarchive& oa) : in_archive_{&oa} {*in_archive_ >> current_;}
+
+		RETURN_TYPESTATE(unconsumed)
+		iterator() = default;
+
+	//  iterator& operator=(T const& value) { *out_archive_ << value; return *this; }
+
+	//	RETURN_TYPESTATE(consumed) 
+		SET_TYPESTATE(consumed) CALLABLE_WHEN(unconsumed)
+		auto operator*() -> T&& {return std::move(current_);}
+
+		RETURN_TYPESTATE(unconsumed) SET_TYPESTATE(unconsumed)
+		auto operator++() -> iterator& {*in_archive_ >> current_; return *this;}
+	//	RETURN_TYPESTATE(unconsumed)
+	//	auto operator++(int) -> iterator& {*in_archive_ >> current_; return *this;}
+
+		bool operator!=(iterator const& other) const = delete;
+		bool operator==(iterator const& other) const = delete;
+
+	//	bool operator==(iterator const& other) const {return     static_cast<bool>(*in_archive_);}
+	//	bool operator!=(iterator const& other) const {return not static_cast<bool>(*in_archive_);}
+
+	 private:
+	 	package_iarchive* in_archive_ = nullptr;
+		T current_;
+	};
 };
 
 struct package_oarchive : public detail::package_oarchive_impl<package_oarchive> {
@@ -290,16 +348,6 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 		assert(0);
 		return *this;
 	}
-
-	#ifdef __clang__
-	#define CALLABLE_WHEN(ConsumedORUnconsumed)    [[clang::callable_when(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
-	#define CONSUMABLE(ConsumedORUnconsumed)       [[clang::consumable(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
-	#define RETURN_TYPESTATE(ConsumedORUnconsumed) [[clang::return_typestate(ConsumedORUnconsumed)]]  // NOLINT(cppcoreguidelines-macro-usage)
-	#else
-	#define CALLABLE_WHEN(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
-	#define CONSUMABLE(ConsumedORUnconsumed)  // NOLINT(cppcoreguidelines-macro-usage)
-	#define RETURN_TYPESTATE(ConsumedORUnconsumed) // NOLINT(cppcoreguidelines-macro-usage)
-	#endif
 
 	template<class T = void>
 	struct CONSUMABLE(unconsumed)

@@ -88,10 +88,11 @@ private:
 //		comm_->barrier();
 //	}
 	template<class Ptr, class Size, class TT = typename std::pointer_traits<Ptr>::element_type>
-	auto alloc_destroy_n(Ptr first, Size count){
+	auto alloc_destroy_n(Ptr first, Size count) {
 		first.wP_->fence();
 		if(comm_->root()) {
-			for( ; count > 0; --count, ++first) {raw_pointer_cast(first)->~TT();}
+			std::for_each_n(first, count, [](auto const& e) {raw_pointer_cast(&e)->~TT();});
+			// for( ; count > 0; --count, ++first) {raw_pointer_cast(first)->~TT();}
 		}
 		first.wP_->fence();
 		comm_->barrier();

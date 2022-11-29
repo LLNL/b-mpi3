@@ -16,12 +16,16 @@ class B {  // NOLINT(readability-identifier-naming) example name
 	template<class Archive> friend void save(Archive & ar, B const& b, unsigned int/*version*/);
 	template<class Archive> friend void load(Archive & ar, B      & b, unsigned int/*version*/);
 	std::unique_ptr<double[]> data_; // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
-public:
-	auto data()      & -> double      *{return data_.get();}
-	auto data() const& -> double const*{return data_.get();}
-	auto operator[](std::size_t i)&->double &{return data_.get()[i];}
-	auto name()      & -> std::string      & {return name_;}
-	auto name() const& -> std::string const& {return name_;}
+
+ public:
+	auto data() & -> double* { return data_.get(); }
+	auto data() const& -> double const* { return data_.get(); }
+
+	auto operator[](std::size_t i) & -> double& { return data_.get()[i]; }
+
+	auto name() & -> std::string& { return name_; }
+	auto name() const& -> std::string const& { return name_; }
+
 	B() = default;
 	explicit B(int n) : n_{n}, data_{std::make_unique<double[]>(static_cast<std::size_t>(n))} {// NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::fill_n(data_.get(), n_, 0.);
@@ -29,26 +33,26 @@ public:
 	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{std::make_unique<double[]>(static_cast<std::size_t>(other.n_))} { // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 	}
-	B(B&&) = delete;
-	auto operator=(B const& other) -> B&{
-		if(this == &other){return *this;}
+	B(B&&) = default;
+	auto operator=(B const& other) -> B& {
+		if(this == &other) {return *this;}
 		name_ = other.name_;
-		n_ = other.n_; 
-		data_ = std::make_unique<double[]>(static_cast<std::size_t>(other.n_));// NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
+		n_    = other.n_;
+		data_ = std::make_unique<double[]>(static_cast<std::size_t>(other.n_));  // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	auto operator=(B&&) = delete;
+	B& operator=(B&&) = default;
 	~B() = default;
 };
 
 // nonintrusive serialization
 template<class Archive>
-void save(Archive & ar, B const& b, const unsigned int/*version*/){
+void save(Archive& ar, B const& b, unsigned int const /*version*/) {
 	ar << b.name() << b.n_ << boost::serialization::make_array(b.data_.get(), b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int/*version*/){
+void load(Archive& ar, B& b, unsigned int const /*version*/) {
 	ar >> b.name() >> b.n_;
 	b.data_ = std::make_unique<double[]>(static_cast<std::size_t>(b.n_));  // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 	ar >> boost::serialization::make_array(b.data_.get(), b.n_);

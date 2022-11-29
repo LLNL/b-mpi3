@@ -18,7 +18,7 @@ AlignTrailingComments: false
 AllowShortCaseLabelsOnASingleLine: true  # false
 #AllowShortFunctionsOnASingleLine: All
 #AllowShortLambdasOnASingleLine: All
-#AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 #AllowShortLoopsOnASingleLine: true
 #AlwaysBreakAfterDefinitionReturnType: None
 #AlwaysBreakAfterReturnType: None
@@ -28,7 +28,7 @@ AlwaysBreakTemplateDeclarations: No  # Yes
 #  - __capability
 #BinPackArguments: true
 #BinPackParameters: true
-#BraceWrapping:
+BraceWrapping:
 #  AfterCaseLabel:  false
 #  AfterClass:      false
 #  AfterControlStatement: Never
@@ -44,7 +44,7 @@ AlwaysBreakTemplateDeclarations: No  # Yes
 #  BeforeLambdaBody: false
 #  BeforeWhile:     false
 #  IndentBraces:    false
-#  SplitEmptyFunction: true
+   SplitEmptyFunction: false # true
 #  SplitEmptyRecord: true
 #  SplitEmptyNamespace: true
 #BreakBeforeBinaryOperators: None
@@ -112,6 +112,7 @@ AccessModifierOffset: -98  # 2
 IndentWidth:     99
 #IndentWrappedFunctionNames: false
 #InsertTrailingCommas: None
+#InsertBraces: true  # clang format 15
 #JavaScriptQuotes: Leave
 #JavaScriptWrapImports: true
 #KeepEmptyLinesAtTheStartOfBlocks: false

@@ -1,8 +1,10 @@
-// © Alfredo A. Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
+
 #include "../../mpi3/main.hpp"
 
 #include<iostream>
-#include<numeric>  // for iota
+#include<numeric>  // for std::iota
 #include<vector>
 
 namespace bmpi3 = boost::mpi3;
@@ -30,21 +32,18 @@ int bmpi3::main(int /*argc*/, char ** /*argv*/, bmpi3::communicator world) try {
 		std::vector<double> xrecv(xsend.size(), -1.);
 
 		world.send(cbegin(xsend), cend(xsend), (world.rank()/2)*2 + (world.rank()+1)%2);
-		auto last = world.receive(begin(xrecv));
+		world.receive(begin(xrecv), end(xrecv));
 
-		assert( last == end(xrecv) );
-		assert( xrecv[5] == 105. );
+		assert( xrecv[5] == 105.0 );
 	}
 	{
 		std::vector<double> xsend(20); iota(begin(xsend), end(xsend), 100.);
-		std::vector<double> xrecv(xsend.size(), -1.);
+		std::vector<double> xrecv(xsend.size(), -1.0);
 
 		world.send(cbegin(xsend), cend(xsend), (world.rank()/2)*2 + (world.rank()+1)%2);
-		auto last = world.receive(begin(xrecv));
+		world.receive(begin(xrecv), end(xrecv));
 
-		assert( last == end(xrecv) );
-		std::cout<<"******"<< xrecv[5] <<std::endl;
-		assert( xrecv[5] == 105. );
+		assert( xrecv[5] == 105.0 );
 	}
 
 	if(world.is_root()) {std::cerr<<"successfully completed"<<std::endl;}
