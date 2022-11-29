@@ -1,9 +1,7 @@
 # -*-indent-tabs-mode:nil;c-basic-offset:2;tab-width:2;autowrap:nil;-*-
 ---
 Checks: '*,
-  -altera-id-dependent-backward-branch,
   -altera-struct-pack-align,
-  -altera-unroll-loops,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -fuchsia-default-arguments-declarations,
