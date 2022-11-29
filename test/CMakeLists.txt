@@ -88,6 +88,7 @@ set(TEST_SRCS
 	shared_mutex.cpp
 	simple_send_receive.cpp
 	simple_broadcast.cpp
+  status.cpp
 	type_commit.cpp
 	type_size.cpp
 	uniform_abort.cpp
@@ -120,8 +121,62 @@ foreach(TEST_FILE ${TEST_SRCS})
     set_source_files_properties(${TEST_FILE} PROPERTIES LANGUAGE CUDA)
   endif()
 
-  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror  -Wno-error=deprecated-declarations>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
+  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror -Wno-error=deprecated-declarations>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
   target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Wall -Wextra>)
+
+  target_compile_options(
+    ${TEST_EXE}
+    PRIVATE
+      $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:
+        -Xcompiler=-Werror,-Wall,-Wextra,-Wcast-align,-Wcast-qual,-Wno-deprecated-declarations,-Wno-double-promotion,-Wduplicated-branches,-Wduplicated-cond,-Wformat-truncation,-Wformat=2,-Wlogical-op,-Wmisleading-indentation,-Wno-missing-include-dirs,-Wnon-virtual-dtor,-Wno-missing-declarations,-Wnon-virtual-dtor,-Wnull-dereference,-Woverloaded-virtual,-Wpointer-arith,-Wno-redundant-decls,-Wno-shadow,-Wno-switch-enum,-Wno-unknown-pragmas,-Wtrampolines,-Wuninitialized,-Wunused,-Wunused-but-set-variable,-Wunused-result,-Wno-zero-as-null-pointer-constant
+        --expt-relaxed-constexpr --extended-lambda --Werror=cross-execution-space-call -Xcudafe=--display_error_number -Xcudafe=--diag_error=incompatible_assignment_operands -Xcudafe=--diag_error=returning_ptr_to_local_variable -Xcudafe=--diag_error=subscript_out_of_range -Xcudafe=--diag_error=used_before_set -Xcudafe=--diag_error=undefined_preproc_id -Xcudafe=--diag_error=implicit_func_decl -Xcudafe=--diag_error=implicit_return_from_non_void_function -Xcudafe=--diag_error=missing_type_specifier
+      >
+      $<$<AND:$<CXX_COMPILER_ID:GNU>,$<NOT:$<CUDA_COMPILER_ID:NVIDIA>>,$<NOT:$<CUDA_COMPILER_ID:Clang>>>:
+        -Wno-unknown-pragmas  
+        # -Wextra-semi (gcc 8, not in gcc 7)
+        -Wpedantic
+        # -Wabi=13 -Wabi-tag (maybe important when linking with very old libraries)
+        -Waddress
+        # -Waddress-of-packed-member (gcc 11, not in gcc 8)
+        # -Waggregate-return (disallow return classes or structs, seems a C-compatibility warning)
+        -Waggressive-loop-optimizations
+        -Wzero-as-null-pointer-constant
+      >
+      $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CUDA_COMPILER_ID:Clang>>:
+        -Wno-unknown-pragmas
+        -Wcast-align
+        -Wcomplex-component-init
+        -Wconstexpr-not-const
+        -Wconsumed
+        -Wconversion -Wconversion-null
+        -Wmove
+        -Wzero-as-null-pointer-constant -Wzero-length-array
+        -Wno-c++98-compat-unnamed-type-template-args
+        -Wno-ignored-qualifiers
+        -Wno-range-loop-analysis # (this check is overzealous in clang 9)
+      >
+      $<$<CXX_COMPILER_ID:Intel>:  # also IntelLLVM, XL (ibm), XLClang (ibm)
+        -Werror
+        -Wall
+        -Wextra
+        -diag-disable=remark
+        -Wunused -Wunused-but-set-variable -Wunused-function -Wunused-parameter -Wunused-variable
+        -Wwrite-strings
+      >
+      $<$<OR:$<CXX_COMPILER_ID:PGI>,$<CXX_COMPILER_ID:NVHPC>>:
+        -Werror
+        -Wall
+        -Wcast-qual
+        -Wformat=2
+        -Wshadow
+        -Wunused-parameter
+      >
+      $<$<CXX_COMPILER_ID:MSVC>:
+        /WX
+        /W4
+      >
+  )
+
   target_include_directories(${TEST_EXE} PUBLIC "../../../..")
 
   # TODO(correaa) simplify include directories
