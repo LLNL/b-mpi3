@@ -38,11 +38,11 @@ struct A {  // NOLINT(readability-identifier-naming) example name
 	auto operator[](std::ptrdiff_t i) -> double& { return data_.get()[i]; }
 	// intrusive serialization
 	template<class Archive>
-	void save(Archive & ar, const unsigned int /*version*/) const{
+	void save(Archive& ar, unsigned int const /*version*/) const {
 		ar<< name_ << n_ << boost::serialization::make_array(data_.get(), n_);
 	}
 	template<class Archive>
-	void load(Archive & ar, const unsigned int /*version*/){
+	void load(Archive& ar, unsigned int const /*version*/) {
 		ar>> name_ >> n_;
 		data_.reset(new double[n_]); // NOLINT(cppcoreguidelines-owning-memory)
 		ar>> boost::serialization::make_array(data_.get(), n_);
@@ -75,11 +75,11 @@ struct B {  // NOLINT(readability-identifier-naming) example name
 
 // nonintrusive serialization
 template<class Archive>
-void save(Archive & ar, B const& b, const unsigned int /*version*/) {
+void save(Archive& ar, B const& b, unsigned int const /*version*/) {
 	ar<< b.name_ << b.n_ << boost::serialization::make_array(b.data.get(), b.n_);
 }
 template<class Archive>
-void load(Archive & ar, B& b, const unsigned int /*version*/) { //NOLINT(google-runtime-references): serialization protocol
+void load(Archive& ar, B& b, unsigned int const /*version*/) {  // NOLINT(google-runtime-references): serialization protocol
 	ar>> b.name_ >> b.n_;
 	b.data = std::make_unique<double[]>(b.n_); // NOLINT(cppcoreguidelines-owning-memory,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 	ar>> boost::serialization::make_array(b.data.get(), b.n_);
@@ -103,55 +103,60 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		}; break;
 	}
 	switch(world.rank()) {
-		case 0 : {
+		break; case 0 : {
 			std::vector<double> buffer(10);
-			iota(begin(buffer), end(buffer), 0);
-			world.send(begin(buffer), end(buffer), 1, 123);
-		}; break;
-		case 1 : {
+			iota(begin(buffer), end(buffer), 0.0);
+			world.send(begin(buffer), end(buffer), 1);
+		};
+		break; case 1 : {
 			std::vector<double> v(10);
-		//	world.receive(std::back_inserter(v), 0, 123);
-			auto it = world.receive(begin(v), 0, 123);
-			assert(it == v.end() and v[3] == 3.);
-		}; break;
+			auto it = world.receive_n(begin(v), 10, 0);
+			assert(it == end(v) and v[3] == 3.0);
+		};
 	}
 	switch(world.rank()) {
-		case 0: {
-			std::map<int, std::vector<double>> m;
-			m[2] = std::vector<double>(2);
-			m[5] = std::vector<double>(5);
-			world.send(begin(m), end(m), 1, 123);
-		}; break;
-		case 1: {
-			std::vector<std::pair<int, std::vector<double>>> v(2);
-			world.receive(begin(v), end(v), 0, 123);
-			assert(( v[1] == std::pair<int, std::vector<double>>{5, std::vector<double>(5)} ));
-		}; break;
+	case 0: {
+		std::map<int, std::vector<double>> m;
+		m[2] = std::vector<double>(2);
+		m[5] = std::vector<double>(5);
+		world.send(begin(m), end(m), 1, 123);
+		break;
+	};
+	case 1: {
+		std::vector<std::pair<int, std::vector<double>>> v(2);
+		world.receive(begin(v), end(v), 0, 123);
+		assert((v[1] == std::pair<int, std::vector<double>>{5, std::vector<double>(5)}));
+		break;
+	};
 	}
+
 	switch(world.rank()) {
-		case 0 : {
-			std::vector<A> v(5, A(3));
-			v[2][2] = 3.14;
-			world.send(begin(v), end(v), 1, 123);
-		}; break;
-		case 1 : {
-			std::vector<A> v(5);
-			world.receive(begin(v), end(v), 0, 123);
-			assert(v[2][2] == 3.14);
-		}; break;
+	case 0: {
+		std::vector<A> v(5, A(3));
+		v[2][2] = 3.14;
+		world.send(begin(v), end(v), 1, 123);
+		break;
+	};
+	case 1: {
+		std::vector<A> v(5);
+		world.receive(begin(v), end(v), 0, 123);
+		assert(v[2][2] == 3.14);
+		break;
+	};
 	}
+
 	switch(world.rank()) {
-		case 0 : {
-			std::vector<B> v(5, B(3));
-			v[2][2] = 3.14;
-			world.send(begin(v), end(v), 1, 123);
+	case 0: {
+		std::vector<B> v(5, B(3));
+		v[2][2] = 3.14;
+		world.send(begin(v), end(v), 1, 123);
 		}; break;
 		case 1 : {
 			std::vector<B> v(5);
 			world.receive(begin(v), end(v), 0, 123);
 			assert(v[2][2] == 3.14);
 		}; break;
-	}
+		}
 
 	return 0;
 } catch(...) { return 1; }
