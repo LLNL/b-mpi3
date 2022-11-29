@@ -7,7 +7,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for updates, documentation, and revision history.
-
+// NOLINTBEGIN(altera-unroll-loops,cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
 #if (defined _MSC_VER) && (_MSC_VER == 1200)
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
@@ -151,9 +151,10 @@ archive_exception::what() const BOOST_NOEXCEPT_OR_NOTHROW {
 }
 
 BOOST_ARCHIVE_DECL
-archive_exception::archive_exception() BOOST_NOEXCEPT :  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code
+archive_exception::archive_exception() BOOST_NOEXCEPT :
     code(no_exception)
 {}
 
 } // end namespace archive
 } // end namespace boost
+// NOLINTEND(altera-unroll-loops,cppcoreguidelines-pro-type-member-init,hicpp-member-init) external code

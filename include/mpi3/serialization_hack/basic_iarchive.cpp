@@ -7,7 +7,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for updates, documentation, and revision history.
-// NOLINTBEGIN(hicpp-use-auto,modernize-use-auto)  external code
+// NOLINTBEGIN(altera-id-dependent-backward-branch,altera-unroll-loops,hicpp-use-auto,hicpp-use-equals-default,modernize-use-auto,modernize-use-equals-default)  external code
 #include <boost/config.hpp> // msvc 6.0 needs this to suppress warnings
 
 #include <boost/assert.hpp>
@@ -538,7 +538,7 @@ basic_iarchive::basic_iarchive(unsigned int flags) :
 {}
 
 BOOST_ARCHIVE_DECL
-basic_iarchive::~basic_iarchive()  // NOLINT(hicpp-use-equals-default,modernize-use-equals-default) external code
+basic_iarchive::~basic_iarchive()
 {}
 
 BOOST_ARCHIVE_DECL void
@@ -599,4 +599,4 @@ basic_iarchive::get_flags() const{
 } // namespace detail
 } // namespace archive
 } // namespace boost
-// NOLINTEND(hicpp-use-auto,modernize-use-auto)
+// NOLINTEND(altera-id-dependent-backward-branch,altera-unroll-loops,hicpp-use-auto,hicpp-use-equals-default,modernize-use-auto,modernize-use-equals-default)  external code

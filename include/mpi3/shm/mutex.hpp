@@ -1,7 +1,10 @@
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_SHM_MUTEX_HPP
 #define BOOST_MPI3_SHM_MUTEX_HPP
 
-#include "../../mpi3/shm/allocator.hpp"
+#include <mpi3/shm/allocator.hpp>
 
 namespace boost {
 namespace mpi3 {
@@ -23,7 +26,8 @@ class mutex {
 	mutex& operator=(mutex const&) = delete;
 	mutex& operator=(mutex     &&) = delete;
 	void lock() {
-		while(f_->test_and_set(std::memory_order_acquire)) {};
+		// spin
+		while(f_->test_and_set(std::memory_order_acquire)) {};  // NOLINT(altera-unroll-loops)
 	}
 	void unlock(){f_->clear(std::memory_order_release);}
 	~mutex() {  // noexcept(false) {

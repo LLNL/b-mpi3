@@ -1,8 +1,8 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2022 Alfredo A. Correa
 
-#include "../../mpi3/main.hpp"
-#include "../../mpi3/communicator.hpp"
+#include <mpi3/communicator.hpp>
+#include <mpi3/main.hpp>
 
 #include <chrono>
 #include <stdexcept>  // std::runtime_error
@@ -13,19 +13,19 @@ namespace mpi3 = boost::mpi3;
 // failures
 
 void uniform_fail(mpi3::communicator const& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
-    using namespace std::chrono_literals;
+	using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
-	std::cout<< "uniform_fail in n = "<< comm.rank() <<" is about to fail" <<std::endl;
+	std::cout << "uniform_fail in n = " << comm.rank() << " is about to fail" << std::endl;
 	throw std::logic_error{"global but unsynchronized error"};
 }
 
 void nonuniform_fail(mpi3::communicator const& comm) {  // cppcheck-suppress [unusedFunction,unmatchedSuppression]
-    using namespace std::chrono_literals;
+	using namespace std::chrono_literals;
 	std::this_thread::sleep_for(comm.rank() * 1s);
 
 	if(comm.rank() > 1) {
-		std::cout<< "nonuniform_fail in n = "<< comm.rank() <<" is about to fail" <<std::endl;
+		std::cout << "nonuniform_fail in n = " << comm.rank() << " is about to fail" << std::endl;
 		throw std::logic_error{"nonglobal error"};
 	}
 }
@@ -33,34 +33,36 @@ void nonuniform_fail(mpi3::communicator const& comm) {  // cppcheck-suppress [un
 // handlers
 
 void unconditional_abort(mpi3::communicator const& comm) {  // cppcheck-suppress unusedFunction
-	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
+	std::cout << "not essential message: aborting from rank " << comm.rank() << std::endl;
 	comm.abort();
 }
 
 void barriered_abort(mpi3::communicator& comm) {  // cppcheck-suppress unusedFunction
 	comm.barrier();
-	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<std::endl;
+	std::cout << "not essential message: aborting from rank " << comm.rank() << std::endl;
 	comm.abort();
 }
 
 template<class Duration>
 void abort_after(mpi3::communicator& comm, Duration d) {
 	auto const t0 = mpi3::wall_time();
-	while((mpi3::wall_time() - t0) < d) {}
-	std::cout<< "not essential message: aborting from rank "<< comm.rank() <<" after others join"<<std::endl;
+	while((mpi3::wall_time() - t0) < d) {  // NOLINT(altera-unroll-loops) spin loop
+	}
+	std::cout << "not essential message: aborting from rank " << comm.rank() << " after others join" << std::endl;
 	comm.abort();
 }
 
 template<class Duration>
 void timedout_abort(mpi3::communicator& comm, Duration d) {
-	auto rbarrier = comm.ibarrier();
-	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+	auto       rbarrier = comm.ibarrier();
+	auto const t0       = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {  // NOLINT(altera-unroll-loops,altera-id-dependent-backward-branch) spin loop
+	}
 
 	if(not rbarrier.completed()) {
-		std::cout<< "non essential message: aborting from rank "<< comm.rank() <<" after timeout"<<std::endl;
+		std::cout << "non essential message: aborting from rank " << comm.rank() << " after timeout" << std::endl;
 	} else {
-		std::cout<< "not essential message: aborting from rank "<< comm.rank() <<" after others join"<<std::endl;
+		std::cout << "not essential message: aborting from rank " << comm.rank() << " after others join" << std::endl;
 	}
 
 	comm.abort();
@@ -68,12 +70,13 @@ void timedout_abort(mpi3::communicator& comm, Duration d) {
 
 template<class Duration>
 void timedout_throw(mpi3::communicator& comm, Duration d) {
-	auto rbarrier = comm.ibarrier();
-	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {}
+	auto       rbarrier = comm.ibarrier();
+	auto const t0       = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {  // NOLINT(altera-id-dependent-backward-branch,altera-unroll-loops) spin loop
+	}
 
 	if(rbarrier.completed()) {
-		std::cout<< "non essential message: throwing from rank "<< comm.rank() <<" before timeout"<<std::endl;
+		std::cout << "non essential message: throwing from rank " << comm.rank() << " before timeout" << std::endl;
 		throw;  // cppcheck-suppress [rethrowNoCurrentException,unmatchedSuppression] ; experimental line
 	}
 	std::terminate();
@@ -81,21 +84,21 @@ void timedout_throw(mpi3::communicator& comm, Duration d) {
 
 template<class Duration>
 [[noreturn]] void mpi3_timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
-	std::cout<< "terminate called" << std::endl;
-	auto rbarrier = comm.ibarrier();
-	auto const t0 = mpi3::wall_time();
-	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {
-	    using namespace std::chrono_literals;
+	std::cout << "terminate called" << std::endl;
+	auto       rbarrier = comm.ibarrier();
+	auto const t0       = mpi3::wall_time();
+	while(not rbarrier.completed() and (mpi3::wall_time() - t0) < d) {  // NOLINT(altera-id-dependent-backward-branch,altera-unroll-loops) spin loop
+		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(1s);
 	}
 
 	if(rbarrier.completed()) {
 		if(comm.root()) {
-			std::cout<<"not essential message: terminate from rank "<< comm.rank() <<" after others joined before timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds"<<std::endl;
+			std::cout << "not essential message: terminate from rank " << comm.rank() << " after others joined before timeout of " << std::chrono::duration_cast<std::chrono::seconds>(d).count() << " seconds" << std::endl;
 			comm.abort(911);
 		}
 	} else {
-		std::cout<<"non essential message: terminate from rank "<< comm.rank() <<" after timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds, not all processes failed within that time."<<std::endl;
+		std::cout << "non essential message: terminate from rank " << comm.rank() << " after timeout of " << std::chrono::duration_cast<std::chrono::seconds>(d).count() << " seconds, not all processes failed within that time." << std::endl;
 	}
 
 	comm.abort(911);
@@ -103,8 +106,8 @@ template<class Duration>
 	std::abort();  // necessary to avoid error for returning in a [[noreturn]] function
 }
 
-auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int {  // NOLINT(bugprone-exception-escape) part of the test is that there is no `try` here
-	assert( world.size() == 4 );
+auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int {  // NOLINT(bugprone-exception-escape) part of the test is that there is no `try` here
+	assert(world.size() == 4);
 
 // unconditional abort
 #if 0
@@ -127,7 +130,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int { 
 
 // barriered abort
 #if 0
-	// (-) prints all available messages, (+) program terminates immediately
+	// (+) prints all available messages, (+) program terminates immediately
 	try {
 		uniform_fail(world);
 	} catch(std::logic_error& e) {
@@ -189,8 +192,8 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int { 
 // timedout_terminate
 #if 1
 	// (+) prints all available messages, (+) program terminates very quickly
-	std::set_terminate([]{
-	    using namespace std::chrono_literals;
+	std::set_terminate([] {
+		using namespace std::chrono_literals;
 		mpi3_timed_terminate(20s);
 	});
 
@@ -217,7 +220,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int { 
 
 	// I am putting a collective here to produce an deadlock if some abort strategy leaks processes
 	{
-		int n = 1;
+		int n     = 1;
 		int total = 0;
 		world.all_reduce_n(&n, 1, &total);
 		assert(total == world.size());

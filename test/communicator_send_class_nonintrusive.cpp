@@ -33,18 +33,16 @@ class B {  // NOLINT(readability-identifier-naming) example name
 	B(B const& other) : name_{other.name_}, n_{other.n_}, data_{std::make_unique<double[]>(static_cast<std::size_t>(other.n_))} { // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 	}
-	// B(B&&) = delete;
+	B(B&&) = default;
 	auto operator=(B const& other) -> B& {
-		if(this == &other) {
-			return *this;
-		}
+		if(this == &other) {return *this;}
 		name_ = other.name_;
 		n_    = other.n_;
 		data_ = std::make_unique<double[]>(static_cast<std::size_t>(other.n_));  // NOLINT(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays) // test code
 		std::copy_n(other.data_.get(), n_, data_.get());
 		return *this;
 	}
-	// auto operator=(B&&) = delete;
+	B& operator=(B&&) = default;
 	~B() = default;
 };
 
