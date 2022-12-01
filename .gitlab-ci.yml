@@ -235,14 +235,15 @@ qmcpack-cuda-runner:
 #    - make -j 16 ppconvert afqmc test_afqmc_matrix test_afqmc_numerics test_afqmc_slaterdeterminantoperations test_afqmc_walkers test_afqmc_hamiltonians test_afqmc_hamiltonian_operations test_afqmc_phmsd test_afqmc_wfn_factory test_afqmc_prop_factory test_afqmc_estimators qmc-afqmc-performance
 #    - ctest -R ppconvert --output-on-failure
 
+#    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose  # following https://askubuntu.com/a/865294/15943
+#    - mkdir /opt/cmake
+#    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+#    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+
 inq-openmpi:
   stage: test
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev gfortran g++ cmake pkg-config make git ca-certificates wget
-    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose  # following https://askubuntu.com/a/865294/15943
-    - mkdir /opt/cmake
-    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
