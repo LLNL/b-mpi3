@@ -30,7 +30,6 @@ openmpi:
 #    - rm -rf webimage_extracted
 #    - . /opt/intel/oneapi/setvars.sh
 
-
 icpc-intelmpi:
   stage: build
   image: intel/oneapi-hpckit:latest
@@ -56,7 +55,7 @@ icpx-intelmpi:
     - cd test
     - mkdir build && cd build
     - icpx --version
-    - CXX=icpx cmake .. -DCMAKE_BUILD_TYPE=Release
+    - CXX=icpx CXXFLAGS="-O1" cmake .. -DCMAKE_BUILD_TYPE=Debug
     - make
     - ctest --output-on-failure
   needs: ["openmpi"]
