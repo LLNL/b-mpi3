@@ -76,15 +76,14 @@ try {  // this is an error in MPICH and openMPI
 	assert( div[0]*div[1] == 4 );
 	assert( div[0] == 2 );
 	assert( div[1] == 2 );
-} catch(std::runtime_error& e) {
-}
+} catch(std::runtime_error&) {}
 
 try {  // this is an error in MPICH
 	auto const div = mpi3::cartesian_communicator<2>::division(6, {2, 2});
-	assert( div[0]*div[1] == 4 );
-	assert( div[0] == 2 );
-	assert( div[1] == 2 );
-} catch(std::runtime_error& e) {
+	assert(div[0] * div[1] == 4);
+	assert(div[0] == 2);
+	assert(div[1] == 2);
+} catch(std::runtime_error&) {
 }
 
 }
