@@ -753,6 +753,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
+#if 0
 #ifdef MPICH_NUMVERSION
 #if MPICH_NUMVERSION >= 30400000
  private:
@@ -767,6 +768,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
+#endif
 #endif
 #endif
 
