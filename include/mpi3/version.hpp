@@ -45,7 +45,7 @@ struct version_t {
 inline constexpr auto Version() -> version_t { return {MPI_VERSION, MPI_SUBVERSION}; }  // NOLINT(readability-identifier-naming)
 static constexpr auto VERSION = version_t{MPI_VERSION, MPI_SUBVERSION};
 
-inline version_t version() {
+inline auto version() {
 	version_t ret{};
 	MPI_(Get_version)(&ret.major, &ret.minor);
 	return ret;

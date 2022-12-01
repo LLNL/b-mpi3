@@ -15,11 +15,21 @@ namespace boost {
 namespace mpi3 {
 namespace detail {
 
+template<int(*F)(int*)>
+int call() {
+	int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+	auto const e = static_cast<enum error>((*F)(&ret));
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}	
+	return ret;
+}
+
 template<int(*F)(char*, int*)>
 std::string call() {
 	int len = -1;
 	std::array<char, MPI_MAX_PROCESSOR_NAME> name{};
-	F(name.data(), &len);
+	auto const e = static_cast<enum error>((*F)(name.data(), &len));
+	assert(len >= 0);
+	if(e != mpi3::error::success) {throw std::system_error{e, "cannot call function " + std::string{__PRETTY_FUNCTION__}};}
 	return {name.data(), static_cast<std::size_t>(len)};
 }
 

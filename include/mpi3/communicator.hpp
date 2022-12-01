@@ -753,7 +753,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
-#ifdef MPICH_VERSION
+#if 0
+#ifdef MPICH_NUMVERSION
+#if MPICH_NUMVERSION >= 30400000
  private:
 	template<class It, class Size, class It2>
 	[[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
@@ -766,6 +768,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
+#endif
+#endif
 #endif
 
 	template<class It, class Size>

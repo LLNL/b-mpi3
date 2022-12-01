@@ -43,7 +43,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	{
 		mpi3::type t = mpi3::float_int;
 		assert( t.size() == sizeof(std::pair<float, int>) );
-		struct {
+		struct foo_t {
 			float a;
 			int b;
 		} foo{};
@@ -56,7 +56,6 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 		assert( t.lower_bound() == 0 );
 		assert( t.upper_bound() == t.extent() - t.lower_bound() );
 	}
-
 	{
 		using T = std::complex<double>;
 		T buffer[100];  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) test legacy type

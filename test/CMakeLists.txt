@@ -160,6 +160,11 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wall
         -Wextra
         -diag-disable=remark
+        -wd161
+        -Wabi
+        -Warray-bounds
+        -Wcast-qual
+        -Wchar-subscripts
         -Wunused -Wunused-but-set-variable -Wunused-function -Wunused-parameter -Wunused-variable
         -Wwrite-strings
       >
