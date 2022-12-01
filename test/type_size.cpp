@@ -43,10 +43,10 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	{
 		mpi3::type t = mpi3::float_int;
 		assert( t.size() == sizeof(std::pair<float, int>) );
-		struct {
+		struct foo_t {  // struct needs to be named for icpc 2021.7.1 (intel compiler)
 			float a;
 			int b;
-		} foo{};
+		} foo;
 
 		foo.a = 1.2F;
 		foo.b = 5;
