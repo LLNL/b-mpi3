@@ -1,7 +1,4 @@
-//-*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4; -*-
-//#if COMPILATION
-//$CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
-//#endif
+//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
@@ -31,7 +28,10 @@ enum class thread_level : int {
 
 using thread = thread_level;
 
-inline void finalize() noexcept {
+inline void finalize() {
+	assert(initialized());
+	assert(not finalized());
+
 	if(int count = std::uncaught_exceptions()) {
 		std::cerr << "finalizing MPI environment with " << count << " uncaught exceptions";
 	}
@@ -49,6 +49,8 @@ inline void myterminate() {
 }
 
 inline void initialize(int& argc, char**& argv) {
+	assert(not initialized());  // double initialize
+	assert(not finalized());
 
 	if(mpi3::version() != mpi3::Version()) {
 		std::cerr << "WARNING: MPI version inconsistency\n";
@@ -202,9 +204,9 @@ class environment {
 	environment& operator=(environment const&) = delete;
 	environment& operator=(environment&&)      = delete;
 
-	~environment() noexcept {
+	~environment() noexcept {  // NOLINT(bugprone-exception-escape) finalizes throws as an instance of UB
 		named_attributes_key_f().reset();
-		finalize();
+		finalize();  // cppcheck-suppress throwInNoexceptFunction ; finalizes throws as an instance of UB
 	}
 
 	inline static thread_level thread_support() { return mpi3::thread_support(); }
@@ -227,7 +229,7 @@ class environment {
 	static inline thread_level initialize(thread_level required) { return mpi3::initialize_thread(required); }
 	static inline thread_level initialize(int argc, char** argv, thread_level req) { return mpi3::initialize_thread(argc, argv, req); }
 
-	static inline void finalize() noexcept { mpi3::finalize(); }
+	static inline void finalize() { mpi3::finalize(); }
 
 	static inline bool is_initialized() { return mpi3::initialized(); }
 	static inline bool is_finalized() { return mpi3::finalized(); }

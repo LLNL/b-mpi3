@@ -43,8 +43,8 @@ struct committed_type {
 };
 
 struct type {
-	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {
-		if(mpi3::initialized()) {MPI_Type_dup(dt, &impl_);}
+	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {  // NOLINT(bugprone-exception-escape) TODO(correaa) improve this global initialization
+		if(mpi3::initialized()) {MPI_(Type_dup)(dt, &impl_);}  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
 	}
 
 	template<class T>
