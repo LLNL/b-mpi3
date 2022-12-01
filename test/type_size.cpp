@@ -43,10 +43,10 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 	{
 		mpi3::type t = mpi3::float_int;
 		assert( t.size() == sizeof(std::pair<float, int>) );
-		struct foo_t {  // struct needs to be named for icpc 2021.7.1 (intel compiler)
+		struct foo_t {
 			float a;
 			int b;
-		} foo;
+		} foo{};
 
 		foo.a = 1.2F;
 		foo.b = 5;
@@ -56,7 +56,6 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 		assert( t.lower_bound() == 0 );
 		assert( t.upper_bound() == t.extent() - t.lower_bound() );
 	}
-
 	{
 		using T = std::complex<double>;
 		T buffer[100];  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) test legacy type
