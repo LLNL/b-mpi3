@@ -31,7 +31,6 @@ namespace mpi3 = boost::mpi3;
 //}
 
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
-    world.set_name("world");
 	std::size_t chunk = 5;
 
 	auto sb = std::vector<int>(static_cast<std::size_t>(world.size()) * chunk);
@@ -39,7 +38,9 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
 	auto rb = std::vector<int>(static_cast<std::size_t>(world.size()) * chunk);
 
-	world.all_to_all_n(sb.data(), sb.size(), rb.data());
+	assert( sb.size() % static_cast<std::size_t>(world.size()) == 0);
+
+	world.all_to_all_n(sb.data(), sb.size()/world.size(), rb.data());
 //    do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
 //  do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
 
@@ -47,7 +48,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
     std::copy(sb.begin(), sb.end(), std::ostream_iterator<int>(wout<<"sb = ", ", ")); wout<<std::endl;
     std::copy(rb.begin(), rb.end(), std::ostream_iterator<int>(wout<<"rb = ", ", ")); wout<<std::endl;
 
-	world.all_to_all_inplace_n(sb.data(), sb.size());
+	world.all_to_all_inplace_n(sb.data(), sb.size()/world.size());
 //	do_all_to_all_n(world, sb.data(), sb.size(), sb.data());
 //	world.all_to_all_n(sb.data(), sb.size()); //  , sb.data());
 	std::copy(sb.begin(), sb.end(), std::ostream_iterator<int>(wout<<"sb (inplace) = ", ", ")); wout<<std::endl;
