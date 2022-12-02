@@ -1,8 +1,5 @@
 // -*- indent-tabs-mode:t;c-basic-offset:4;tab-width:4; -*-
-//#if COMPILATION
-//$CXXX `mpicxx -showme:compile|sed 's/-pthread/ /g'` -std=c++14 $0 -o $0x `mpicxx -showme:link|sed 's/-pthread/ /g'`&&mpirun -n 4 $0x&&rm $0x;exit
-//#endif
-// Copyright 2018-2021 Alfredo A. Correa
+// Copyright 2018-2022 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_CORE_HPP
 #define BOOST_MPI3_CORE_HPP

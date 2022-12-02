@@ -1,4 +1,6 @@
-/* -*- indent-tabs-mode: t -*- */
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_PROCESS_HPP
 #define BOOST_MPI3_PROCESS_HPP
 
@@ -115,103 +117,4 @@ std::pair<T, process> communicator::max_location(T const& t) {
 
 }  // end namespace mpi3
 }  // end namespace boost
-
-//#ifdef _TEST_BOOST_MPI3_PROCESS
-
-//#include "../mpi3/main.hpp"
-
-////#include "alf/boost/multi_array/serialization.hpp"
-
-//#include<boost/serialization/vector.hpp>
-//#include<boost/multi_array.hpp>
-
-//#include<boost/archive/xml_iarchive.hpp>
-//#include<boost/archive/xml_oarchive.hpp>
-
-//#include<fstream>
-
-
-//namespace mpi3 = boost::mpi3;
-//using std::cout;
-
-//template<class T>
-//bool save_xml(std::string file, T const& ma){
-//	std::ofstream ofs(file.c_str()); assert(ofs);
-//	boost::archive::xml_oarchive oa(ofs);
-//	oa << boost::serialization::make_nvp(file.c_str(), ma);
-//	return ofs.good();
-//}
-
-//template<class T>
-//bool load_xml(std::string file, T&& ma) try{
-//	std::ifstream ifs(file.c_str()); assert(ifs);
-//	boost::archive::xml_iarchive ia(ifs);
-//	ia >> boost::serialization::make_nvp(file.c_str(), std::forward<T>(ma));
-//	return ifs.good();
-//}catch(std::exception& e){
-//	throw std::runtime_error("cannot load from file `\n" + file + ": line 0:\n', because " + e.what() + ". Are the save and load type compatible?");
-//}
-
-//int mpi3::main(int argc, char* argv[], mpi3::communicator world){
-//	assert(world.size() == 2);
-//	if(world.rank() == 0){
-//		int a = 7;
-//		world[1] << a;
-//	}else if(world.rank() == 1){
-//		int a = -1;
-//		world >> a; // any source (any tag)
-//		assert(a == 7);
-//	}
-//	switch(world.rank()){
-//		case 0: {
-//			bool b = true;
-//			world[1] << b;
-//		} break;
-//		case 1:{
-//			bool b = false;
-//			world >> b;
-//			assert(b == true);
-//		} break;
-//	}
-//	if(world.rank() == 0){
-//		std::vector<double> v = {
-//			1, 2, 3,
-//			4, 5, 6,
-//			7, 8, 9,
-//			10, 11, 12
-//		};
-//		world[1] << v;
-//	}else if(world.rank() == 1){
-//		std::vector<double> v;
-//		world >> v;
-//		assert(( v == std::vector<double>{1,2,3,  4, 5, 6,  7,8,9, 10,11,12} ));
-//	}
-//	switch(world.rank()){
-//		case 0:{
-//			std::vector<bool> v = {false, true, false};
-//			world[1] << v;
-//		} break; case 1:{
-//			std::vector<bool> v;
-//			world >> v;
-//			assert(( v == std::vector<bool>{false, true, false} ));
-//		}
-//	}
-//#if 0
-//	if(world.rank() == 0){
-//		std::vector<double> v = {1,2,3,  4, 5, 6,  7,8,9,  10,11,12};
-//		boost::multi_array<double, 2> ma(boost::extents[4][2]);
-//		std::copy(v.begin(), v.begin() + 8, ma.data());
-//		save_xml("process.xml", ma);
-//		world[1] << ma;
-//	}else if(world.rank() == 1){
-//		boost::multi_array<double, 2> ma(boost::extents[4][2]);
-//		world >> ma;
-//	//	load_xml("process.xml", ma);
-//		cout << ma.shape()[0] << " " << ma.shape()[1] << '\n';
-//	//	assert( ma[2][2] == 8. );
-//	}
-//#endif
-//	return 0;
-//}
-//#endif
 #endif
