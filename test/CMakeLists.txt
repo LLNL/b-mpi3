@@ -102,7 +102,7 @@ SET(NEED_BOOST_SERIALIZATION_SRCS
 	communicator_send_class.cpp
 	communicator_ireceive.cpp
 	communicator_gather.cpp
-#   process.cpp
+  process.cpp
 #   process_vector.cpp
 )
 
