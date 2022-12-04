@@ -38,19 +38,20 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
 	auto rb = std::vector<int>(static_cast<std::size_t>(world.size()) * chunk);
 
-	assert( sb.size() % static_cast<std::size_t>(world.size()) == 0);
+	std::size_t sz = world.size(); assert( sz != 0 );
+	assert( sb.size() % sz == 0);
 
-	world.all_to_all_n(sb.data(), sb.size()/static_cast<std::size_t>(world.size()), rb.data());
-//    do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
-//  do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
+	world.all_to_all_n(sb.data(), sb.size()/sz, rb.data());
+	// do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
+	// do_all_to_all_n(world, sb.data(), sb.size(), rb.data());
 
     mpi3::ostream wout(world);
     std::copy(sb.begin(), sb.end(), std::ostream_iterator<int>(wout<<"sb = ", ", ")); wout<<std::endl;
     std::copy(rb.begin(), rb.end(), std::ostream_iterator<int>(wout<<"rb = ", ", ")); wout<<std::endl;
 
 	world.all_to_all_inplace_n(sb.data(), sb.size()/static_cast<std::size_t>(world.size()));
-//	do_all_to_all_n(world, sb.data(), sb.size(), sb.data());
-//	world.all_to_all_n(sb.data(), sb.size()); //  , sb.data());
+	// do_all_to_all_n(world, sb.data(), sb.size(), sb.data());
+	// world.all_to_all_n(sb.data(), sb.size()); //  , sb.data());
 	std::copy(sb.begin(), sb.end(), std::ostream_iterator<int>(wout<<"sb (inplace) = ", ", ")); wout<<std::endl;
 
 	assert(sb == rb);
