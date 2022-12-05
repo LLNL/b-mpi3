@@ -1537,12 +1537,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		/**/ detail::contiguous_iterator_tag /*tag*/,
 		/**/ detail::basic_tag /*tag*/
 	) {
-		auto const sz = static_cast<Size>(size());
-		assert(sz != 0 and count % sz == 0);
+		// auto const sz = static_cast<Size>(size());
+		// assert(sz != 0 and count % sz == 0);
 		using count_type = int;
 		MPI_(Alltoall)(
-			detail::data(  first), static_cast<count_type>(count / sz), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), static_cast<count_type>(count / sz), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			detail::data(  first), static_cast<count_type>(count/* / sz*/), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(d_first), static_cast<count_type>(count/* / sz*/), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
 			impl_
 		);
 		return d_first + count;
@@ -1558,38 +1558,38 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		Size count
 	)
 	->decltype(MPI_(Alltoall)(
-			std::declval<in_place_type>(), 0*count/size(),
+			std::declval<in_place_type>(), 0*count/*/size()*/,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(first), count/size(),
+			detail::data(first), count/*/size()*/,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
-		), first + count) {
-		auto const sz = size();
-		assert(sz > 0);
-		assert( count % sz == 0 );
+		), first + count*size()) {
+		// auto const sz = size();
+		// assert(sz > 0);
+		// assert( count % sz == 0 );
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
 		MPI_(Alltoall)(
-			in_place, 0*count/sz,
+			in_place, 0*count/*/sz*/,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(first), count/sz,
+			detail::data(first), count/*/sz*/,
 			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
 		);
-		return first + count;
+		return first + count*size();
 	}
 
  public:
 	template<class It1, typename Size>
 	auto all_to_all_inplace_n(It1 first, Size count) {
 		using count_type = int;
-		auto const sz = static_cast<count_type>(size());  // TODO(correaa) safe cast
-		assert(sz > 0);
-		assert(  static_cast<count_type>(count) % sz == 0 );
+		// auto const sz = static_cast<count_type>(size());  // TODO(correaa) safe cast
+		// assert(sz > 0);
+		// assert(  static_cast<count_type>(count) % sz == 0 );
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
 		using count_type = int;
 		MPI_(Alltoall)(
-			in_place           , 0*static_cast<count_type>(count)/sz, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(first),   static_cast<count_type>(count)/sz, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			in_place           , 0*static_cast<count_type>(count)/*/sz*/, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(first),   static_cast<count_type>(count)/*/sz*/, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
 			impl_
 		);
 		return first + count;
@@ -1597,8 +1597,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class It1, typename Size, class It2>
 	auto all_to_all_n(It1 first, Size count, It2 d_first) {
-		using count_type = int;
-		assert( static_cast<count_type>(count) % size() == 0 );  // NOLINT(clang-analyzer-core.DivideZero) TODO(correaa) add size cache to immutable communicator
+		// using count_type = int;
+		// assert( static_cast<count_type>(count) % size() == 0 );  // NOLINT(clang-analyzer-core.DivideZero) TODO(correaa) add size cache to immutable communicator
 		return
 			all_to_all_n(
 				first,
