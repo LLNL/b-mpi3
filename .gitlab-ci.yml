@@ -333,6 +333,47 @@ openmpi-cuda-11:
     - ctest --output-on-failure
   needs: ["openmpi"]
 
+openmpi-cuda-12:
+  stage: build
+  allow_failure: false
+  image: debian:stable
+  script:
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates gnupg software-properties-common
+    - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
+    - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
+    - add-apt-repository contrib
+    - apt-get update
+    - apt-get -y install cuda
+    - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
+    - /usr/local/cuda-12/bin/nvcc --version
+    - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+    - cd test
+    - mkdir build && cd build
+    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake --build . || make VERBOSE=1
+    - ctest --output-on-failure
+  needs: ["openmpi"]
+
+openmpi-cuda-kasmweb:
+  stage: build
+  allow_failure: true
+  image: kasmweb/core-cuda-bionic:1.9.0-rolling
+  script:
+    - export DEBIAN_FRONTEND=noninteractive
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates gnupg software-properties-common
+    - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
+    - /usr/local/cuda-11/bin/nvcc --version
+    - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+    - cd test
+    - mkdir build && cd build
+    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake --build . || make VERBOSE=1
+    - ctest --output-on-failure
+  needs: ["openmpi"]
+
 #cuda-11.4-std17:
 #    image: nvidia/cuda:11.4.0-devel
 #    allow_failure: true
