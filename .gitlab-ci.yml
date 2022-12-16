@@ -210,7 +210,7 @@ qmcpack-cuda-runner:
     - make -j4 ppconvert afqmc test_afqmc_matrix test_afqmc_numerics test_afqmc_slaterdeterminantoperations test_afqmc_walkers test_afqmc_hamiltonians test_afqmc_hamiltonian_operations test_afqmc_phmsd test_afqmc_wfn_factory test_afqmc_prop_factory test_afqmc_estimators qmc-afqmc-performance
     - ctest -R ppconvert --output-on-failure
     - ctest -R afqmc     --output-on-failure
-  needs: ["openmpi-cuda-11", "qmcpack-openmpi"]
+  needs: ["openmpi-cuda-12", "qmcpack-openmpi"]
 
 #qmcpack-icpc-runner:
 #  stage: test
@@ -310,7 +310,7 @@ inq-openmpi:
 #      - cmake --build . --verbose
 #      - ctest --output-on-failure
 
-openmpi-cuda-11:
+openmpi-cuda-12:
   stage: build
   allow_failure: false
   image: debian:stable
@@ -323,12 +323,12 @@ openmpi-cuda-11:
     - apt-get update
     - apt-get -y install cuda
     - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
-    - /usr/local/cuda-11/bin/nvcc --version
+    - /usr/local/cuda-12/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
+    - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
     - cmake --build . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -355,7 +355,7 @@ openmpi-cuda-11:
 #      - cmake --build . --verbose
 #      - ctest --output-on-failure
 
-inq-cuda-11-openmpi-compileonly:
+inq-cuda-12-openmpi-compileonly:
   stage: build
   allow_failure: true
   image: debian:stable
@@ -379,11 +379,11 @@ inq-cuda-11-openmpi-compileonly:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - /usr/local/cuda-11/bin/nvcc -V
-    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
+    - /usr/local/cuda-12/bin/nvcc -V
+    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=70
     - make silicon
   needs:
-    - openmpi-cuda-11
+    - openmpi-cuda-12
 
 #inq-cuda-11.2-compileonly:
 #    image: nvidia/cuda:11.2.0-devel
