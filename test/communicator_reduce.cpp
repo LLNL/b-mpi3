@@ -1,4 +1,5 @@
-// © Alfredo Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2022 Alfredo A. Correa
 
 #include "../../mpi3/communicator.hpp"
 #include "../../mpi3/main.hpp"
@@ -7,7 +8,7 @@
 namespace mpi3 = boost::mpi3;
 
 void part1(mpi3::communicator& world) {
-	std::size_t      count = 120;
+	std::size_t const count = 120;
 	std::vector<int> send_buffer(count);
 	iota(send_buffer.begin(), send_buffer.end(), 0);
 

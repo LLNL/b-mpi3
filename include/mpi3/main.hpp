@@ -21,7 +21,7 @@ static int main(int /*argc*/, char** /*argv*/, boost::mpi3::communicator /*world
 
 // cppcheck-suppress syntaxError ; bug cppcheck 2.3
 auto main(int argc, char** argv) -> int /*try*/ {  // NOLINT(misc-definitions-in-headers,bugprone-exception-escape) : if you include this file you shouldn't have your own `::main`, you should define `boost::mpi3::main(int argc, char** argv, boost::mpi3::communicator world)` instead
-	boost::mpi3::environment env{argc, argv};
+	boost::mpi3::environment const env{argc, argv};
 	std::set_terminate([]{
 	    using namespace std::chrono_literals;
 		boost::mpi3::timed_terminate(3s);

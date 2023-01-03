@@ -1,5 +1,9 @@
+//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2023 Alfredo A. Correa
+
 #ifndef MPI3_DETAIL_ITERATOR_TRAITS_HPP
 #define MPI3_DETAIL_ITERATOR_TRAITS_HPP
+#pragma once
 
 #include "./iterator.hpp"
 
@@ -12,14 +16,14 @@ namespace boost {
 namespace mpi3 {
 namespace detail {
 
-template<class It>
-struct iterator_traits : std::iterator_traits<It>{};
+template<class Iterator>
+struct iterator_traits : std::iterator_traits<Iterator> {};
 
 struct unspecified{};
-struct output_iterator_tag{using base = unspecified;};
-struct input_iterator_tag{using base = unspecified;};
-struct forward_iterator_tag : input_iterator_tag{using base = input_iterator_tag;};
-struct random_access_iterator_tag : forward_iterator_tag{
+struct output_iterator_tag {using base = unspecified;};
+struct input_iterator_tag {using base = unspecified;};
+struct forward_iterator_tag : input_iterator_tag {using base = input_iterator_tag;};
+struct random_access_iterator_tag : forward_iterator_tag {
 	using base = forward_iterator_tag;
 };
 struct contiguous_iterator_tag : random_access_iterator_tag{
@@ -49,7 +53,7 @@ template<class T, typename = decltype(detail::data(T{}))>
 std::true_type  has_data_aux(T  );
 std::false_type has_data_aux(...);
 
-template<class T> struct has_data : decltype(has_data_aux(std::declval<T>())){};
+template<class T> struct has_data : decltype(has_data_aux(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 template<class It, typename = std::enable_if_t<not has_data<It>::value> >
 typename std_translate<typename std::iterator_traits<It>::iterator_category>::type iterator_category_aux(It);
@@ -61,46 +65,47 @@ typename std_translate<typename std::iterator_traits<It>::iterator_category>::ty
 template<class T>
 contiguous_iterator_tag iterator_category_aux(T*);
  
-template<class It, typename = std::enable_if_t<has_data<It>{}>>
-contiguous_iterator_tag iterator_category_aux(It);
-template<class It, class = decltype(data(It{}.base())), class = decltype(It{}.stride()), class = std::enable_if_t<not has_data<It>{}>>
-strided_contiguous_iterator_tag iterator_category_aux(It);
+template<class Iter, typename = std::enable_if_t<has_data<Iter>{}>>
+contiguous_iterator_tag iterator_category_aux(Iter);
+template<class Iter, class = decltype(data(Iter{}.base())), class = decltype(Iter{}.stride()), class = std::enable_if_t<not has_data<Iter>{}>>
+strided_contiguous_iterator_tag iterator_category_aux(Iter);
 
-template<class It>
-struct iterator_category{
-	using type = decltype(iterator_category_aux(std::declval<std::decay_t<It>>()));
+template<class Iter>
+struct iterator_category {
+	using type = decltype(iterator_category_aux(std::declval<std::decay_t<Iter>>()));
 };
-template<class It>
-using iterator_category_t = typename iterator_category<It>::type;
+template<class Iter>
+using iterator_category_t = typename iterator_category<Iter>::type;
 
-template<class It> struct forward_iterator       : just_t<It>{
-	using just_t<It>::just_t;
+template<class Iter> struct forward_iterator       : just_t<Iter> {
+	using just_t<Iter>::just_t;
 };
-template<class It> struct random_access_iterator : forward_iterator<It>{
-	using forward_iterator<It>::forward_iterator;
-};
-template<class It> struct contiguous_iterator    : random_access_iterator<It>{
-	using random_access_iterator<It>::random_access_iterator;
+template<class Iter> struct random_access_iterator : forward_iterator<Iter> {
+	using forward_iterator<Iter>::forward_iterator;
 };
 
-template<class It>
-forward_iterator<It&&> category_iterator_aux(It&& it, forward_iterator_tag /*forward*/) {
-	return {std::forward<It>(it)};
+template<class Iter> struct contiguous_iterator    : random_access_iterator<Iter> {
+	using random_access_iterator<Iter>::random_access_iterator;
+};
+
+template<class Iter>
+forward_iterator<Iter&&> category_iterator_aux(Iter&& it, forward_iterator_tag /*forward*/) {
+	return {std::forward<Iter>(it)};
 }
 
-template<class It>
-random_access_iterator<It&&> category_iterator_aux(It&& it, random_access_iterator_tag /*random_access*/) {
-	return {std::forward<It>(it)};
+template<class Iter>
+random_access_iterator<Iter&&> category_iterator_aux(Iter&& it, random_access_iterator_tag /*random_access*/) {
+	return {std::forward<Iter>(it)};
 }
 
-template<class It>
-contiguous_iterator<It&&> category_iterator_aux(It&& it, contiguous_iterator_tag /*contiguous*/) {
-	return {std::forward<It>(it)};
+template<class Iter>
+contiguous_iterator<Iter&&> category_iterator_aux(Iter&& it, contiguous_iterator_tag /*contiguous*/) {
+	return {std::forward<Iter>(it)};
 }
 
-template<class It>
-auto category_iterator(It&& it){
-	return category_iterator_aux(std::forward<It>(it), typename iterator_category<It>::type{});
+template<class Iter>
+auto category_iterator(Iter&& it){
+	return category_iterator_aux(std::forward<Iter>(it), typename iterator_category<Iter>::type{});
 }
 
 }  // end namespace detail

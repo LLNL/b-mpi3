@@ -65,10 +65,7 @@ struct generalized_request : request{
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot create generalized request");}
 	}
-	void complete() {
-		int s = MPI_Grequest_complete(impl_);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot complete");}
-	}
+	void complete() { MPI_(Grequest_complete)(impl_); }
 };
 
 }  // end namespace mpi3

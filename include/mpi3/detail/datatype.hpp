@@ -148,7 +148,7 @@ std::true_type  is_basic_aux(T  );
 std::false_type is_basic_aux(...);
 
 template<class T> 
-struct is_basic : decltype(is_basic_aux(std::declval<T>())){};
+struct is_basic : decltype(is_basic_aux(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 }  // end namespace detail
 }  // end namespace mpi3

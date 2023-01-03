@@ -1,4 +1,6 @@
-// © Alfredo A. Correa 2018-2021
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2018-2023 Alfredo A. Correa
+
 #ifndef MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
 #define MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
 
@@ -46,8 +48,7 @@ class basic_communicator{
 	template<class T>
 	int pack_size(int count, detail::basic_tag /*tag*/) {
 		int size = -1;
-		int s = MPI_Pack_size(count, detail::basic_datatype<T>{}, impl_, &size);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot pack size");}
+		MPI_(Pack_size)(count, detail::basic_datatype<T>{}, impl_, &size);
 		return size;
 	}
 	template<class T>
@@ -86,7 +87,7 @@ class basic_communicator{
 	template<class It, typename Size>
 	auto pack_n(It first, Size count, uvector<detail::packed>& p) {
 		assert(p.size() < std::numeric_limits<int>::max());
-		int pos = static_cast<int>(p.size());
+		int const pos = static_cast<int>(p.size());
 		p.resize(p.size() + static_cast<std::size_t>(pack_size<typename std::iterator_traits<It>::value_type>(static_cast<int>(count))));
 		return pack_n(first, count, p, pos);
 	}
@@ -129,9 +130,9 @@ class basic_communicator{
 	){
 		using value_type = typename std::iterator_traits<It>::value_type;
 		MPI_(Unpack)(
-			b.data(), static_cast<int>(b.size()), &pos, 
+			b.data(), static_cast<int>(b.size()), &pos,
 			detail::data(first), static_cast<int>(count),  // TODO(correaa) use safe cast
-			detail::basic_datatype<value_type>{}, 
+			detail::basic_datatype<value_type>{},
 			impl_
 		);
 		return pos;
@@ -164,8 +165,8 @@ class basic_communicator{
 		It first, It last
 	) {
 		return unpack(
-			b, pos, 
-			first, last, 
+			b, pos,
+			first, last,
 			/**/ detail::iterator_category_t<It>{}
 		);
 	}
@@ -176,7 +177,7 @@ class basic_communicator{
 	template<class It, typename Size>
 	auto unpack_n(uvector<detail::packed>& b, int pos, It first, Size count){
 		return unpack_n(
-			b, pos, 
+			b, pos,
 			first,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename  std::iterator_traits<It>::value_type>{},
@@ -186,7 +187,7 @@ class basic_communicator{
 	template<class It, typename Size>
 	auto unpack_n(detail::buffer& b, It first, Size count) {
 	//	assert(0);
-		b.pos = unpack_n(b, b.pos, first, count); 
+		b.pos = unpack_n(b, b.pos, first, count);
 		return b.pos;
 	}
 	template<class It, typename Size>
@@ -247,8 +248,7 @@ class basic_communicator{
 	}
 	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m;
-		int s = MPI_Mprobe(source, tag, impl_, &m.message::impl_, &m.status::impl_);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot mprobe");}
+		MPI_(Mprobe)(source, tag, impl_, &m.message::impl_, &m.status::impl_);
 		return m;
 	}
 	template<class It, typename Size>
@@ -322,8 +322,8 @@ class basic_communicator{
 	}
 	template<class It, class Size>
 	auto send_receive_n(
-		It first, Size size, 
-		int dest, int source, // = MPI_ANY_SOURCE, 
+		It first, Size size,
+		int dest, int source, // = MPI_ANY_SOURCE,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	) {
 		return send_receive_replace_n(first, size, dest, source, sendtag, recvtag);

@@ -1,6 +1,9 @@
-// © Alfredo A. Correa 2019-2021
+//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2019-2023 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_REQUEST_HPP
 #define BOOST_MPI3_REQUEST_HPP
+#pragma once
 
 #include "../mpi3/detail/call.hpp"
 #include "../mpi3/detail/iterator.hpp" // detail::data
@@ -58,14 +61,13 @@ struct [[nodiscard]] request {
 	//  assert(valid());  // TODO(correaa) investigate why this is failing
 		if(impl_ != MPI_REQUEST_NULL) {
 			status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
-			int s = MPI_Wait(&impl_, &ret.impl_);  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) non-blocking call was used to create the object
-			if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
+			MPI_(Wait)(&impl_, &ret.impl_);  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) non-blocking call was used to create the object
 		}
 	}
 	status get() {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed initialization
-		int s = MPI_Wait(&impl_, &ret.impl_);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
+		MPI_(Wait)(&impl_, &ret.impl_);
+	//  if(s != MPI_SUCCESS) {throw std::runtime_error("cannot wait on request");}
 		return ret;
 	}
 	void start(){MPI_(Start)(&impl_);}
@@ -76,7 +78,7 @@ inline std::vector<status> test_some(std::vector<request> const& requests) {
 	int outcount = -1;
 	std::vector<int> ignore(requests.size());
 	std::vector<status> ret(requests.size());
-	int s = MPI_Testsome(
+	int const s = MPI_Testsome(  // TODO(correaa) modernize calls
 		static_cast<int>(requests.size()),
 		const_cast<MPI_Request*>(&(requests.data()->impl_)),  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		&outcount,
@@ -90,7 +92,7 @@ inline std::vector<status> test_some(std::vector<request> const& requests) {
 inline std::vector<int> completed_some(std::vector<request> const& requests) {
 	int outcount = -1;
 	std::vector<int> ret(requests.size());
-	int s = MPI_Testsome(
+	int const s = MPI_Testsome(  // TODO(correaa) modernize calls
 		static_cast<int>(requests.size()),
 		const_cast<MPI_Request*>(&(requests.data()->impl_)),  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		&outcount,
