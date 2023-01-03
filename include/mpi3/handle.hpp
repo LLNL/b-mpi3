@@ -19,7 +19,7 @@ struct caller {
 
 	template<class F, class... Args>
 	void static_call(F f, Args&&... args) {
-		int const status = f(std::forward<Args>(args)...);  // cppcheck-suppress redundantInitialization ; bug in cppcheck 2.9
+		int const status = f(std::forward<Args>(args)...);  // cppcheck-suppress [redundantInitialization,redundantAssignment] ; bug in cppcheck 2.9
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 	}
 	template<int(*F)(Impl, char const*, char const*)> void call(
