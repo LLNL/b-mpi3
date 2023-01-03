@@ -297,7 +297,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	using size_type = int;
 	int size() const {
 		if(is_null()) {return 0;}
-		int size = MPI_(Comm_size)(impl_);
+		int const size = MPI_(Comm_size)(impl_);
 		assert(size > 0);
 		return size;
 	}
@@ -423,7 +423,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T, class = decltype(T::dimensionality)> static std::true_type  has_dimensionality_aux(T const&);
 	                                                       static std::false_type has_dimensionality_aux(...);
 
-	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};
+	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 	template<class It, typename Size, class = std::enable_if_t<(not has_dimensionality<It>{})> >
 	void send_n(It first, Size count, int dest, int tag = 0) {
@@ -679,7 +679,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	communicator divide_high(int n) {
-		int bat=size()/n; int residue = size()%n;
+		int const bat=size()/n; int const residue = size()%n;
 		int i = 0;
 		for(int last = 0; ; i++) {  // NOLINT(altera-unroll-loops) TODO(correaa)
 			last += bat + ((i < residue)?1:0);
@@ -794,7 +794,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		mpi3::status s = MPI_(Sendrecv_replace)(
+		mpi3::status const s = MPI_(Sendrecv_replace)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, sendtag, source, recvtag, impl_
@@ -1200,7 +1200,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		detail::package p(*this);
 		p.receive(source, tag);
-		package_iarchive pia(p);
+		package_iarchive const pia(p);  // TODO(correaa) investigate
 		while(p) {pia >> *dest++;}  // NOLINT(altera-unroll-loops) deprecating
 		return dest;
 	}
@@ -2963,7 +2963,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
-		int s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
+		int const s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot create intercommunicator");}
 		return ret;
 	}
@@ -3031,7 +3031,7 @@ inline communicator::operator group() const{
 
 inline communicator communicator::create(group const& g) const{
 	communicator ret;
-	int s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
+	int const s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot crate group"};}
 	return ret;
 }

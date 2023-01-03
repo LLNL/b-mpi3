@@ -23,8 +23,7 @@ inline void* malloc(mpi3::size_t size) {
 }
 
 inline void free(void* ptr){
-	int s = MPI_Free_mem(ptr);
-	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot free");}
+	MPI_(Free_mem)(ptr);
 }
 
 template<class T>
