@@ -40,13 +40,13 @@ struct [[nodiscard]] status {
 	template<class T>
 	int elements() const {
 		int ret = -1;
-		int s = MPI_Get_elements(&impl_, detail::basic_datatype<T>{}, &ret);
+		int const s = MPI_Get_elements(&impl_, detail::basic_datatype<T>{}, &ret);  // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot elements"};}
 		return ret;
 	}
 	template<class T>
 	void set_elements(int count) {
-		int s = MPI_Status_set_elements(&impl_, detail::basic_datatype<T>{}, count);
+		int const s = MPI_Status_set_elements(&impl_, detail::basic_datatype<T>{}, count);  // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot set elements"};}
 	}
 
@@ -57,7 +57,7 @@ struct [[nodiscard]] status {
 	void set_tag(int t) {impl_.MPI_TAG = t;}
 
 	void set_cancelled(bool flag = true) {
-		int s = MPI_Status_set_cancelled(&impl_, flag?1:0);
+		int const s = MPI_Status_set_cancelled(&impl_, flag?1:0);  // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot set cancelled"};}
 	}
 //	bool cancelled() const {

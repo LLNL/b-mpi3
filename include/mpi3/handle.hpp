@@ -19,13 +19,13 @@ struct caller {
 
 	template<class F, class... Args>
 	void static_call(F f, Args&&... args) {
-		int status = f(std::forward<Args>(args)...);  // cppcheck-suppress redundantInitialization ; bug in cppcheck 2.9
+		int const status = f(std::forward<Args>(args)...);  // cppcheck-suppress [redundantInitialization,redundantAssignment] ; bug in cppcheck 2.9
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 	}
 	template<int(*F)(Impl, char const*, char const*)> void call(
 		char const* c1, char const* c2
 	) {
-		int status = F(impl(), c1, c2);
+		int const status = F(impl(), c1, c2);
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 	}
 	template<int(*F)(Impl, char const*, char const*)> void call(
@@ -36,20 +36,20 @@ struct caller {
 	template<int(*F)(Impl, int*)> int call() const {
 		int ret = -1;
 	//	static_call(F, impl_, &ret);
-		int status = F(impl(), &ret);
+		int const status = F(impl(), &ret);
 		if(status != MPI_SUCCESS) {throw std::runtime_error{"error " + std::to_string(status)};}
 		return ret;
 	}
 	template<int(*F)(Impl, int, char*)> std::string call(int n) const {
 		std::array<char, MPI_MAX_INFO_KEY> ret{};
-		int status = F(impl(), n, ret.data());
+		int const status = F(impl(), n, ret.data());
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 		return std::string{ret.data()};
 	}
 	template<int(*F)(Impl, char const*, int*, int*)> std::pair<int, int> call(std::string const& key) const {
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		int valuelen;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		int status = F(impl(), key.c_str(), &valuelen, &flag);
+		int const status = F(impl(), key.c_str(), &valuelen, &flag);
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 		return {valuelen, flag};
 	}
@@ -57,13 +57,13 @@ struct caller {
 	std::pair<std::string, int> call(std::string const& key, int valuelen) const {
 		std::array<char,  MPI_MAX_INFO_VAL> value{};
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		int status = F(impl(), key.c_str(), valuelen, value.data(), &flag);
+		int const status = F(impl(), key.c_str(), valuelen, value.data(), &flag);
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 		return {std::string(value.data(), static_cast<std::string::size_type>(valuelen)), flag};
 	}
 	template<int(*F)(Impl, char const*)> void call(std::string const& key) const {
-		int status = F(impl(), key.c_str());
-		if(status != 0) {throw std::runtime_error("error "+ std::to_string(status));}
+		int const status = F(impl(), key.c_str());
+		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
 	}
 };
 

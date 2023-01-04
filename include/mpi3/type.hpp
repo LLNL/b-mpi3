@@ -146,7 +146,7 @@ struct type {
 
 	type contiguous(int count) const {
 		type ret;  // NOLINT() delayed init
-		int s = MPI_Type_contiguous(count, impl_, &ret.impl_);
+		int const s = MPI_Type_contiguous(count, impl_, &ret.impl_);  // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot build contiguous type"};}
 		ret.set_name("(" + name() + ")[" + std::to_string(count) + "]");
 		return ret;
@@ -215,32 +215,32 @@ struct type {
 	MPI_Aint extent() const {
 		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		int s = MPI_Type_get_extent(impl_, &lb, &ext);
+		int const s = MPI_Type_get_extent(impl_, &lb, &ext); // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot extent"};}
 		return ext;
 	}
 	MPI_Aint lower_bound() const {
 		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		int s = MPI_Type_get_extent(impl_, &lb, &ext);
+		int const s = MPI_Type_get_extent(impl_, &lb, &ext); // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot lower bound"};}
 		return lb;
 	}
 	MPI_Aint upper_bound() const {
 		MPI_Aint lb;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Aint ext;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		int s = MPI_Type_get_extent(impl_, &lb, &ext);
+		int const s = MPI_Type_get_extent(impl_, &lb, &ext);  // TODO(correaa) modernize call
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot lower bound"};}
 		return lb + ext;
 	}
 	type operator,(type const& other) const {
 		type ret;
-		int count = 2;
+		int const count = 2;
 		std::array<int, 2> blocklen = {1, 1};
 		std::array<MPI_Aint, 2> disp = {0, this->size()};
 		std::array<MPI_Datatype, 2> array_of_types = {impl_, other.impl_};
 		MPI_Type_create_struct(count, blocklen.data(), disp.data(), array_of_types.data(), &ret.impl_);
-		std::string newname = name() + ", " + other.name();
+		std::string const newname = name() + ", " + other.name();
 		MPI_Type_set_name(ret.impl_, newname.c_str());
 		return ret;
 	}

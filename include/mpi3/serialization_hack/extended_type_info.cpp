@@ -7,7 +7,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for updates, documentation, and revision history.
-// NOLINTBEGIN(altera-id-dependent-backward-branch,altera-unroll-loops) external code
+// NOLINTBEGIN(altera-id-dependent-backward-branch,altera-unroll-loops,misc-const-correctness) external code
 #if (defined _MSC_VER) && (_MSC_VER == 1200)
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
@@ -191,4 +191,4 @@ extended_type_info::operator==(const extended_type_info &rhs) const {
 
 } // namespace serialization
 } // namespace boost
-// NOLINTEND(altera-id-dependent-backward-branch,altera-unroll-loops) external code
+// NOLINTEND(altera-id-dependent-backward-branch,altera-unroll-loops,misc-const-correctness) external code

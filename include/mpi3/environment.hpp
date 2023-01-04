@@ -1,8 +1,9 @@
 //  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2018-2022 Alfredo A. Correa
+// Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
+#pragma once
 
 #include "./communicator.hpp"
 #include "./core.hpp"
@@ -32,12 +33,12 @@ inline void finalize() {
 	assert(initialized());
 	assert(not finalized());
 
-	if(int count = std::uncaught_exceptions()) {
+	if(int const count = std::uncaught_exceptions()) {
 		std::cerr << "finalizing MPI environment with " << count << " uncaught exceptions";
 	}
 
 	std::set_terminate(&std::abort);
-	int s = MPI_Finalize();
+	int const s = MPI_Finalize();  // TODO(correaa) modernize call?
 	if(s != MPI_SUCCESS) {
 		std::terminate();
 	}  //{throw std::runtime_error{"cannot finalize"};}
@@ -88,10 +89,7 @@ inline void initialize(int& argc, char**& argv) {
 #endif
 	}
 
-	int s = MPI_Init(&argc, &argv);
-	if(s != MPI_SUCCESS) {
-		throw std::runtime_error{"cannot initialize"};
-	}
+	MPI_(Init)(&argc, &argv);  // TODO(correaa) modernize call?
 
 	int nprocs = -1;
 	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -123,19 +121,13 @@ inline void initialize(int& argc, char**& argv) {
 
 inline thread_level initialize(int& argc, char**& argv, thread_level required) {
 	int provided;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
-	int s = MPI_Init_thread(&argc, &argv, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) {
-		throw std::runtime_error{"cannot thread-initialize"};
-	}
+	MPI_(Init_thread)(&argc, &argv, static_cast<int>(required), &provided);
 	return static_cast<thread_level>(provided);
 }
 
 inline thread_level initialize_thread(thread_level required) {
-	int provided;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
-	int s = MPI_Init_thread(nullptr, nullptr, static_cast<int>(required), &provided);
-	if(s != MPI_SUCCESS) {
-		throw std::runtime_error{"cannot thread-initialize"};
-	}
+	int provided;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
+	MPI_(Init_thread)(nullptr, nullptr, static_cast<int>(required), &provided);
 	return static_cast<thread_level>(provided);
 }
 

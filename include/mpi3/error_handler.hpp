@@ -1,4 +1,6 @@
-/* -*- indent-tabs-mode: t -*- */
+// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
+// Copyright 2017-2023 Alfredo A. Correa
+
 #ifndef BOOST_MPI3_ERROR_HANDLER_HPP
 #define BOOST_MPI3_ERROR_HANDLER_HPP
 
@@ -47,7 +49,7 @@ struct error_handler {
 		int len;  // NOLINT(cppcoreguidelines-init-variables,-warnings-as-errors) delayed init
 		std::array<char, MPI_MAX_ERROR_STRING> estring{};
 		MPI_Error_string(*err, estring.data(), &len);
-		std::string w(estring.data(), static_cast<std::string::size_type>(len));
+		std::string const w(estring.data(), static_cast<std::string::size_type>(len));
 		throw std::runtime_error{"error code"+ std::to_string(*err) +" "+ w};
 //		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 //		throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
@@ -61,14 +63,12 @@ error_handler const error_handler::fatal{MPI_ERRORS_ARE_FATAL};  // NOLINT(misc-
 error_handler const error_handler::code{MPI_ERRORS_RETURN};  // NOLINT(misc-definitions-in-headers,fuchsia-statically-constructed-objects) TODO(correaa)
 
 inline void communicator::set_error_handler(error_handler const& eh) {
-	int s = MPI_Comm_set_errhandler(impl_, eh.impl_);
-	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot set error handler"};}
+	MPI_(Comm_set_errhandler)(impl_, eh.impl_);
 }
 
 inline error_handler communicator::get_error_handler() const {
 	error_handler ret;
-	int status = MPI_Comm_get_errhandler(impl_, &ret.impl_);
-	if(status != MPI_SUCCESS) {throw std::runtime_error("cannot get error handler");}
+	MPI_(Comm_get_errhandler)(impl_, &ret.impl_);
 	return ret;
 }
 

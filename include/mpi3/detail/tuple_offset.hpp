@@ -41,11 +41,11 @@ std::size_t element_offset() {
 	return ret;
 }
 
-template<std::size_t I, typename Tuple>
-struct tuple_offset : std::integral_constant<std::size_t, tuple_offset_aux<I, Tuple>()> {};
+template<std::size_t Iter, typename Tuple>
+struct tuple_offset : std::integral_constant<std::size_t, tuple_offset_aux<Iter, Tuple>()> {};
 
-template<std::size_t I, typename Tuple>
-constexpr std::size_t tuple_offset_v = tuple_offset<I, Tuple>::value;
+template<std::size_t Iter, typename Tuple>
+constexpr std::size_t tuple_offset_v = tuple_offset<Iter, Tuple>::value;
 
 }  // end namespace boost::mpi3::detail
 #endif

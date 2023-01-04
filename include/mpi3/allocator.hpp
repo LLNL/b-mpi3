@@ -16,15 +16,14 @@ namespace mpi3{
 struct /*__attribute__((aligned(0)))*/ bad_alloc : std::bad_alloc{using std::bad_alloc::bad_alloc;};
 
 inline void* malloc(mpi3::size_t size) {
-	void* ret;  // NOLINT(cppcoreguidelines-init-variables) : read var
-	int s = MPI_Alloc_mem(size, MPI_INFO_NULL, &ret);
-	if(s != MPI_SUCCESS) {return nullptr;}//s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
+	void* ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+	int const s = MPI_Alloc_mem(size, MPI_INFO_NULL, &ret);
+	if(s != MPI_SUCCESS) {return nullptr;}  //s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
 	return ret;
 }
 
 inline void free(void* ptr){
-	int s = MPI_Free_mem(ptr);
-	if(s != MPI_SUCCESS) {throw std::runtime_error("cannot free");}
+	MPI_(Free_mem)(ptr);
 }
 
 template<class T>

@@ -39,7 +39,7 @@ struct shared_communicator : communicator {
 	}
 	shared_communicator(communicator& comm, mpi3::communicator_type t, int key = 0) {
 		MPI_(Comm_split_type)(&comm, static_cast<int>(t), key, MPI_INFO_NULL, &impl_);
-		boost::uuids::uuid tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
+		boost::uuids::uuid const tag = boost::uuids::random_generator{}(); static_assert(sizeof(unsigned int)<=sizeof(boost::uuids::uuid), "!");
 		auto utag = reinterpret_cast<unsigned int const&>(tag);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) TODO(correaa)
 		this->broadcast_n(&utag, 1, 0);
 		auto Tag = std::to_string(utag);

@@ -1,5 +1,5 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2018-2022 Alfredo A. Correa
+// Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef MPI3_COMMUNICATOR_HPP
 #define MPI3_COMMUNICATOR_HPP
@@ -61,7 +61,7 @@
 #define BOOST_ARCHIVE_DECL
 #define BOOST_SERIALIZATION_DECL
 #endif
-// NOLINTBEGIN(hicpp-use-auto,modernize-use-auto)  external code
+// NOLINTBEGIN(hicpp-use-auto,misc-const-correctness,modernize-use-auto)  external code
 #include "../mpi3/serialization_hack/archive_exception.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/basic_archive.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/basic_iarchive.cpp"  // NOLINT(bugprone-suspicious-include) hack
@@ -69,8 +69,8 @@
 #include "../mpi3/serialization_hack/basic_oarchive.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/basic_oserializer.cpp"  // NOLINT(bugprone-suspicious-include) hack
 #include "../mpi3/serialization_hack/extended_type_info.cpp"  // NOLINT(bugprone-suspicious-include) hack
-#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"  // NOLINT(bugprone-suspicious-include) hack
-// NOLINTEND(hicpp-use-auto,modernize-use-auto)
+#include "../mpi3/serialization_hack/extended_type_info_typeid.cpp"  // NOLINT(bugprone-suspicious-include,misc-const-correctness) hack
+// NOLINTEND(hicpp-use-auto,misc-const-correctness,modernize-use-auto)
 
 #endif
 
@@ -297,7 +297,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	using size_type = int;
 	int size() const {
 		if(is_null()) {return 0;}
-		int size = MPI_(Comm_size)(impl_);
+		int const size = MPI_(Comm_size)(impl_);
 		assert(size > 0);
 		return size;
 	}
@@ -423,7 +423,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T, class = decltype(T::dimensionality)> static std::true_type  has_dimensionality_aux(T const&);
 	                                                       static std::false_type has_dimensionality_aux(...);
 
-	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};
+	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 	template<class It, typename Size, class = std::enable_if_t<(not has_dimensionality<It>{})> >
 	void send_n(It first, Size count, int dest, int tag = 0) {
@@ -679,7 +679,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	communicator divide_high(int n) {
-		int bat=size()/n; int residue = size()%n;
+		int const bat=size()/n; int const residue = size()%n;
 		int i = 0;
 		for(int last = 0; ; i++) {  // NOLINT(altera-unroll-loops) TODO(correaa)
 			last += bat + ((i < residue)?1:0);
@@ -794,7 +794,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		mpi3::status s = MPI_(Sendrecv_replace)(
+		mpi3::status const s = MPI_(Sendrecv_replace)(
 			detail::data(first), count,
 			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
 			dest, sendtag, source, recvtag, impl_
@@ -881,7 +881,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int sendtag, int recvtag
 	) {
 		static_assert( std::is_same<V1, V2>{}, "source and destination need to be same type" );
-		status ret = MPI_(Sendrecv)(
+		status const ret = MPI_(Sendrecv)(
 			detail::data(first), static_cast<count_type>(count), detail::basic_datatype<V1>{},
 			dest, sendtag,
 			detail::data(d_first), std::numeric_limits<int>::max() /*unlim in receiving*/, detail::basic_datatype<V2>{},
@@ -1200,7 +1200,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		detail::package p(*this);
 		p.receive(source, tag);
-		package_iarchive pia(p);
+		package_iarchive const pia(p);  // TODO(correaa) investigate
 		while(p) {pia >> *dest++;}  // NOLINT(altera-unroll-loops) deprecating
 		return dest;
 	}
@@ -1949,8 +1949,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
-		int s = MPI_Allreduce(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot all reduce n");}
+		MPI_(Allreduce)(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
 	}
 	template<
 		class It1, class Size, class Op = std::plus<>,
@@ -1967,13 +1966,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0){
+	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0) {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
-		int s =
-			(rank() == root)?MPI_Reduce(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
-			                 MPI_Reduce(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+		(rank() == root)?MPI_(Reduce)(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
+		                 MPI_(Reduce)(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
 		;
-		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot reduce n"};}
 	}
 
 	template<
@@ -1986,7 +1983,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return reduce_n(first, 0, nullptr, op, root);
 	}
 	template<
-		class It1, class Op, 
+		class It1, class Op,
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
@@ -2008,26 +2005,26 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class V2 = typename std::iterator_traits<It2>::value_type 
 	>
 	auto reduce_n(
-		ReducePolicy rp, 
-		It1 first, Size count, It2 d_first, 
+		ReducePolicy rp,
+		It1 first, Size count, It2 d_first,
 		Op op, int root = 0
 	) {
-		return reduce_n_dispatch(rp, 
+		return reduce_n_dispatch(rp,
 			std::integral_constant<bool, detail::is_basic<V1>{} and detail::is_basic<V2>{} and detail::is_contiguous<It1>{} and detail::is_contiguous<It2>{}>{}, 
 			first, count, d_first, op, root
 		);
 	}
 	template<class ReducePolicy, class RandomAccessIt1, class It2, class Op>
 	auto reduce_category(
-		ReducePolicy rp, std::random_access_iterator_tag /*tag*/, 
-		RandomAccessIt1 first, RandomAccessIt1 last, It2 d_first, 
+		ReducePolicy rp, std::random_access_iterator_tag /*tag*/,
+		RandomAccessIt1 first, RandomAccessIt1 last, It2 d_first,
 		Op op, int root
 	) {
 		return reduce_n(rp, first, std::distance(first, last), d_first, op, root);
 	}
-	template<class It1, class Size, class It2, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, 
-		class V2 = typename std::iterator_traits<It2>::value_type 
+	template<class It1, class Size, class It2, class Op,
+		class V1 = typename std::iterator_traits<It1>::value_type,
+		class V2 = typename std::iterator_traits<It2>::value_type
 	>
 	auto reduce_n_dispatch(
 		all_reduce_mode rp, std::true_type /*true*/,
@@ -2035,7 +2032,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		Op op, int /*root*/ = 0
 	) {
 		int s = rp(
-			detail::data(first)  , 
+			detail::data(first)  ,
 			detail::data(d_first), count, detail::basic_datatype<V1>{},
 			op.impl_, impl_
 		);
@@ -2963,7 +2960,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
-		int s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
+		int const s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot create intercommunicator");}
 		return ret;
 	}
@@ -3031,7 +3028,7 @@ inline communicator::operator group() const{
 
 inline communicator communicator::create(group const& g) const{
 	communicator ret;
-	int s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
+	int const s = MPI_Comm_create(impl_, &const_cast<group&>(g), &ret.impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
 	if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot crate group"};}
 	return ret;
 }
