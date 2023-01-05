@@ -147,7 +147,7 @@ openmpi-cppcheck:
 mpich-debug:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake git make g++ libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake git make g++ libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -159,7 +159,7 @@ mpich-debug:
 mpich-valgrind:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ git libboost-serialization-dev valgrind
+    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake make g++ git libboost-serialization-dev valgrind
     - mpirun --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
     - mkdir build && cd build
