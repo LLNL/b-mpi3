@@ -5,6 +5,13 @@ project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 enable_testing()
 include(CTest)
 
+find_package(multi)
+if(multi_FOUND)
+  message("multi library found, path is ${multi_INCLUDE_DIRS}")
+else()
+  message(FATAL_ERROR "multi library not found")
+endif()
+
 find_package(MPI REQUIRED)
 
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
@@ -58,10 +65,10 @@ set(TEST_SRCS
 	communicator_all_gatherv_output_iterator.cpp
 	communicator_all_reduce.cpp
 	communicator_barrier.cpp
-	communicator_broadcast.cpp
 	communicator_divide.cpp
 	datatype.cpp
   deino_all_to_all.cpp
+  deino_broadcast.cpp
 	gather2.cpp
 	group.cpp
 	communicator_cctor.cpp
