@@ -4,13 +4,16 @@ project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 enable_testing()
 include(CTest)
+include(FetchContent)
 
-# find_package(multi)
-# if(multi_FOUND)
-#   message("multi library found, path is ${multi_INCLUDE_DIRS}")
-# else()
-#   message(FATAL_ERROR "multi library not found")
-# endif()
+find_package(multi)
+if(multi_FOUND)
+  message("multi library found, path is ${multi_INCLUDE_DIRS}")
+else()
+  message("multi library not found, trying fetch")
+  FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)
+  FetchContent_MakeAvailable(multi)
+endif()
 
 find_package(MPI REQUIRED)
 
@@ -206,6 +209,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   target_link_libraries(${TEST_EXE} PRIVATE pthread)
+  target_link_libraries(${TEST_EXE} PRIVATE multi)
 
   set(NPROC 3)
   if (
