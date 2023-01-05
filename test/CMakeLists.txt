@@ -5,12 +5,12 @@ project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 enable_testing()
 include(CTest)
 
-find_package(multi)
-if(multi_FOUND)
-  message("multi library found, path is ${multi_INCLUDE_DIRS}")
-else()
-  message(FATAL_ERROR "multi library not found")
-endif()
+# find_package(multi)
+# if(multi_FOUND)
+#   message("multi library found, path is ${multi_INCLUDE_DIRS}")
+# else()
+#   message(FATAL_ERROR "multi library not found")
+# endif()
 
 find_package(MPI REQUIRED)
 
@@ -58,6 +58,7 @@ endif()
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
 	async_interaction.cpp
+  broadcast.cpp
 	cartesian.cpp
 	communicator_abort.cpp
 	communicator_all_gather.cpp
