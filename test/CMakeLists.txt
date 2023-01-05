@@ -11,7 +11,7 @@ if(multi_FOUND)
   message("multi library found, path is ${multi_INCLUDE_DIRS}")
 else()
   message("multi library not found, trying fetch")
-  FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)
+  FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
   FetchContent_MakeAvailable(multi)
 endif()
 
