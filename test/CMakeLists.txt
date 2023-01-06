@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.18.4) # 3.10 for FindMPI, 3.12 for MPI_ROOT
 project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
+if(EXISTS "CMakeLists.txt")
+	message(FATAL_ERROR "You probably don't want to run CMake in a directory with CMakeLists.txt")
+endif()
+
 enable_testing()
 include(CTest)
 include(FetchContent)
@@ -12,6 +16,7 @@ if(multi_FOUND)
 else()
   message("multi library not found, trying fetch")
   FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
+  # FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
   FetchContent_MakeAvailable(multi)
 endif()
 
