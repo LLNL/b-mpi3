@@ -1,8 +1,8 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2023 Alfredo A. Correa
 
-#include <mpi3/main.hpp>
 #include <mpi3/communicator.hpp>
+#include <mpi3/main.hpp>
 
 #include<multi/array.hpp>
 
