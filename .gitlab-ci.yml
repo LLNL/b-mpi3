@@ -316,7 +316,7 @@ openmpi-cuda-12:
   image: debian:stable
   script:
     - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates gnupg software-properties-common
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates git gnupg software-properties-common
     - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
     - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
     - add-apt-repository contrib
