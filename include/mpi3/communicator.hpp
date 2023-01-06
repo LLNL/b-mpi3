@@ -1692,14 +1692,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  public:
 	template<class T>
-	auto broadcast_value(T& t, int root = 0){return broadcast_n(std::addressof(t), 1, root);}
+	void broadcast_value(T& t, int root = 0) {broadcast_n(std::addressof(t), 1, root);}
 
 	template<class T>
-	auto broadcast_value(std::vector<T>& t, int root = 0){
+	void broadcast_value(std::vector<T>& t, int root = 0){
 		auto t_size = t.size();
 		broadcast_value(t_size, root);
 		t.resize(t_size);
-		return broadcast_n(t.data(), t.size(), root);
+		broadcast_n(t.data(), t.size(), root);
 	}
 
 	template<class It, typename Size>
@@ -1718,20 +1718,19 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return r;
 	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
-	void broadcast_n(
-		It first, 
+	auto broadcast_n(
+		It first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
 		int root
 	) {
-		auto e = static_cast<enum error>(
-			MPI_Bcast(
+		MPI_(Bcast)(
 				detail::data(first), static_cast<int>(count), // TODO(correaa) use safe cast
 				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
-			root, impl_)
+			root, impl_
 		);
-		if(e != mpi3::error::success) {throw std::system_error{e, "cannot broadcast"};}
+		return first + static_cast<typename std::iterator_traits<It>::difference_type>(count);
 	}
 	template<class It>
 	auto ibroadcast(
@@ -1761,7 +1760,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	void broadcast_n(It first, Size count, int root = 0){
+	auto broadcast_n(It first, Size count, int root = 0){
 		return broadcast_n(
 			first,
 				detail::iterator_category_t<It>{},

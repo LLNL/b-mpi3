@@ -11,7 +11,7 @@ variables:
 openmpi:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make g++ libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -35,7 +35,7 @@ icpc-intelmpi:
   image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -50,7 +50,7 @@ icpx-intelmpi:
   image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ make libboost-test-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -63,7 +63,7 @@ icpx-intelmpi:
 openmpi-clang:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang g++ libstdc++-12-dev libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -78,7 +78,7 @@ openmpi-clang:
 openmpi-clang20:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin cmake make clang libstdc++-12-dev libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -93,7 +93,7 @@ openmpi-clang20:
 openmpi-clang-tidy:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake make libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake git make libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -108,14 +108,14 @@ openmpi-clang-tidy:
 openmpi-cppcheck:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev cppcheck cmake make libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - g++ --version
     - cppcheck --version
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CPPCHECK="cppcheck;--enable=all;--inline-suppr;--language=c++;--suppress=missingIncludeSystem;--suppress=syntaxError;--suppress=unmatchedSuppression;--std=c++17;--error-exitcode=666;-UEXCLUDE_CPPCHECK"
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CPPCHECK="cppcheck;--force;--enable=all;--inline-suppr;--language=c++;--suppress=missingIncludeSystem;--suppress=syntaxError;--suppress=unmatchedSuppression;--std=c++17;--error-exitcode=666;-UEXCLUDE_CPPCHECK"
     - make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
@@ -147,7 +147,7 @@ openmpi-cppcheck:
 mpich-debug:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev
+    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake git make g++ libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -159,7 +159,7 @@ mpich-debug:
 mpich-valgrind:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich cmake make g++ libboost-serialization-dev valgrind
+    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake make g++ git libboost-serialization-dev valgrind
     - mpirun --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
     - mkdir build && cd build
@@ -316,7 +316,7 @@ openmpi-cuda-12:
   image: debian:stable
   script:
     - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates gnupg software-properties-common
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates git gnupg software-properties-common
     - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
     - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
     - add-apt-repository contrib

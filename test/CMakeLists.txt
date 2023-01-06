@@ -2,14 +2,22 @@
 cmake_minimum_required(VERSION 3.18.4) # 3.10 for FindMPI, 3.12 for MPI_ROOT
 project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
+if(EXISTS "CMakeLists.txt")
+	message(FATAL_ERROR "You probably don't want to run CMake in a directory with CMakeLists.txt")
+endif()
+
 enable_testing()
 include(CTest)
+include(FetchContent)
 
 find_package(multi)
 if(multi_FOUND)
   message("multi library found, path is ${multi_INCLUDE_DIRS}")
 else()
-  message(FATAL_ERROR "multi library not found")
+  message("multi library not found, trying fetch")
+  FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
+  # FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
+  FetchContent_MakeAvailable(multi)
 endif()
 
 find_package(MPI REQUIRED)
@@ -58,6 +66,7 @@ endif()
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
 	async_interaction.cpp
+  broadcast.cpp
 	cartesian.cpp
 	communicator_abort.cpp
 	communicator_all_gather.cpp
@@ -205,6 +214,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   target_link_libraries(${TEST_EXE} PRIVATE pthread)
+  target_link_libraries(${TEST_EXE} PRIVATE multi)
 
   set(NPROC 3)
   if (
