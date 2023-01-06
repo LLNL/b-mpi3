@@ -7,7 +7,6 @@
 #include<multi/array.hpp>
 
 namespace mpi3 = boost::mpi3;
-namespace multi = boost::multi;
 
 auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int try {
 
@@ -20,6 +19,7 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		assert( std::find_if(v.cbegin(), v.cend(), [](auto& e) {return e != 3.14;}) == v.cend() );
 	}
 	{
+		namespace multi = boost::multi;
 		auto arr = multi::array<double, 1>(10, world.root()? 3.14 : 99.9);
 
 		auto it = world.broadcast_n(arr.begin(), 10);
