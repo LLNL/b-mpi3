@@ -10,15 +10,9 @@ enable_testing()
 include(CTest)
 include(FetchContent)
 
-find_package(multi)
-if(multi_FOUND)
-  message("multi library found, path is ${multi_INCLUDE_DIRS}")
-else()
-  message("multi library not found, trying fetch")
-  FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
-  # FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
-  FetchContent_MakeAvailable(multi)
-endif()
+FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
+# FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
+FetchContent_MakeAvailable(multi)
 
 find_package(MPI REQUIRED)
 
