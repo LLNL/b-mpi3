@@ -161,6 +161,37 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 		}
 		#endif
 	}
+	{
+		auto comm_sub0 = cart_comm.axis<0>();
+		assert( comm_sub0.shape()[0] == 3 );
+		assert( comm_sub0.size() == 3 );
+	}
+	{
+		auto plane = cart_comm.plane<0, 1>();
+		assert( plane.shape() == cart_comm.shape() );
+	}
+}
+{
+	mpi3::cartesian_communicator<3> cart_comm(world, {3, 2 ,1});
+	assert( cart_comm.dimensions()[0] == 3 );
+	assert( cart_comm.dimensions()[1] == 2 );
+	assert( cart_comm.dimensions()[2] == 1 );
+
+	{
+		mpi3::cartesian_communicator<2> plane = cart_comm.plane<0, 1>();
+		assert( plane.shape()[0] == cart_comm.shape()[0] );
+		assert( plane.shape()[1] == cart_comm.shape()[1] );
+	}
+	{
+		auto plane = cart_comm.plane<0, 1>();
+		assert( plane.shape()[0] == cart_comm.shape()[0] );
+		assert( plane.shape()[1] == cart_comm.shape()[1] );
+	}
+	{
+		mpi3::cartesian_communicator<2> plane = cart_comm.plane<0, 2>();
+		assert( plane.shape()[0] == cart_comm.shape()[0] );
+		assert( plane.shape()[1] == cart_comm.shape()[2] );
+	}
 }
 {
 	mpi3::cartesian_communicator<2> cart_comm(world, {3, 2});
