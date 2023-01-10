@@ -190,10 +190,10 @@ struct cartesian_communicator : cartesian_communicator<> {
 	template<int D1, int D2>
 	cartesian_communicator<2> plane() {
 		static_assert(D1 < D2);
-		cartesian_communicator<2> ret;
 		std::array<int, D> remains{}; remains.fill(false);
 		std::get<D1>(remains) = true;
 		std::get<D2>(remains) = true;
+		cartesian_communicator<2> ret;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
 		return ret;
 	}
