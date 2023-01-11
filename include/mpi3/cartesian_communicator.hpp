@@ -188,12 +188,16 @@ struct cartesian_communicator : cartesian_communicator<> {
 	template<int DD> auto axis() -> circular_communicator;
 
 	auto plane(int d1, int d2) {
-		assert( d1 >= 0 and d1 < d2 and d2 < D);
-		assert( d1 < d2 );
+		assert( d1 >= 0 and d2 >= 0 );
+
+		auto const d1s = static_cast<std::size_t>(d1);
+		auto const d2s = static_cast<std::size_t>(d2);
+
+		assert( d2s < D and d1s < d2s );
 
 		std::array<int, D> remains{};
-		remains[static_cast<std::size_t>(d1)] = true;
-		remains[static_cast<std::size_t>(d2)] = true;
+		remains.at(d1s) = true;
+		remains.at(d2s) = true;
 
 		cartesian_communicator<2> ret;
 		MPI_(Cart_sub)(impl_, remains.data(), &ret.get());
