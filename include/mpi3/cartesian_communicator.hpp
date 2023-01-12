@@ -47,10 +47,10 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)) {}
 
 	[[deprecated("use dimensionality() instead of dimension")]] int dimension() const {
-		int ret;
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_Cartdim_get(impl_, &ret);
 		return ret;
-	}  // NOLINT(cppcoreguidelines-init-variables) delayed init
+	}
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator&&)      = default;
