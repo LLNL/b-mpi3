@@ -66,10 +66,10 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	~cartesian_communicator() = default;
 
 	int dimensionality() const {
-		int ret;
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Cartdim_get)(impl_, &ret);
 		return ret;
-	}  // NOLINT(cppcoreguidelines-init-variables) delayed init
+	}
 
 	std::vector<int> coordinates() const {
 		std::vector<int> ret(static_cast<std::vector<int>::size_type>(dimensionality()));
