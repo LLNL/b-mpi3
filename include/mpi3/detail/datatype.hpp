@@ -1,5 +1,5 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2017-2022 Alfredo A. Correa
+// Copyright 2017-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
@@ -44,6 +44,8 @@ using long_double_long_double = std::pair<long double, long double>;
 using cxx_float_complex       = std::complex<float>;
 using cxx_double_complex      = std::complex<double>;
 using cxx_long_double_complex = std::complex<long double>;
+
+using cxx_2double_complex     = std::pair<std::complex<double>, std::complex<double>>;
 
 using cxx_bool = bool;
 
@@ -106,6 +108,8 @@ MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_DOUBLE_COMPLEX);
 
+MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);
+
 MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);
@@ -147,11 +151,12 @@ template<class T, class = decltype(basic_datatype<T>{})>
 std::true_type  is_basic_aux(T  );
 std::false_type is_basic_aux(...);
 
-template<class T> 
+template<class T>
 struct is_basic : decltype(is_basic_aux(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+
+template<class T> constexpr bool is_basic_v = is_basic<T>::value;
 
 }  // end namespace detail
 }  // end namespace mpi3
 }  // end namespace boost
-
 #endif
