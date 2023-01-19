@@ -98,6 +98,7 @@ set(TEST_SRCS
 	shared_mutex.cpp
 	simple_send_receive.cpp
 	simple_broadcast.cpp
+  spinor.cpp
   status.cpp
 	type_commit.cpp
 	type_size.cpp
