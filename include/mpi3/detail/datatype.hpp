@@ -45,7 +45,7 @@ using cxx_float_complex       = std::complex<float>;
 using cxx_double_complex      = std::complex<double>;
 using cxx_long_double_complex = std::complex<long double>;
 
-using cxx_2double_complex     = std::pair<std::complex<double>, std::complex<double>>;
+// using cxx_2double_complex     = std::pair<std::complex<double>, std::complex<double>>;
 
 using cxx_bool = bool;
 
@@ -81,6 +81,7 @@ template<> struct basic_datatype<TypE> {           \
 	assert( (MpiiD) != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
 		return MpiiD;                              \
 	} \
+	auto get() const -> MPI_Datatype {return MpiiD;} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
 
@@ -108,7 +109,7 @@ MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_DOUBLE_COMPLEX);
 
-MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);
+// MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);  // not available in mpich
 
 MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
@@ -157,6 +158,24 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())) {};  // NOLINT(cppco
 template<class T> constexpr bool is_basic_v = is_basic<T>::value;
 
 }  // end namespace detail
+
+template<class T> class datatype;
+
+template<class T> class datatype {
+ public:
+	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
+	R operator()() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
+};
+
+template<class T, class = decltype(datatype<T>{}())>
+std::true_type  has_datatype_aux(T  );
+std::false_type has_datatype_aux(...);
+
+template<class T>
+struct has_datatype : decltype(has_datatype_aux(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+
+template<class T> constexpr bool has_datatype_v = has_datatype<T>::value;
+
 }  // end namespace mpi3
 }  // end namespace boost
 #endif

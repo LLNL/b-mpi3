@@ -17,7 +17,6 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) -> 
 	static_assert( is_basic_v<double> );
 	static_assert( is_basic_v<mpi3::detail::float_int> );
 	static_assert( is_basic_v<std::complex<double>> );
-	static_assert( is_basic_v<std::pair<std::complex<double>, std::complex<double>>> );
 
 	static_assert( not is_basic_v<std::string> );
 

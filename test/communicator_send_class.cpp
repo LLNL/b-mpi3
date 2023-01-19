@@ -92,6 +92,9 @@ void load(Archive& ar, B& b, unsigned int const /*version*/) {  // NOLINT(google
 }
 BOOST_SERIALIZATION_SPLIT_FREE(B)
 
+template<> struct mpi3::datatype<std::pair<std::complex<double>, std::complex<double>>>
+: datatype<std::complex<double>[2]> {};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) provide nice syntax
+
 auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 
 	assert(world.size() > 1);
