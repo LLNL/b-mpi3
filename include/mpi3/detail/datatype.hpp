@@ -85,7 +85,6 @@ template<> struct basic_datatype<TypE> {           \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
 
- 
 // basic data types http://beige.ucs.indiana.edu/I590/node100.html
 MPI3_DECLARE_DATATYPE(char                   , MPI_CHAR);
 MPI3_DECLARE_DATATYPE(unsigned char          , MPI_UNSIGNED_CHAR);
