@@ -81,9 +81,11 @@ template<> struct basic_datatype<TypE> {           \
 	assert( (MpiiD) != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
 		return MpiiD;                              \
 	} \
+	auto get() const -> MPI_Datatype {return MpiiD;} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
 }
 
+ 
 // basic data types http://beige.ucs.indiana.edu/I590/node100.html
 MPI3_DECLARE_DATATYPE(char                   , MPI_CHAR);
 MPI3_DECLARE_DATATYPE(unsigned char          , MPI_UNSIGNED_CHAR);
@@ -157,6 +159,24 @@ struct is_basic : decltype(is_basic_aux(std::declval<T>())) {};  // NOLINT(cppco
 template<class T> constexpr bool is_basic_v = is_basic<T>::value;
 
 }  // end namespace detail
+
+template<class T> class datatype;
+
+template<class T> class datatype {
+ public:
+	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
+	R operator()() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
+};
+
+template<class T, class = decltype(datatype<T>{}())>
+std::true_type  has_datatype_aux(T  );
+std::false_type has_datatype_aux(...);
+
+template<class T>
+struct has_datatype : decltype(has_datatype_aux(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+
+template<class T> constexpr bool has_datatype_v = has_datatype<T>::value;
+
 }  // end namespace mpi3
 }  // end namespace boost
 #endif
