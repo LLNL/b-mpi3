@@ -45,7 +45,7 @@ using cxx_float_complex       = std::complex<float>;
 using cxx_double_complex      = std::complex<double>;
 using cxx_long_double_complex = std::complex<long double>;
 
-using cxx_2double_complex     = std::pair<std::complex<double>, std::complex<double>>;
+// using cxx_2double_complex     = std::pair<std::complex<double>, std::complex<double>>;
 
 using cxx_bool = bool;
 
@@ -109,7 +109,7 @@ MPI3_DECLARE_DATATYPE(cxx_float_complex      , MPI_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_double_complex     , MPI_DOUBLE_COMPLEX);
 MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_DOUBLE_COMPLEX);
 
-MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);
+// MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);  // not available in mpich
 
 MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
