@@ -364,7 +364,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		MPI_(Send)(
 			detail::data(first), static_cast<int>(count),  // TODO(correaa) use safe cast
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			mpi3::datatype<typename std::iterator_traits<It>::value_type>{}(),
 			dest, tag, impl_
 		);
 	}
@@ -378,7 +378,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		 return MPI_I(send)(
 			detail::data(first), count,
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			datatype<typename std::iterator_traits<It>::value_type>{}(),
 			dest, tag, impl_
 		);
 	}
@@ -726,13 +726,13 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	receive_request receive_init(ContIt first, ContIt last, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
 
 	template<
-		class InputIt, class Size, 
-		typename V = typename std::iterator_traits<InputIt>::value_type, class Datatype = detail::basic_datatype<V>
+		class InputIt, class Size,
+		typename V = typename std::iterator_traits<InputIt>::value_type, class Datatype = datatype<V>
 	>
 	auto unpack_from_n(InputIt first, Size count, char const* buffer) {
 		int position = 0;
 		using detail::data;
-		MPI_(Unpack)(buffer, count*pack_size<V>(), &position, data(first), count, Datatype{}, impl_);
+		MPI_(Unpack)(buffer, count*pack_size<V>(), &position, data(first), count, Datatype{}(), impl_);
 		return std::next(buffer, position);
 	}
 
@@ -763,7 +763,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		auto const sz = size();
 		assert(sz != 0);
 		mpi3::request r;
-		MPI_I(sendrecv_replace)(detail::data(first), count/sz, mpi3::detail::basic_datatype<typename std::iterator_traits<It>::value_type>(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
+		MPI_I(sendrecv_replace)(detail::data(first), count/sz, datatype<typename std::iterator_traits<It>::value_type>{}(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
 		return r;
 	}
 
@@ -796,7 +796,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		mpi3::status const s = MPI_(Sendrecv_replace)(
 			detail::data(first), count,
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			datatype<typename std::iterator_traits<It>::value_type>{}(),
 			dest, sendtag, source, recvtag, impl_
 		);
 		return first + s.count<typename std::iterator_traits<It>::value_type>();
@@ -861,8 +861,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		MPI_(Sendrecv)(
-			detail::data(  first), static_cast<int>(  count), detail::basic_datatype<typename std::iterator_traits<It >::value_type>{}, dest  , sendtag,  // TODO(correaa) use safe cast
-			detail::data(d_first), static_cast<int>(d_count), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, source, recvtag,  // TODO(correaa) use safe cast
+			detail::data(  first), static_cast<int>(  count), datatype<typename std::iterator_traits<It >::value_type>{}(), dest  , sendtag,  // TODO(correaa) use safe cast
+			detail::data(d_first), static_cast<int>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(), source, recvtag,  // TODO(correaa) use safe cast
 			impl_, &ret.impl_
 		);
 		assert( static_cast<Size>(ret.count<typename std::iterator_traits<It2>::value_type>()) == d_count );
@@ -882,9 +882,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		static_assert( std::is_same<V1, V2>{}, "source and destination need to be same type" );
 		status const ret = MPI_(Sendrecv)(
-			detail::data(first), static_cast<count_type>(count), detail::basic_datatype<V1>{},
+			detail::data(first), static_cast<count_type>(count), datatype<V1>{}(),
 			dest, sendtag,
-			detail::data(d_first), std::numeric_limits<int>::max() /*unlim in receiving*/, detail::basic_datatype<V2>{},
+			detail::data(d_first), std::numeric_limits<int>::max() /*unlim in receiving*/, datatype<V2>{}(),
 			source, recvtag,
 			impl_  //, &ret.impl_  // status refers to the receive operation.
 		);
@@ -1119,7 +1119,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		status sta;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
 		MPI_(Recv)(
-			detail::data(dest), static_cast<count_type>(count), detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			detail::data(dest), static_cast<count_type>(count), 
+			datatype<typename std::iterator_traits<It>::value_type>{}(),
 			source, tag, impl_, &sta.impl_
 		);
 		assert(sta.count<typename std::iterator_traits<It>::value_type>() == static_cast<count_type>(count));
@@ -1136,7 +1137,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		mpi3::request r;
 		MPI_(Irecv)(
 			detail::data(dest), static_cast<count_type>(count),
-			detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			datatype<typename std::iterator_traits<It>::value_type>{}(),
 			source, tag, impl_, &r.impl_
 		);
 		return r;
@@ -1363,7 +1364,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		request ret;
 		int s = MPI_Bsend_init(
-			std::addressof(*first), count, detail::basic_datatype<V>{},
+			std::addressof(*first), count, datatype<V>{}(),
 			dest, tag, impl_, &ret.impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot bsend init"};}
@@ -1408,9 +1409,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	    MPI_Message msg;  // NOLINT(cppcoreguidelines-init-variables) delayed init
     	int count = -1;
     	MPI_Mprobe(source, tag, impl_, &msg, &status);
-    	MPI_Get_count(&status, detail::basic_datatype<V>{}, &count);
+    	MPI_Get_count(&status, datatype<V>{}(), &count);
     	using detail::data;
-    	MPI_Mrecv(data(first), count, detail::basic_datatype<V>{}, &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+    	MPI_Mrecv(data(first), count, datatype<V>{}(), &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
 
 	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
@@ -1448,7 +1449,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		mpi3::request ret;
 		CommunicationMode{}.ISend(
-			std::addressof(*first), count, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{}, dest, tag, impl_, &ret.impl_
+			std::addressof(*first), count, datatype<typename std::iterator_traits<It1>::value_type>{}(), dest, tag, impl_, &ret.impl_
 		);
 		return ret;
 	}
@@ -1500,7 +1501,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<
 		class CommunicationMode, class ContiguousIterator, 
 		class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type,
-		class Datatype = typename detail::basic_datatype<ValueType>
+		class Datatype = datatype<ValueType>
 	>
 	request send_n_randomaccess_contiguous_builtin(
 		CommunicationMode cm, nonblocking_mode /*mode*/,
@@ -1508,21 +1509,21 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		ContiguousIterator first, Size n, int dest, int tag
 	) {
 		request r;
-		int s = cm.ISend(detail::data(first), n, Datatype{}, dest, tag, impl_, &r.impl_);
+		int s = cm.ISend(detail::data(first), n, Datatype{}(), dest, tag, impl_, &r.impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot send random access iterators"};}
 		return r;
 	}
 	template<
 		class CommunicationMode, class ContiguousIterator,
 		class Size, class ValueType = typename std::iterator_traits<ContiguousIterator>::value_type, 
-		class Datatype = typename detail::basic_datatype<ValueType>
+		class Datatype = datatype<ValueType>
 	>
 	request receive_n_randomaccess_contiguous_builtin(
 		CommunicationMode cm, nonblocking_mode /*mode*/, std::true_type /*true*/, 
 		ContiguousIterator first, Size n, int dest, int tag
 	) {
 		request r;
-		int s = cm.IRecv(detail::data(first), n, Datatype{}, dest, tag, impl_, &r.impl_);
+		int s = cm.IRecv(detail::data(first), n, Datatype{}(), dest, tag, impl_, &r.impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot send random access iterators"};}
 		return r;
 	}
@@ -1541,8 +1542,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		// assert(sz != 0 and count % sz == 0);
 		using count_type = int;
 		MPI_(Alltoall)(
-			detail::data(  first), static_cast<count_type>(count/* / sz*/), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), static_cast<count_type>(count/* / sz*/), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			detail::data(  first), static_cast<count_type>(count/* / sz*/), datatype<typename std::iterator_traits<It1>::value_type>{}(),
+			detail::data(d_first), static_cast<count_type>(count/* / sz*/), datatype<typename std::iterator_traits<It2>::value_type>{}(),
 			impl_
 		);
 		return d_first + count;
@@ -1559,9 +1560,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	)
 	->decltype(MPI_(Alltoall)(
 			std::declval<in_place_type>(), 0*count/*/size()*/,
-			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			detail::data(first), count/*/size()*/,
-			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			impl_
 		), first + count*size()) {
 		// auto const sz = size();
@@ -1570,9 +1571,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
 		MPI_(Alltoall)(
 			in_place, 0*count/*/sz*/,
-			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			detail::data(first), count/*/sz*/,
-			detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			impl_
 		);
 		return first + count*size();
@@ -1588,8 +1589,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general  // TODO(correaa) define constant globally for the library
 		using count_type = int;
 		MPI_(Alltoall)(
-			in_place           , 0*static_cast<count_type>(count)/*/sz*/, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(first),   static_cast<count_type>(count)/*/sz*/, detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			in_place           , 0*static_cast<count_type>(count)/*/sz*/, datatype<typename std::iterator_traits<It1>::value_type>{}(),
+			detail::data(first),   static_cast<count_type>(count)/*/sz*/, datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			impl_
 		);
 		return first + count;
@@ -1668,8 +1669,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<
 		class It1, class It2,
-			class Sendtype = detail::basic_datatype<typename std::iterator_traits<It1>::value_type>,
-			class Recvtype = detail::basic_datatype<typename std::iterator_traits<It2>::value_type>
+			class Sendtype = datatype<typename std::iterator_traits<It1>::value_type>,
+			class Recvtype = datatype<typename std::iterator_traits<It2>::value_type>
 	>
 	auto scatter_builtin(
 		detail::contiguous_iterator_tag /*tag*/,
@@ -1678,9 +1679,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		MPI_(Scatter)(
 			detail::data(  first), std::distance(first, last),
-			Sendtype::value,
+			Sendtype{}(),
 			detail::data(d_first), std::distance(first, last),
-			Recvtype::value,
+			Recvtype{}(),
 			root,
 			impl_
 		);
@@ -1712,7 +1713,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		request r;
 		MPI_(Ibcast)(
-			detail::data(first), static_cast<count_type>(count), detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+			detail::data(first), static_cast<count_type>(count), datatype<typename std::iterator_traits<It>::value_type>{}(),
 			root, impl_, &r.impl_
 		);
 		return r;
@@ -1727,7 +1728,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		MPI_(Bcast)(
 				detail::data(first), static_cast<int>(count), // TODO(correaa) use safe cast
-				detail::basic_datatype<typename std::iterator_traits<It>::value_type>{},
+				datatype<typename std::iterator_traits<It>::value_type>{}(),
 			root, impl_
 		);
 		return first + static_cast<typename std::iterator_traits<It>::difference_type>(count);
@@ -1811,7 +1812,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{});
 		MPI_(Reduce)(
 			detail::data(first), detail::data(d_first), static_cast<count_type>(count),
-			detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, PredefinedOp{}, 
+			datatype<typename std::iterator_traits<It2>::value_type>{}(), PredefinedOp{}, 
 			root, impl_
 		);
 		return rank() == root?d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(count):d_first;
@@ -1888,7 +1889,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	>
 	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
 		using detail::data;
-		int s = MPI_Allreduce(data(first), detail::data(d_first), count, detail::basic_datatype<V1>{}, PredefinedOp{}/*op*/, impl_);
+		int s = MPI_Allreduce(data(first), detail::data(d_first), count, datatype<V1>{}(), PredefinedOp{}/*op*/, impl_);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot reduce n");}
 	}
 	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp, typename = decltype(static_cast<void*>(detail::data(std::declval<It2>())))>
@@ -1906,7 +1907,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{});
 		using count_type = int;
 		MPI_(Allreduce)(
-			detail::data(first), detail::data(d_first), static_cast<count_type>(count), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},  // TODO(correaa) use safe cast
+			detail::data(first), detail::data(d_first), static_cast<count_type>(count), datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
 			PredefinedOp{}/*op*/, impl_
 		);
 		return d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(count);
@@ -1948,7 +1949,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
-		MPI_(Allreduce)(in_place, data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, impl_);
+		MPI_(Allreduce)(in_place, data_adl(first), count, datatype<V1>{}(), PredefinedOp{}, impl_);
 	}
 	template<
 		class It1, class Size, class Op = std::plus<>,
@@ -1967,8 +1968,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	>
 	auto reduce_in_place_n(It1 first, Size count, Op /*op*/, int root = 0) {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
-		(rank() == root)?MPI_(Reduce)(in_place       , data_adl(first), count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_):
-		                 MPI_(Reduce)(data_adl(first), nullptr        , count, detail::basic_datatype<V1>{}, PredefinedOp{}, root, impl_)
+		(rank() == root)?MPI_(Reduce)(in_place       , data_adl(first), count, datatype<V1>{}(), PredefinedOp{}, root, impl_):
+		                 MPI_(Reduce)(data_adl(first), nullptr        , count, datatype<V1>{}(), PredefinedOp{}, root, impl_)
 		;
 	}
 
@@ -2032,7 +2033,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		int s = rp(
 			detail::data(first)  ,
-			detail::data(d_first), count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, datatype<V1>{}(),
 			op.impl_, impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot reduce");}
@@ -2048,7 +2049,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		int s = rp(
 			detail::data(first)  ,
-			detail::data(d_first), count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, datatype<V1>{}(),
 			op.impl_,
 			root, impl_
 		);
@@ -2066,7 +2067,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		request ret;
 		int s = rp(
 			detail::data(first)  , 
-			detail::data(d_first), count, detail::basic_datatype<V1>{},
+			detail::data(d_first), count, datatype<V1>{}(),
 			op.impl_,
 			root, impl_, &ret.impl_
 		);
@@ -2085,8 +2086,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		if(s == 0) {throw std::runtime_error{"invalid empty communicator for scatter_n"};}
 		assert( n%s == 0 );
 		MPI_(Scatter)(
-			detail::data(  first), static_cast<count_type>(n/s), detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
-			detail::data(d_first), static_cast<count_type>(n/s), detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
+			detail::data(  first), static_cast<count_type>(n/s), datatype<typename std::iterator_traits<CIt1>::value_type>{}(),
+			detail::data(d_first), static_cast<count_type>(n/s), datatype<typename std::iterator_traits<CIt2>::value_type>{}(),
 			root, impl_
 		);
 		if(rank() == root) {std::advance(d_first, n);}
@@ -2181,10 +2182,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int root = 0
 	) {
 		MPI_(Scatterv)(
-			detail::data(first), counts, displs,
-			detail::basic_datatype<typename std::iterator_traits<CIt1>::value_type>{},
+			detail::data(  first), counts, displs,
+			datatype<typename std::iterator_traits<CIt1>::value_type>{}(),
 			detail::data(d_first), n,
-			detail::basic_datatype<typename std::iterator_traits<CIt2>::value_type>{},
+			datatype<typename std::iterator_traits<CIt2>::value_type>{}(),
 			root, impl_
 		);
 	}
@@ -2268,8 +2269,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		MPI_(Gather)
 		(
-			detail::data(  first), static_cast<count_type>(  count), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), static_cast<count_type>(d_count), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			detail::data(  first), static_cast<count_type>(  count), datatype<typename std::iterator_traits<It1>::value_type>{}(),
+			detail::data(d_first), static_cast<count_type>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(),
 			root, impl_
 		);
 		return d_first + ((rank() == root) ? static_cast<typename std::iterator_traits<It2>::difference_type>(d_count * static_cast<Size2>(size())) : 0);
@@ -2393,8 +2394,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		/**/ detail::basic_tag /*tag*/
 	) {
 		MPI_(Allgather)(
-			detail::data(  first), static_cast<int>(  count), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},  // TODO(correaa) use safe cast
-			detail::data(d_first), static_cast<int>(d_count), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},  // TODO(correaa) use safe cast
+			detail::data(  first), static_cast<int>(  count), datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
+			detail::data(d_first), static_cast<int>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(),  // TODO(correaa) use safe cast
 			impl_
 		);
 		return d_first + static_cast<decltype(usize())>(d_count) * usize();
@@ -2470,8 +2471,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		CountsIt counts, DisplsIt displs
 	) {
 		MPI_(Allgatherv)(
-			detail::data(  first), static_cast<int>(count)                   , detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},  // TODO(correaa) use safe cast
-			detail::data(d_first), detail::data(counts), detail::data(displs), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},
+			detail::data(  first), static_cast<int>(count)                   , datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
+			detail::data(d_first), detail::data(counts), detail::data(displs), datatype<typename std::iterator_traits<It2>::value_type>{}(),
 			impl_
 		);
 		return d_first + detail::data(displs)[size()-1] + detail::data(counts)[size()-1];  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -2594,8 +2595,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int root
 	) {
 		MPI_(Gatherv)(
-			detail::data(  first), static_cast<int>(count),                    detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},  // TODO(correaa) use safe cast
-			detail::data(d_first), detail::data(counts), detail::data(displs), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
+			detail::data(  first), static_cast<int>(count),                    datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
+			detail::data(d_first), detail::data(counts), detail::data(displs), datatype<typename std::iterator_traits<It1>::value_type>{}(),
 			root, impl_
 		);
 	}
@@ -2634,15 +2635,15 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		request ret;
 		MPI_(Igather)(
-			detail::data(first)  , static_cast<count_type>(  count), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},
-			detail::data(d_first), static_cast<count_type>(d_count), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{}, 
+			detail::data(first)  , static_cast<count_type>(  count), datatype<typename std::iterator_traits<It1>::value_type>{}(),
+			detail::data(d_first), static_cast<count_type>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(),
 			root, impl_, &ret.impl_
 		);
 		return ret;
 	}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker)  MPI_Wait called on destructor of ret
 	template<class It1, typename Size1, class It2, typename Size2>
 	auto iall_gather_n(
-		It1 first, 
+		It1 first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size1 count,
@@ -2653,8 +2654,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		request ret;
 		MPI_(Iallgather)(
-			detail::data(first)  , static_cast<count_type>(  count), detail::basic_datatype<typename std::iterator_traits<It1>::value_type>{},  // TODO(correaa) use safe cast
-			detail::data(d_first), static_cast<count_type>(d_count), detail::basic_datatype<typename std::iterator_traits<It2>::value_type>{},  // TODO(correaa) use safe cast
+			detail::data(first)  , static_cast<count_type>(  count), datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
+			detail::data(d_first), static_cast<count_type>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(),  // TODO(correaa) use safe cast
 			impl_, &ret.impl_
 		);
 		return ret;
@@ -2879,8 +2880,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		It1 first, Size count, It2 d_first, int root = 0
 	) {
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>{},
-			detail::data(d_first), count, detail::basic_datatype<V2>{},
+			detail::data(first)  , count, datatype<V1>{}(),
+			detail::data(d_first), count, datatype<V2>{}(),
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
@@ -2894,8 +2895,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		It1 first, Size count, It2 d_first, int root = 0
 	) {
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>{},
-			detail::data(d_first), count, detail::basic_datatype<V2>{},
+			detail::data(first)  , count, datatype<V1>{}(),
+			detail::data(d_first), count, datatype<V2>{}(),
 			root, impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
@@ -2910,8 +2911,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		request r;
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>{},
-			detail::data(d_first), count, detail::basic_datatype<V2>{},
+			detail::data(first)  , count, datatype<V1>{}(),
+			detail::data(d_first), count, datatype<V2>{}(),
 			root, impl_, &r.impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
@@ -2926,8 +2927,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		It1 first, Size count, It2 d_first, int /*root*/= 0
 	) {
 		int s = g(
-			detail::data(first)  , count, detail::basic_datatype<V1>{},
-			detail::data(d_first), count, detail::basic_datatype<V2>{},
+			detail::data(first)  , count, datatype<V1>{}(),
+			detail::data(d_first), count, datatype<V2>{}(),
 			impl_
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot scatter");}
