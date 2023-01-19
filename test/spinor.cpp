@@ -13,7 +13,7 @@ struct spinor {
 	bool                 operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
 };
 
-template<> struct mpi3::datatype<spinor> : mpi3::datatype<std::complex<double>[2]> {};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) provide nice syntax
+template<> struct mpi3::datatype<spinor> : datatype<std::complex<double>[2]> {};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) provide nice syntax
 
 auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 
