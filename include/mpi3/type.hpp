@@ -310,11 +310,11 @@ template<> inline type make_type<int>() { return mpi3::int_; }
 // TODO(correaa) remove this?
 template<class T> class datatype<T[2]> {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
  public:
-	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[2].get())>
-	R operator()() const {
+	template<class R = decltype(boost::mpi3::type{mpi3::detail::basic_datatype<T>{}}[2].get())>
+	R const& operator()() const {
 		static auto ret = std::invoke([]() {
 			assert(boost::mpi3::initialized());
-			return boost::mpi3::type{mpi3::datatype<T>{}()}[2].commit().get();
+			return boost::mpi3::type{mpi3::detail::basic_datatype<T>{}}[2].commit().get();
 		});
 		return ret;
 	}
