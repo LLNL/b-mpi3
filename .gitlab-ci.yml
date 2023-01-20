@@ -121,7 +121,7 @@ mpich-valgrind:
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
-    - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"
+    - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --suppressions=.valgrind_suppressions --gen-suppressions=all --error-exitcode=1"
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - make --jobs=2
     - ctest --output-on-failure
