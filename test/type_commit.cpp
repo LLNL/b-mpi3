@@ -25,10 +25,12 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) try 
 		assert(reinterpret_cast<char*>(&tup) + offset4 == reinterpret_cast<char*>(&std::get<4>(tup)));  // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert,cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic) for some compiler this is not a constexpr
 	}
 
-	mpi3::type t = mpi3::int_[100];  // mpi3::type::int_.contiguous(100);
+	mpi3::type const t = mpi3::int_[100];  // mpi3::type::int_.contiguous(100);
 
-	auto x = get_complex_2();
-	(void)x;
+	mpi3::type const s = mpi3::type::struct_(
+		mpi3::double_complex_,
+		mpi3::double_complex_
+	);
 
 	return 0;
 } catch(...) {

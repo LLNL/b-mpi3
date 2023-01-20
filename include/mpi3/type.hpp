@@ -1,5 +1,5 @@
 // -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2018-2022 Alfredo A. Correa
+// Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -138,7 +138,7 @@ struct type {
 		return committed_type{std::exchange(impl_, MPI_DATATYPE_NULL)};
 	}
 	template<class T> void commit_as(T const& /*unused*/) {return commit_as<T>();}
-	~type() noexcept{
+	~type() {
 		assert(impl_ != MPI_DATATYPE_NULL);
 		MPI_(Type_free)(&impl_);
 		// try {
@@ -167,7 +167,6 @@ struct type {
 	}
 	type stride(int stride) const {return resize(0, static_cast<MPI_Aint>(stride)*size());}
 
-	// MPI_Type_struct is deprecated
 	static type struct_(std::initializer_list<type> il) {  // NOLINT(readability-identifier-naming) meta
 		type ret;
 		std::vector<int> blocklen(il.size(), 1);
@@ -184,7 +183,7 @@ struct type {
 			// array_of_types.push_back(e.impl_);
 		});
 
-		MPI_Type_create_struct(
+		MPI_Type_create_struct(	// MPI_Type_struct is deprecated
 			static_cast<int>(il.size()),
 			blocklen.data(),
 			disp.data(),
