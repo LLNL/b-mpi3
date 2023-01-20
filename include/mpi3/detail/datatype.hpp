@@ -79,8 +79,9 @@ template<> struct basic_datatype<TypE> {           \
 	assert( (MpiiD) != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
 		return MpiiD;                              \
 	} \
-/*	static constexpr MPI_Datatype value = MpiiD;*/ \
+	inline static MPI_Datatype const value = MpiiD;  /*can't be constexpr in some MPI implementations*/ \
 }
+//inline MPI_Datatype const basic_datatype<TypE>::value = MpiiD
 
 // basic data types http://beige.ucs.indiana.edu/I590/node100.html
 MPI3_DECLARE_DATATYPE(char                   , MPI_CHAR);

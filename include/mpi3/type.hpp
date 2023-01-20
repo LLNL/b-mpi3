@@ -139,6 +139,8 @@ struct type {
 	}
 	template<class T> void commit_as(T const& /*unused*/) {return commit_as<T>();}
 	~type() noexcept{
+		assert(impl_ != MPI_DATATYPE_NULL);
+	//	MPI_(Type_free)(&impl_);
 		try {
 			if(mpi3::initialized() and not mpi3::finalized()) {
 				if(impl_ != MPI_DATATYPE_NULL) {MPI_Type_free(&impl_);}
@@ -249,26 +251,26 @@ struct type {
 //	static std::map<std::type_index, type const&> registered;
 };
 
-static type const          char_ {detail::basic_datatype<         char >{}};
-static type const unsigned_char_ {detail::basic_datatype<unsigned char >{}};
-static type const          short_{detail::basic_datatype<         short>{}};
-static type const unsigned_short_{detail::basic_datatype<unsigned short>{}};
-static type const          int_  {detail::basic_datatype<         int  >{}};
-static type const unsigned_int_  {detail::basic_datatype<unsigned int  >{}}; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const          long_ {detail::basic_datatype<         long >{}};
-static type const unsigned_long_ {detail::basic_datatype<unsigned long >{}}; static type const& unsigned_long = unsigned_long;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const float_         {detail::basic_datatype<float         >{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const      double_   {detail::basic_datatype<     double   >{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_double_   {detail::basic_datatype<long double   >{}}; static type const& long_double = long_double_;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_long_int_ {detail::basic_datatype<long long int >{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const float_int      {detail::basic_datatype<std::pair<float, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_int       {detail::basic_datatype<     long int >{}};
-static type const double_int_    {detail::basic_datatype<std::pair<double, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const short_int      {detail::basic_datatype<short int>{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const int_int        {detail::basic_datatype<std::pair<int, int>>{}}; // static type const& _2int = int_int;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_double_int{detail::basic_datatype<std::pair<long double, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const float_complex_ {detail::basic_datatype<std::complex<float >>{}};
-static type const double_complex_{detail::basic_datatype<std::complex<double>>{}};
+static type const&         char_   = reinterpret_cast<type const&>(detail::basic_datatype<         char              >::value);
+static type const& unsigned_char_  = reinterpret_cast<type const&>(detail::basic_datatype<unsigned char              >::value);
+static type const&          short_ = reinterpret_cast<type const&>(detail::basic_datatype<         short             >::value);
+static type const& unsigned_short_ = reinterpret_cast<type const&>(detail::basic_datatype<unsigned short             >::value);
+static type const&          int_   = reinterpret_cast<type const&>(detail::basic_datatype<         int               >::value);
+static type const& unsigned_int_   = reinterpret_cast<type const&>(detail::basic_datatype<unsigned int               >::value); static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const&          long_  = reinterpret_cast<type const&>(detail::basic_datatype<         long              >::value);
+static type const& unsigned_long_  = reinterpret_cast<type const&>(detail::basic_datatype<unsigned long              >::value); static type const& unsigned_long = unsigned_long;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& float_          = reinterpret_cast<type const&>(detail::basic_datatype<float                      >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const&      double_    = reinterpret_cast<type const&>(detail::basic_datatype<     double                >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& long_double_    = reinterpret_cast<type const&>(detail::basic_datatype<long double                >::value); static type const& long_double = long_double_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& long_long_int_  = reinterpret_cast<type const&>(detail::basic_datatype<long long int              >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& float_int       = reinterpret_cast<type const&>(detail::basic_datatype<std::pair<float, int>      >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& long_int        = reinterpret_cast<type const&>(detail::basic_datatype<     long int              >::value);
+static type const& double_int_     = reinterpret_cast<type const&>(detail::basic_datatype<std::pair<double, int>     >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& short_int       = reinterpret_cast<type const&>(detail::basic_datatype<short int                  >::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& int_int         = reinterpret_cast<type const&>(detail::basic_datatype<std::pair<int, int>        >::value); // static type const& _2int = int_int;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& long_double_int = reinterpret_cast<type const&>(detail::basic_datatype<std::pair<long double, int>>::value);  // NOLINT(fuchsia-statically-constructed-objects)
+static type const& float_complex_  = reinterpret_cast<type const&>(detail::basic_datatype<std::complex<float >       >::value);
+static type const& double_complex_ = reinterpret_cast<type const&>(detail::basic_datatype<std::complex<double>       >::value);
 
 template<class T> auto make_type() -> type;
 
