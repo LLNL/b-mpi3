@@ -140,12 +140,12 @@ struct type {
 	template<class T> void commit_as(T const& /*unused*/) {return commit_as<T>();}
 	~type() noexcept{
 		assert(impl_ != MPI_DATATYPE_NULL);
-	//	MPI_(Type_free)(&impl_);
-		try {
-			if(mpi3::initialized() and not mpi3::finalized()) {
-				if(impl_ != MPI_DATATYPE_NULL) {MPI_Type_free(&impl_);}
-			}
-		} catch(...) {}
+		MPI_(Type_free)(&impl_);
+		// try {
+		// 	if(mpi3::initialized() and not mpi3::finalized()) {
+		// 		if(impl_ != MPI_DATATYPE_NULL) {MPI_Type_free(&impl_);}
+		// 	}
+		// } catch(...) {}
 	}
 
 	type contiguous(int count) const {

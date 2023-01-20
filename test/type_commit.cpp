@@ -11,10 +11,10 @@
 
 namespace mpi3 = boost::mpi3;
 
-// auto get_complex_2() {
-// 	auto static ret = mpi3::type{mpi3::detail::basic_datatype<std::complex<double>>{}}[2].commit().get();
-// 	return ret;
-// }
+auto get_complex_2() {
+	auto static ret = mpi3::type{mpi3::detail::basic_datatype<std::complex<double>>{}}[2].commit().get();
+	return ret;
+}
 
 int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) try {
 
@@ -27,8 +27,8 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) try 
 
 	mpi3::type t = mpi3::int_[100];  // mpi3::type::int_.contiguous(100);
 
-//	auto x = get_complex_2();
-//	(void)x;
+	auto x = get_complex_2();
+	(void)x;
 
 	return 0;
 } catch(...) {
