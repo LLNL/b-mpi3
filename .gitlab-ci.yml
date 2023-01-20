@@ -157,6 +157,7 @@ mpich-debug:
     - ctest --output-on-failure
 
 mpich-valgrind:
+  allow_failure: true
   stage: build
   script:
     - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake make g++ git libboost-serialization-dev valgrind

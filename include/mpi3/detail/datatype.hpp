@@ -165,6 +165,8 @@ template<class T> class datatype {
  public:
 	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
 	R operator()() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
+	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
+	R get() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
 };
 
 template<class T, class = decltype(datatype<T>{}())>
