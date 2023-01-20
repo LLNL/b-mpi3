@@ -95,10 +95,8 @@ struct type {
 		(*this) = this->vector(1, 1, first.stride() * sizeof(E)).resize(0, first.stride() * sizeof(E));
 	}
 
- private:
-	MPI_Datatype impl_ = MPI_DATATYPE_NULL;
+	MPI_Datatype impl_ = MPI_DATATYPE_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
- public:
 	type() = default;  // delete; //: impl_(MPI_DATATYPE_NULL){}
 	type(type const& other) { MPI_Type_dup(other.impl_, &impl_); }
 	type(type&& other) noexcept : impl_{std::exchange(other.impl_, MPI_DATATYPE_NULL)} {}  // TODO(correaa) consider not making it default constructible or movable
@@ -307,28 +305,106 @@ template<> inline auto make_type<thrust::complex<double>>() -> type { return typ
 template<> inline type make_type<double>() { return mpi3::double_; }
 template<> inline type make_type<int>() { return mpi3::int_; }
 
-// TODO(correaa) remove this?
-template<class T> class datatype<T[2]> {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
- public:
-	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[2].get())>
-	R operator()() const {
-		static auto ret = std::invoke([]() {
-			assert(boost::mpi3::initialized());
-			return boost::mpi3::type{mpi3::datatype<T>{}()}[2].commit().get();
-		});
+// // TODO(correaa) remove this?
+// template<class T> class datatype<T[2]> {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+//  public:
+// 	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[2].get())>
+// 	R operator()() const {
+// 		static auto ret = std::invoke([]() {
+// 			assert(boost::mpi3::initialized());
+// 			return boost::mpi3::type{mpi3::datatype<T>{}()}[2].commit().get();
+// 		});
+// 		return ret;
+// 	}
+// };
+
+// template<class T, std::size_t D> class datatype<std::array<T, D>> {
+//  public:
+// 	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[D].get())>
+// 	R operator()() const {
+// 		static auto ret = std::invoke([]() {
+// 			assert(boost::mpi3::initialized());
+// 			return boost::mpi3::type{mpi3::datatype<T>{}()}[D].commit().get();  // cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays
+// 		});
+// 		return ret;
+// 	}
+// };
+
+
+template<class... Ts> struct struct_;
+
+template<class T1, class T2> struct struct_<std::pair<T1, T2>> : struct_<T1, T2> {};
+
+template<class T1> struct struct_<T1> {
+	static auto make() {
+		struct dummy {
+			T1 t1_;
+		};
+		const int nitems = 1;
+		std::array<int, 1> blocklengths = {1};
+		std::array<MPI_Datatype, 1> types = {datatype<T1>{}.get()};
+		std::array<MPI_Aint, 1> offsets {
+			offsetof(dummy, t1_)
+		};
+		mpi3::type ret;
+		MPI_Type_create_struct(nitems, blocklengths.data(), offsets.data(), types.data(), &ret.impl_);
 		return ret;
+	}
+	auto operator()() const {
+		static auto ret = make().commit();
+		return ret.get();
 	}
 };
 
-template<class T, std::size_t D> class datatype<std::array<T, D>> {
- public:
-	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[D].get())>
-	R operator()() const {
-		static auto ret = std::invoke([]() {
-			assert(boost::mpi3::initialized());
-			return boost::mpi3::type{mpi3::datatype<T>{}()}[D].commit().get();  // cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays
-		});
+template<class T1, class T2> struct struct_<T1, T2> {
+	static auto make() {
+		struct dummy {
+			T1 t1_;
+			T2 t2_;
+		};
+		const int nitems = 2;
+		std::array<int, 2> blocklengths = {1, 1};
+		std::array<MPI_Datatype, 2> types = {datatype<T1>{}.get(), datatype<T2>{}.get()};
+		std::array<MPI_Aint, 2> offsets {
+			offsetof(dummy, t1_),
+			offsetof(dummy, t2_)
+		};
+		mpi3::type ret;
+		MPI_Type_create_struct(nitems, blocklengths.data(), offsets.data(), types.data(), &ret.impl_);
 		return ret;
+	}
+	auto operator()() const {
+		static auto ret = make().commit();
+		return ret.get();
+	}
+};
+
+template<class T1, class T2, class T3> struct struct_<T1, T2, T3> {
+	static auto make() {
+		struct dummy {
+			T1 t1_;
+			T2 t2_;
+			T3 t3_;
+		};
+		const int nitems = 3;
+		std::array<int, 3> blocklengths = {1, 1, 1};
+		std::array<MPI_Datatype, 3> types = {
+			datatype<T1>{}.get(),
+			datatype<T2>{}.get(),
+			datatype<T3>{}.get()
+		};
+		std::array<MPI_Aint, 3> offsets {
+			offsetof(dummy, t1_),
+			offsetof(dummy, t2_),
+			offsetof(dummy, t3_)
+		};
+		mpi3::type ret;
+		MPI_Type_create_struct(nitems, blocklengths.data(), offsets.data(), types.data(), &ret.impl_);
+		return ret;
+	}
+	auto operator()() const {
+		static auto ret = make().commit();
+		return ret.get();
 	}
 };
 
