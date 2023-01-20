@@ -40,15 +40,17 @@ struct committed_type {
 
  public:
 	explicit operator MPI_Datatype() const {return impl_;}
+	MPI_Datatype get() const{return impl_;}
 };
 
 struct type {
-	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {  // NOLINT(bugprone-exception-escape) TODO(correaa) improve this global initialization
-		if(mpi3::initialized()) {MPI_(Type_dup)(dt, &impl_);}  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
-	}
+//	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {  // NOLINT(bugprone-exception-escape) TODO(correaa) improve this global initialization
+//		assert(mpi3::initialized());
+//		MPI_(Type_dup)(dt, &impl_);  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
+//	}
 
 	template<class T>
-	explicit type(detail::basic_datatype<T> bd) : impl_(bd) {}
+	explicit type(detail::basic_datatype<T> bd) : impl_{bd} {}
 
 	template<class T, typename = decltype(detail::basic_datatype<T>::value_f())>
 	explicit type(T const* /*unused*/) {MPI_Type_dup(detail::basic_datatype<T>::value_f(), &impl_);}
@@ -247,36 +249,34 @@ struct type {
 //	static std::map<std::type_index, type const&> registered;
 };
 
-// vvv TODO(correaa)
-// vvv this will work in clang-tidy 14 https://clang.llvm.org/extra/clang-tidy/
-// NOLINTBEGIN(fuchsia-statically-constructed-objects)
-static type const          char_ {MPI_CHAR           };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const unsigned_char  {MPI_UNSIGNED_CHAR  }; static type const& unsigned_char_ = unsigned_char;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const          short_{MPI_SHORT          };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const unsigned_short {MPI_UNSIGNED_SHORT }; static type const& unsigned_short_ = unsigned_short;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const          int_  {MPI_INT            };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const unsigned_int_  {MPI_UNSIGNED       }; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const          long_ {MPI_LONG           };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const unsigned_long  {MPI_UNSIGNED_LONG  }; static type const& unsigned_long_ = unsigned_long;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const float_         {MPI_FLOAT          };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const      double_   {MPI_DOUBLE         };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_double_   {MPI_LONG_DOUBLE    }; static type const& long_double = long_double_;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_long_int  {MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-statically-constructed-objects)
-static type const float_int      {MPI_FLOAT_INT      };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_int       {MPI_LONG_INT       };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const double_int     {MPI_DOUBLE_INT     };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const short_int      {MPI_SHORT_INT      };  // NOLINT(fuchsia-statically-constructed-objects)
-static type const int_int        {MPI_2INT           }; static type const& _2int = int_int;  // NOLINT(fuchsia-statically-constructed-objects)
-static type const long_double_int{MPI_LONG_DOUBLE_INT};  // NOLINT(fuchsia-statically-constructed-objects)
-// NOLINTEND(fuchsia-statically-constructed-objects)
+static type const          char_ {detail::basic_datatype<         char >{}};
+static type const unsigned_char_ {detail::basic_datatype<unsigned char >{}};
+static type const          short_{detail::basic_datatype<         short>{}};
+static type const unsigned_short_{detail::basic_datatype<unsigned short>{}};
+static type const          int_  {detail::basic_datatype<         int  >{}};
+static type const unsigned_int_  {detail::basic_datatype<unsigned int  >{}}; static type const& unsigned_int = unsigned_int_; static type const& unsigned_ = unsigned_int_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const          long_ {detail::basic_datatype<         long >{}};
+static type const unsigned_long_ {detail::basic_datatype<unsigned long >{}}; static type const& unsigned_long = unsigned_long;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const float_         {detail::basic_datatype<float         >{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const      double_   {detail::basic_datatype<     double   >{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_double_   {detail::basic_datatype<long double   >{}}; static type const& long_double = long_double_;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_long_int_ {detail::basic_datatype<long long int >{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const float_int      {detail::basic_datatype<std::pair<float, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_int       {detail::basic_datatype<     long int >{}};
+static type const double_int_    {detail::basic_datatype<std::pair<double, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const short_int      {detail::basic_datatype<short int>{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const int_int        {detail::basic_datatype<std::pair<int, int>>{}}; // static type const& _2int = int_int;  // NOLINT(fuchsia-statically-constructed-objects)
+static type const long_double_int{detail::basic_datatype<std::pair<long double, int>>{}};  // NOLINT(fuchsia-statically-constructed-objects)
+static type const float_complex_ {detail::basic_datatype<std::complex<float >>{}};
+static type const double_complex_{detail::basic_datatype<std::complex<double>>{}};
 
 template<class T> auto make_type() -> type;
 
-template<> inline auto make_type<         char>() -> type {return type{MPI_CHAR         };}
-template<> inline auto make_type<unsigned char>() -> type {return type{MPI_UNSIGNED_CHAR};}
+template<> inline auto make_type<         char>() -> type {return char_;}
+template<> inline auto make_type<unsigned char>() -> type {return unsigned_char_;}
 
-template<> inline auto make_type<std::complex<float >>() -> type {return type{MPI_CXX_FLOAT_COMPLEX };}
-template<> inline auto make_type<std::complex<double>>() -> type {return type{MPI_CXX_DOUBLE_COMPLEX};}
+template<> inline auto make_type<std::complex<float >>() -> type {return float_complex_;}
+template<> inline auto make_type<std::complex<double>>() -> type {return double_complex_;}
 
 #if defined(__NVCC__)
 template<> inline auto make_type<thrust::complex<float >>() -> type {return type{MPI_CXX_FLOAT_COMPLEX };}

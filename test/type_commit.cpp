@@ -27,6 +27,9 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator /*world*/) try 
 
 	mpi3::type t = mpi3::int_[100];  // mpi3::type::int_.contiguous(100);
 
+	auto x = get_complex_2();
+	(void)x;
+
 	return 0;
 } catch(...) {
 	return 1;
