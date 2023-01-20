@@ -1,12 +1,10 @@
 # -*-indent-tabs-mode:nil;c-basic-offset:2;tab-width:4;-*-
-# Copyright 2020-2022 Alfredo A. Correa
+# Copyright 2020-2023 Alfredo A. Correa
 
-image: debian:testing
+image: correaadock/gnudev
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  OMPI_ALLOW_RUN_AS_ROOT: 1
-  OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 
 openmpi:
   stage: build
@@ -157,16 +155,18 @@ mpich-debug:
     - ctest --output-on-failure
 
 mpich-valgrind:
+  image: correaadock/gnudev
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich ca-certificates cmake make g++ git libboost-serialization-dev valgrind
+    - apt-get install -qq -y --no-install-recommends libmpich-dev mpich
     - mpirun --version
-    - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3/test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
     - export VALGRIND_EXE="valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1"
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - make
+    - make --jobs=2
+    - export OMPI_ALLOW_RUN_AS_ROOT=1
+    - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
     - ctest --output-on-failure
   needs: ["mpich-debug"]
 
