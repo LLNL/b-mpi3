@@ -12,7 +12,7 @@
 namespace mpi3 = boost::mpi3;
 
 auto get_complex_2() {
-	auto static ret = mpi3::type{mpi3::basic_datatype<std::complex<double>>{}}[2].commit().get();
+	auto static ret = mpi3::type{mpi3::detail::basic_datatype<std::complex<double>>{}}[2].commit().get();
 	return ret;
 }
 
