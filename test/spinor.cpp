@@ -2,7 +2,9 @@
 // Copyright 2023 Alfredo A. Correa
 
 #include <mpi3/communicator.hpp>
-#include <mpi3/main.hpp>
+#include <mpi3/environment.hpp>
+
+//#include <mpi3/main.hpp>
 
 namespace mpi3 = boost::mpi3;
 
@@ -18,7 +20,11 @@ template<> struct mpi3::datatype<spinor> : mpi3::struct_<
 	std::complex<double>
 > {};
 
-auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
+mpi3::environment const mpienv{mpi3::thread::serialized};  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
+
+auto main(int /*argc*/, char** /*argv*/) -> int try {
+
+	mpi3::communicator world = mpienv.world();
 
     using namespace std::complex_literals;  // i
 
@@ -38,7 +44,6 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
 	static_assert(boost::mpi3::has_datatype<spinor>{});
-	return 0;
-} catch(...) {
+}catch(...){
 	return 1;
 }
