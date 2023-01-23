@@ -15,12 +15,12 @@ struct spinor {
 	bool                 operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
 };
 
+mpi3::environment const mpienv{mpi3::thread::serialized};  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
+
 template<> struct mpi3::datatype<spinor> : mpi3::struct_<
 	std::complex<double>,
 	std::complex<double>
 > {};
-
-mpi3::environment const mpienv{mpi3::thread::serialized};  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
 
 auto main(int /*argc*/, char** /*argv*/) -> int try {
 
