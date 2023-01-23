@@ -208,7 +208,7 @@ openmpi-cuda-12:
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12/bin/nvcc -DCMAKE_BUILD_TYPE=Debug -DENABLE_CUDA=1
-    - cmake --parallel 2 --build . || make VERBOSE=1
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
