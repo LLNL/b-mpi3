@@ -43,16 +43,17 @@ struct committed_type {
 
 struct type {
 	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {  // NOLINT(bugprone-exception-escape) TODO(correaa) improve this global initialization
-		if(mpi3::initialized()) {  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
-			MPI_(Type_dup)(dt, &impl_);
-		}
+	 	if(mpi3::initialized()) {  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
+	 		MPI_(Type_dup)(dt, &impl_);
+	 	}
 	}
 
 	template<class T>
-	explicit type(detail::basic_datatype<T> bd) : impl_(bd) {}
+	explicit type(detail::basic_datatype<T> bd) : impl_(bd) {
+	}
 
-	template<class T, typename = decltype(detail::basic_datatype<T>::value_f())>
-	explicit type(T const* /*unused*/) { MPI_Type_dup(detail::basic_datatype<T>::value_f(), &impl_); }
+	// template<class T, typename = decltype(detail::basic_datatype<T>::value_f())>
+	// explicit type(T const* /*unused*/) { MPI_Type_dup(detail::basic_datatype<T>::value_f(), &impl_); }
 
 	template<
 		class T,
@@ -97,7 +98,9 @@ struct type {
 
 	MPI_Datatype impl_ = MPI_DATATYPE_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
-	type() = default;  // delete; //: impl_(MPI_DATATYPE_NULL){}
+	type() {
+	//	std::clog << "ctor type()" << std::endl;
+	}
 	type(type const& other) { MPI_Type_dup(other.impl_, &impl_); }
 	type(type&& other) noexcept : impl_{std::exchange(other.impl_, MPI_DATATYPE_NULL)} {}  // TODO(correaa) consider not making it default constructible or movable
 
@@ -136,8 +139,9 @@ struct type {
 	}
 	template<class T> void commit_as(T const& /*unused*/) { return commit_as<T>(); }
 	~type() noexcept {
+		// std::clog << "dtor type" << std::endl;
 		try {
-			if(mpi3::initialized() and not mpi3::finalized()) {
+			if(mpi3::initialized() and not mpi3::finalized()) {  // TODO(correaa) types defined statically will generally leak on exit
 				if(impl_ != MPI_DATATYPE_NULL) {
 					MPI_Type_free(&impl_);
 				}
