@@ -4,18 +4,19 @@
 #include <mpi3/communicator.hpp>
 #include <mpi3/environment.hpp>
 
-//#include <mpi3/main.hpp>
+// #include <mpi3/main.hpp>
 
 namespace mpi3 = boost::mpi3;
 
 struct spinor {
 	std::complex<double> up;  // NOLINT(misc-non-private-member-variables-in-classes)
 	std::complex<double> dn;  // NOLINT(misc-non-private-member-variables-in-classes)
-	bool                 operator==(spinor const& other) const { return up == other.up and dn == other.dn; }
-	bool                 operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
+
+	bool operator==(spinor const& other) const { return up == other.up and dn == other.dn; }
+	bool operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
 };
 
-mpi3::environment const mpienv{mpi3::thread::serialized};  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
+mpi3::environment const mpienv;  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
 
 template<> struct mpi3::datatype<spinor> : mpi3::struct_<
 	std::complex<double>,
@@ -26,7 +27,7 @@ auto main(int /*argc*/, char** /*argv*/) -> int try {
 
 	mpi3::communicator world = mpienv.world();
 
-    using namespace std::complex_literals;  // i
+	using namespace std::complex_literals;  // i
 
 	switch(world.rank()) {
 	case 0: {
@@ -44,6 +45,6 @@ auto main(int /*argc*/, char** /*argv*/) -> int try {
 	}
 
 	static_assert(boost::mpi3::has_datatype<spinor>{});
-}catch(...){
+} catch(...) {
 	return 1;
 }
