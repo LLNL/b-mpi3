@@ -98,9 +98,7 @@ struct type {
 
 	MPI_Datatype impl_ = MPI_DATATYPE_NULL;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
 
-	type() {
-	//	std::clog << "ctor type()" << std::endl;
-	}
+	type() = default;// {std::clog << "ctor type()" << std::endl;}
 	type(type const& other) { MPI_Type_dup(other.impl_, &impl_); }
 	type(type&& other) noexcept : impl_{std::exchange(other.impl_, MPI_DATATYPE_NULL)} {}  // TODO(correaa) consider not making it default constructible or movable
 
