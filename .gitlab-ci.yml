@@ -15,7 +15,7 @@ openmpi:
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - make --jobs=2
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
 
 icpc-intelmpi:
@@ -29,7 +29,7 @@ icpc-intelmpi:
     - mkdir build && cd build
     - icpc --version
     - CXX=icpc CXXFLAGS="-diag-disable=593,2196,1786,1478" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
-    - make --jobs=2
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
 
@@ -44,7 +44,7 @@ icpx-intelmpi:
     - mkdir build && cd build
     - icpx --version
     - CXX=icpx CXXFLAGS="-O1" cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - make --jobs=2
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - ctest --output-on-failure
   needs: ["openmpi"]
 
@@ -59,7 +59,7 @@ openmpi-clang:
     - clang++ --version
     - mpirun --version
     - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug
-    - make --jobs=2
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
@@ -73,7 +73,7 @@ openmpi-clang20:
     - clang++ --version
     - mpirun --version
     - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
-    - make --jobs=2 || make VERBOSE=1
+    - cmake --build --parallel 2 . || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi-clang"]
 
@@ -189,20 +189,21 @@ inq-openmpi:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
+# - export DEBIAN_FRONTEND=noninteractive
+# - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates git gnupg software-properties-common
+# - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
+# - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
+# - add-apt-repository contrib
+# - apt-get update
+# - apt-get -y install cuda
+
 openmpi-cuda-12:
   stage: build
   allow_failure: false
-  image: debian:stable
+  image: nvcr.io/nvidia/nvhpc:22.11-devel-cuda_multi-ubuntu20.04
   script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates git gnupg software-properties-common
-    - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
-    - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
-    - add-apt-repository contrib
-    - apt-get update
-    - apt-get -y install cuda
     - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
-    - /usr/local/cuda-12/bin/nvcc --version
+    - /usr/local/cuda/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -212,23 +213,17 @@ openmpi-cuda-12:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
+# - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
+# - mkdir /opt/cmake
+# - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+# - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+
 inq-cuda-12-openmpi-compileonly:
   stage: build
   allow_failure: true
-  image: debian:stable
+  image: nvcr.io/nvidia/nvhpc:22.11-devel-cuda_multi-ubuntu20.04
   script:
-    - export DEBIAN_FRONTEND=noninteractive
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates gnupg software-properties-common
-    - apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/3bf863cc.pub
-    - add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/ /"
-    - add-apt-repository contrib
-    - apt-get update
-    - apt-get -y install cuda
-    - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev gfortran g++ pkg-config make git ca-certificates wget
-    - wget https://cmake.org/files/v3.21/cmake-3.21.3-linux-x86_64.sh --no-verbose # following https://askubuntu.com/a/865294/15943
-    - mkdir /opt/cmake
-    - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-    - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+    - apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev gfortran g++ pkg-config make git ca-certificates wget
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
