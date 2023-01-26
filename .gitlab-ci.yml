@@ -202,7 +202,7 @@ openmpi-cuda-12:
   allow_failure: false
   image: nvcr.io/nvidia/nvhpc:22.11-devel-cuda_multi-ubuntu20.04
   script:
-    - apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
+    - apt-get update && apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
     - /usr/local/cuda/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
