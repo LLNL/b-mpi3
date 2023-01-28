@@ -14,7 +14,7 @@ FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi
 # FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
 FetchContent_MakeAvailable(multi)
 
-find_package(MPI REQUIRED)
+find_package(MPI REQUIRED)  # install MPI, e.g. sudo dnf install mpich-devel
 
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
 link_libraries(${MPI_CXX_LIBRARIES})
