@@ -203,7 +203,7 @@ openmpi-cuda-11:
   allow_failure: false
   image: nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04
   script:
-    - apt-get update && apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
+    - apt-get update && apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make git
     - /usr/local/cuda-11/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
