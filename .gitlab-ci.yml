@@ -203,7 +203,7 @@ openmpi-cuda-12:
   image: nvcr.io/nvidia/nvhpc:22.11-devel-cuda_multi-ubuntu20.04
   script:
     - apt-get update && apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make
-    - /usr/local/cuda/bin/nvcc --version
+    - /usr/local/cuda-12/bin/nvcc --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
