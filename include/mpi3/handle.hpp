@@ -134,7 +134,13 @@ struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, I
 	explicit nondefault_handle(uninitialized /*unused*/){};
 	nondefault_handle(nondefault_handle const&) = delete;
 	nondefault_handle(nondefault_handle&&) = delete;
-	~nondefault_handle(){if(not predefined_) {FreeFunction(&impl_);}}
+	~nondefault_handle(){
+		int fin_int; MPI_Finalized(&fin_int);
+		bool const fin = fin_int?true:false;
+		if(not fin) {
+			if(not predefined_) {FreeFunction(&impl_);}
+		}
+	}
 	void swap(nondefault_handle& other){std::swap(impl_, other.impl_);}
 	nondefault_handle& operator=(nondefault_handle const& other) = delete;
 	nondefault_handle& operator=(nondefault_handle&& other) = delete;
