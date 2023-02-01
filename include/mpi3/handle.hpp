@@ -135,9 +135,9 @@ struct nondefault_handle : caller<nondefault_handle<Self, Impl, FreeFunction>, I
 	nondefault_handle(nondefault_handle const&) = delete;
 	nondefault_handle(nondefault_handle&&) = delete;
 	~nondefault_handle(){
-		int fin_int; MPI_Finalized(&fin_int);
+		int fin; MPI_Finalized(&fin);
 		bool const fin = fin_int?true:false;
-		if(not fin) {
+		if(not static_cast<bool>(fin)) {
 			if(not predefined_) {FreeFunction(&impl_);}
 		}
 	}
