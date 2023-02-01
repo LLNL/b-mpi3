@@ -52,9 +52,53 @@ auto main(int /*argc*/, char** /*argv*/) -> int try { // NOLINT(bugprone-excepti
 
 		world.all_reduce_n(w.begin(), w.size(), sum.begin());
 
-		std::cout << sum[0].x <<" "<< w[0].x*world.size() << std::endl;
 		assert(sum[0].x == w[0].x*world.size() );
 		assert(sum[1].y == w[1].y*world.size() );
+	}
+	{
+		std::vector<vec3> w = { vec3{1.0, 2.0, 3.0}, vec3{4.0, 5.0, 6.0} };
+		std::vector<vec3> sum(2);
+
+		world.all_reduce(w.begin(), w.end(), sum.begin());
+
+		assert(sum[0].x == w[0].x*world.size() );
+		assert(sum[1].y == w[1].y*world.size() );
+	}
+	{
+		std::vector<vec3> w = { vec3{1.0, 2.0, 3.0}, vec3{4.0, 5.0, 6.0} };
+		std::vector<vec3> sum(2);
+
+		world.all_reduce_n(w.begin(), w.size(), sum.begin());
+
+		assert(sum[0].x == w[0].x*world.size() );
+		assert(sum[1].y == w[1].y*world.size() );
+	}
+	{
+		std::vector<vec3> w = { vec3{1.0, 2.0, 3.0}, vec3{4.0, 5.0, 6.0} };
+		std::vector<vec3> sum(2);
+
+		world.all_reduce(w.begin(), w.end(), sum.begin());
+
+		assert(sum[0].x == w[0].x*world.size() );
+		assert(sum[1].y == w[1].y*world.size() );
+	}
+	{
+		std::vector<vec3> w = { vec3{1.0, 2.0, 3.0}, vec3{4.0, 5.0, 6.0} };
+		auto w_copy = w;
+
+		world.all_reduce_n(w.begin(), w.size());
+
+		assert(w[0].x == w_copy[0].x*world.size() );
+		assert(w[1].y == w_copy[1].y*world.size() );
+	}
+	{
+		std::vector<vec3> w = { vec3{1.0, 2.0, 3.0}, vec3{4.0, 5.0, 6.0} };
+		auto w_copy = w;
+
+		world.all_reduce(w.begin(), w.end());
+
+		assert(w[0].x == w_copy[0].x*world.size() );
+		assert(w[1].y == w_copy[1].y*world.size() );
 	}
 
 	static_assert(boost::mpi3::has_datatype<vec3>{});
