@@ -43,8 +43,11 @@ endif()
 find_package(Boost REQUIRED)
 if(Boost_FOUND)
   set(HAVE_LIBBOOST 1)
-  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-  message(STATUS "Setting Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+#  include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+#  message(STATUS "Setting Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+
+  include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+  message(STATUS "Setting Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 endif()
 
 if(ENABLE_CUDA)
@@ -70,8 +73,10 @@ set(TEST_SRCS
 	communicator_barrier.cpp
 	communicator_divide.cpp
 	datatype.cpp
+  datatype_struct_vector3.cpp
   deino_all_to_all.cpp
   deino_broadcast.cpp
+  deino_op_create.cpp
 	gather2.cpp
 	group.cpp
 	communicator_cctor.cpp
