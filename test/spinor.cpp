@@ -16,7 +16,7 @@ struct spinor {
 	bool operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
 };
 
-mpi3::environment const mpienv;  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp)
+mpi3::environment mpienv;  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp,cppcoreguidelines-avoid-non-const-global-variables)
 
 template<> struct mpi3::datatype<spinor> : mpi3::struct_<
 	std::complex<double>,
