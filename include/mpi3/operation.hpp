@@ -147,7 +147,10 @@ struct operation<double> {
 
 template<>
 struct operation<mpi3::vlp<int> > {
+ private:
 	MPI_Op impl_;
+
+ public:
 	// explicit operation(std::plus<> /*op*/) : impl_{MPI_SUM} {}
 	// explicit operation(std::plus<double> /*op*/) : impl_{MPI_SUM} {}
 
