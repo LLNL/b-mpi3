@@ -116,7 +116,7 @@ void wait_all(ContRequestIterator it1, ContRequestIterator it2){
 
 template<class... Args>
 void wait(Args&&... args){
-	auto move_impl = [](request&& r)->MPI_Request{	MPI_Request ret = r.impl_;
+	auto move_impl = [](request&& r)->MPI_Request{	MPI_Request const ret = r.impl_;
 		r.impl_ = MPI_REQUEST_NULL;
 		return ret;
 	};
