@@ -116,7 +116,7 @@ void wait_all(ContRequestIterator it1, ContRequestIterator it2){
 
 template<class... Args>
 void wait(Args&&... args){
-	auto move_impl = [](request&& r)->MPI_Request{	MPI_Request const ret = r.impl_;
+	auto move_impl = [](request&& r)->MPI_Request{	MPI_Request const ret = r.impl_;  // NOLINT(misc-misplaced-const) MPI_Request is a pointer itself in some MPI
 		r.impl_ = MPI_REQUEST_NULL;
 		return ret;
 	};
