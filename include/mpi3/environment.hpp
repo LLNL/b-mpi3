@@ -3,6 +3,7 @@
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
 #define BOOST_MPI3_ENVIRONMENT_HPP
+
 #pragma once
 
 #include "./communicator.hpp"
@@ -262,7 +263,7 @@ class environment {
 		return instance;
 	}
 
-	[[nodiscard]] communicator world() const {  // NOLINT(readability-convert-member-functions-to-static) to force instance
+	[[nodiscard]] communicator world() {  // NOLINT(readability-convert-member-functions-to-static) to force instance
 		communicator ret{get_world_instance()};
 		ret.set_name("world");
 		return ret;
