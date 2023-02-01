@@ -1881,7 +1881,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class It1, class Size, class It2, class Op = std::plus<>, typename = decltype(static_cast<void*>(detail::data(std::declval<It2>())))>
 	auto all_reduce_n(
-		It1 first, 
+		It1 first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
@@ -1935,7 +1935,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
 		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
 	>
-	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){
+	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/) {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 		static mpi3::operation<typename std::iterator_traits<It1>::value_type> const combine{Op{}};  // will leak?
 		MPI_(Allreduce)(in_place, data_adl(first), static_cast<count_type>(count), datatype<V1>{}(), &combine, impl_);
