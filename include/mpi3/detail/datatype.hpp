@@ -23,8 +23,12 @@ namespace mpi3 {
 
 template<class T>
 struct vlp {  // value location pair
-	T value;
-	int location;
+	T value;  // NOLINT(misc-non-private-member-variables-in-classes)
+	int location;  // NOLINT(misc-non-private-member-variables-in-classes)
+	bool operator<(vlp<T> const& other) const {
+	//  if(value == other.value) {return location < other.location;}  // partial order on purpose?
+		return value < other.value;
+	}
 };
 
 namespace detail {
