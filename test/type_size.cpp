@@ -47,6 +47,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 			float a;
 			int b;
 		};
+		[[maybe_unused]]  // nvcc false warning
 		foo_t foo{};
 
 		foo.a = 1.2F;
