@@ -1796,40 +1796,40 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		reduce_value(t, ret, op, root); // if(rank() == root) return optional<T>(ret);
 		return ret;
 	}
-	template<class It1, class Size, class It2, class Op, class PredefinedOp>
+	template<class It1, class Size, class It2, class Op>
 	It2 reduce_n(
 		It1 first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
-		Size count, 
+		Size count,
 		It2 d_first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Op /*operation*/,  // TODO(correaa) why value is not used?
-		PredefinedOp /*operation*/,  // TODO(correaa) why value is not used?
 		int root
 	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{});
+		static mpi3::operation<typename std::iterator_traits<It1>::value_type> const combine{Op{}};  // will leak?
 		MPI_(Reduce)(
 			detail::data(first), detail::data(d_first), static_cast<count_type>(count),
-			datatype<typename std::iterator_traits<It2>::value_type>{}(), PredefinedOp{}, 
+			datatype<typename std::iterator_traits<It2>::value_type>{}(), &combine,
 			root, impl_
 		);
 		return rank() == root?d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(count):d_first;
 	}
 
-	template<class It1, class Size, class It2, class Op>
-	It2 reduce_n(It1 first, Size count, It2 d_first, Op op, int root = 0) {
+	template<class It1, class Size, class It2, class Op = std::plus<> >
+	It2 reduce_n(It1 first, Size count, It2 d_first, Op op = {}, int root = 0) {
 		return reduce_n(
-			first, 
+			first,
 				detail::iterator_category_t<It1>{},
 				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			count, 
+			count,
 			d_first,
 				detail::iterator_category_t<It2>{},
 				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
-			op, 
-				predefined_operation<Op>{},
+			op,
+			//	predefined_operation<Op>{},
 			root
 		);
 	}
@@ -1879,43 +1879,32 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return ml.location == rank()? &t : nullptr;
 	}
 
-	template<
-		class It1, class Size, class It2, class Op = std::plus<>, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class V2 = typename std::iterator_traits<It2>::value_type,
-		class P1 = decltype(detail::data(It1{})), class P2 = decltype(detail::data(It2{})),
-		typename = std::enable_if_t<std::is_same<V1, V2>{}>,
-		class PredefinedOp = predefined_operation<Op>,
-		typename = decltype(predefined_operation<Op>::value)
-	>
-	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op /*op*/ = {}){
-		using detail::data;
-		int s = MPI_Allreduce(data(first), detail::data(d_first), count, datatype<V1>{}(), PredefinedOp{}/*op*/, impl_);
-		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot reduce n");}
-	}
-	template<class It1, class Size, class It2, class Op = std::plus<>, class PredefinedOp, typename = decltype(static_cast<void*>(detail::data(std::declval<It2>())))>
+	template<class It1, class Size, class It2, class Op = std::plus<>, typename = decltype(static_cast<void*>(detail::data(std::declval<It2>())))>
 	auto all_reduce_n(
-		It1 first, 
+		It1 first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
 		Size count,
 		It2 d_first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
-		Op /*operation*/,  // TODO(correaa) why is not used?
-			PredefinedOp /*unused*/  // TODO(correaa) why is this not used?
+		Op /*operation*/  // TODO(correaa) why is not used?
 	) {
 		static_assert(std::is_same<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It2>::value_type>{});
 		using count_type = int;
+		static mpi3::operation<typename std::iterator_traits<It1>::value_type> const combine{Op{}};  // will leak?
 		MPI_(Allreduce)(
 			detail::data(first), detail::data(d_first), static_cast<count_type>(count), datatype<typename std::iterator_traits<It1>::value_type>{}(),  // TODO(correaa) use safe cast
-			PredefinedOp{}/*op*/, impl_
+			&combine, impl_
 		);
 		return d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(count);
 	}
+
 	template<
 		class It1, class Size, class It2, class Op = std::plus<>,
 		class VC1 = detail::value_category_t<typename std::iterator_traits<It1>::value_type>,
-		class VC2 = detail::value_category_t<typename std::iterator_traits<It2>::value_type>
+		class VC2 = detail::value_category_t<typename std::iterator_traits<It2>::value_type>,
+		class = decltype(std::declval<typename std::iterator_traits<It2>::reference>() = std::declval<Op>()(typename std::iterator_traits<It1>::value_type{}, typename std::iterator_traits<It1>::value_type{}))
 	>
 	It2 all_reduce_n(It1 first, Size count, It2 d_first, Op op = {}) {
 		return all_reduce_n(
@@ -1926,8 +1915,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			d_first,
 				detail::iterator_category_t<It2>{},
 				VC2{},
-			op,
-				predefined_operation<Op>{}
+			op
 		);
 	}
 	template<typename It1, typename It2, class Op = std::plus<>>
@@ -1943,19 +1931,19 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  public:
 	template<
-		class It1, class Size, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
-		class PredefinedOp = predefined_operation<Op>, class = decltype(PredefinedOp{})
-	>
-	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/){ // TODO(correaa) check why op is not used 
-		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
-		MPI_(Allreduce)(in_place, data_adl(first), count, datatype<V1>{}(), PredefinedOp{}, impl_);
-	}
-	template<
 		class It1, class Size, class Op = std::plus<>,
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
-		class PredefinedOp = predefined_operation<Op>//,
-	//	typename = decltype(predefined_operation<Op>::value)
+		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
+	>
+	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/) {
+		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
+		static mpi3::operation<typename std::iterator_traits<It1>::value_type> const combine{Op{}};  // will leak?
+		MPI_(Allreduce)(in_place, data_adl(first), static_cast<count_type>(count), datatype<V1>{}(), &combine, impl_);
+	}
+
+	template<
+		class It1, class Size, class Op = std::plus<>,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{}))
 	>
 	auto all_reduce_n(It1 first, Size count, Op op = {})
 	->decltype(all_reduce_in_place_n(first, count, op)) {
@@ -1974,11 +1962,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
 	template<
-		class It1, class Size, class Op = std::plus<>, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
-		class PredefinedOp = predefined_operation<Op>
+		class It1, class Size, class Op = std::plus<>,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})),
+		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
 	>
-	auto reduce_n(It1 first, Size count, Op op = {}, int root = 0){
+	auto reduce_n(It1 first, Size count, Op op = {}, int root = 0) {
 		if(rank() == root) {return reduce_in_place_n(first, count, op, root);}
 		return reduce_n(first, 0, nullptr, op, root);
 	}
@@ -1987,22 +1975,41 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
 		class PredefinedOp = predefined_operation<Op>
 	>
-	auto reduce_in_place(It1 first, It1 last, Op op, int root = 0){
+	auto reduce_in_place(It1 first, It1 last, Op op, int root = 0) {
 		return reduce_in_place_n(first, std::distance(first, last), op, root);
 	}
+
 	template<
-		class It1, class Op = std::plus<>, 
-		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})), 
-		class PredefinedOp = predefined_operation<Op>
+		class It1, class Op = std::plus<>,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})),
+		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
 	>
-	auto reduce(It1 first, It1 last, Op op = {}, int root = 0){
+	auto reduce(It1 first, It1 last, Op op = {}, int root = 0) {
 		return reduce_n(first, std::distance(first, last), op, root);
 	}
 
+	template<
+		class It1, class It2, class Op = std::plus<>,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})),
+		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
+	>
+	auto reduce(It1 first, It1 last, It2 d_first, Op op = {}, int root = 0) {
+		return reduce_n(first, std::distance(first, last), d_first, op, root);
+	}
+
+	template<
+		class It1, class Op = std::plus<>,
+		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(detail::data(It1{})),
+		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
+	>
+	auto all_reduce(It1 first, It1 last, Op op = {}) {
+		return all_reduce_in_place_n(first, std::distance(first, last), op);
+	}
+
  private:
-	template<class ReducePolicy, class It1, class Size, class It2, class Op, 
-		class V1 = typename std::iterator_traits<It1>::value_type, 
-		class V2 = typename std::iterator_traits<It2>::value_type 
+	template<class ReducePolicy, class It1, class Size, class It2, class Op,
+		class V1 = typename std::iterator_traits<It1>::value_type,
+		class V2 = typename std::iterator_traits<It2>::value_type
 	>
 	auto reduce_n(
 		ReducePolicy rp,

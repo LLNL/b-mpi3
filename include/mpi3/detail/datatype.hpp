@@ -23,8 +23,12 @@ namespace mpi3 {
 
 template<class T>
 struct vlp {  // value location pair
-	T value;
-	int location;
+	T value;  // NOLINT(misc-non-private-member-variables-in-classes)
+	int location;  // NOLINT(misc-non-private-member-variables-in-classes)
+	bool operator<(vlp<T> const& other) const {
+	//  if(value == other.value) {return location < other.location;}  // partial order on purpose?
+		return value < other.value;
+	}
 };
 
 namespace detail {
@@ -74,12 +78,12 @@ class packed {
 template<class T> struct basic_datatype;
 
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define MPI3_DECLARE_DATATYPE(TypE, MpiiD)         \
-template<> struct basic_datatype<TypE> {           \
-/*	constexpr*/ operator MPI_Datatype() const {    \
-	assert(MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL );  			\
-	assert( (MpiiD) != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
-		return MpiiD;                              \
+#define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
+template<> struct basic_datatype<TypE> { \
+/*	constexpr*/ operator MPI_Datatype() const { \
+	assert(MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL );  /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert)*/ \
+	assert( (MpiiD) != MPI_DATATYPE_NULL );            /* NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) in some MPI distros this is not constexpr */ /*this system doesn't support this type*/ \
+		return MpiiD; \
 	} \
 	auto get() const -> MPI_Datatype {return MpiiD;} \
 /*	static constexpr MPI_Datatype value = MpiiD;*/ \
