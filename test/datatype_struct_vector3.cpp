@@ -100,7 +100,6 @@ auto main(int /*argc*/, char** /*argv*/) -> int try { // NOLINT(bugprone-excepti
 		assert(w[0].x == w_copy[0].x*world.size() );
 		assert(w[1].y == w_copy[1].y*world.size() );
 	}
-
 	static_assert(boost::mpi3::has_datatype<vec3>{});
 } catch(...) {
 	throw;

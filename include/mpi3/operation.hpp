@@ -7,6 +7,11 @@
 #include <mpi3/detail/datatype.hpp>
 #include <mpi3/handle.hpp>
 
+
+#if defined(__NVCC__)
+#include <thrust/transform.h>
+#endif
+
 #include <algorithm>  // std::transform_n
 #include <utility> // std::forward
 
@@ -19,22 +24,32 @@ struct commutative_operation;
 template<class T>
 struct builtin_operation;
 
-template<class T>
+template<class T, class P = T*>
 struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> { // user_operation, operator_ . operator is a C++ keyword
 	using base = typename detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free>;
 	using typename base::nondefault_handle;
 	operation() = delete;
 
-	template<class Op, class TT = T>
+	template<class Op>
 	// NOLINTNEXTLINE(bugprone-easily-swappable-parameters) signature is fixed
 	constexpr static void combine(void const* in, void* inout, int const* len, MPI_Datatype* /*dtype*/) {  // cppcheck-suppress constParameter ; signature is fixed
-		auto const* in_t    = reinterpret_cast<T const*>(in   );  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-		auto      * inout_t = reinterpret_cast<T      *>(inout);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-	//  assert( dtype == mpi3::datatype<typename Op::first_argument_type>{}() );
-		using std::transform;
-		transform(
+		auto in_t    = reinterpret_cast<typename std::pointer_traits<P>::template rebind<T const>&>(in   );  // NOLINT(llvm-qualified-auto,readability-qualified-auto,cppcoreguidelines-pro-type-reinterpret-cast)
+		auto inout_t = reinterpret_cast<                             P                           &>(inout);  // NOLINT(llvm-qualified-auto,readability-qualified-auto,cppcoreguidelines-pro-type-reinterpret-cast)
+		#if defined(__NVCC__)
+		thrust::transform(
+		#else
+		std::transform(
+		#endif
 			in_t, std::next(in_t, *len), inout_t, inout_t,
-			[](auto const& a, auto&& b) {return Op{}(a, std::forward<decltype(b)>(b));}
+			[]
+			#if defined(__NVCC__)
+			__host__ __device__
+			#endif
+			(T const& a, T const& b)
+			#if not defined(__NVCC__)
+			constexpr
+			#endif
+			{return Op{}(a, b);}
 		);
 	//	for(int i = 0; i != *len; i++) {
 	//		inout_t[i] = Op{}(std::move(inout_t[i]), in_t[i]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -43,7 +58,7 @@ struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> 
 
 	public:
 	template<class F>
-	explicit operation(F&& /*f*/) : base(detail::uninitialized{}) {
+	explicit operation(F const& /*f*/) : base(detail::uninitialized{}) {
 		MPI_Op_create(reinterpret_cast<MPI_User_function*>(&combine<F>), /*commutative*/ true, &(this->impl_));  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 	}
 
@@ -100,31 +115,31 @@ template<class T = void>
 using multiplies = std::multiplies<T>;
 
 template<class T = void> struct min {
-	T const& operator()(T const& t1, T const& t2) const {return std::min(t1, t2);}
+	constexpr T const& operator()(T const& t1, T const& t2) const {return std::min(t1, t2);}
 };
 template<> struct min<void>{
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
+	template<class T1, class T2> constexpr decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
 template<class T = void> struct max {
-	T const& operator()(T const& t1, T const& t2) const {return std::max(t1, t2);}
+	constexpr T const& operator()(T const& t1, T const& t2) const {return std::max(t1, t2);}
 };
 template<> struct max<void> {
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+	template<class T1, class T2> constexpr decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
 template<class T = void> struct max_loc {  // the only differences is that argument is assumed to be a pair, and second element is int
-	T const& operator()(T const& t1, T const& t2) const {std::max(t1, t2);}
+	constexpr T const& operator()(T const& t1, T const& t2) const {std::max(t1, t2);}
 };
 template<> struct max_loc<void> {
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
+	template<class T1, class T2> constexpr decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::max(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
 template<class T = void> struct min_loc {  // the only differences is that argument is assumed to be a pair, and second element is int
-	T const& operator()(T const& t1, T const& t2) const {std::min(t1, t2);}
+	constexpr T const& operator()(T const& t1, T const& t2) const {std::min(t1, t2);}
 };
 template<> struct min_loc<void> {
-	template<class T1, class T2> decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
+	template<class T1, class T2> constexpr decltype(auto) operator()(T1&& t1, T2&& t2) const {return std::min(std::forward<T1>(t1), std::forward<T2>(t2));}
 };
 
 template<>
