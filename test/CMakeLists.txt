@@ -101,6 +101,7 @@ set(TEST_SRCS
 	reduce_maxloc.cpp
 	ring.cpp
 	shared_mutex.cpp
+  send_complex.cpp
 	simple_send_receive.cpp
 	simple_broadcast.cpp
   spinor.cpp
