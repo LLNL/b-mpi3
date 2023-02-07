@@ -118,7 +118,7 @@ mpich-valgrind:
   stage: build
   allow_failure: true
   script:
-    - apt-get install -qq -y --no-install-recommends libmpich-dev mpich
+    - apt update -qq && apt-get install -qq -y --no-install-recommends libmpich-dev mpich
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
