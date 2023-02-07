@@ -115,6 +115,8 @@ MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_DOUBLE_COMPLEX);
 
 // MPI3_DECLARE_DATATYPE(cxx_2double_complex    , MPI_2DOUBLE_COMPLEX);  // not available in mpich
 
+// TODO(correaa) these types below probably don't behave correctly for reductions with multiplication
+
 MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);
@@ -165,13 +167,21 @@ template<class T> constexpr bool is_basic_v = is_basic<T>::value;
 
 template<class T> class datatype;
 
-template<class T> class datatype {
+template<class T> class default_datatype {
  public:
 	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
 	R operator()() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
 	template<class TT = T, class R = decltype(boost::mpi3::detail::basic_datatype<TT>{}.get())>
 	R get() const { return boost::mpi3::detail::basic_datatype<T>{}.get(); }
 };
+
+template<class T>
+auto datatype_detect(...) -> default_datatype<T>;
+
+template<class T, class U, class RealType = decltype(U{}.real()), class = decltype(U{}.imag())>
+auto datatype_detect(U const&) -> default_datatype<std::complex<RealType>>;
+
+template<class T> class datatype :  public decltype(datatype_detect<T>(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg) detection idiom
 
 template<class T, class = decltype(datatype<T>{}())>
 std::true_type  has_datatype_aux(T  );

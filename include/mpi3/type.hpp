@@ -299,6 +299,9 @@ template<> inline auto make_type<unsigned char>() -> type { return type{MPI_UNSI
 template<> inline auto make_type<std::complex<float>>() -> type { return type{MPI_CXX_FLOAT_COMPLEX}; }
 template<> inline auto make_type<std::complex<double>>() -> type { return type{MPI_CXX_DOUBLE_COMPLEX}; }
 
+// template<Complex, class = std::enable_if_t<std::is_same<decltype(Complex{}.real())> > > inline auto make_type<Complex>() -> type { return type{MPI_CXX_FLOAT_COMPLEX}; }
+// template<Complex, class = std::enable_if_t<std::is_same<> > inline auto make_type<std::complex<double>>() -> type { return type{MPI_CXX_DOUBLE_COMPLEX}; }
+
 #if defined(__NVCC__)
 template<> inline auto make_type<thrust::complex<float>>() -> type { return type{MPI_CXX_FLOAT_COMPLEX}; }
 template<> inline auto make_type<thrust::complex<double>>() -> type { return type{MPI_CXX_DOUBLE_COMPLEX}; }
@@ -331,7 +334,6 @@ template<> inline type make_type<int>() { return mpi3::int_; }
 // 		return ret;
 // 	}
 // };
-
 
 template<class... Ts> struct struct_;
 
