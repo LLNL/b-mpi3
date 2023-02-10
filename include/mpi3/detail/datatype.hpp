@@ -128,10 +128,10 @@ MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_C_LONG_DOUBLE_COMPLEX);
 
 // TODO(correaa) these types below probably don't behave correctly for reductions with multiplication
 
-// MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
-// MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
-// MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);
-// MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
+MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);
+MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 #if defined(__NVCC__)
 MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_DOUBLE_COMPLEX);
