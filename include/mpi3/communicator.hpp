@@ -709,7 +709,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class T>
 	auto isend_value(T const& t, int dest, int tag = 0) {
-		return isend(std::addressof(t), std::addressof(t) + 1, dest, tag);
+		return isend(std::addressof(t), std::next(std::addressof(t)), dest, tag);
 	}
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) compatibility
