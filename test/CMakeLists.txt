@@ -62,6 +62,7 @@ endif()
 # This list is only a subset of files.  It might be useful to divide some of the tests into
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
+  all_reduce.cpp
 	async_interaction.cpp
   broadcast.cpp
 	cartesian.cpp
@@ -69,7 +70,6 @@ set(TEST_SRCS
 	communicator_all_gather.cpp
 	communicator_all_gatherv.cpp
 	communicator_all_gatherv_output_iterator.cpp
-	communicator_all_reduce.cpp
 	communicator_barrier.cpp
 	communicator_divide.cpp
 	datatype.cpp

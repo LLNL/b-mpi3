@@ -709,7 +709,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class T>
 	auto isend_value(T const& t, int dest, int tag = 0) {
-		return isend(std::addressof(t), std::addressof(t) + 1, dest, tag);
+		return isend(std::addressof(t), std::next(std::addressof(t)), dest, tag);
 	}
 	template<class T, std::size_t N>
 	void send_value(T(&t)[N], int dest, int tag = 0) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays) compatibility
@@ -3001,7 +3001,18 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class T>
 	friend T operator&=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
-		return comm.all_reduce_value(t, std::logical_and<>{});
+		return comm.all_reduce_value(t, std::bit_and<>{});
+	}
+
+	friend bool operator&=(communicator& comm, bool t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		bool ret = true;
+		comm.all_reduce_n(&t, 1, &ret, std::logical_and<>{});
+		return ret;
+	}
+	friend bool operator|=(communicator& comm, bool t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		bool ret = false;
+		comm.all_reduce_n(&t, 1, &ret, std::logical_or<>{});
+		return ret;
 	}
 
 	template<class T>
