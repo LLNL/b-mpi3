@@ -84,9 +84,9 @@ struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> 
 
 #if 0
 	enum struct code : MPI_Op{
-		maximum = MPI_MAX, minimum = MPI_MIN, 
-		sum = MPI_SUM, product = MPI_PROD, 
-		logical_and = MPI_LAND, bitwise_and = MPI_BAND, 
+		maximum = MPI_MAX, minimum = MPI_MIN,
+		sum = MPI_SUM, product = MPI_PROD,
+		logical_and = MPI_LAND, bitwise_and = MPI_BAND,
 		logical_or  = MPI_LOR,   bitwise_or = MPI_BOR,
 		logical_xor = MPI_LXOR, bitwise_xor = MPI_BXOR,
 		max_value_location = MPI_MAXLOC,
@@ -193,6 +193,9 @@ BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::plus<>       , MPI_SUM , sum       
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::multiplies<> , MPI_PROD, product    );
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::logical_and<>, MPI_LAND, logical_and);
 
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::bit_and<>, MPI_BAND, bitwise_and);
+BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(std::bit_or<> , MPI_BOR , bitwise_or);
+
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(max<>, MPI_MAX, maximum);
 BOOST_MPI3_DECLARE_PREDEFINED_OPERATION(min<>, MPI_MIN, minimum);
 
@@ -216,47 +219,4 @@ struct non_commutative_operation : operation<T> {
 }  // end namespace mpi3
 }  // end namespace boost
 
-//#ifdef _TEST_BOOST_MPI3_OPERATION
-
-//#include "../mpi3/main.hpp"
-//#include "../mpi3/error_handler.hpp"
-
-//void addem_int(int const* invec, int *inoutvec, int *len, int* f){
-//	for(int i=0; i<*len; i++) inoutvec[i] += invec[i];
-//}
-
-//namespace mpi3 = boost::mpi3;
-//using std::cout;
-
-//int mpi3::main(int, char*[], mpi3::communicator world){
-
-//	int correct_result = world.size()*(world.size()-1)/2;
-
-//	int data = world.rank();
-//	{
-//		int result = -1;
-//		world.reduce_n(&data, 1, &result, std::plus<>{}, 0);
-//		if(world.root()) assert( result == correct_result ); else assert( result == -1 );
-//		world.broadcast_n(&result, 1, 0);
-//		assert(result == correct_result);
-//	}
-//	{
-//		int result = -1;
-//		world.all_reduce_n(&data, 1, &result, std::plus<>{});
-//		assert(result == correct_result);
-//	}
-//	{
-//	//	int result = world.all_reduce_value<std::plus<>>(data);
-//	//	assert( result == correct_result );
-//	}
-//	{
-//	//	int result = world.all_reduce_value(world.rank(), std::plus<>{});
-//	//	assert( result == correct_result );
-//	}
-
-//	return 0;
-//}
-
-//#endif
 #endif
-
