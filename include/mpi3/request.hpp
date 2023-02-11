@@ -34,7 +34,7 @@ struct [[nodiscard]] request {
 
 	request& operator=(request const&) = delete;
 	request& operator=(request&& other) noexcept {
-		request(std::move(other)).swap(*this);
+		request(std::move(other)).swap(*this);  // cppcheck-suppress accessMoved ; false positive?
 		return *this;
 	}
 	bool completed() const {
