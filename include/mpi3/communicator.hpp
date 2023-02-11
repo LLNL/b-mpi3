@@ -3001,7 +3001,18 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	template<class T>
 	friend T operator&=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
-		return comm.all_reduce_value(t, std::logical_and<>{});
+		return comm.all_reduce_value(t, std::bit_and<>{});
+	}
+
+	friend bool operator&=(communicator& comm, bool t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		bool ret = true;
+		comm.all_reduce_n(&t, 1, &ret, std::logical_and<>{});
+		return ret;
+	}
+	friend bool operator|=(communicator& comm, bool t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
+		bool ret = false;
+		comm.all_reduce_n(&t, 1, &ret, std::logical_or<>{});
+		return ret;
 	}
 
 	template<class T>
