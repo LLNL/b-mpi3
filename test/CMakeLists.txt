@@ -98,7 +98,7 @@ set(TEST_SRCS
 	environment_thread.cpp
 	empty_main.cpp
 	window_put_get.cpp
-  pacheco_trapezoidal.cpp
+  pacheco_ch4_trapezoidal.cpp
 	reduce_maxloc.cpp
 	ring.cpp
 	shared_mutex.cpp
@@ -120,6 +120,7 @@ SET(NEED_BOOST_SERIALIZATION_SRCS
 	communicator_send_class.cpp
 	communicator_ireceive.cpp
 	communicator_gather.cpp
+  pacheco_ch03_greetings.cpp
   process.cpp
 #   process_vector.cpp
 )
