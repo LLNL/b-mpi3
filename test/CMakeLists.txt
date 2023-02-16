@@ -98,6 +98,7 @@ set(TEST_SRCS
 	environment_thread.cpp
 	empty_main.cpp
 	window_put_get.cpp
+  pacheco_trapezoidal.cpp
 	reduce_maxloc.cpp
 	ring.cpp
 	shared_mutex.cpp
