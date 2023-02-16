@@ -34,7 +34,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::environment& env) {
 
 	auto const a = 0.0F;
 	auto const b = 1.0F;
-	int const  n = 1024*3;
+	int const  n = 1024*world.size();
 
 	auto const integral = trap(
 		[](auto x) { return x * x; },
