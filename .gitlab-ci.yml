@@ -8,6 +8,7 @@ variables:
 
 openmpi:
   stage: build
+  image: debian:testing
   script:
     - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3

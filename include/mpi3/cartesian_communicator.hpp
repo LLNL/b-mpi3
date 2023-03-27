@@ -59,7 +59,8 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 		if(this == std::addressof(other)) {
 			return *this;
 		}  // lints cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator
-		communicator::operator=(other);
+		if(not (compare(other) == boost::mpi3::detail::congruent)) {throw std::logic_error{"assignment is going to be deprecated"};}
+		// communicator::operator=(other);
 		return *this;
 	}
 
@@ -188,7 +189,8 @@ struct cartesian_communicator : cartesian_communicator<> {
 		if(this == std::addressof(other)) {
 			return *this;
 		}  // lints cert-oop54-cpp
-		cartesian_communicator<>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
+		if(not (compare(other) == boost::mpi3::detail::congruent)) {throw std::logic_error{"assignment is going to be deprecated"};}
+		// cartesian_communicator<>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
 		return *this;
 	}
 
@@ -309,7 +311,8 @@ struct circular_communicator : cartesian_communicator<1> {
 		if(this == std::addressof(other)) {
 			return *this;
 		}  // lints cert-oop54-cpp
-		cartesian_communicator<1>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
+		if(not (compare(other) == boost::mpi3::detail::congruent)) {throw std::logic_error{"assignment is going to be deprecated"};}
+		// cartesian_communicator<1>::operator=(other);  // NOLINT(clang-diagnostic-deprecated-declarations)
 		return *this;
 	}
 
