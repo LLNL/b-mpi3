@@ -1,5 +1,5 @@
-// Copyright 2018-2021 Alfredo A. Correa
-#include "../../mpi3/environment.hpp"
+// Copyright 2018-2023 Alfredo A. Correa
+#include <mpi3/environment.hpp>
 
 namespace mpi3 = boost::mpi3;
 
@@ -12,4 +12,7 @@ int main() try {
 	assert( mpienv.thread_support() <  mpi3::thread::multiple );
 
 	assert( mpienv.is_thread_main() );
+
+	auto const cuda = mpienv.cuda_support();  // NOLINT(readability-static-accessed-through-instance)
+	assert( not cuda );
 } catch(...) {return 0;}
