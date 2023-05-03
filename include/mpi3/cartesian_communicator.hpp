@@ -157,17 +157,35 @@ struct cartesian_communicator : cartesian_communicator<> {
 	}
 	constexpr static dimensionality_type dimensionality = D;
 
-	explicit cartesian_communicator(
+	cartesian_communicator(
 		communicator&       other,
-		std::array<int, D>  dims    = {},
-		std::array<bool, D> periods = std::apply([](auto... e) { return std::array{(static_cast<void>(e), true)...}; }, std::array<int, D>{})
-	) try : cartesian_communicator
-		<>{other, division(other.size(), dims), std::apply([](auto... e) { return std::array<int, D>{e...}; }, periods)} {}
+		std::array<int, D>  dims,
+		std::array<bool, D> periods
+	) 
+	try 
+	: cartesian_communicator<>{
+		other, 
+		division(other.size(), dims), 
+		std::apply([](auto... e) { return std::array<int, D>{e...}; }, periods)
+	} {}
 	catch(std::runtime_error& e) {
 		std::ostringstream ss;
 		std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>{ss, " "});
 		throw std::runtime_error{"cannot create cartesian communicator with constrains " + ss.str() + " from communicator of size " + std::to_string(other.size()) + " because " + e.what()};
 	}
+
+	cartesian_communicator(
+		communicator&       other,
+		std::array<int, D>  dims
+	) : cartesian_communicator(
+		other,
+		dims,
+		std::apply([](auto... e) { return std::array<bool, D>{(static_cast<void>(e), true)...}; }, std::array<int, D>{})
+	) {}
+
+	explicit cartesian_communicator(
+		communicator&       other
+	) : cartesian_communicator(other, std::array<int, D>{}) {}
 
 	auto topology() const {
 		struct topology_t {
