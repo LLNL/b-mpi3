@@ -161,8 +161,8 @@ struct cartesian_communicator : cartesian_communicator<> {
 		communicator&       other,
 		std::array<int, D>  dims,
 		std::array<bool, D> periods
-	) 
-	try 
+	)
+	try
 	: cartesian_communicator<>{
 		other, 
 		division(other.size(), dims), 
