@@ -137,12 +137,12 @@ inline thread_level initialize(thread_level required = thread_level::single) {
 }
 
 // inline void throw_error_fn(MPI_Comm* comm, int* errorcode, ...) {
-//	char name[MPI_MAX_OBJECT_NAME];
-//	int rlen;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
-//	int status = MPI_Comm_get_name(*comm, name, &rlen);
-//	if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
-//	std::string sname(name, rlen);
-//	throw std::runtime_error{"error code "+ std::to_string(*errorcode) +" from comm "+ sname};
+//  char name[MPI_MAX_OBJECT_NAME];
+//  int rlen;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
+//  int status = MPI_Comm_get_name(*comm, name, &rlen);
+//  if(status != MPI_SUCCESS) {throw std::runtime_error{"cannot get name"};}
+//  std::string sname(name, rlen);
+//  throw std::runtime_error{"error code "+ std::to_string(*errorcode) +" from comm "+ sname};
 // }
 
 inline thread_level initialize_thread(
@@ -155,10 +155,16 @@ inline thread_level initialize_thread(
 }
 
 inline thread_level thread_support() {
-	int r;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
-	MPI_(Query_thread)
-	(&r);
-	return static_cast<thread_level>(r);
+	return static_cast<thread_level>(MPI_(Query_thread)());
+}
+
+inline bool cuda_support() {
+	#if defined(CUDA_AWARE_SUPPORT) and CUDA_AWARE_SUPPORT
+		static bool const ret = Query_cuda_support();
+	#else
+		static bool const ret = false;
+	#endif
+	return ret;
 }
 
 inline bool is_thread_main() {
@@ -206,18 +212,19 @@ class environment {
 	}
 
 	inline static thread_level thread_support() { return mpi3::thread_support(); }
-	//	static /*inline*/ communicator::keyval<int> const* color_key_p;
-	//	static communicator::keyval<int> const& color_key(){return *color_key_p;}
-	//	static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
+	//  static /*inline*/ communicator::keyval<int> const* color_key_p;
+	//  static communicator::keyval<int> const& color_key(){return *color_key_p;}
+	//  static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
 	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f() {
 		static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const> named_attributes_key_p;
 		return named_attributes_key_p;
 	}
 	static communicator::keyval<std::map<std::string, mpi3::any>> const& named_attributes_key() {
-		//	static communicator::keyval<std::map<std::string, mpi3::any>> const named_attributes_key_p;
-		//	return named_attributes_key_p;
+		//  static communicator::keyval<std::map<std::string, mpi3::any>> const named_attributes_key_p;
+		//  return named_attributes_key_p;
 		return *named_attributes_key_f();
 	}
+	static bool cuda_support() { return mpi3::cuda_support(); }
 
 	static inline void initialize() { mpi3::initialize(); }
 	static inline void initialize(int argc, char** argv) { mpi3::initialize(argc, argv); }
@@ -238,10 +245,10 @@ class environment {
 	static inline communicator& get_self_instance() {
 		assert(initialized());
 		static communicator instance = [] {
-			//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
-			//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
+			//  MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+			//  MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
 			MPI_Comm_set_errhandler(MPI_COMM_SELF, MPI_ERRORS_RETURN);
-			//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+			//  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 			return communicator{MPI_COMM_SELF};
 		}();
 		return instance;
@@ -254,10 +261,10 @@ class environment {
 	static inline communicator& get_world_instance() {
 		assert(initialized());
 		static communicator instance = [] {
-			//	MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
-			//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
+			//  MPI_Comm_create_errhandler(&throw_error_fn, &throw_error_);
+			//  MPI_Comm_set_errhandler(MPI_COMM_WORLD, throw_error_);
 			MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-			//	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+			//  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 			return communicator{MPI_COMM_WORLD};
 		}();
 		return instance;
@@ -296,20 +303,20 @@ inline mpi3::any& communicator::attribute(std::string const& s) {
 // using namespace std::chrono_literals; // 2s
 
 // int main(){//int argc, char* argv[]){
-//	mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
-//	assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
-//	assert(mpi3::environment::is_initialized());
-//	{
-//		mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
-//		auto then = mpi3::environment::wall_time();
-//		std::this_thread::sleep_for(2s);
-//	//	cout<< (mpi3::environment::wall_time() - then).count() <<" seconds\n";
-//	}
-//	mpi3::environment::finalize(); // same as MPI_Finalize()
-//	assert(mpi3::environment::is_finalized());
+//  mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
+//  assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
+//  assert(mpi3::environment::is_initialized());
+//  {
+//      mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
+//      auto then = mpi3::environment::wall_time();
+//      std::this_thread::sleep_for(2s);
+//  //  cout<< (mpi3::environment::wall_time() - then).count() <<" seconds\n";
+//  }
+//  mpi3::environment::finalize(); // same as MPI_Finalize()
+//  assert(mpi3::environment::is_finalized());
 //// or better:
-////	mpi3::environment env(argc, argv);
-////	auto world = env.world();
+////    mpi3::environment env(argc, argv);
+////    auto world = env.world();
 //}
 //#endif
 #endif
