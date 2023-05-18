@@ -1933,7 +1933,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<
 		class It1, class Size, class Op = std::plus<>,
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
-		class = decltype(std::declval<typename std::iterator_traits<It1>::reference>() = std::declval<Op>()(V1{}, V1{}))
+		class = decltype(std::declval<V1&>() = std::declval<Op>()(V1{}, V1{}))
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/) {
 		auto const in_place = MPI_IN_PLACE;  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,llvm-qualified-auto,readability-qualified-auto,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
