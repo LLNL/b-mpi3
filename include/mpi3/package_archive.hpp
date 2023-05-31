@@ -338,19 +338,14 @@ struct package_iarchive
 
 	template <class Variant, std::size_t I = 0>
 	static Variant variant_from_index(std::size_t index) {
-		if constexpr(I >= std::variant_size_v<Variant>)
-			throw std::runtime_error{"Variant index " + std::to_string(I + index) + " out of bounds"};
-		else
-			return index == 0
-				? Variant{std::in_place_index<I>}
-				: variant_from_index<Variant, I + 1>(index - 1);
+		return index == 0?Variant{std::in_place_index<I>}:variant_from_index<Variant, I + 1>(index - 1);
 	}
 
-	template<class T1, class T2>
-	void operator>>(std::variant<T1, T2>& value) {
-		int idx = -1;
-		(*this) >> idx;
-		value = variant_from_index<std::variant<T1, T2>>(idx);
+	template<class... Ts>
+	void operator>>(std::variant<Ts...>& value) {
+		std::size_t idx = -1;
+		*this->This() >> idx; assert( idx < std::variant_size_v<std::variant<Ts...>> );
+		value = variant_from_index<std::variant<Ts...>>(idx);
 		std::visit([self = this](auto& alternative){(*self) >> alternative;}, value);
 	}
 };
@@ -371,9 +366,9 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 		return *this;
 	}
 
-	template<class T1, class T2>
-	void operator<<(std::variant<T1, T2> const& value) {
-		(*this) << static_cast<int>(value.index());
+	template<class... Ts>
+	void operator<<(std::variant<Ts...> const& value) {
+		*this->This() << value.index();
 		std::visit([self = this](auto const& alternative){(*self) << alternative;}, value);
 	}
 
@@ -408,72 +403,4 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 }  // end namespace mpi3
 }  // end namespace boost
 
-// maybe needed for optimization to take effect?
-// BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::archive::package_oarchive)
-
-//#ifdef _TEST_MPI3_PACKAGE_ARCHIVE
-
-//#include "../mpi3/main.hpp"
-//#include "../mpi3/process.hpp"
-
-//#include <boost/serialization/vector.hpp>
-//#include <boost/serialization/map.hpp>
-
-// namespace mpi3 = boost::mpi3;
-// using std::cout;
-
-// int mpi3::main(int, char*[], mpi3::communicator world) {
-//	assert(world.size() > 1);
-//	switch(world.rank()){
-//		case 0: {
-//			mpi3::detail::package p(world);
-//			mpi3::package_oarchive poa(p);
-//			std::string s("hello");
-//			int
-//				i = 12,
-//				j = 13
-//			;
-//			std::vector<double> v(20, 5.);
-//			std::map<int, int> m = {{1,2},{2,4},{3,4}};
-//			poa
-//				<< s
-//				<< i
-//				<< j
-//				<< v
-//				<< 5
-//				<< m
-//			;
-//			p.send(1);
-//		} break;
-//		case 1: {
-//			mpi3::detail::package p(world);
-//			mpi3::package_iarchive pia(p);
-//			p.receive(0);
-//			std::string s;
-//			int
-//				i,
-//				j
-//			;
-//			std::vector<double> v;
-//			int c;
-//			std::map<int, int> m;
-//			pia
-//				>> s
-//				>> i
-//				>> j
-//				>> v
-//				>> c
-//				>> m
-//			;
-//			assert( s == "hello" );
-//			assert( i == 12 );
-//			assert( j == 13 );
-//			assert(v.size() == 20);
-//			assert(c == 5);
-//			assert( m[3] == 4 );
-//		}
-//	}
-//	return 0;
-// }
-//#endif
 #endif
