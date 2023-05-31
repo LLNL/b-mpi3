@@ -15,15 +15,15 @@ namespace mpi3 = boost::mpi3;
 
 namespace error_ns {
 enum code { FAILURE = 0, SUCCESS = 1, RECOVERABLE = 2 };
-}
+}  // end namespace error_ns
 
 namespace error_long_ns {
-enum code : unsigned long { FAILURE = 0, SUCCESS = 1, RECOVERABLE = 2 };
-}
+enum code : unsigned long { FAILURE = 0, SUCCESS = 1, RECOVERABLE = 2 };  // NOLINT(google-runtime-int) test unsiged long specifically
+}  // end namespace error_long_ns
 
 namespace error_class_ns {
 enum class code { FAILURE = 0, SUCCESS = 1, RECOVERABLE = 2 };
-}
+}  // end namespace error_class_ns
 
 auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 	assert(world.size() > 1);
