@@ -53,10 +53,10 @@ endif()
 if(ENABLE_CUDA)
 	enable_language(CUDA)
 	find_package(CUDA 11.3.0 REQUIRED)
-#	set(CXX_COMPILER ${CMAKE_CUDA_COMPILER})
-#	set(CXX_FLAGS ${CMAKE_CUDA_FLAGS})
-#	string(APPEND CMAKE_CUDA_FLAGS " --forward-unknown-to-host-linker") # ${ARCH_FLAGS} -std=c++17 --expt-relaxed-constexpr --extended-lambda --Werror=cross-execution-space-call -Xcudafe \"--diag_suppress=implicit_return_from_non_void_function\"")
-#	add_compile_options(--forward-unknown-to-host-linker)
+# set(CXX_COMPILER ${CMAKE_CUDA_COMPILER})
+# set(CXX_FLAGS ${CMAKE_CUDA_FLAGS})
+# string(APPEND CMAKE_CUDA_FLAGS " --forward-unknown-to-host-linker") # ${ARCH_FLAGS} -std=c++17 --expt-relaxed-constexpr --extended-lambda --Werror=cross-execution-space-call -Xcudafe \"--diag_suppress=implicit_return_from_non_void_function\"")
+# add_compile_options(--forward-unknown-to-host-linker)
 endif()
 
 # This list is only a subset of files.  It might be useful to divide some of the tests into
@@ -94,9 +94,10 @@ set(TEST_SRCS
 	communicator_scatter.cpp
 	communicator_set_error_handler.cpp
 	communicator_split.cpp
-	ibarrier.cpp
+  enum.cpp
 	environment_thread.cpp
 	empty_main.cpp
+	ibarrier.cpp
 	window_put_get.cpp
 	reduce_maxloc.cpp
 	ring.cpp
