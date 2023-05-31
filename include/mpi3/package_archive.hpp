@@ -338,12 +338,16 @@ struct package_iarchive
 
 	template <class Variant, std::size_t I = 0>
 	static Variant variant_from_index(std::size_t index) {
-		return index == 0?Variant{std::in_place_index<I>}:variant_from_index<Variant, I + 1>(index - 1);
+		if constexpr(I >= std::variant_size_v<Variant>) {
+			throw std::runtime_error{"Variant index " + std::to_string(I + index) + " out of bounds"};
+		} else {
+			return index == 0 ? Variant{std::in_place_index<I>} : variant_from_index<Variant, I + 1>(index - 1);
+		}
 	}
 
 	template<class... Ts>
 	void operator>>(std::variant<Ts...>& value) {
-		std::size_t idx = -1;
+		std::size_t idx = std::numeric_limits<std::size_t>::max();
 		*this->This() >> idx; assert( idx < std::variant_size_v<std::variant<Ts...>> );
 		value = variant_from_index<std::variant<Ts...>>(idx);
 		std::visit([self = this](auto& alternative){(*self) >> alternative;}, value);
