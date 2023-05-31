@@ -130,7 +130,7 @@ MPI3_DECLARE_DATATYPE(cxx_long_double_complex, MPI_C_LONG_DOUBLE_COMPLEX);
 
 MPI3_DECLARE_DATATYPE(float_float            , MPI_COMPLEX);  static_assert(sizeof(std::pair<float, float>) == sizeof(std::complex<float>), "checking that complex mem layout maps to pair");
 MPI3_DECLARE_DATATYPE(double_double          , MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<double, double>) == sizeof(std::complex<double>), "checking that complex mem layout maps to pair");
-MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);
+MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_DOUBLE_COMPLEX);  // TODO(correaa) is this correct? reduce (specially multiplication) will not give correct result
 MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 
 #if defined(__NVCC__)
@@ -188,6 +188,10 @@ auto datatype_detect(...) -> default_datatype<T>;
 
 template<class T, class U, class RealType = decltype(U{}.real()), class = decltype(U{}.imag())>
 auto datatype_detect(U const&) -> default_datatype<std::complex<RealType>>;
+
+// support enums
+template<class T, class U, class UL = std::underlying_type_t<U>>
+auto datatype_detect(U const&) -> default_datatype<UL>;
 
 template<class T> class datatype :  public decltype(datatype_detect<T>(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg) detection idiom
 
