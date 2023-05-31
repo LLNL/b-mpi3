@@ -5,11 +5,6 @@
 #include <mpi3/main.hpp>
 #include <mpi3/process.hpp>
 
-#include <boost/variant.hpp>
-#include <boost/tuple/tuple.hpp>
-
-#include <boost/serialization/variant.hpp>
-
 #include <variant>
 
 namespace mpi3 = boost::mpi3;
