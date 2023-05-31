@@ -310,31 +310,6 @@ template<> inline auto make_type<thrust::complex<double>>() -> type { return typ
 template<> inline type make_type<double>() { return mpi3::double_; }
 template<> inline type make_type<int>() { return mpi3::int_; }
 
-// // TODO(correaa) remove this?
-// template<class T> class datatype<T[2]> {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-//  public:
-// 	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[2].get())>
-// 	R operator()() const {
-// 		static auto ret = std::invoke([]() {
-// 			assert(boost::mpi3::initialized());
-// 			return boost::mpi3::type{mpi3::datatype<T>{}()}[2].commit().get();
-// 		});
-// 		return ret;
-// 	}
-// };
-
-// template<class T, std::size_t D> class datatype<std::array<T, D>> {
-//  public:
-// 	template<class R = decltype(boost::mpi3::type{mpi3::datatype<T>{}()}[D].get())>
-// 	R operator()() const {
-// 		static auto ret = std::invoke([]() {
-// 			assert(boost::mpi3::initialized());
-// 			return boost::mpi3::type{mpi3::datatype<T>{}()}[D].commit().get();  // cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays
-// 		});
-// 		return ret;
-// 	}
-// };
-
 template<class... Ts> struct struct_;
 
 template<class T1, class T2> struct struct_<std::pair<T1, T2>> : struct_<T1, T2> {};
@@ -404,6 +379,17 @@ template<class T1, class T2, class T3> struct struct_<T1, T2, T3> {
 		};
 		mpi3::type ret;
 		MPI_Type_create_struct(nitems, blocklengths.data(), offsets.data(), types.data(), &ret.impl_);
+		return ret;
+	}
+	auto operator()() const {
+		static auto ret = make().commit();
+		return ret.get();
+	}
+};
+
+template<typename Underlying = int> struct enum_ {
+	static auto make() {
+		mpi3::type ret = make_type<Underlying>();
 		return ret;
 	}
 	auto operator()() const {
