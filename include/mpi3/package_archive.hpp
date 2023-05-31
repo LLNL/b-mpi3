@@ -15,6 +15,7 @@
 #include <boost/version.hpp>
 
 #include <sstream>
+#include <variant>
 
 namespace boost {
 namespace mpi3 {
@@ -296,6 +297,8 @@ struct package_iarchive
 	explicit package_iarchive(mpi3::detail::package& p, unsigned int flags = 0)
 	: package_iarchive_impl<package_iarchive>(p, flags) {}
 
+	using package_iarchive_impl<package_iarchive>::operator>>;
+
 	template<class T>
 	struct CONSUMABLE(unconsumed)
 	iterator {
@@ -332,12 +335,31 @@ struct package_iarchive
 	 	package_iarchive* in_archive_ = nullptr;
 		T current_;
 	};
+
+	template <class Variant, std::size_t I = 0>
+	static Variant variant_from_index(std::size_t index) {
+		if constexpr(I >= std::variant_size_v<Variant>)
+			throw std::runtime_error{"Variant index " + std::to_string(I + index) + " out of bounds"};
+		else
+			return index == 0
+				? Variant{std::in_place_index<I>}
+				: variant_from_index<Variant, I + 1>(index - 1);
+	}
+
+	template<class T1, class T2>
+	void operator>>(std::variant<T1, T2>& value) {
+		int idx = -1;
+		(*this) >> idx;
+		value = variant_from_index<std::variant<T1, T2>>(idx);
+		std::visit([self = this](auto& alternative){(*self) >> alternative;}, value);
+	}
 };
 
 struct package_oarchive : public detail::package_oarchive_impl<package_oarchive> {
 	explicit package_oarchive(mpi3::detail::package& p, unsigned int flags = 0)
 	: package_oarchive_impl<package_oarchive>(p, flags) {}
 	using package_oarchive_impl<package_oarchive>::operator&;
+	using package_oarchive_impl<package_oarchive>::operator<<;
 
 #if(BOOST_VERSION < 106100)
 	package_oarchive& operator&(boost::serialization::array<double>& /*arr*/)
@@ -347,6 +369,12 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 	{
 		assert(0);
 		return *this;
+	}
+
+	template<class T1, class T2>
+	void operator<<(std::variant<T1, T2> const& value) {
+		(*this) << static_cast<int>(value.index());
+		std::visit([self = this](auto const& alternative){(*self) << alternative;}, value);
 	}
 
 	template<class T = void>
