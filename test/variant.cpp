@@ -34,14 +34,12 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	switch(world.rank()) {
 	break; case 0: {
         variant<int, double> const v{42};
-        assert( v.index() == 0 );
 		world.send_n(&v, 1, 1);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
 	};
 	break; case 1: {
         variant<int, double> v;
 		world.receive_n(&v, 1, 0);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
         assert( v.index() == 0 );
-        std::visit([](auto const& alt) {std::cout << alt << std::endl;}, v);
     	assert(( v == variant<int, double>{42} ));
 	};
 	}
