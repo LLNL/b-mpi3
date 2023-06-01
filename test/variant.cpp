@@ -9,12 +9,38 @@
 
 namespace mpi3 = boost::mpi3;
 
+enum color {red, blue};
+
 auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int try {
 	assert(world.size() > 1);
 
     using std::variant;
 
 	switch(world.rank()) {
+	break; case 0: {
+        variant<int, double> const v{3.14};
+        world[1] << v;
+	};
+	break; case 1: {
+        variant<int, double> v;
+        world[0] >> v;
+    	assert(( v == variant<int, double>{3.14} ));
+	};
+	}
+
+	switch(world.rank()) {
+	break; case 0: {
+        variant<color, double> const v{blue};
+        world[1] << v;
+	};
+	break; case 1: {
+        variant<color, double> v;
+        world[0] >> v;
+    	assert(( v == variant<color, double>{blue} ));
+	};
+	}
+
+    switch(world.rank()) {
 	break; case 0: {
         variant<int, double> const v{3.14};
         world[1] << v;
