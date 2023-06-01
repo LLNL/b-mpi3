@@ -15,6 +15,7 @@
 #include <boost/version.hpp>
 
 #include <sstream>
+#include <variant>
 
 namespace boost {
 namespace mpi3 {
@@ -296,6 +297,8 @@ struct package_iarchive
 	explicit package_iarchive(mpi3::detail::package& p, unsigned int flags = 0)
 	: package_iarchive_impl<package_iarchive>(p, flags) {}
 
+	using package_iarchive_impl<package_iarchive>::operator>>;
+
 	template<class T>
 	struct CONSUMABLE(unconsumed)
 	iterator {
@@ -332,12 +335,30 @@ struct package_iarchive
 	 	package_iarchive* in_archive_ = nullptr;
 		T current_;
 	};
+
+	template <class Variant, std::size_t I = 0>
+	static Variant variant_from_index(std::size_t index) {
+		if constexpr(I >= std::variant_size_v<Variant>) {
+			throw std::runtime_error{"Variant index " + std::to_string(I + index) + " out of bounds"};
+		} else {
+			return index == 0 ? Variant{std::in_place_index<I>} : variant_from_index<Variant, I + 1>(index - 1);
+		}
+	}
+
+	template<class... Ts>
+	void operator>>(std::variant<Ts...>& value) {
+		std::size_t idx = std::numeric_limits<std::size_t>::max();
+		*this->This() >> idx; assert( idx < std::variant_size_v<std::variant<Ts...>> );
+		value = variant_from_index<std::variant<Ts...>>(idx);
+		std::visit([self = this](auto& alternative){(*self) >> alternative;}, value);
+	}
 };
 
 struct package_oarchive : public detail::package_oarchive_impl<package_oarchive> {
 	explicit package_oarchive(mpi3::detail::package& p, unsigned int flags = 0)
 	: package_oarchive_impl<package_oarchive>(p, flags) {}
 	using package_oarchive_impl<package_oarchive>::operator&;
+	using package_oarchive_impl<package_oarchive>::operator<<;
 
 #if(BOOST_VERSION < 106100)
 	package_oarchive& operator&(boost::serialization::array<double>& /*arr*/)
@@ -347,6 +368,12 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 	{
 		assert(0);
 		return *this;
+	}
+
+	template<class... Ts>
+	void operator<<(std::variant<Ts...> const& value) {
+		*this->This() << value.index();
+		std::visit([self = this](auto const& alternative){(*self) << alternative;}, value);
 	}
 
 	template<class T = void>
@@ -380,72 +407,4 @@ struct package_oarchive : public detail::package_oarchive_impl<package_oarchive>
 }  // end namespace mpi3
 }  // end namespace boost
 
-// maybe needed for optimization to take effect?
-// BOOST_SERIALIZATION_USE_ARRAY_OPTIMIZATION(boost::archive::package_oarchive)
-
-//#ifdef _TEST_MPI3_PACKAGE_ARCHIVE
-
-//#include "../mpi3/main.hpp"
-//#include "../mpi3/process.hpp"
-
-//#include <boost/serialization/vector.hpp>
-//#include <boost/serialization/map.hpp>
-
-// namespace mpi3 = boost::mpi3;
-// using std::cout;
-
-// int mpi3::main(int, char*[], mpi3::communicator world) {
-//	assert(world.size() > 1);
-//	switch(world.rank()){
-//		case 0: {
-//			mpi3::detail::package p(world);
-//			mpi3::package_oarchive poa(p);
-//			std::string s("hello");
-//			int
-//				i = 12,
-//				j = 13
-//			;
-//			std::vector<double> v(20, 5.);
-//			std::map<int, int> m = {{1,2},{2,4},{3,4}};
-//			poa
-//				<< s
-//				<< i
-//				<< j
-//				<< v
-//				<< 5
-//				<< m
-//			;
-//			p.send(1);
-//		} break;
-//		case 1: {
-//			mpi3::detail::package p(world);
-//			mpi3::package_iarchive pia(p);
-//			p.receive(0);
-//			std::string s;
-//			int
-//				i,
-//				j
-//			;
-//			std::vector<double> v;
-//			int c;
-//			std::map<int, int> m;
-//			pia
-//				>> s
-//				>> i
-//				>> j
-//				>> v
-//				>> c
-//				>> m
-//			;
-//			assert( s == "hello" );
-//			assert( i == 12 );
-//			assert( j == 13 );
-//			assert(v.size() == 20);
-//			assert(c == 5);
-//			assert( m[3] == 4 );
-//		}
-//	}
-//	return 0;
-// }
-//#endif
 #endif
