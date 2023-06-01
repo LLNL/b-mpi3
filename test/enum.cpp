@@ -46,7 +46,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world.send_n(&ec, 1, 1);
 	};
 	break; case 1: {
-		error_ns::code ec = error_ns::SUCCESS;
+		error_ns::code ec = error_ns::FAILURE;
 		world.receive_n(&ec, 1, 0);
 		assert(ec == error_ns::SUCCESS);
 	};
@@ -58,7 +58,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world.send_n(&ec, 1, 1);
 	};
 	break; case 1: {
-		error_ns::code ec = error_ns::SUCCESS;
+		error_ns::code ec = error_ns::FAILURE;
 		world.receive_n(&ec, 1);
 		assert(ec == error_ns::SUCCESS);
 	};
@@ -70,7 +70,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world[1] << ec;
 	};
 	break; case 1: {
-		error_ns::code ec = error_ns::SUCCESS;
+		error_ns::code ec = error_ns::FAILURE;
 		world[0] >> ec;
 		assert(ec == error_ns::SUCCESS);
 	};
@@ -82,7 +82,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world[1] << ec;
 	};
 	break; case 1: {
-		error_ns::code ec = error_ns::SUCCESS;
+		error_ns::code ec = error_ns::FAILURE;
 		world >> ec;
 		assert(ec == error_ns::SUCCESS);
 	};
@@ -94,7 +94,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world[1] << ec;
 	};
 	break; case 1: {
-		error_long_ns::code ec  = error_long_ns::SUCCESS;
+		error_long_ns::code ec  = error_long_ns::FAILURE;
 		world >> ec;
 		assert(ec == error_long_ns::SUCCESS);
 	};
@@ -106,7 +106,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		world[1] << ec;
 	};
 	break; case 1: {
-		error_class_ns::code ec = error_class_ns::code::SUCCESS;
+		error_class_ns::code ec = error_class_ns::code::FAILURE;
 		world >> ec;
 		assert(ec == error_class_ns::code::SUCCESS);
 	};
