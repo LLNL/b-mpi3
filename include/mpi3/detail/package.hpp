@@ -20,7 +20,7 @@ namespace detail {
 
 struct package : buffer {
  private:
-	basic_communicator& bcomm_;
+	basic_communicator& bcomm_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) TODO(correaa) reevaluate if a reference here is the right thing
 
  public:
 	explicit package(communicator& comm, buffer::size_type n = 0)
