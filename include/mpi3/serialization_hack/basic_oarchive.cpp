@@ -7,7 +7,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for updates, documentation, and revision history.
-// NOLINTBEGIN(misc-const-correctness) external code
+// NOLINTBEGIN(misc-const-correctness,cppcoreguidelines-avoid-const-or-ref-data-members) external code
 #include <boost/config.hpp> // msvc 6.0 needs this for warning suppression
 
 #include <boost/assert.hpp>
@@ -468,7 +468,7 @@ basic_oarchive::get_helper_collection(){
 } // namespace detail
 } // namespace archive
 } // namespace boost
-// NOLINTEND(misc-const-correctness) external code
+// NOLINTEND(misc-const-correctness,cppcoreguidelines-avoid-const-or-ref-data-members) external code
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
