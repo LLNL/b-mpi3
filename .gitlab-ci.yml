@@ -108,8 +108,9 @@ openmpi-cppcheck:
 
 mpich-debug:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
