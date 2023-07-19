@@ -127,7 +127,7 @@ mpich-valgrind:
   image: debian:testing
   allow_failure: true
   script:
-    - apt-get update -qq && apt-get install -qq -y --no-install-recommends cmake git libmpich-dev mpich make
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git libmpich-dev mpich make
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
