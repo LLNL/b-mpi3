@@ -51,8 +51,9 @@ icpx-intelmpi:
 
 openmpi-clang:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -93,8 +94,9 @@ openmpi-clang-tidy:
 
 openmpi-cppcheck:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - g++ --version
@@ -180,7 +182,7 @@ inq-openmpi:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - ../configure --prefix=$HOME --disable-debug
+    - cmake .. --install-prefix=$HOME -DCMAKE_BUILD_TYPE=Release
     - make --jobs=2 || make VERBOSE=1
     - make install
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
@@ -232,7 +234,7 @@ inq-cuda-11-openmpi-compileonly:
     - cd ../..
     - mkdir build && cd build
     - /usr/local/cuda-11/bin/nvcc -V
-    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=61
+    - CUDACXX=/usr/local/cuda/bin/nvcc cmake .. --install-prefix=$HOME -DENABLE_CUDA=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=61
     - make silicon --jobs=2
     - make install
     - ctest -R silicon
