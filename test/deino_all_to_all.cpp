@@ -6,26 +6,24 @@
 #include <mpi3/main.hpp>
 #include <mpi3/ostream.hpp>
 
-#include "mpi.h"
-
 namespace mpi3 = boost::mpi3;
 
 //template<class InputIt, class Size, class OutputIt>
 //void do_all_to_all_n(mpi3::communicator& comm, InputIt first, Size count, OutputIt result) {
 // #ifndef MPICH_VERSION
-// 	comm.all_to_all_n(first, count, result);
+//  comm.all_to_all_n(first, count, result);
 // #else
 //     if(first != result) {
 //         comm.all_to_all_n(first, count, result);
 //     } else {
-// 		std::vector<MPI_Request> reqs(comm.size(), MPI_REQUEST_NULL);
+//      std::vector<MPI_Request> reqs(comm.size(), MPI_REQUEST_NULL);
 		
 //         assert(count % comm.size() == 0);
-// 		for(int iproc = 0; iproc < comm.size(); iproc++) {
-// 			MPI_Isendrecv_replace(first, count/comm.size(), mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, MPI_ANY_SOURCE, MPI_ANY_TAG, &comm, &reqs[iproc]);
-// 		}
+//      for(int iproc = 0; iproc < comm.size(); iproc++) {
+//          MPI_Isendrecv_replace(first, count/comm.size(), mpi3::detail::basic_datatype<typename std::iterator_traits<InputIt>::value_type>(), iproc, 0, MPI_ANY_SOURCE, MPI_ANY_TAG, &comm, &reqs[iproc]);
+//      }
 
-// 		MPI_Waitall(static_cast<int>(reqs.size()), reqs.data(), MPI_STATUSES_IGNORE);
+//      MPI_Waitall(static_cast<int>(reqs.size()), reqs.data(), MPI_STATUSES_IGNORE);
 //     }
 // #endif
 //}

@@ -51,8 +51,9 @@ icpx-intelmpi:
 
 openmpi-clang:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -66,8 +67,9 @@ openmpi-clang:
 
 openmpi-clang20:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
@@ -80,8 +82,9 @@ openmpi-clang20:
 
 openmpi-clang-tidy:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake git make libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake git make libboost-serialization-dev
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - clang++ --version
@@ -93,8 +96,9 @@ openmpi-clang-tidy:
 
 openmpi-cppcheck:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - g++ --version
@@ -106,20 +110,24 @@ openmpi-cppcheck:
 
 mpich-debug:
   stage: build
+  image: debian:testing
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends libmpich-dev mpich
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
+    - export OMPI_ALLOW_RUN_AS_ROOT=1
+    - export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . --parallel 2 || cmake --build . --verbose
     - ctest --output-on-failure
 
 mpich-valgrind:
   stage: build
+  image: debian:testing
   allow_failure: true
   script:
-    - apt update -qq && apt-get install -qq -y --no-install-recommends libmpich-dev mpich
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git libmpich-dev mpich make
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
@@ -133,6 +141,7 @@ mpich-valgrind:
 
 qmcpack-openmpi:
   stage: test
+  image: debian:testing
   script:
     - apt-get -qq update && apt-get -qq install --no-install-recommends -y libblas-dev liblapack-dev libfftw3-dev libboost-serialization-dev libopenmpi-dev gfortran g++ cmake make git ca-certificates numdiff python3 python3-numpy python3-h5py python3-mpi4py python3-scipy libxml2-dev libhdf5-dev
     - git clone https://github.com/QMCPACK/qmcpack.git
@@ -169,10 +178,11 @@ qmcpack-cuda-runner:
 
 inq-openmpi:
   stage: test
+  image: debian:testing
   tags:
     - cpu
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev gfortran g++ cmake pkg-config make git ca-certificates wget
+    - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libboost-iostreams-dev libopenmpi-dev libhdf5-dev gfortran g++ cmake pkg-config make git ca-certificates wget
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
@@ -180,7 +190,7 @@ inq-openmpi:
     - git checkout $CI_COMMIT_BRANCH
     - cd ../..
     - mkdir build && cd build
-    - ../configure --prefix=$HOME --disable-debug
+    - cmake .. --install-prefix=$HOME -DCMAKE_BUILD_TYPE=Release
     - make --jobs=2 || make VERBOSE=1
     - make install
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
@@ -223,7 +233,7 @@ inq-cuda-11-openmpi-compileonly:
   tags:
     - nvidia-docker
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet cmake libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev gfortran g++ pkg-config make git ca-certificates wget
+    - apt-get update && apt-get install --no-install-recommends -y --quiet cmake libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-iostreams-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev gfortran g++ pkg-config make git ca-certificates wget
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
@@ -232,7 +242,7 @@ inq-cuda-11-openmpi-compileonly:
     - cd ../..
     - mkdir build && cd build
     - /usr/local/cuda-11/bin/nvcc -V
-    - CUDA_ARCH_OVERRIDE=1 ../configure --prefix=$HOME --enable-cuda --with-cuda-prefix=/usr/local/cuda --pass-thru -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=61
+    - CUDACXX=/usr/local/cuda/bin/nvcc cmake .. --install-prefix=$HOME -DENABLE_CUDA=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=61
     - make silicon --jobs=2
     - make install
     - ctest -R silicon

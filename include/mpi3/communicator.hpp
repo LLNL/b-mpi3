@@ -140,7 +140,7 @@ enum key { // for attributes
 };
 
 template<int N = 10> struct overload_priority : overload_priority<N-1>{
-//	using overload_priority<N-1>::overload_priority;
+//  using overload_priority<N-1>::overload_priority;
 };
 template<> struct overload_priority<0>{};
 
@@ -217,14 +217,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	[[deprecated]] auto operator=(communicator& other) -> communicator& {  // NOLINT(cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator) duplicate assigment
 		communicator tmp{other};
 		operator=(std::move(tmp));
-	//	swap(tmp);
+	//  swap(tmp);
 		return *this;
 	}
 	auto operator=(communicator     && other) noexcept -> communicator& {  // TODO(correaa) tidy this operator
 		if(impl_ != MPI_COMM_NULL) {
 			try {
 				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
-			//	MPI_Comm_free(&impl_);
+			//  MPI_Comm_free(&impl_);
 			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
 		}
 		impl_ = std::exchange(other.impl_, MPI_COMM_NULL);
@@ -241,24 +241,24 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	explicit operator bool() const{return not is_empty();}
 
 	using reference = process;
-//	struct iterator_t {
-////		iterator_t() = default;
-////		explicit iterator_t(std::nullptr_t n) : commP_{n} {}
-////		auto operator++() -> iterator_t& {++rank_; return *this;}
-////		auto operator--() -> iterator_t& {--rank_; return *this;}
-////		auto operator*() const -> reference;
+//  struct iterator_t {
+////        iterator_t() = default;
+////        explicit iterator_t(std::nullptr_t n) : commP_{n} {}
+////        auto operator++() -> iterator_t& {++rank_; return *this;}
+////        auto operator--() -> iterator_t& {--rank_; return *this;}
+////        auto operator*() const -> reference;
 
-////	 private:
-////		communicator* commP_ = nullptr;
-////		int rank_ = MPI_PROC_NULL;
+////     private:
+////        communicator* commP_ = nullptr;
+////        int rank_ = MPI_PROC_NULL;
 
-////		friend class communicator;
-////		iterator_t(communicator* self, int rank) : commP_{self}, rank_{rank} {}
-//	};
+////        friend class communicator;
+////        iterator_t(communicator* self, int rank) : commP_{self}, rank_{rank} {}
+//  };
 //  using iterator = iterator_t;
 
-//	auto begin() -> iterator {return {this, 0     };}
-//	auto end  () -> iterator {return {this, size()};}
+//  auto begin() -> iterator {return {this, 0     };}
+//  auto end  () -> iterator {return {this, size()};}
 
 	auto& handle() {return impl_;}
 	auto get_mutable()       {return impl_;}
@@ -272,7 +272,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		explicit ptr(communicator* ptr) : ptr_{ptr} {}
 		operator MPI_Comm() const {return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 		explicit operator communicator      *() const {return ptr_;}
-	//	explicit operator communicator const*() const{return ptr_;}
+	//  explicit operator communicator const*() const{return ptr_;}
 		friend bool operator==(ptr const& a, ptr const& b) {return a.ptr_ == b.ptr_;}
 		friend bool operator!=(ptr const& a, ptr const& b) {return a.ptr_ != b.ptr_;}
 	};
@@ -285,7 +285,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF) {
 			try {
 				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
-			//	MPI_Comm_free(&impl_);
+			//  MPI_Comm_free(&impl_);
 			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
 		}
 	}
@@ -320,12 +320,12 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	class keyval {
 		static int delete_fn(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
 			delete static_cast<T*>(attr_val);  // NOLINT(cppcoreguidelines-owning-memory)
-		//	attr_val = nullptr;
+		//  attr_val = nullptr;
 			return MPI_SUCCESS;
 		}
 		static int copy_fn(
 			MPI_Comm /*oldcomm*/, int /*keyval*/,
-			void * /*extra_state*/, void *attribute_val_in,
+			void * /*extra_state*/, void *attribute_val_in,  // cppcheck-suppress constParameterCallback ; C-function callback
 			void *attribute_val_out, int *flag
 		) {
 			*static_cast<void**>(attribute_val_out) = static_cast<void*>(new T{*(static_cast<T const*>(attribute_val_in))});
@@ -394,7 +394,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		package_oarchive poa(p);
 		std::copy_n(first, count, package_oarchive::iterator<typename std::iterator_traits<It>::value_type>(poa));
 		// while(count--) {poa << *first++;}
-		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
+		send_n(p.begin(), p.size(), dest, tag); //  p.send(dest, tag);
 	}
 	template<class It, typename Size>
 	auto isend_n(It first, Size count, int dest, int tag = 0){
@@ -474,7 +474,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		package_oarchive poa(p);
 		std::copy(first, last, package_oarchive::iterator<typename std::iterator_traits<It>::value_type>(poa));
 		// while(first!=last) {poa << *first++;}
-		send_n(p.begin(), p.size(), dest, tag); //	p.send(dest, tag);
+		send_n(p.begin(), p.size(), dest, tag); //  p.send(dest, tag);
 	}
 
 	template<class MultiIt>
@@ -834,21 +834,21 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 //  private:
 
 //  public:
-//  	template<class It, class Size>
-// 	auto isend_receive_replace_n(
-// 		It first, Size size,
-// 		int dest, int source, // = MPI_ANY_SOURCE, 
-// 		int sendtag = 0, int recvtag = MPI_ANY_TAG
-// 	) {
-// 		using value_type = typename std::iterator_traits<It>::value_type;
-// 		return isend_receive_replace_n(
-// 			first,
-// 				detail::iterator_category_t<It>{},
-// 				detail::value_category_t<value_type>{},
-// 			size,
-// 			dest, source, sendtag, recvtag
-// 		);
-// 	}
+//      template<class It, class Size>
+//  auto isend_receive_replace_n(
+//      It first, Size size,
+//      int dest, int source, // = MPI_ANY_SOURCE, 
+//      int sendtag = 0, int recvtag = MPI_ANY_TAG
+//  ) {
+//      using value_type = typename std::iterator_traits<It>::value_type;
+//      return isend_receive_replace_n(
+//          first,
+//              detail::iterator_category_t<It>{},
+//              detail::value_category_t<value_type>{},
+//          size,
+//          dest, source, sendtag, recvtag
+//      );
+//  }
 
  private:
 	template<class It, typename Size, class It2>
@@ -1105,8 +1105,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_Mprobe(source, tag, impl_, &msg, &status);
 		MPI_Get_count(&status, MPI_PACKED, &count);
 		MPI_Mrecv(begin, count, MPI_PACKED, &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
-	//	auto n = probe(source, tag).count<char>();
-	//	receive_packed_n(begin, n, source, tag);
+	//  auto n = probe(source, tag).count<char>();
+	//  receive_packed_n(begin, n, source, tag);
 		return static_cast<void*>(std::next(static_cast<char*>(begin), count));
 	}
 	template<class It, typename Size>
@@ -1240,7 +1240,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int source, int tag
 	) {
 		return receive_n(std::addressof(*d_first), std::distance(d_first, d_last), source, tag);
-	//	return std::copy(buffer.begin(), buffer.end(), d_first);
+	//  return std::copy(buffer.begin(), buffer.end(), d_first);
 	}
 
 	template<class It>
@@ -1254,89 +1254,89 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		receive_n(buffer.begin(), buffer.size(), source, tag);
 		return std::copy(buffer.begin(), buffer.end(), d_first);
 	}
-//	class ir_req{
-//		boost::mpi3::status query(){
-//			boost::mpi3::status ret;
-//			ret.set_source(MPI_UNDEFINED);
-//			ret.set_tag(MPI_UNDEFINED);
-//			ret.set_cancelled();
-//			ret.set_elements<char>(0);
-//			return ret;
-//		}
-//		static void free(){
-//			std::cout << "free" << std::endl;
-//		}
-//		static void cancel(int complete) {
-//			std::cout << "cancel " << complete << std::endl;
-//		}
-//	};
-//	template<class It>
-//	struct receive_args {
-//		communicator* commP;
-//		It d_first;
-//	//	It d_last;
-//		int source;
-//		int tag; 
-//		MPI_Request* requestP;
-//	};
-//	struct receive_state{
-//		int cancelled = 0;
-//		int source = MPI_UNDEFINED;
-//		int tag = MPI_UNDEFINED;
-//	};
-//	template<class It>
-//	inline static void* receive_thread(void* ptr) {
-//		receive_args<It>* args = (receive_args<It>*)ptr;
-//		args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
-//		MPI_Grequest_complete(*args->requestP);
-//		::free(ptr);
-//		return nullptr;
-//	}
-//	inline static int query_fn(void* extra_state, MPI_Status *status){
-//		auto* rs = static_cast<receive_state*>(extra_state);
-//		/* always send just one int */ 
-//		MPI_Status_set_elements(status, MPI_INT, 1);
-//		/* can never cancel so always true */ 
-//		MPI_Status_set_cancelled(status, rs->cancelled); 
-//		/* choose not to return a value for this */
-//		status->MPI_SOURCE = rs->source; 
-//		/* tag has not meaning for this generalized request */ 
-//		status->MPI_TAG = rs->tag; 
-//		/* this generalized request never fails */ 
-//		return MPI_SUCCESS;
-//	}
-//	inline static int free_fn(void* extra_state) {
-//		/* this generalized request does not need to do any freeing */ 
-//		/* as a result it never fails here */
-//		::free(extra_state);
-//		return MPI_SUCCESS;
-//	}
-//	inline static int cancel_fn(void* /*extra_state*/, int complete) {
-//		/* This generalized request does not support cancelling. 
-//		   Abort if not already done.  If done then treat as if cancel failed. */
-//		if(not (complete == 0)) {
-//			std::cerr<< "Cannot cancel generalized request - aborting program" <<std::endl;
-//			MPI_Abort(MPI_COMM_WORLD, 99); 
-//		}
-//		return MPI_SUCCESS;
-//	}
-//	template<class It>
-//	auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
-//		// based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
-//		mpi3::request ret; /*	receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>)); args->commP = this; args->d_first = d_first; //	args->d_last = d_last; args->source = source; args->tag = tag; args->requestP = &ret.impl_;*/
-//		receive_state* rs = (receive_state*)::malloc(sizeof(receive_state));
-//		rs->cancelled = 0;
-//		rs->source = source;
-//		rs->tag = tag;
-//		MPI_Grequest_start(query_fn, free_fn, cancel_fn, rs, &ret.impl_);//args->requestP);
-//		std::thread( //	static_cast<void*(*)(void*)>(receive_thread<It>), args
-//			[this, d_first, source, tag, &ret](){
-//				this->receive(d_first, source, tag); //	receive_args<It>* args = (receive_args<It>*)ptr; //	args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
-//				MPI_Grequest_complete(ret.impl_); //	MPI_Grequest_complete(*args->requestP); //	::free(ptr);
-//			}
-//		).detach();	//	t.detach(); //	pthread_t thread; //	pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args); //	pthread_detach(thread);
-//		return ret;
-//	}
+//  class ir_req{
+//      boost::mpi3::status query(){
+//          boost::mpi3::status ret;
+//          ret.set_source(MPI_UNDEFINED);
+//          ret.set_tag(MPI_UNDEFINED);
+//          ret.set_cancelled();
+//          ret.set_elements<char>(0);
+//          return ret;
+//      }
+//      static void free(){
+//          std::cout << "free" << std::endl;
+//      }
+//      static void cancel(int complete) {
+//          std::cout << "cancel " << complete << std::endl;
+//      }
+//  };
+//  template<class It>
+//  struct receive_args {
+//      communicator* commP;
+//      It d_first;
+//  //  It d_last;
+//      int source;
+//      int tag; 
+//      MPI_Request* requestP;
+//  };
+//  struct receive_state{
+//      int cancelled = 0;
+//      int source = MPI_UNDEFINED;
+//      int tag = MPI_UNDEFINED;
+//  };
+//  template<class It>
+//  inline static void* receive_thread(void* ptr) {
+//      receive_args<It>* args = (receive_args<It>*)ptr;
+//      args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+//      MPI_Grequest_complete(*args->requestP);
+//      ::free(ptr);
+//      return nullptr;
+//  }
+//  inline static int query_fn(void* extra_state, MPI_Status *status){
+//      auto* rs = static_cast<receive_state*>(extra_state);
+//      /* always send just one int */ 
+//      MPI_Status_set_elements(status, MPI_INT, 1);
+//      /* can never cancel so always true */ 
+//      MPI_Status_set_cancelled(status, rs->cancelled); 
+//      /* choose not to return a value for this */
+//      status->MPI_SOURCE = rs->source; 
+//      /* tag has not meaning for this generalized request */ 
+//      status->MPI_TAG = rs->tag; 
+//      /* this generalized request never fails */ 
+//      return MPI_SUCCESS;
+//  }
+//  inline static int free_fn(void* extra_state) {
+//      /* this generalized request does not need to do any freeing */ 
+//      /* as a result it never fails here */
+//      ::free(extra_state);
+//      return MPI_SUCCESS;
+//  }
+//  inline static int cancel_fn(void* /*extra_state*/, int complete) {
+//      /* This generalized request does not support cancelling. 
+//         Abort if not already done.  If done then treat as if cancel failed. */
+//      if(not (complete == 0)) {
+//          std::cerr<< "Cannot cancel generalized request - aborting program" <<std::endl;
+//          MPI_Abort(MPI_COMM_WORLD, 99); 
+//      }
+//      return MPI_SUCCESS;
+//  }
+//  template<class It>
+//  auto ireceive(It d_first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
+//      // based on http://liinwww.ira.uka.de/courses/spprakt/mpi2-html-doc/node157.html
+//      mpi3::request ret; /*   receive_args<It>* args = (receive_args<It>*)::malloc(sizeof(receive_args<It>)); args->commP = this; args->d_first = d_first; // args->d_last = d_last; args->source = source; args->tag = tag; args->requestP = &ret.impl_;*/
+//      receive_state* rs = (receive_state*)::malloc(sizeof(receive_state));
+//      rs->cancelled = 0;
+//      rs->source = source;
+//      rs->tag = tag;
+//      MPI_Grequest_start(query_fn, free_fn, cancel_fn, rs, &ret.impl_);//args->requestP);
+//      std::thread( // static_cast<void*(*)(void*)>(receive_thread<It>), args
+//          [this, d_first, source, tag, &ret](){
+//              this->receive(d_first, source, tag); // receive_args<It>* args = (receive_args<It>*)ptr; // args->commP->receive(args->d_first, args->source, args->tag);//, /*args->d_last,*/ );
+//              MPI_Grequest_complete(ret.impl_); //    MPI_Grequest_complete(*args->requestP); //  ::free(ptr);
+//          }
+//      ).detach(); //  t.detach(); //  pthread_t thread; //    pthread_create(&thread, NULL, static_cast<void*(*)(void*)>(receive_thread<It>), args); //   pthread_detach(thread);
+//      return ret;
+//  }
 	template<class It>
 	auto ireceive(
 		It d_first, It d_last, 
@@ -1403,15 +1403,15 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class InputIt, class V = typename std::iterator_traits<InputIt>::value_type>
 	auto dynamic_receive(InputIt first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
-	//	auto count = probe(source, tag).count<V>();
-	//	return receive(first, first + count, source, tag);
+	//  auto count = probe(source, tag).count<V>();
+	//  return receive(first, first + count, source, tag);
 		MPI_Status status;
 	    MPI_Message msg;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-    	int count = -1;
-    	MPI_Mprobe(source, tag, impl_, &msg, &status);
-    	MPI_Get_count(&status, datatype<V>{}(), &count);
-    	using detail::data;
-    	MPI_Mrecv(data(first), count, datatype<V>{}(), &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
+        int count = -1;
+        MPI_Mprobe(source, tag, impl_, &msg, &status);
+        MPI_Get_count(&status, datatype<V>{}(), &count);
+        using detail::data;
+        MPI_Mrecv(data(first), count, datatype<V>{}(), &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
 
 	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
@@ -1688,7 +1688,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 	template<class Iterator1, class Iterator2>
 	auto scatter_builtin_q(std::false_type, Iterator1 first, Iterator2 last, Iterator1 d_first, int root)
-//	{ TODO implement }
+//  { TODO implement }
 	;
 
  public:
@@ -1829,7 +1829,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 				detail::iterator_category_t<It2>{},
 				detail::value_category_t<typename std::iterator_traits<It2>::value_type>{},
 			op,
-			//	predefined_operation<Op>{},
+			//  predefined_operation<Op>{},
 			root
 		);
 	}
@@ -1932,7 +1932,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
  public:
 	template<
 		class It1, class Size, class Op = std::plus<>,
-	 	class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
+	    class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
 		class = std::enable_if_t<std::is_assignable_v<V1&, decltype(std::declval<Op>()(std::declval<V1 const&>(), std::declval<V1 const&>()))>>
 	>
 	auto all_reduce_in_place_n(It1 first, Size count, Op /*op*/) {
@@ -2243,7 +2243,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		std::vector<int> counts(c.size());
 		std::transform(
 			counts.begin(), counts.end(), begin(c), counts.begin(),
-			[](auto& /*unused*/, auto& b){return std::distance(begin(b), end(b));}
+			[](auto& /*unused*/, auto const& b){return std::distance(begin(b), end(b));}
 		);
 		int n = scatter(counts);
 		scatterv_n(
@@ -2386,7 +2386,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 		if(s != MPI_SUCCESS) {throw std::runtime_error("cannot gather");}
 		advance(d_first, count*size(), root...);
-	//	std::advance(d_first, count);
+	//  std::advance(d_first, count);
 		return d_first;
 	}
 
@@ -2990,8 +2990,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 //template<class T>
 //friend auto operator,(communicator& comm, T const& t){
-//	std::vector<T> ret(comm.size());
-//	comm.all_gather_n(std::addressof(t), 1, first, root); 
+//  std::vector<T> ret(comm.size());
+//  comm.all_gather_n(std::addressof(t), 1, first, root); 
 //}
 
 	template<class T>
@@ -3059,16 +3059,16 @@ inline communicator communicator::create_group(class group const& g, int tag = 0
 
 template<class T>
 inline void communicator::deallocate_shared(pointer<T> /*unused*/){
-//	MPI_Free_mem(p.base_ptr(rank()));
+//  MPI_Free_mem(p.base_ptr(rank()));
 }
 
 template<class T>
 inline void communicator::deallocate(pointer<T>& /*p*/, MPI_Aint /*size*/) {  // TODO(correaa) should be called free?
-//	p.pimpl_->fence();
-//	MPI_Free_mem(p.local_ptr());
-//	MPI_Win_free(&p.pimpl_->impl_);
-//	delete p.pimpl_;
-//	p.pimpl_ == nullptr;
+//  p.pimpl_->fence();
+//  MPI_Free_mem(p.local_ptr());
+//  MPI_Win_free(&p.pimpl_->impl_);
+//  delete p.pimpl_;
+//  p.pimpl_ == nullptr;
 }
 
 #if 0
@@ -3134,97 +3134,97 @@ inline mpi3::communicator& grip_communicator(MPI_Comm const& handle) {
 //namespace mpi3 = boost::mpi3;
 
 //class V{
-//	mpi3::communicator comm_;
-//	public:
-//	V(mpi3::communicator const& c) : comm_(c){}
-//	V(mpi3::communicator&& c) : comm_(std::move(c)){}
+//  mpi3::communicator comm_;
+//  public:
+//  V(mpi3::communicator const& c) : comm_(c){}
+//  V(mpi3::communicator&& c) : comm_(std::move(c)){}
 //};
 
 //int mpi3::main(int, char*[], mpi3::communicator world){
-//	std::cout << mpi3::undefined << std::endl;
+//  std::cout << mpi3::undefined << std::endl;
 
-//	static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
+//  static_assert(std::is_nothrow_constructible<mpi3::communicator>::value, "MyType should be noexcept MoveConstructible");
 
-////	auto worldcopy1 = world;
-////	auto worldcopy2 = std::move(worldcopy1);
-////	V v(worldcopy);
-////	V v2(std::move(v));
+////    auto worldcopy1 = world;
+////    auto worldcopy2 = std::move(worldcopy1);
+////    V v(worldcopy);
+////    V v2(std::move(v));
 
-//	if(world.rank() == 0) cout << "MPI version " <<  mpi3::version() << '\n';
-////	if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
+//  if(world.rank() == 0) cout << "MPI version " <<  mpi3::version() << '\n';
+////    if(world.rank() == 0) cout << "Topology: " << name(world.topo()) << '\n';
 
-//	cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
+//  cout << "MPI_ERR_COMM = " << MPI_ERR_COMM << '\n';
 
-//	mpi3::communicator comm;
-//	assert(!comm);
-////	cout << comm.rank() << '\n';
+//  mpi3::communicator comm;
+//  assert(!comm);
+////    cout << comm.rank() << '\n';
 
-//	mpi3::communicator comm2 = world;
-//	assert(comm2);
-//	assert(comm2.size() == world.size());
-//	assert(comm2 == world);
-//	assert(&comm2 != &world);
+//  mpi3::communicator comm2 = world;
+//  assert(comm2);
+//  assert(comm2.size() == world.size());
+//  assert(comm2 == world);
+//  assert(&comm2 != &world);
 
-//	mpi3::communicator comm3 = world;//.duplicate();
-//	assert(comm3);
-//	assert(comm3 == world);
-//	assert(&comm3 != &world);
-//	comm = comm2;
-//	assert(&comm != &comm2);
+//  mpi3::communicator comm3 = world;//.duplicate();
+//  assert(comm3);
+//  assert(comm3 == world);
+//  assert(&comm3 != &world);
+//  comm = comm2;
+//  assert(&comm != &comm2);
 
-////	world2 = world;
+////    world2 = world;
 
-//	return 0;
+//  return 0;
 //#if 0
-////	boost::mpi3::communicator newcomm = world;
-//	{
-//		int color = world.rank()/3;
-//		communicator row_comm;
-//		row_comm = world.split(color);
-//		world.barrier();
-//		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
-//		world.barrier();
-//	}
-//	{
-//		communicator row_comm = world/3;
-//		world.barrier();
-//		std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
-//		world.barrier();
-//	}
+////    boost::mpi3::communicator newcomm = world;
+//  {
+//      int color = world.rank()/3;
+//      communicator row_comm;
+//      row_comm = world.split(color);
+//      world.barrier();
+//      std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
+//      world.barrier();
+//  }
+//  {
+//      communicator row_comm = world/3;
+//      world.barrier();
+//      std::cout << std::to_string(world.rank()) + " " + std::to_string(row_comm.rank()) + "\n";// << std::endl;
+//      world.barrier();
+//  }
 
-//	world.barrier();
-//	if(world.rank() == 0) cout << "prime communicator" << '\n';
-//	world.barrier();
+//  world.barrier();
+//  if(world.rank() == 0) cout << "prime communicator" << '\n';
+//  world.barrier();
 
-//	{
-//	//	group world_group(world);
-//	//	const int ranks[4] = {2, 3, 5, 7};
-//	//	group prime = world_group.include(ranks, ranks + 4);
-//	//	communicator prime_comm(world, prime);
-//		auto prime_comm = world.subcomm({2,3,5,7});
-//		cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
+//  {
+//  //  group world_group(world);
+//  //  const int ranks[4] = {2, 3, 5, 7};
+//  //  group prime = world_group.include(ranks, ranks + 4);
+//  //  communicator prime_comm(world, prime);
+//      auto prime_comm = world.subcomm({2,3,5,7});
+//      cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
 //#if 0
-//		if(communicator::null != prime_comm){
-//			cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
-//		}else{
-//			cout << world.rank() << " not in prime comm\n";
-//		}
+//      if(communicator::null != prime_comm){
+//          cout << world.rank() << " -> " << prime_comm.rank() << "/" << prime_comm.size() << '\n';
+//      }else{
+//          cout << world.rank() << " not in prime comm\n";
+//      }
 //#endif
-//	}
+//  }
 
-//	world.barrier();
-//	if(world.rank() == 0) cout << "prime communicator" << '\n';
-//	world.barrier();
+//  world.barrier();
+//  if(world.rank() == 0) cout << "prime communicator" << '\n';
+//  world.barrier();
 
-//	if(0){
-//		auto prime = world.subcomm({2,3,5,7});
-//		if(prime.is_empty()){
-//	//	if (communicator::null != prime){
-//			cout << world.rank() << " -> " << prime.rank() << "/" << prime.size() << '\n';
-//		}else{
-//			cout << world.rank() << " not in prime comm\n";
-//		}
-//	}
+//  if(0){
+//      auto prime = world.subcomm({2,3,5,7});
+//      if(prime.is_empty()){
+//  //  if (communicator::null != prime){
+//          cout << world.rank() << " -> " << prime.rank() << "/" << prime.size() << '\n';
+//      }else{
+//          cout << world.rank() << " not in prime comm\n";
+//      }
+//  }
 //#endif
 //}
 
