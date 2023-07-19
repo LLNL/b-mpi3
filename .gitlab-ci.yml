@@ -67,6 +67,7 @@ openmpi-clang:
 
 openmpi-clang20:
   stage: build
+  image: debian:testing
   script:
     - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
     - cd test
