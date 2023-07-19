@@ -328,7 +328,7 @@ basic_oarchive_impl::save_pointer(
             if(bos.is_polymorphic()){
                 const serialization::extended_type_info *eti = & bos.get_eti();
                 const char * key = nullptr;
-                if(nullptr != eti) {  // suppress-cppcheck knownConditionTrueFalse ; external code
+                if(nullptr != eti) {  // cppcheck-suppress knownConditionTrueFalse ; external code
                     key = eti->get_key(); }
                 if(nullptr != key){
                     // the following is required by IBM C++ compiler which

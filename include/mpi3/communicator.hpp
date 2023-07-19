@@ -325,7 +325,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		}
 		static int copy_fn(
 			MPI_Comm /*oldcomm*/, int /*keyval*/,
-			void * /*extra_state*/, void *attribute_val_in,
+			void * /*extra_state*/, void *attribute_val_in,  // cppcheck-suppress constParameterCallback ; C-function callback
 			void *attribute_val_out, int *flag
 		) {
 			*static_cast<void**>(attribute_val_out) = static_cast<void*>(new T{*(static_cast<T const*>(attribute_val_in))});
