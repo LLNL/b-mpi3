@@ -190,11 +190,11 @@ class environment {
 		initialize_thread(required);
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-	explicit environment(int& argc, char**& argv) {  // cppcheck-suppress constParameter ; bug in cppcheck 2.3 or it can't see through the MPI C-API
+	explicit environment(int& argc, char**& argv) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv);  // initialize(argc, argv); // TODO have an environment_mt/st version?
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
-	explicit environment(int& argc, char**& argv, thread_level required) {  // cppcheck-suppress constParameter ; bug in cppcheck 2.3
+	explicit environment(int& argc, char**& argv, thread_level required) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv, required);
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	}
@@ -224,7 +224,7 @@ class environment {
 		//  return named_attributes_key_p;
 		return *named_attributes_key_f();
 	}
-	static bool cuda_support() { return mpi3::cuda_support(); }
+	static bool cuda_support() { return mpi3::cuda_support(); }  // cppcheck-suppress knownConditionTrueFalse ; might be known at compile time
 
 	static inline void initialize() { mpi3::initialize(); }
 	static inline void initialize(int argc, char** argv) { mpi3::initialize(argc, argv); }
