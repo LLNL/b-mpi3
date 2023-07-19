@@ -170,7 +170,7 @@ class package_iarchive_impl  // NOLINT(fuchsia-multiple-inheritance) follow Boos
 		s.resize(size);
 		p_.unpack_n(s.data(), size);
 	}
-	void load(std::wstring& ws) {  // cppcheck-suppress constParameter ; TODO(correaa) implement?
+	void load(std::wstring& ws) {  // cppcheck-suppress [constParameter,constParameterReference]  ; TODO(correaa) implement?
 		const std::size_t size = ws.size();
 		*this->This() << size;
 		//  ++tokens_; //   this->This()->newtoken();
