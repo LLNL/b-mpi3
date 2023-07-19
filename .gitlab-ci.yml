@@ -123,9 +123,10 @@ mpich-debug:
 
 mpich-valgrind:
   stage: build
+  image: debian:testing
   allow_failure: true
   script:
-    - apt update -qq && apt-get install -qq -y --no-install-recommends libmpich-dev mpich
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libmpich-dev mpich
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
