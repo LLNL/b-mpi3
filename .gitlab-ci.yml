@@ -1,14 +1,13 @@
 # -*-indent-tabs-mode:nil;c-basic-offset:2;tab-width:4;-*-
 # Copyright 2020-2023 Alfredo A. Correa
 
-image: correaadock/gnudev:v2
+image: debian:testing
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 openmpi:
   stage: build
-  image: debian:testing
   script:
     - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -22,7 +21,6 @@ openmpi:
 icpc-intelmpi:
   stage: build
   image: intel/oneapi-hpckit:latest
-  allow_failure: true
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -82,7 +80,6 @@ openmpi-clang20:
 
 openmpi-clang-tidy:
   stage: build
-  image: debian:testing
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake git make libboost-serialization-dev
     - mkdir build && cd build
@@ -96,7 +93,6 @@ openmpi-clang-tidy:
 
 openmpi-cppcheck:
   stage: build
-  image: debian:testing
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - mkdir build && cd build
@@ -110,7 +106,6 @@ openmpi-cppcheck:
 
 mpich-debug:
   stage: build
-  image: debian:testing
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - cd test
@@ -124,10 +119,9 @@ mpich-debug:
 
 mpich-valgrind:
   stage: build
-  image: debian:testing
   allow_failure: true
   script:
-    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git libmpich-dev mpich make
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git libboost-test-dev libboost-serialization-dev libmpich-dev make mpich valgrind
     - mpirun --version
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE=""
