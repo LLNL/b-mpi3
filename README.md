@@ -81,27 +81,23 @@ It turns out that this interface was a very minimal change over the C version, a
 The B.MPI3 library was designed to use simultaneously (interleaved) with the standard C interface of MPI.
 In this way, changes to existing code can be made incrementally.
 
-## Installation
+## Usage
 
-The library is "header-only"; no separate compilation is necessary.
-In order to compile it requires an MPI distribution (e.g. OpenMPI or MPICH2) and the corresponding compiler-wrapper (`mpic++` or `mpicxx`).
-This library requires C++14 and Boost libraries installed.
+The library is "header-only"; no separate compilation or configuration of the library is necessary.
+It requires an MPI distribution (e.g. OpenMPI or MPICH2), a C++14 compiler and Boost libraries installed.
 A typical compilation/run command looks like this:
 
 ```bash
-$ mpic++ -std=c++14 -O3 mpi3/test/communicator_send.cpp -o communicator_send.x -lboost_serialization
+$ mpic++ communicator_send.cpp -o communicator_send.x -lboost_serialization
 $ mpirun -n 8 ./communicator_send.x
 ```
 
-In a system such as Red Hat, the dependencies can by installed by
-
-```bash
-dnf install gcc-c++ boost-devel openmpi-devel mpich-devel
-```
+In a system such as Red Hat or Fedora, the dependencies can by installed by `sudo dnf install gcc-c++ boost-devel openmpi-devel mpich-devel`.
 
 Alternatively, the library can be fetched on demand by the CMake project:
 
 ```cmake
+include(FetchContent)
 FetchContent_Declare(bmpi3 GIT_REPOSITORY https://gitlab.com/correaa/boost-mpi3.git)  # or git@gitlab.com:correaa/boost-mpi3.git
 FetchContent_MakeAvailable(bmpi3)
 
@@ -110,7 +106,7 @@ target_link_libraries(your_executable PRIVATE bmpi3)
 
 Some systems require loading the MPI module before compiling and using MPI programs, `module load mpi` (or `mpich`).
 
-The library is tested frequently against `openmpi` and `mpich`, and less frequently with `mvapich2`.
+The library is tested frequently against `openmpi` and `mpich` implementations of MPI.
 
 ## Testing
 
