@@ -63,9 +63,9 @@ openmpi-clang:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
-"openmpi-clang20-libc++":
+"openmpi-clang20":
   stage: build
-  image: debian:testing
+  image: debian:stable
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
     - cd test
@@ -73,7 +73,7 @@ openmpi-clang:
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - clang++ --version
     - mpirun --version
-    - CXX=clang++ CXXFLAGS="-stdlib=libc++" cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
+    - CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi-clang"]
