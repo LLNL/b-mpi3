@@ -181,7 +181,7 @@ inq-openmpi:
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
     - cd external_libs/mpi3
-    - git checkout $CI_COMMIT_BRANCH
+    - git checkout $CI_COMMIT_BRANCH  # check that multi repo is mirrored correctly from this repo to the submodule repo (npneq)
     - cd ../..
     - mkdir build && cd build
     - cmake .. --install-prefix=$HOME -DCMAKE_BUILD_TYPE=Release
