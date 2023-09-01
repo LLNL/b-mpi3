@@ -77,9 +77,9 @@ class packed {
 
 template<class T> struct basic_datatype;
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 
 #if defined(MPI_DOUBLE_COMPLEX)
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MPI3_DECLARE_DATATYPE(TypE, MpiiD) \
 template<> struct basic_datatype<TypE> { \
 /*	constexpr*/ operator MPI_Datatype() const { \
