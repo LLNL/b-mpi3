@@ -47,7 +47,7 @@ auto inline string(enum error err) {
 	int len;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization
 	int s = MPI_Error_string(static_cast<int>(err), estring.data(), &len);  // do not use the MPI_() macro or mpi3::call here because they need this in the first place to capture the error message
 	if( s !=MPI_SUCCESS ) {throw std::logic_error("error while constructing error string");}
-	estring.resize(len);
+	estring.resize(static_cast<std::size_t>(len));
 	return estring;
 }
 
