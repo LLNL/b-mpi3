@@ -1,8 +1,7 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
-#ifndef MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
-#define MPI3_DETAIL_BASIC_COMMUNICATOR_HPP
+#ifndef BMPI3_DETAIL_BASIC_COMMUNICATOR_HPP
+#define BMPI3_DETAIL_BASIC_COMMUNICATOR_HPP
 
 #include "../../mpi3/vector.hpp"
 
@@ -246,11 +245,7 @@ class basic_communicator{
 	auto send(uvector<detail::packed> const& p, int dest, int tag = 0) {
 		return send_n(p.data(), p.size(), dest, tag);
 	}
-	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
-		match m;
-		MPI_(Mprobe)(source, tag, impl_, &m.message::impl_, &m.status::impl_);
-		return m;
-	}
+
 	template<class It, typename Size>
 	auto receive_n(
 		It dest,
@@ -263,6 +258,14 @@ class basic_communicator{
 		receive_n(buffer.data(), buffer.size(), source, tag);
 		return std::copy_n(buffer.begin(), n, dest);
 	}
+
+	#if not defined(__EXAMPI_MPI_H)
+	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
+		match m;
+		MPI_(Mprobe)(source, tag, impl_, &m.message::impl_, &m.status::impl_);
+		return m;
+	}
+
 	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
 		auto const count = static_cast<std::size_t>(m.count<detail::packed>());
@@ -270,9 +273,13 @@ class basic_communicator{
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);
 	}
+	#endif
+
+	#if not defined(__EXAMPI_MPI_H)
 	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		return receive(static_cast<uvector<detail::packed>&>(b), source, tag);
 	}
+	#endif
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
 		It first,

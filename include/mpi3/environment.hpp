@@ -25,7 +25,9 @@ enum class thread_level : int {
 	single     = MPI_THREAD_SINGLE,
 	funneled   = MPI_THREAD_FUNNELED,
 	serialized = MPI_THREAD_SERIALIZED,
+#if not defined(__EXAMPI_MPI_H)
 	multiple   = MPI_THREAD_MULTIPLE
+#endif
 };
 
 using thread = thread_level;
@@ -154,9 +156,11 @@ inline thread_level initialize_thread(
 	return static_cast<thread_level>(ret);
 }
 
+#if not defined(__EXAMPI_MPI_H)
 inline thread_level thread_support() {
 	return static_cast<thread_level>(MPI_(Query_thread)());
 }
+#endif
 
 inline bool cuda_support() {
 	#if defined(CUDA_AWARE_SUPPORT) and CUDA_AWARE_SUPPORT
@@ -181,22 +185,30 @@ inline std::string get_processor_name() { return detail::call<&MPI_Get_processor
 class environment {
  public:
 	environment() {
+#if not defined(__EXAMPI_MPI_H)
 		initialize_thread(thread_level::multiple);
-		// std::clog << "ctor() environment" << std::endl;
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
+#else
+		initialize_thread(thread_level::serialized);
+#endif
 	}
 	explicit environment(thread_level required) {
-		// std::clog << "ctor(thread_level) environment" << std::endl;
 		initialize_thread(required);
+	#if not defined(__EXAMPI_MPI_H)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
+	#endif
 	}
 	explicit environment(int& argc, char**& argv) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv);  // initialize(argc, argv); // TODO have an environment_mt/st version?
+	#if not defined(__EXAMPI_MPI_H)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
+	#endif
 	}
 	explicit environment(int& argc, char**& argv, thread_level required) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv, required);
+	#if not defined(__EXAMPI_MPI_H)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
+	#endif
 	}
 
 	environment(environment const&) = delete;
@@ -206,15 +218,20 @@ class environment {
 	environment& operator=(environment&&)      = delete;
 
 	~environment() noexcept {  // NOLINT(bugprone-exception-escape) finalizes throws as an instance of UB
-		// std::clog << "dtor environment" << std::endl;
+	#if not defined(__EXAMPI_MPI_H)
 		named_attributes_key_f().reset();
+	#endif
 		finalize();  // cppcheck-suppress throwInNoexceptFunction ; finalizes throws as an instance of UB
 	}
 
+#if not defined(__EXAMPI_MPI_H)
 	inline static thread_level thread_support() { return mpi3::thread_support(); }
+#endif
 	//  static /*inline*/ communicator::keyval<int> const* color_key_p;
 	//  static communicator::keyval<int> const& color_key(){return *color_key_p;}
 	//  static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
+
+#if not defined(__EXAMPI_MPI_H)
 	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f() {
 		static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const> named_attributes_key_p;
 		return named_attributes_key_p;
@@ -224,6 +241,7 @@ class environment {
 		//  return named_attributes_key_p;
 		return *named_attributes_key_f();
 	}
+#endif
 	static bool cuda_support() { return mpi3::cuda_support(); }  // cppcheck-suppress knownConditionTrueFalse ; might be known at compile time
 
 	static inline void initialize() { mpi3::initialize(); }
@@ -286,9 +304,11 @@ class environment {
 	static auto wall_sleep_for(Duration d) { return mpi3::wall_sleep_for(d); }
 };
 
+#if not defined(__EXAMPI_MPI_H)
 inline mpi3::any& communicator::attribute(std::string const& s) {
 	return attribute(environment::named_attributes_key())[s];
 }
+#endif
 
 }  // end namespace mpi3
 }  // end namespace boost

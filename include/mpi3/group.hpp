@@ -66,10 +66,12 @@ class group {
 	auto root() const -> bool {assert(not empty()); return rank() == 0;}
 	auto size() const -> int {int size = -1; MPI_(Group_size)(impl_, &size); return size;}
 
-	group sliced(int first, int last, int stride = 1) const {
+#ifndef __EXAMPI_MPI_H
+	auto sliced(int first, int last, int stride = 1) const {
 		int ranges[][3] = {{first, last - 1, stride}};  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 		group ret; MPI_(Group_range_incl)(impl_, 1, ranges, &ret.impl_); return ret;
 	}
+#endif
 
 	bool empty() const {return size()==0;}
 	friend auto compare(group const& self, group const& other){

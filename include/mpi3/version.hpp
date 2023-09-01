@@ -52,14 +52,15 @@ inline auto version() {
 	return ret;
 }
 
-inline auto library_version() -> std::string {
-	std::array<char, MPI_MAX_LIBRARY_VERSION_STRING> mpi_lib_ver{};
-	int  len = 0;
-	MPI_(Get_library_version)(mpi_lib_ver.data(), &len);
-	return {mpi_lib_ver.data(), static_cast<std::string::size_type>(len)};
+inline auto library_version() {
+	std::string ret(MPI_MAX_LIBRARY_VERSION_STRING, '\0');
+	int len;
+	MPI_(Get_library_version)(ret.data(), &len);
+	ret.resize(len);
+	return ret;
 }
 
-inline auto library_version_short() -> std::string {
+inline auto library_version_short() {
 	std::string ret = library_version();
 	{
 		auto found = ret.find('\n');

@@ -17,13 +17,21 @@ struct /*__attribute__((aligned(0)))*/ bad_alloc : std::bad_alloc{using std::bad
 
 inline void* malloc(mpi3::size_t size) {
 	void* ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+#if not defined(__EXAMPI_MPI_H)
 	int const s = MPI_Alloc_mem(size, MPI_INFO_NULL, &ret);
 	if(s != MPI_SUCCESS) {return nullptr;}  //s throw bad_alloc();//"cannot allocate " + std::to_string(size) + " bytes");
+#else
+	ret = std::malloc(size);
+#endif
 	return ret;
 }
 
 inline void free(void* ptr){
+#if not defined(__EXAMPI_MPI_H)
 	MPI_(Free_mem)(ptr);
+#else
+	std::free(ptr);
+#endif
 }
 
 template<class T>

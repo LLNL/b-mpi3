@@ -11,6 +11,7 @@ namespace mpi3 {
 
 template<class Duration>
 [[noreturn]] void timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
+#if not defined(__EXAMPI_MPI_H)
 	auto rbarrier = comm.ibarrier();
 	auto const t0 = mpi3::wall_time();
 	// now spin  
@@ -21,6 +22,7 @@ template<class Duration>
 	} else {
 		std::cout<<"MPI program terminated from rank "<< comm.rank() <<" after timeout of "<< std::chrono::duration_cast<std::chrono::seconds>(d).count() <<" seconds, not all processes failed within that time."<<std::endl;
 	}
+#endif
 	comm.abort(911);
 	// never call std::terminate from here (it will recurse)
 	std::abort();  // necessary to avoid error for returning in a [[noreturn]] function
