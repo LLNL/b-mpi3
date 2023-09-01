@@ -315,8 +315,8 @@ template<> inline auto make_type<std::complex<double>>() -> type const& { return
 // template<Complex, class = std::enable_if_t<std::is_same<> > inline auto make_type<std::complex<double>>() -> type { return type{MPI_CXX_DOUBLE_COMPLEX}; }
 
 #if defined(__NVCC__)
-template<> inline auto make_type<thrust::complex<float>>() -> type const& { return type{MPI_CXX_FLOAT_COMPLEX}; }
-template<> inline auto make_type<thrust::complex<double>>() -> type const& { return type{MPI_CXX_DOUBLE_COMPLEX}; }
+template<> inline auto make_type<thrust::complex<float>>() -> type const& { return mpi3::float_complex; }
+template<> inline auto make_type<thrust::complex<double>>() -> type const& { return mpi3::double_complex; }
 #endif
 
 template<> inline auto make_type<double>() -> type const& { return mpi3::double_; }
