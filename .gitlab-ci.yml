@@ -73,7 +73,7 @@ openmpi-clang:
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - clang++ --version
     - mpirun --version
-    - CXX=clang++ CXXFLAGS="-stdlib=libc++"" cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
+    - CXX=clang++ CXXFLAGS="-stdlib=libc++" cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=20
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi-clang"]
