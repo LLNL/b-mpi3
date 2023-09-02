@@ -1,4 +1,3 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_DETAIL_HANDLE_HPP
@@ -46,7 +45,7 @@ struct caller {
 		std::string ret(MPI_MAX_INFO_KEY, '\0');
 		int const status = F(impl(), n, ret.data());
 		if(status != 0) {throw std::runtime_error{"error "+ std::to_string(status)};}
-		ret.resize(n);
+		ret.resize(static_cast<std::string::size_type>(n));
 		return ret;
 	}
 	template<int(*F)(Impl, char const*, int*, int*)> std::pair<int, int> call(std::string const& key) const {
