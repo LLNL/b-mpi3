@@ -3065,7 +3065,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int impl_;
 
 	 public:
-		topology(int impl) : impl_{impl} {}
+		explicit topology(int impl) : impl_{impl} {}
 
 		static topology const undefined;
 		static topology const graph;
@@ -3118,9 +3118,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 };
 
-inline communicator::topology const communicator::topology::undefined{MPI_UNDEFINED};
-inline communicator::topology const communicator::topology::graph    {MPI_GRAPH};
-inline communicator::topology const communicator::topology::cartesian{MPI_CART};
+inline communicator::topology const communicator::topology::undefined{MPI_UNDEFINED};  // NOLINT(fuchsia-statically-constructed-objects) see if EXAMPI will allow it to be constexpr
+inline communicator::topology const communicator::topology::graph    {MPI_GRAPH};      // NOLINT(fuchsia-statically-constructed-objects) see if EXAMPI will allow it to be constexpr
+inline communicator::topology const communicator::topology::cartesian{MPI_CART};       // NOLINT(fuchsia-statically-constructed-objects) see if EXAMPI will allow it to be constexpr
 
 inline void  barrier(communicator& self) {       self. barrier();}
 #if not defined(__EXAMPI_MPI_H)
