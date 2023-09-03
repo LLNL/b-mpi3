@@ -3065,7 +3065,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int impl_;
 
 	 public:
-		explicit topology(int impl) : impl_{impl} {}
+		explicit topology(int impl) noexcept : impl_{impl} {}
 
 		static topology const undefined;
 		static topology const graph;
@@ -3083,12 +3083,6 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			{communicator::topology::cartesian, "cartesian"}};
 		return names.find(t)->second;
 	}
-
-//template<class T>
-//friend auto operator,(communicator& comm, T const& t){
-//  std::vector<T> ret(comm.size());
-//  comm.all_gather_n(std::addressof(t), 1, first, root); 
-//}
 
 	template<class T>
 	friend T operator+=(communicator& comm, T const& t) {  // NOLINT(fuchsia-overloaded-operator) : experimental operator
