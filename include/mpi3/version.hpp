@@ -1,5 +1,4 @@
-/* -*- indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4;-*- */
-// © Alfredo A. Correa 2018-2020
+// Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_VERSION_HPP
 #define BOOST_MPI3_VERSION_HPP

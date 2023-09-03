@@ -9,7 +9,7 @@ variables:
 openmpi:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -17,6 +17,21 @@ openmpi:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
+
+exampi:
+  stage: build
+  script:
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates git ssh # ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
+    - git clone https://github.com/tonyskjellum/ExaMPI.git
+    - cd ExaMPI
+    - mkdir build && cd build
+    - cmake ..
+    - make
+    - make install
+    - cd ../..
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - make -j 2 || make VERBOSE=1
+    - ctest --output-on-failure
 
 icpc-intelmpi:
   stage: build
