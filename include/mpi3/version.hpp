@@ -53,7 +53,7 @@ inline auto version() {
 
 inline auto library_version() {
 	std::string ret(MPI_MAX_LIBRARY_VERSION_STRING, '\0');
-	int len;
+	int len;  // NOLINT(cppcoreguidelines-init-variables) delayed initialization TODO(correaa) use assigment
 	MPI_(Get_library_version)(ret.data(), &len);
 	ret.resize(static_cast<std::string::size_type>(len));
 	return ret;
