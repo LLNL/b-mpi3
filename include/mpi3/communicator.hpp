@@ -3021,7 +3021,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		std::string ret(MPI_MAX_OBJECT_NAME, '\0');
 		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 		MPI_(Comm_get_name)(impl_, ret.data(), &len);
-		ret.resize(len);
+		ret.resize(static_cast<std::string::size_type>(len));
 		return ret;
 	}
 	void set_name(std::string const& s) {MPI_(Comm_set_name)(impl_, s.c_str());}
@@ -3029,7 +3029,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	[[deprecated]] void name(std::string const& s) {set_name(s);}
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	static mpi3::communicator& parent() {
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
 		static_assert(std::is_same<decltype(impl_), MPI_Comm>{}, "!");
