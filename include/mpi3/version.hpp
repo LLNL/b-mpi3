@@ -26,8 +26,8 @@ namespace mpi3 {
 struct version_t {
 	int major;  // NOLINT(misc-non-private-member-variables-in-classes)
 	int minor;  // NOLINT(misc-non-private-member-variables-in-classes)
-//	version_t() = default;
-//	constexpr explicit version_t(int major, int minor = 0) : major{major}, minor{minor} {}  // NOLINT(bugprone-easily-swappable-parameters)
+//  version_t() = default;
+//  constexpr explicit version_t(int major, int minor = 0) : major{major}, minor{minor} {}  // NOLINT(bugprone-easily-swappable-parameters)
 	friend std::ostream& operator<<(std::ostream& os, version_t const& self) {
 		return os << self.major << '.' << self.minor;
 	}
@@ -56,7 +56,7 @@ inline auto library_version() {
 	std::string ret(MPI_MAX_LIBRARY_VERSION_STRING, '\0');
 	int len;
 	MPI_(Get_library_version)(ret.data(), &len);
-	ret.resize(len);
+	ret.resize(static_cast<std::string::size_type>(len));
 	return ret;
 }
 
@@ -86,23 +86,23 @@ inline auto library_version_short() {
 
 // int mpi3::main(int, char*[], mpi3::communicator world){
 
-//	assert(( mpi3::version() == mpi3::Version() ));
-//	assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
-//	assert(( mpi3::version() == mpi3::version_t{3, 1} ));
-//	assert(( mpi3::version() <  mpi3::version_t{3, 2} ));
-//	assert(( mpi3::version() >  mpi3::version_t{3, 0} ));
-//	if(world.rank() == 0){
-//		cout
-//			<<"mpi Version                : "<< mpi3::Version()               <<'\n'
-//			<<"mpi version                : "<< mpi3::version()               <<'\n'
-//			<<"mpi3 library version       : "<< mpi3::library_version()       <<'\n'
-//			<<"mpi3 library version short : "<< mpi3::library_version_short() <<'\n'
-//			<<"mpi3 wrapper version       : "<< BOOST_MPI3_VERSION            <<'\n'
-//			<<"mpi3 wrapper version string: "<< BOOST_MPI3_VERSION_STRING     <<'\n'
-//		;
-//	}
-//	assert( BOOST_MPI3_VERSION >= 071 );
-//	return 0;
+//  assert(( mpi3::version() == mpi3::Version() ));
+//  assert(( mpi3::version() == mpi3::version_t{MPI_VERSION, MPI_SUBVERSION} ));
+//  assert(( mpi3::version() == mpi3::version_t{3, 1} ));
+//  assert(( mpi3::version() <  mpi3::version_t{3, 2} ));
+//  assert(( mpi3::version() >  mpi3::version_t{3, 0} ));
+//  if(world.rank() == 0){
+//      cout
+//          <<"mpi Version                : "<< mpi3::Version()               <<'\n'
+//          <<"mpi version                : "<< mpi3::version()               <<'\n'
+//          <<"mpi3 library version       : "<< mpi3::library_version()       <<'\n'
+//          <<"mpi3 library version short : "<< mpi3::library_version_short() <<'\n'
+//          <<"mpi3 wrapper version       : "<< BOOST_MPI3_VERSION            <<'\n'
+//          <<"mpi3 wrapper version string: "<< BOOST_MPI3_VERSION_STRING     <<'\n'
+//      ;
+//  }
+//  assert( BOOST_MPI3_VERSION >= 071 );
+//  return 0;
 
 //}
 //#endif
