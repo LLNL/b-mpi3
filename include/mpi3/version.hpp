@@ -53,8 +53,9 @@ inline auto version() {
 
 inline auto library_version() {
 	std::string ret(MPI_MAX_LIBRARY_VERSION_STRING, '\0');
-	int len;
+	int len = -1;
 	MPI_(Get_library_version)(ret.data(), &len);
+	assert(len >= 0);
 	ret.resize(static_cast<std::string::size_type>(len));
 	return ret;
 }

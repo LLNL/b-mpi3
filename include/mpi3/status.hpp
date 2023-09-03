@@ -1,5 +1,4 @@
-/* -*- indent-tabs-mode: t -*- */
-// Copyright 2018-2022 Alfredo A. Correa
+// Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_STATUS_HPP
 #define BOOST_MPI3_STATUS_HPP
@@ -25,15 +24,11 @@ struct [[nodiscard]] status {
 	status& operator=(status     &&) = default;
 
 	~status() noexcept = default; //  TODO(correaa) use MPI_Status_free
-	//{
-	//	if(impl_ != MPI_STATUS_NULL) 
-	//	MPI_Status_free(&impl_);
-	//}
 
 	template<class T>  // = char>
 	int count() const {  // entries received of datatype T
 		int ret = -1;
-		MPI_Get_count(const_cast<MPI_Status*>(&impl_), datatype<T>{}(), &ret);  // can't use MPI_(Get_count) because it is used for call
+		MPI_Get_count(const_cast<MPI_Status*>(&impl_), datatype<T>{}(), &ret);  // can't use MPI_(Get_count) because it is used for call  // NOLINT(cppcoreguidelines-pro-type-const-cast)
 		return ret;
 	}
 
@@ -62,13 +57,13 @@ struct [[nodiscard]] status {
 		int const s = MPI_Status_set_cancelled(&impl_, flag?1:0);  // TODO(correaa) modernize calls
 		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot set cancelled"};}
 	}
-//	bool cancelled() const {
-//		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-//		int s = MPI_Test_cancelled(&impl_, &ret);
-//		if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot test cancelled"};}
-//		return ret != 0;
-//	}
-//	constexpr static auto const ignore = MPI_STATUS_IGNORE;
+//  bool cancelled() const {
+//      int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
+//      int s = MPI_Test_cancelled(&impl_, &ret);
+//      if(s != MPI_SUCCESS) {throw std::runtime_error{"cannot test cancelled"};}
+//      return ret != 0;
+//  }
+//  constexpr static auto const ignore = MPI_STATUS_IGNORE;
 };
 
 }  // end namespace mpi3
