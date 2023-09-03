@@ -14,11 +14,12 @@ struct long_long {
 		value = v;
 		return *this;
 	}
-	template<class Archive>
-	void serialize(Archive& ar, unsigned = 0) {
-		ar & value;
-	}
 };
+
+template<class Archive>
+void serialize(Archive& ar, long_long& l, unsigned = 0) {  // cppcheck-suppress unusedFunction ; false positive in cppcheck 2.11 
+ ar& l.value;
+}
 
 namespace mpi3 = boost::mpi3;
 using std::cout;
