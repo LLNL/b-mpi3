@@ -53,8 +53,10 @@ inline void myterminate() {
 }
 
 inline void initialize(int& argc, char**& argv) {
-	assert(not initialized());  // double initialize
+	assert(not initialized());  // avoid double initialization`
+#if not defined(EXAMPI)
 	assert(not finalized());
+#endif
 
 	if(mpi3::version() != mpi3::Version()) {
 		std::cerr << "WARNING: MPI version inconsistency\n";

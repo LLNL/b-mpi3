@@ -1,4 +1,3 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2017-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ERROR_HPP

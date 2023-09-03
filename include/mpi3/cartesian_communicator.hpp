@@ -46,11 +46,15 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	cartesian_communicator(communicator& comm_old, std::initializer_list<int> shape, std::initializer_list<int> period)
 	: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)) {}
 
-	[[deprecated("use dimensionality() instead of dimension")]] int dimension() const {
-		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Cartdim_get(impl_, &ret);
+
+#if not defined(__EXAMPI_MPI_H)
+	[[deprecated("use dimensionality() instead of dimension")]]
+	int dimension() const {
+		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init  // TODO(correaa)
+		MPI_(Cartdim_get)(impl_, &ret);
 		return ret;
 	}
+#endif
 
 	cartesian_communicator& operator=(cartesian_communicator const&) = delete;
 	cartesian_communicator& operator=(cartesian_communicator&&)      = default;
@@ -66,6 +70,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 
 	~cartesian_communicator() = default;
 
+#if not defined(__EXAMPI_MPI_H)
 	int dimensionality() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Cartdim_get)(impl_, &ret);
@@ -101,10 +106,13 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	}
 
 	std::vector<int>  shape() const { return topology().dimensions(); }
+
 	std::vector<bool> periods() const {
 		auto ps = topology().periods();
 		return {ps.begin(), ps.end()};
 	}
+#endif
+
 	auto num_elements() const { return size(); }
 
 	template<class Coord>
@@ -114,6 +122,8 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 		return (*this)[rank];
 		//	return operator[](rank);
 	}
+
+#if not defined(__EXAMPI_MPI_H)
 	// int MPI_Cart_map not implemented
 	cartesian_communicator sub_aux(std::vector<int> const& remain_dims) {
 		assert(static_cast<dimensionality_type>(remain_dims.size()) == dimensionality());
@@ -132,6 +142,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 		remain[0] = 0 /*false*/;
 		return sub_aux(remain);
 	}
+#endif
 };
 
 enum fill_t {
@@ -151,10 +162,13 @@ struct cartesian_communicator : cartesian_communicator<> {
 
 	~cartesian_communicator() = default;
 
+// #if not defined(EXAMPI)
 	static std::array<int, D> division(int nnodes, std::array<int, D> suggest = {}) {
 		MPI_(Dims_create)(nnodes, D, suggest.data());
 		return suggest;
 	}
+// #endif
+
 	constexpr static dimensionality_type dimensionality = D;
 
 	cartesian_communicator(
@@ -269,6 +283,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 	using coordinates_type = std::array<int, D>;
 
 	using cartesian_communicator<>::rank;
+#if not defined(__EXAMPI_MPI_H)
 	auto rank(coordinates_type cs) const -> int {
 		auto const ps = periods();
 		auto const s  = shape();
@@ -280,6 +295,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 		}
 		return MPI_(Cart_rank)(impl_, cs.data());
 	}
+#endif
 	auto coordinates(int r) const -> coordinates_type {
 		coordinates_type ret;
 		MPI_(Cart_coords)(impl_, r, D, ret.data());
@@ -338,7 +354,10 @@ struct circular_communicator : cartesian_communicator<1> {
 	auto coordinate(int rank) const { return std::get<0>(this->coordinates(rank)); }
 
 	using cartesian_communicator<1>::rank;
+
+#if not defined(__EXAMPI_MPI_H)
 	auto rank(int coordinate) const { return cartesian_communicator<1>::rank({coordinate}); }
+#endif
 
 	template<typename... As>
 	auto rotate(As... as, int displacement) { return this->send_receive(as..., this->shift<0>(-displacement)); }

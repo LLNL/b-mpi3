@@ -20,10 +20,10 @@ void serialize(Archive& ar, long_long& l, unsigned = 0){
 namespace mpi3 = boost::mpi3;
 using std::cout;
 
-int mpi3::main(int argc, char* argv[], mpi3::communicator world){
+int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 
-	assert( world.size() == 2 );
-	long long size = 100000000;
+	assert( world.size() > 1 );
+	long long size = 10000000;
 	switch(world.rank()){
 	case 0:
 		{
@@ -34,9 +34,10 @@ int mpi3::main(int argc, char* argv[], mpi3::communicator world){
 		break;
 	case 1:
 		{
-			std::vector<long_long> w; world[0] >> w;
-			assert( w.size() == size );
-			assert( w[45].value = 45 );
+			std::vector<long_long> w;
+			world[0] >> w;
+			assert( w.size() == static_cast<std::size_t>(size) );
+			assert( w[45].value == 45 );
 		//	assert(std::accumulate(w.begin(), w.end(), 0.) == size*(size-1)/2 );
 		}
 		break;

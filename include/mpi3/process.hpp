@@ -1,8 +1,7 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
-#ifndef BOOST_MPI3_PROCESS_HPP
-#define BOOST_MPI3_PROCESS_HPP
+#ifndef BMPI3_PROCESS_HPP
+#define BMPI3_PROCESS_HPP
 
 #include "../mpi3/communicator.hpp"
 

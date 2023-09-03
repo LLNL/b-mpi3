@@ -128,6 +128,9 @@ auto const shared = {static_cast<communicator_type>(MPI_COMM_TYPE_SHARED)
 #endif
 };
 
+#if defined(__EXAMPI_MPI_H)
+inline
+#endif
 enum constant : int {
 #if defined(__EXAMPI_MPI_H)
 }
@@ -140,6 +143,9 @@ enum constant : int {
 #endif
 ;
 
+#if defined(__EXAMPI_MPI_H)
+inline
+#endif
 enum key : int { // for attributes
 #if defined(__EXAMPI_MPI_H)
 }
@@ -518,8 +524,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator split(int color, int key) {
 		communicator ret;
 		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
-		if(ret) {ret.set_name(name() + std::to_string(color));}
-		if(ret) {ret.attribute("color") = color;}
+		if(ret) { ret.set_name(name() + std::to_string(color)); }
+	#if not defined(EXAMPI)
+		if(ret) { ret.attribute("color") = color; }
+	#endif
 		return ret;
 	}
 	communicator split(int color = MPI_UNDEFINED) {
@@ -698,9 +706,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		if(not has_attribute(kv)) {set_attribute(kv);}
 		return get_attribute(kv);
 	}
-#endif
 
 	mpi3::any& attribute(std::string const& s);
+#endif
 
 #if not defined(__EXAMPI_MPI_H)
 	void call_error_handler(int errorcode) noexcept {
@@ -815,7 +823,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 #endif
 #endif
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	template<class It, class Size>
 	auto send_receive_replace_n(
 		It first, Size size,
@@ -846,7 +854,20 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return first + s.count<typename std::iterator_traits<It>::value_type>();
 	}
 
-		template<class It, typename Size, typename... Meta>
+	template<class It, typename Size>
+	auto send_receive_replace_n(
+		It first,
+			detail::forward_iterator_tag /*tag*/,
+			detail::basic_tag /*tag*/,
+		Size count, int dest, int source, int sendtag, int recvtag
+	) {
+		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<std::size_t>(count));
+		std::copy_n(first, count, v.begin());
+		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
+		return std::copy_n(v.begin(), v.size(), first);
+	}
+
+	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
 		It first,
 		/**/ detail::forward_iterator_tag  /*tag*/,
@@ -878,20 +899,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			count, first
 		);
 	}
-
-	template<class It, typename Size>
-	auto send_receive_replace_n(
-		It first,
-			detail::forward_iterator_tag /*tag*/,
-			detail::basic_tag /*tag*/,
-		Size count, int dest, int source, int sendtag, int recvtag
-	) {
-		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<std::size_t>(count));
-		std::copy_n(first, count, v.begin());
-		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
-		return std::copy_n(v.begin(), v.size(), first);
-	}
-#endif
+#endif  // not defined(EXAMPI)
 
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(
@@ -899,7 +907,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		It2 d_first, Size d_count, int source,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	) {
-		return send_receive_n(
+ 		return send_receive_n(
 			first, count, dest,
 			d_first, d_count, source,
 				detail::iterator_category_t<It1>{},  // It2???
@@ -1145,7 +1153,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return ret;
 	}
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	auto receive_packed(void* begin, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		MPI_Status status;
 		MPI_Message msg;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -1262,13 +1270,14 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	>
 	auto receive_n(It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive_n(
-			dest, 
+			dest,
 				detail::iterator_category_t<It>{},
 				detail::value_category_t<typename std::iterator_traits<It>::value_type>{},
 			n,
 			source, tag
 		);
 	}
+
 	template<class It, typename Size>
 	mpi3::request ireceive_n(
 		It dest, Size n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG

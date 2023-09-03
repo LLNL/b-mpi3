@@ -10,7 +10,7 @@ namespace boost {
 namespace mpi3 {
 
 template<class Duration>
-[[noreturn]] void timed_terminate(Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
+[[noreturn]] void timed_terminate([[maybe_unused]] Duration d, mpi3::communicator& comm = mpi3::environment::get_world_instance()) {
 #if not defined(__EXAMPI_MPI_H)
 	auto rbarrier = comm.ibarrier();
 	auto const t0 = mpi3::wall_time();

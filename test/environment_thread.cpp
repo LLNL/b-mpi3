@@ -7,9 +7,11 @@ mpi3::environment const mpienv{mpi3::thread::serialized};  // NOLINT(fuchsia-sta
 
 int main() try {
 
+#if not defined(EXAMPI)
 	assert( mpienv.thread_support() == mpi3::thread::single or mpienv.thread_support() == mpi3::thread::funneled or mpienv.thread_support() == mpi3::thread::serialized );
 	assert( mpienv.thread_support() <= mpi3::thread::serialized );
 	assert( mpienv.thread_support() <  mpi3::thread::multiple );
+#endif
 
 	assert( mpienv.is_thread_main() );
 

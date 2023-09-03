@@ -37,7 +37,7 @@ struct [[nodiscard]] request {
 		request(std::move(other)).swap(*this);  // cppcheck-suppress accessMoved ; false positive?
 		return *this;
 	}
-#if not defined(BMPI3_DISABLE_NONDESTRUCTIVE)
+#if not defined(EXAMPI)
 	bool completed() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Request_get_status)(impl_, &ret, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
@@ -73,7 +73,7 @@ struct [[nodiscard]] request {
 		return ret;
 	}
 	void start(){MPI_(Start)(&impl_);}
-#if not defined(BMPI3_DISABLE_NONDESTRUCTIVE)
+#if not defined(EXAMPI)
 	status test() const{return get_status();}
 #endif
 };

@@ -63,9 +63,7 @@ endif()
 #  different categories (MPI-1, MPI-2, etc., or something else)
 set(TEST_SRCS
   all_reduce.cpp
-	async_interaction.cpp
   broadcast.cpp
-	cartesian.cpp
 	communicator_abort.cpp
 	communicator_all_gather.cpp
 	communicator_all_gatherv.cpp
@@ -73,7 +71,6 @@ set(TEST_SRCS
 	communicator_barrier.cpp
 	communicator_divide.cpp
 	datatype.cpp
-  datatype_struct_vector3.cpp
   deino_all_to_all.cpp
   deino_broadcast.cpp
   deino_op_create.cpp
@@ -87,48 +84,57 @@ set(TEST_SRCS
 	communicator_main.cpp
 	communicator_mutable.cpp
 	communicator_operator.cpp
-	communicator_ostream.cpp
 	communicator_passby.cpp
 	communicator_reduce.cpp
-	communicator_reduce_in_place.cpp
 	communicator_scatter.cpp
+  communicator_send.cpp
 	communicator_set_error_handler.cpp
 	communicator_split.cpp
   enum.cpp
 	environment_thread.cpp
 	empty_main.cpp
-	ibarrier.cpp
-	window_put_get.cpp
 	reduce_maxloc.cpp
 	ring.cpp
-	shared_mutex.cpp
   send_complex.cpp
-	simple_send_receive.cpp
 	simple_broadcast.cpp
   spinor.cpp
   status.cpp
 	type_commit.cpp
 	type_size.cpp
-	uniform_abort.cpp
 )
 
-# List of tests that need to link with boost_serialization
-SET(NEED_BOOST_SERIALIZATION_SRCS
-	communicator_send.cpp
-	communicator_send_class_nonintrusive.cpp
-	communicator_send_receive.cpp
-	communicator_send_class.cpp
-	communicator_ireceive.cpp
-	communicator_gather.cpp
-  process.cpp
-  variant.cpp
-#   process_vector.cpp
-)
+if(NOT DEFINED USE_EXAMPI)
+  list(APPEND TEST_SRCS
+    async_interaction.cpp
+    cartesian.cpp
+    communicator_ostream.cpp
+    communicator_reduce_in_place.cpp
+    datatype_struct_vector3.cpp
+    ibarrier.cpp
+    shared_mutex.cpp
+    simple_send_receive.cpp
+    uniform_abort.cpp
+    window_put_get.cpp
+    )
+    # List of tests that need to link with boost_serialization
+    SET(NEED_BOOST_SERIALIZATION_SRCS
+    communicator_send_class_nonintrusive.cpp
+    communicator_send_class.cpp
+    communicator_send_receive.cpp
+    communicator_ireceive.cpp
+    communicator_gather.cpp
+    process.cpp
+    process_vector.cpp
+    variant.cpp
+  )
+endif()
 
 # Build tests that need boost serialization
-set(TEST_BOOST_SERIALIZATION TRUE)
-if (TEST_BOOST_SERIALIZATION)
-	SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
+if(NOT DEFINED USE_EXAMPI)
+  set(TEST_BOOST_SERIALIZATION TRUE)
+  if (TEST_BOOST_SERIALIZATION)
+    SET(TEST_SRCS ${TEST_SRCS} ${NEED_BOOST_SERIALIZATION_SRCS})
+  endif()
 endif()
 
 foreach(TEST_FILE ${TEST_SRCS})
@@ -252,7 +258,7 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   if(DEFINED ENV{VALGRIND_EXE})
-    add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1 ./${TEST_EXE})
+  add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --error-exitcode=1 ./${TEST_EXE})
   else()
     add_test(NAME ${TEST_EXE} COMMAND ${MPIEXEC} $ENV{MPI_OVERSUBSCRIBE} -n ${NPROC} ./${TEST_EXE})
   endif()
@@ -260,7 +266,10 @@ foreach(TEST_FILE ${TEST_SRCS})
 endforeach()
 
 set_tests_properties(communicator_abort.cpp.x PROPERTIES WILL_FAIL true)
-set_tests_properties(uniform_abort.cpp.x      PROPERTIES WILL_FAIL true)
+
+if(NOT DEFINED USE_EXAMPI)
+  set_tests_properties(uniform_abort.cpp.x      PROPERTIES WILL_FAIL true)
+endif()
 
 # Compile-time check for multiply defined symbols
 add_library(library_check library_check.cpp)
