@@ -3061,8 +3061,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	#endif
 	});
 
-	struct topology {
+	class topology {
 		int impl_;
+
+	 public:
+		topology(int impl) : impl_{impl} {}
 
 		static topology const undefined;
 		static topology const graph;
@@ -3076,7 +3079,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	inline static auto name(communicator::topology const& t) -> std::string const& {
 		static std::map<communicator::topology, std::string> const names = {
 			{communicator::topology::undefined, "undefined"}, 
-			{communicator::topology::graph, "graph"},
+			{communicator::topology::graph    , "graph"},
 			{communicator::topology::cartesian, "cartesian"}};
 		return names.find(t)->second;
 	}
@@ -3116,7 +3119,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 };
 
 inline communicator::topology const communicator::topology::undefined{MPI_UNDEFINED};
-inline communicator::topology const communicator::topology::graph{MPI_GRAPH};
+inline communicator::topology const communicator::topology::graph    {MPI_GRAPH};
 inline communicator::topology const communicator::topology::cartesian{MPI_CART};
 
 inline void  barrier(communicator& self) {       self. barrier();}
