@@ -12,11 +12,11 @@ namespace boost {
 namespace mpi3 {
 
 class fatal {
-//	explicit operator MPI_Errhandler() const {return MPI_ERRORS_ARE_FATAL;}
+//  explicit operator MPI_Errhandler() const {return MPI_ERRORS_ARE_FATAL;}
 };
 
 class code {
-//	explicit operator MPI_Errhandler() const {return MPI_ERRORS_RETURN;}
+//  explicit operator MPI_Errhandler() const {return MPI_ERRORS_RETURN;}
 };
 
 struct error_handler {
@@ -38,10 +38,10 @@ struct error_handler {
 	error_handler(error_handler&&) = default;  // this is necessary in C++14 (to return from function)
 
  public:
-//	error_handler(void(*fn)(MPI_Comm*, int* err, ...)){
-//		MPI_Comm_create_errhandler(fn, &impl_);
-//	}
-//	void operator()(communicator& comm, int error) const{comm.call_error_handler(error);}
+//  error_handler(void(*fn)(MPI_Comm*, int* err, ...)){
+//      MPI_Comm_create_errhandler(fn, &impl_);
+//  }
+//  void operator()(communicator& comm, int error) const{comm.call_error_handler(error);}
 	~error_handler() {
 	#if not defined(EXAMPI)
 		if(impl_ != MPI_ERRORS_ARE_FATAL and impl_ != MPI_ERRORS_RETURN) {
@@ -49,19 +49,19 @@ struct error_handler {
 		}
 	#else
 		if(impl_ != MPI_ERRORS_RETURN) {
-		//	MPI_Errhandler_free(&impl_);
+		//  MPI_Errhandler_free(&impl_);
 		}
 	#endif
 	}
-//	static error_handler const exception;
+//  static error_handler const exception;
 	static void exception(MPI_Comm* /*comm*/, int const* err) {//, ...){
 		std::string estring(MPI_MAX_ERROR_STRING, '\0');
 		int len;  // NOLINT(cppcoreguidelines-init-variables,-warnings-as-errors) delayed init
 		MPI_Error_string(*err, estring.data(), &len);
-		estring.resize(len);
+		estring.resize(static_cast<std::string::size_type>(len));
 		throw std::runtime_error{"error code"+ std::to_string(*err) +" "+ estring};
-//		throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
-//		throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
+//      throw boost::mpi3::exception("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
+//      throw std::runtime_error("error code " + std::to_string(*err) + " from comm " + std::to_string(*comm) + ": " + w);
 	}
 
 	static error_handler const fatal;
