@@ -1,5 +1,6 @@
 #if COMPILATION_INSTRUCTIONS
-mpicxx -O3 -std=c++14 $0 -o $0.x -lboost_serialization -lboost_container&&time mpirun -np 2 $0.x&&rm -f $0.x;exit
+mpicxx -O3 -std=c++14 $0 -o $0.x -lboost_serialization -lboost_container&&time mpirun -np 2 $0.x&&rm -f $0.x;
+exit
 #endif
 
 #include "../main.hpp"
@@ -7,14 +8,17 @@ mpicxx -O3 -std=c++14 $0 -o $0.x -lboost_serialization -lboost_container&&time m
 
 #include <boost/serialization/vector.hpp>
 
-struct long_long{
-	long long value;
-	long_long& operator=(long long v){value = v; return *this;}
+struct long_long {
+	long long  value;
+	long_long& operator=(long long v) {
+		value = v;
+		return *this;
+	}
 };
 
 template<class Archive>
-void serialize(Archive& ar, long_long& l, unsigned = 0){
-	ar & l.value;
+void serialize(Archive& ar, long_long& l, unsigned = 0) {
+	ar& l.value;
 }
 
 namespace mpi3 = boost::mpi3;
@@ -28,7 +32,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 	case 0:
 		{
 			std::vector<long_long> v(size); std::iota(v.begin(), v.end(), 0.);
-		//	assert(std::accumulate(v.begin(), v.end(), 0.) == size*(size-1)/2 );
+		//  assert(std::accumulate(v.begin(), v.end(), 0.) == size*(size-1)/2 );
 			world[1] << v;
 		}
 		break;
@@ -38,7 +42,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world){
 			world[0] >> w;
 			assert( w.size() == static_cast<std::size_t>(size) );
 			assert( w[45].value == 45 );
-		//	assert(std::accumulate(w.begin(), w.end(), 0.) == size*(size-1)/2 );
+		//  assert(std::accumulate(w.begin(), w.end(), 0.) == size*(size-1)/2 );
 		}
 		break;
 	}

@@ -867,7 +867,43 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return std::copy_n(v.begin(), v.size(), first);
 	}
 
-	template<class It, typename Size, typename... Meta>
+#endif  // not defined(EXAMPI)
+
+	template<class It, typename Size, class It2>
+	auto send_receive_n(
+		It    first, Size   count, int dest,
+		It2 d_first, Size d_count, int source,
+		/**/ detail::contiguous_iterator_tag /*tag*/,
+		/**/ detail::basic_tag /*tag*/,
+		int sendtag, int recvtag
+	) {
+		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
+		MPI_(Sendrecv)(
+			detail::data(  first), static_cast<int>(  count), datatype<typename std::iterator_traits<It >::value_type>{}(), dest  , sendtag,  // TODO(correaa) use safe cast
+			detail::data(d_first), static_cast<int>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(), source, recvtag,  // TODO(correaa) use safe cast
+			impl_, &ret.impl_
+		);
+		assert( static_cast<Size>(ret.count<typename std::iterator_traits<It2>::value_type>()) == d_count );
+		return d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(d_count);
+	}
+
+	template<class It1, typename Size, class It2>
+	auto send_receive_n(
+		It1 first, Size count, int dest,
+		It2 d_first, Size d_count, int source,
+		int sendtag = 0, int recvtag = MPI_ANY_TAG
+	) {
+        return send_receive_n(
+			first, count, dest,
+			d_first, d_count, source,
+				detail::iterator_category_t<It1>{},  // It2???
+				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
+			sendtag, recvtag
+		);
+	}
+
+#if not defined(EXAMPI)
+		template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(
 		It first,
 		/**/ detail::forward_iterator_tag  /*tag*/,
@@ -904,21 +940,6 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(
 		It1 first, Size count, int dest,
-		It2 d_first, Size d_count, int source,
-		int sendtag = 0, int recvtag = MPI_ANY_TAG
-	) {
- 		return send_receive_n(
-			first, count, dest,
-			d_first, d_count, source,
-				detail::iterator_category_t<It1>{},  // It2???
-				detail::value_category_t<typename std::iterator_traits<It1>::value_type>{},
-			sendtag, recvtag
-		);
-	}
-
-	template<class It1, typename Size, class It2>
-	auto send_receive_n(
-		It1 first, Size count, int dest,
 		It2 d_first, int source = MPI_ANY_SOURCE,
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
 	) {
@@ -951,24 +972,6 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 //  }
 
  private:
-	template<class It, typename Size, class It2>
-	auto send_receive_n(
-		It    first, Size   count, int dest,
-		It2 d_first, Size d_count, int source,
-		/**/ detail::contiguous_iterator_tag /*tag*/,
-		/**/ detail::basic_tag /*tag*/,
-		int sendtag, int recvtag
-	) {
-		status ret;  // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init) delayed init
-		MPI_(Sendrecv)(
-			detail::data(  first), static_cast<int>(  count), datatype<typename std::iterator_traits<It >::value_type>{}(), dest  , sendtag,  // TODO(correaa) use safe cast
-			detail::data(d_first), static_cast<int>(d_count), datatype<typename std::iterator_traits<It2>::value_type>{}(), source, recvtag,  // TODO(correaa) use safe cast
-			impl_, &ret.impl_
-		);
-		assert( static_cast<Size>(ret.count<typename std::iterator_traits<It2>::value_type>()) == d_count );
-		return d_first + static_cast<typename std::iterator_traits<It2>::difference_type>(d_count);
-	}
-
 	template<class It1, class Size, class It2
 		, class V1 = typename std::iterator_traits<It1>::value_type
 		, class V2 = typename std::iterator_traits<It2>::value_type
