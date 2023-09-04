@@ -23,7 +23,7 @@ exampi:
   stage: build
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates git ssh #  ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
-    - git clone https://oauth2:${EXATOKEN}@github.com/tonyskjellum/ExaMPI.git
+    - git clone https://correaa:${EXATOKEN}@github.com/tonyskjellum/ExaMPI.git
     - cd ExaMPI
     - mkdir build && cd build
     - cmake ..
