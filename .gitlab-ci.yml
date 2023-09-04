@@ -36,6 +36,8 @@ exampi:
     - export MPI_LIB=$HOME/exa/lib
     - export MPI_INC=$HOME/exa/include
     - export MPI_HOME=$HOME/exa
+    - which mpicxx
+    - which mpirun
     - ctest --output-on-failure
     - cd ../..
     - mkdir build && cd build
