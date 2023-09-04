@@ -41,7 +41,7 @@ icpc-intelmpi:
   stage: build
   image: intel/oneapi-hpckit:latest
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
