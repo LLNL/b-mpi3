@@ -103,6 +103,9 @@ set(TEST_SRCS
 	type_size.cpp
 )
 
+if(NOT ${USE_EXAMPI})
+endif()
+
 if(NOT DEFINED USE_EXAMPI)
   list(APPEND TEST_SRCS
     async_interaction.cpp
