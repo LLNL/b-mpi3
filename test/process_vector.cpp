@@ -6,7 +6,7 @@
 #include <boost/serialization/vector.hpp>
 
 struct long_long {
-	long long  value;  // NOLINT(google-runtime-int) testing type
+	long long  value;  // NOLINT(google-runtime-int,misc-non-private-member-variables-in-classes) testing type
 	long_long& operator=(long long v) {  // NOLINT(google-runtime-int) testing type
 		value = v;
 		return *this;
