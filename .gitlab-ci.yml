@@ -31,7 +31,7 @@ exampi:
     - make install
     - cd ../..
     - mkdir build && cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa -DMPI_CXX_HEADER_DIR=$HOME/exa/include
     - make -j 2 || make VERBOSE=1
     - ctest --output-on-failure
 
