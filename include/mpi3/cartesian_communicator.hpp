@@ -1,4 +1,3 @@
-//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_CARTESIAN_COMMUNICATOR_HPP
@@ -32,7 +31,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 		assert(s.size() == p.size());
 		using dimensionality_type = int;
 		MPI_(Cart_create)(comm_old.get(), static_cast<dimensionality_type>(s.size()), s.data(), p.data(), /*reorder*/ true, &impl_);
-		//	assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
+		//  assert(impl_ != MPI_COMM_NULL); // null communicator is a valid outcome
 		// TODO(correaa) try with mpich, WAS: there is an bug in mpich, in which if the remaining dim are none then the communicator is not well defined.
 	}
 
@@ -47,7 +46,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)) {}
 
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	[[deprecated("use dimensionality() instead of dimension")]]
 	int dimension() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init  // TODO(correaa)
@@ -70,7 +69,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 
 	~cartesian_communicator() = default;
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	int dimensionality() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init
 		MPI_(Cartdim_get)(impl_, &ret);
@@ -120,10 +119,10 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 		int rank = -1;
 		MPI_(Cart_rank)(impl_, coord.data(), &rank);
 		return (*this)[rank];
-		//	return operator[](rank);
+		//  return operator[](rank);
 	}
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	// int MPI_Cart_map not implemented
 	cartesian_communicator sub_aux(std::vector<int> const& remain_dims) {
 		assert(static_cast<dimensionality_type>(remain_dims.size()) == dimensionality());
@@ -283,7 +282,7 @@ struct cartesian_communicator : cartesian_communicator<> {
 	using coordinates_type = std::array<int, D>;
 
 	using cartesian_communicator<>::rank;
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	auto rank(coordinates_type cs) const -> int {
 		auto const ps = periods();
 		auto const s  = shape();
@@ -355,7 +354,7 @@ struct circular_communicator : cartesian_communicator<1> {
 
 	using cartesian_communicator<1>::rank;
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	auto rank(int coordinate) const { return cartesian_communicator<1>::rank({coordinate}); }
 #endif
 

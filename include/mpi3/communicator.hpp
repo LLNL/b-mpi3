@@ -108,7 +108,7 @@ namespace mpi3 {
 
 // https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
 enum class communicator_type : int {
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
 	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
 	core      = OMPI_COMM_TYPE_CORE    ,
@@ -127,30 +127,30 @@ auto const shared = {static_cast<communicator_type>(MPI_COMM_TYPE_SHARED)
 #endif
 };
 
-#if defined(__EXAMPI_MPI_H)
+#if defined(EXAMPI)
 inline
 #endif
 enum constant : int {
-#if defined(__EXAMPI_MPI_H)
-}
+#if defined(EXAMPI)
+} const
 #endif
 	undefined    = static_cast<constant>(MPI_UNDEFINED ),
 	process_null = static_cast<constant>(MPI_PROC_NULL ),
 	any_source   = static_cast<constant>(MPI_ANY_SOURCE)
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 }
 #endif
 ;
 
-#if defined(__EXAMPI_MPI_H)
+#if defined(EXAMPI)
 inline
 #endif
 enum key : int { // for attributes
-#if defined(__EXAMPI_MPI_H)
+#if defined(EXAMPI)
 }
 #endif
 	tag_ub             = static_cast<key>(MPI_TAG_UB)
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	, host               = static_cast<key>(MPI_HOST)
 	, io                 = static_cast<key>(MPI_IO)
 	, wtime_is_global    = static_cast<key>(MPI_WTIME_IS_GLOBAL)
@@ -246,7 +246,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	auto operator=(communicator     && other) noexcept -> communicator& {  // TODO(correaa) tidy this operator, consider removing it
 		if(impl_ != MPI_COMM_NULL) {
 			try {
-			#if not defined(__EXAMPI_MPI_H)
+			#if not defined(EXAMPI)
 				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
 			#else
 				MPI_(Comm_free      )(&impl_);
@@ -310,7 +310,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	~communicator() {
 		if(impl_ != MPI_COMM_WORLD and impl_ != MPI_COMM_NULL and impl_ != MPI_COMM_SELF) {
 			try {
-			#if not defined(__EXAMPI_MPI_H)
+			#if not defined(EXAMPI)
 				MPI_(Comm_disconnect)(&impl_);  //this will wait for communications to finish communications, <s>if it gets to this point is probably an error anyway</s> <-- not true, it is necessary to synchronize the flow
 			#else
 				MPI_Comm_free(&impl_);
@@ -346,7 +346,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
 	using detail::basic_communicator::send_receive_n;
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	using detail::basic_communicator::matched_probe;
 	#endif
 
@@ -542,7 +542,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	communicator reversed() {return split(0, size() - rank());}
 
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert(dims.size() == periods.size());
 		return MPI_(Cart_map)(impl_, static_cast<int>(dims.size()), dims.data(), periods.data());  // TODO(correaa) use safe cast
@@ -597,7 +597,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		assert(rank() - n > 0);
 		return rank() - n;
 	}
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	communicator accept(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -608,11 +608,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	[[deprecated("call non const version")]]
 	void  barrier() const {             MPI_( Barrier)(get()   )                        ;}
 	void  barrier()       {             MPI_( Barrier)(handle())                        ;}
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	auto ibarrier()       {request ret; MPI_(Ibarrier)(handle(), &ret.impl_); return ret;}
 #endif
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
@@ -630,7 +630,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	auto operator[](int rank) -> reference;
 
  protected:
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	template<class T> void set_attribute(int kv_idx, T const& t) {
 		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
@@ -654,7 +654,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  public:
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	template<class T>
 	class keyval {
 		static int delete_fn(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
@@ -709,7 +709,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	mpi3::any& attribute(std::string const& s);
 #endif
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	void call_error_handler(int errorcode) noexcept {
 		auto const s = MPI_Comm_call_errhandler(impl_, errorcode); (void)s;
 		assert(s == MPI_SUCCESS);
@@ -1616,7 +1616,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return d_first + count;
 	}
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	using in_place_type = decltype(MPI_IN_PLACE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr) openmpi #defines this as (void*)1, it may not be a pointer in general
 
 	template<class It1, typename Size>
@@ -1650,7 +1650,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  public:
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	template<class It1, typename Size>
 	auto all_to_all_inplace_n(It1 first, Size count) {
 		using count_type = int;
@@ -2002,7 +2002,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	template<
 		class It1, class Size, class Op = std::plus<>,
 	    class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})),
@@ -3056,7 +3056,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator create(group const& g) const;
 	communicator create_group(group const& g, int tag) const;
 	FILE*        fopen(char const* filename, int amode = unsigned{
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 		MPI_MODE_RDWR} | unsigned{MPI_MODE_CREATE
 	#endif
 	});
@@ -3117,7 +3117,7 @@ inline communicator::topology const communicator::topology::graph    {MPI_GRAPH}
 inline communicator::topology const communicator::topology::cartesian{MPI_CART};       // NOLINT(fuchsia-statically-constructed-objects) see if EXAMPI will allow it to be constexpr
 
 inline void  barrier(communicator& self) {       self. barrier();}
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 inline auto ibarrier(communicator& self) {return self.ibarrier();}
 #endif
 

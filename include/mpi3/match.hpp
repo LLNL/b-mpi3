@@ -9,7 +9,7 @@
 namespace boost{
 namespace mpi3{
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 struct match : public message, public status {  // NOLINT(fuchsia-multiple-inheritance)
 	friend class communicator;
 	template<class It>

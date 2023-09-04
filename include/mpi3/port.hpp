@@ -1,3 +1,5 @@
+// Copyright 2018-2023 Alfredo A. Correa
+
 #ifndef BMPI3_PORT_HPP
 #define BMPI3_PORT_HPP
 
@@ -9,7 +11,7 @@
 namespace boost {
 namespace mpi3 {
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 struct port {
 	// NOLINTNEXTLINE(misc-non-private-member-variables-in-classes) TODO(correaa)
 	std::string name_;  // typically this will be something like tag#0$description#inspiron$port#47425$ifname#172.17.5.240$

@@ -153,8 +153,8 @@ class basic_communicator{
 	) {
 		std::for_each(first, last, [&b, &pos, this](auto& e) {pos = unpack_n(b, pos, std::addressof(e), 1);});
 		// while(first != last){
-		// 	pos = unpack_n(b, pos, std::addressof(*first), 1);
-		// 	++first;
+		//  pos = unpack_n(b, pos, std::addressof(*first), 1);
+		//  ++first;
 		// }
 		return pos;
 	}
@@ -185,7 +185,7 @@ class basic_communicator{
 	}
 	template<class It, typename Size>
 	auto unpack_n(detail::buffer& b, It first, Size count) {
-	//	assert(0);
+	//  assert(0);
 		b.pos = unpack_n(b, b.pos, first, count);
 		return b.pos;
 	}
@@ -259,7 +259,7 @@ class basic_communicator{
 		return std::copy_n(buffer.begin(), n, dest);
 	}
 
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	match matched_probe(int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m;
 		MPI_(Mprobe)(source, tag, impl_, &m.message::impl_, &m.status::impl_);
@@ -275,7 +275,7 @@ class basic_communicator{
 	}
 	#endif
 
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	auto receive(detail::buffer& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		return receive(static_cast<uvector<detail::packed>&>(b), source, tag);
 	}

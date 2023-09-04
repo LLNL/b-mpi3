@@ -1,3 +1,5 @@
+// Copyright 2018-2023 Alfredo A. Correa
+
 #ifndef BMPI3_DETAIL_PACKAGE_HPP
 #define BMPI3_DETAIL_PACKAGE_HPP
 
@@ -59,7 +61,7 @@ struct package : buffer {
 	auto send(int dest, int tag = 0) {
 		return bcomm_.send(static_cast<buffer&>(*this), dest, tag);
 	}
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	auto receive(int dest, int tag = 0) {
 		return bcomm_.receive(static_cast<buffer&>(*this), dest, tag);
 	}

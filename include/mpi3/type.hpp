@@ -1,4 +1,3 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_TYPE_HPP
@@ -43,11 +42,11 @@ struct committed_type {
 
 struct type {
 	explicit type(MPI_Datatype const& dt) noexcept : impl_{dt} {  // NOLINT(bugprone-exception-escape) TODO(correaa) improve this global initialization
-	 	if(mpi3::initialized()) {  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
-		#if not defined(__EXAMPI_MPI_H)
-	 		MPI_(Type_dup)(dt, &impl_);
+	    if(mpi3::initialized()) {  // cppcheck-suppress[throwInNoexceptFunction]; TODO(correaa) improve this global initialization
+		#if not defined(EXAMPI)
+	        MPI_(Type_dup)(dt, &impl_);
 		#endif
-	 	}
+	    }
 	}
 
 	template<class T>
@@ -102,13 +101,13 @@ struct type {
 
 	type() = default;// {std::clog << "ctor type()" << std::endl;}
 
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	type(type const& other) { MPI_Type_dup(other.impl_, &impl_); }
 	#endif
 
 	type(type&& other) noexcept : impl_{std::exchange(other.impl_, MPI_DATATYPE_NULL)} {}  // TODO(correaa) consider not making it default constructible or movable
 
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 	type& operator=(type const& other) {
 		type tmp(other);
 		swap(tmp);
@@ -186,8 +185,8 @@ struct type {
 		std::vector<int>      blocklen(il.size(), 1);
 		std::vector<MPI_Aint> disp;
 		disp.reserve(il.size());
-		//	std::vector<MPI_Datatype> array_of_types;
-		//	array_of_types.reserve(il.size());
+		//  std::vector<MPI_Datatype> array_of_types;
+		//  array_of_types.reserve(il.size());
 		MPI_Aint    current_disp = 0;
 		std::string new_name     = "{";
 		std::for_each(il.begin(), il.end(), [&il, &disp, &current_disp, &new_name](auto const& e) {
@@ -211,7 +210,7 @@ struct type {
 
 	type operator[](int count) const { return contiguous(count); }
 	type operator()(int stride) const {
-		//	assert( stride == 2 );
+		//  assert( stride == 2 );
 		return vector(1, 1, stride);
 	}
 	int size() const {
@@ -268,7 +267,7 @@ struct type {
 		MPI_Type_set_name(ret.impl_, newname.c_str());
 		return ret;
 	}
-	//	static std::map<std::type_index, type const&> registered;
+	//  static std::map<std::type_index, type const&> registered;
 };
 
 // vvv TODO(correaa)

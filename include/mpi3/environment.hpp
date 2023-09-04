@@ -1,4 +1,3 @@
-//  -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_ENVIRONMENT_HPP
@@ -15,7 +14,6 @@
 
 #include <mpi.h>
 
-// #include <iostream>  // for std::clog
 #include <string>
 
 namespace boost {
@@ -25,7 +23,7 @@ enum class thread_level : int {
 	single     = MPI_THREAD_SINGLE,
 	funneled   = MPI_THREAD_FUNNELED,
 	serialized = MPI_THREAD_SERIALIZED,
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	multiple   = MPI_THREAD_MULTIPLE
 #endif
 };
@@ -158,7 +156,7 @@ inline thread_level initialize_thread(
 	return static_cast<thread_level>(ret);
 }
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 inline thread_level thread_support() {
 	return static_cast<thread_level>(MPI_(Query_thread)());
 }
@@ -187,7 +185,7 @@ inline std::string get_processor_name() { return detail::call<&MPI_Get_processor
 class environment {
  public:
 	environment() {
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 		initialize_thread(thread_level::multiple);
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 #else
@@ -196,19 +194,19 @@ class environment {
 	}
 	explicit environment(thread_level required) {
 		initialize_thread(required);
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	#endif
 	}
 	explicit environment(int& argc, char**& argv) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv);  // initialize(argc, argv); // TODO have an environment_mt/st version?
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	#endif
 	}
 	explicit environment(int& argc, char**& argv, thread_level required) {  // cppcheck-suppress [constParameter, constParameterReference] ; bug in cppcheck 2.3 and 2.9 or it can't see through the MPI C-API
 		initialize(argc, argv, required);
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 		named_attributes_key_f() = std::make_unique<communicator::keyval<std::map<std::string, mpi3::any>>>();
 	#endif
 	}
@@ -220,20 +218,20 @@ class environment {
 	environment& operator=(environment&&)      = delete;
 
 	~environment() noexcept {  // NOLINT(bugprone-exception-escape) finalizes throws as an instance of UB
-	#if not defined(__EXAMPI_MPI_H)
+	#if not defined(EXAMPI)
 		named_attributes_key_f().reset();
 	#endif
 		finalize();  // cppcheck-suppress throwInNoexceptFunction ; finalizes throws as an instance of UB
 	}
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	inline static thread_level thread_support() { return mpi3::thread_support(); }
 #endif
 	//  static /*inline*/ communicator::keyval<int> const* color_key_p;
 	//  static communicator::keyval<int> const& color_key(){return *color_key_p;}
 	//  static /*inline*/ communicator::keyval<std::map<std::string, mpi3::any>> const* named_attributes_key_p;
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 	static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const>& named_attributes_key_f() {
 		static std::unique_ptr<communicator::keyval<std::map<std::string, mpi3::any>> const> named_attributes_key_p;
 		return named_attributes_key_p;
@@ -306,7 +304,7 @@ class environment {
 	static auto wall_sleep_for(Duration d) { return mpi3::wall_sleep_for(d); }
 };
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 inline mpi3::any& communicator::attribute(std::string const& s) {
 	return attribute(environment::named_attributes_key())[s];
 }
@@ -314,31 +312,4 @@ inline mpi3::any& communicator::attribute(std::string const& s) {
 
 }  // end namespace mpi3
 }  // end namespace boost
-
-//#if not __INCLUDE_LEVEL__ // _TEST_BOOST_MPI3_ENVIRONMENT
-
-//#include<thread> // this_tread::sleep_for
-//#include<chrono>
-
-// namespace mpi3 = boost::mpi3;
-// using std::cout;
-// using namespace std::chrono_literals; // 2s
-
-// int main(){//int argc, char* argv[]){
-//  mpi3::environment::initialize(mpi3::thread_level::multiple);//argc, argv); // same as MPI_Init(...);
-//  assert( mpi3::environment::thread_support() == mpi3::thread_level::multiple );
-//  assert(mpi3::environment::is_initialized());
-//  {
-//      mpi3::communicator world = mpi3::environment::get_world_instance(); // a copy
-//      auto then = mpi3::environment::wall_time();
-//      std::this_thread::sleep_for(2s);
-//  //  cout<< (mpi3::environment::wall_time() - then).count() <<" seconds\n";
-//  }
-//  mpi3::environment::finalize(); // same as MPI_Finalize()
-//  assert(mpi3::environment::is_finalized());
-//// or better:
-////    mpi3::environment env(argc, argv);
-////    auto world = env.world();
-//}
-//#endif
 #endif

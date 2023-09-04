@@ -40,7 +40,7 @@ struct [[nodiscard]] status {
 		return ret;
 	}
 
-#ifndef __EXAMPI_MPI_H
+#if not defined(EXAMPI)
 	template<class T>
 	void set_elements(int count) {
 		MPI_Status_set_elements(&impl_, datatype<T>{}(), count);  // can't use MPI_(Get_count) because it is used for call

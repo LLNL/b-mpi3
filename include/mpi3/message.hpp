@@ -9,7 +9,7 @@
 namespace boost {
 namespace mpi3 {
 
-#if not defined(__EXAMPI_MPI_H)
+#if not defined(EXAMPI)
 class message {
  public:
 	MPI_Message impl_;  // NOLINT(misc-non-private-member-variables-in-classes) TODO(correaa)
