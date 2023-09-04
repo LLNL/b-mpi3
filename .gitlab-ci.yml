@@ -33,6 +33,13 @@ exampi:
     - cd ../..
     - mkdir build && cd build
     - source /root/exa/bin/exampi_env
+    - export PATH=$HOME/exa/bin:$PATH
+    - export PATH=$HOME/exa/runtime:$PATH
+    - export LD_LIBRARY_PATH=$HOME/exa/lib:$LD_LIBRARY_PATH
+    - export MPI_PATH=$HOME/exa/bin
+    - export MPI_LIB=$HOME/exa/lib
+    - export MPI_INC=$HOME/exa/include
+    - export MPI_HOME=$HOME/exa
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
     - make -j 2 || make VERBOSE=1
     - ctest --output-on-failure
