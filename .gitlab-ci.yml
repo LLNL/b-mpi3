@@ -9,7 +9,7 @@ variables:
 openmpi:
   stage: build
   script:
-    - apt update -qq && apt install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -18,11 +18,38 @@ openmpi:
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
 
+exampi:
+  allow_failure: true
+  stage: build
+  script:
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git g++ libboost-serialization-dev make python3 ssh  #  ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
+    - git clone https://correaa:${EXATOKEN}@github.com/tonyskjellum/ExaMPI.git
+    - git status
+    - cd ExaMPI
+    - mkdir build && cd build
+    - cmake .. --install-prefix=$HOME/exa
+    - make -j 4
+    - make install
+    - cd ../..
+    - mkdir build && cd build
+    - export PATH=$HOME/exa/bin:$PATH
+    - export PATH=$HOME/exa/runtime:$PATH
+    - export LD_LIBRARY_PATH=$HOME/exa/lib:$LD_LIBRARY_PATH
+    - export MPI_PATH=$HOME/exa/bin
+    - export MPI_LIB=$HOME/exa/lib
+    - export MPI_INC=$HOME/exa/include
+    - export MPI_HOME=$HOME/exa
+    - which mpicxx
+    - mpicxx --version
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
+    - make -j 2 || make VERBOSE=1
+    - ctest --output-on-failure
+
 icpc-intelmpi:
   stage: build
   image: intel/oneapi-hpckit:latest
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
