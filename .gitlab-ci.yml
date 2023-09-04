@@ -32,7 +32,7 @@ exampi:
     - make install
     - cd ../..
     - mkdir build && cd build
-    - source $HOME/exa/bin/exampi_env
+    - source /root/exa/bin/exampi_env
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
     - make -j 2 || make VERBOSE=1
     - ctest --output-on-failure
