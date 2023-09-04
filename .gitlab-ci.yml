@@ -30,6 +30,7 @@ exampi:
     - make -j 4
     - make install
     - cd ../..
+    - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - make -j 2 || make VERBOSE=1
     - ctest --output-on-failure
