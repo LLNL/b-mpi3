@@ -5,26 +5,25 @@
 
 #include <boost/serialization/vector.hpp>
 
-	struct long_long {
-	long long  value;
-	long_long& operator=(long long v) {
+struct long_long {
+	long long  value;  // NOLINT(google-runtime-int) testing type
+	long_long& operator=(long long v) {  // NOLINT(google-runtime-int) testing type
 		value = v;
 		return *this;
 	}
 };
 
 template<class Archive>
-void serialize(Archive& ar, long_long& l, unsigned = 0) {  // cppcheck-suppress unusedFunction ; false positive in cppcheck 2.11
+void serialize(Archive& ar, long_long& l, unsigned /*version*/= 0) {  // cppcheck-suppress unusedFunction ; false positive in cppcheck 2.11
 	ar& l.value;
 }
 
 namespace mpi3 = boost::mpi3;
-using std::cout;
 
-int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) {
+int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 
 	assert( world.size() > 1 );
-	long long size = 10000000;
+	long long size = 10000000;  // NOLINT(google-runtime-int) testing type
 	switch(world.rank()) {
 	case 0: {
 		std::vector<long_long> v(static_cast<std::size_t>(size));
@@ -41,4 +40,4 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) {
 	} break;
 	}
 	return 0;
-}
+} catch(...) {return 1;}
