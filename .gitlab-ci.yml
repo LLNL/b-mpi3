@@ -26,12 +26,12 @@ exampi:
     - git clone https://correaa:${EXATOKEN}@github.com/tonyskjellum/ExaMPI.git
     - cd ExaMPI
     - mkdir build && cd build
-    - cmake ..
+    - cmake .. --install-prefix=$HOME
     - make -j 4
     - make install
     - cd ../..
     - mkdir build && cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DCMAKE_MPI_CXX_COMPILER=/home/correaa/bin/mpicxx
     - make -j 2 || make VERBOSE=1
     - ctest --output-on-failure
 
