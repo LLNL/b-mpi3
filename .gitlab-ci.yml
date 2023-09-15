@@ -38,6 +38,8 @@ exampi:
     - export MPI_HOME=$HOME/exa
     - which mpicxx
     - which mpirun
+    - strace tests/integration_tests/allreduce
+    - strace tests/integration_tests/alltoall
     - ctest --output-on-failure
     - cd ../..
     - mkdir build && cd build
@@ -46,7 +48,6 @@ exampi:
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
     - make -j 2 || make VERBOSE=1
     - ls
-    - strace test/allreduce
     - ctest --output-on-failure
 
 icpc-intelmpi:
