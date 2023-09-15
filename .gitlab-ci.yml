@@ -38,8 +38,8 @@ exampi:
     - export MPI_HOME=$HOME/exa
     - which mpicxx
     - which mpirun
-    - strace tests/integration_tests/allreduce
-    - strace tests/integration_tests/alltoall
+    - strace mpirun -n 4 tests/integration_tests/allreduce
+    - strace mpirun -n 4 tests/integration_tests/alltoall
     - ctest --output-on-failure
     - cd ../..
     - mkdir build && cd build
