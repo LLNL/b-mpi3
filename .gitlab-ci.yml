@@ -45,6 +45,8 @@ exampi:
     - mpicxx --version
     - cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_EXAMPI=1 -DMPI_HOME=$HOME/exa
     - make -j 2 || make VERBOSE=1
+    - ls
+    - test/allreduce
     - ctest --output-on-failure
 
 icpc-intelmpi:
