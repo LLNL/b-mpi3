@@ -52,8 +52,8 @@ exampi:
 
 icpc-intelmpi:
   stage: build
-  image: intel/oneapi-hpckit:latest
-  allow_failure: true
+  image: intel/oneapi-hpckit:2023.2.1-devel-ubuntu22.04  # intel/oneapi-hpckit:latest
+  allow_failure: false
   script:
     - apt-get update --allow-unauthenticated && apt-get install --allow-unauthenticated --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -67,8 +67,8 @@ icpc-intelmpi:
 
 icpx-intelmpi:
   stage: build
-  image: intel/oneapi-hpckit:latest
-  allow_failure: true
+  image: intel/oneapi-hpckit:2023.2.1-devel-ubuntu22.04  # intel/oneapi-hpckit:latest
+  allow_failure: false
   script:
     - apt-get update --allow-unauthenticated && apt-get install --allow-unauthenticated --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -96,7 +96,7 @@ openmpi-clang:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
-"openmpi-clang20":
+openmpi-clang20:
   stage: build
   image: debian:stable
   script:
