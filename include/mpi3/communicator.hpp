@@ -1234,7 +1234,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 #endif
 
 	template<class It, typename Size>
-	auto receive_n(
+	auto receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) reconsider base class
 		It dest,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
