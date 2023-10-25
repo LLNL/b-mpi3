@@ -52,7 +52,7 @@ exampi:
 
 icpc-intelmpi:
   stage: build
-  image: intel/oneapi-hpckit:2023.2.1-devel-ubuntu22.04  # intel/oneapi-hpckit:latest
+  image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
     - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
@@ -67,7 +67,7 @@ icpc-intelmpi:
 
 icpx-intelmpi:
   stage: build
-  image: intel/oneapi-hpckit:2023.2.1-devel-ubuntu22.04  # intel/oneapi-hpckit:latest
+  image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
     - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
