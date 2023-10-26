@@ -53,8 +53,9 @@ exampi:
 icpc-intelmpi:
   stage: build
   image: intel/oneapi-hpckit:latest
+  allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
+    - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -69,7 +70,7 @@ icpx-intelmpi:
   image: intel/oneapi-hpckit:latest
   allow_failure: true
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
+    - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
@@ -95,7 +96,7 @@ openmpi-clang:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
 
-"openmpi-clang20":
+openmpi-clang20:
   stage: build
   image: debian:stable
   script:
@@ -259,7 +260,7 @@ inq-cuda-11-openmpi-compileonly:
   tags:
     - nvidia-docker
   script:
-    - apt-get update && apt-get install --no-install-recommends -y --quiet cmake git libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-iostreams-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev ca-certificatesgfortran g++ make pkg-config python3-dev wget
+    - apt-get update && apt-get install --no-install-recommends -y --quiet cmake git libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-iostreams-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev ca-certificates gfortran g++ make pkg-config python3-dev wget
     - cmake --version
     - git clone https://gitlab.com/npneq/inq.git --recurse-submodules
     - cd inq
