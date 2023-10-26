@@ -216,8 +216,8 @@ class window<void> {
 
 template<class T>
 class window : public window<void> {
-//  protected:
-// 	window() = default;
+ protected:
+	window() = default;
 
  public:
 	template<class Size = mpi3::size_t>
