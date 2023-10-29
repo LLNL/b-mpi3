@@ -83,16 +83,22 @@ In this way, changes to existing code can be made incrementally.
 
 ## Usage
 
-The library is "header-only"; no separate compilation or configuration of the library is necessary.
+The library is "header-only"; no separate compilation or configuration is necessary after downloading the library.
+
+
+```cpp
+git clone https://gitlab.com/correaa/boost-mpi3.git
+```
+
 It requires an MPI distribution (e.g. OpenMPI or MPICH2), a C++14 compiler and Boost libraries installed.
+In a system such as Ubuntu or Fedora, the dependencies can by installed by `sudo apt install g++ libmpich-dev libboost-test-dev ` or `sudo dnf install gcc-c++ boost-devel openmpi-devel mpich-devel`.
+
 A typical compilation/run command looks like this:
 
 ```bash
 $ mpic++ communicator_send.cpp -o communicator_send.x -lboost_serialization
 $ mpirun -n 8 ./communicator_send.x
 ```
-
-In a system such as Red Hat or Fedora, the dependencies can by installed by `sudo dnf install gcc-c++ boost-devel openmpi-devel mpich-devel`.
 
 Alternatively, the library can be fetched on demand by the CMake project:
 
@@ -104,7 +110,7 @@ FetchContent_MakeAvailable(bmpi3)
 target_link_libraries(your_executable PRIVATE bmpi3)
 ```
 
-Some systems require loading the MPI module before compiling and using MPI programs, `module load mpi` (or `mpich`).
+Some systems require loading the MPI module before compiling or using MPI programs, `module load mpi` (or `mpich`).
 
 The library is tested frequently against `openmpi` and `mpich` implementations of MPI.
 
@@ -113,8 +119,8 @@ The library is tested frequently against `openmpi` and `mpich` implementations o
 The library has a basic `ctest` based testing system.
 
 ```bash
-# module load mpi/mpich  # or mpi/openmpi  , needed in systems like Fedora
-cd mpi3/test
+# module load mpi/mpich  # or mpi/openmpi  # needed in systems like Fedora
+cd mpi3
 mkdir build && cd build
 cmake ..
 cmake --build ..
