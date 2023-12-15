@@ -65,10 +65,9 @@ icpc-intelmpi:
     - ctest --output-on-failure
   needs: ["openmpi"]
 
-icpx-intelmpi:
+oneapi:
   stage: build
-  image: intel/oneapi-hpckit:latest
-  allow_failure: true
+  image: intel/oneapi-hpckit:2023.0.0-devel-ubuntu22.04
   script:
     - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
