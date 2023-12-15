@@ -129,6 +129,7 @@ class communicator_type {
  public:
 	constexpr explicit communicator_type(int v) noexcept : value_{v} {}
 	constexpr explicit operator int() const noexcept { return value_; }
+
 	constexpr bool operator==(communicator_type const& o) const noexcept { return value_ == o.value_; }
 	constexpr bool operator!=(communicator_type const& o) const noexcept { return value_ != o.value_; }
 
@@ -159,11 +160,30 @@ inline communicator_type const communicator_type::host     {OMPI_COMM_TYPE_HOST 
 inline communicator_type const communicator_type::cu       {OMPI_COMM_TYPE_CU      }; inline communicator_type const& /*synomym*/ cpu = communicator_type::cu;
 inline communicator_type const communicator_type::cluster  {OMPI_COMM_TYPE_CLUSTER };
 
-enum constant {
-	undefined    = MPI_UNDEFINED ,
-	process_null = MPI_PROC_NULL ,
-	any_source   = MPI_ANY_SOURCE
+// enum constant {
+// 	undefined    = MPI_UNDEFINED ,
+// 	process_null = MPI_PROC_NULL ,
+// 	any_source   = MPI_ANY_SOURCE
+// };
+
+class constant {
+	int value_;
+
+ public:
+	constexpr explicit constant(int v) noexcept : value_{v} {}
+	constexpr /*implicit*/ operator int() const noexcept { return value_; }
+
+	constexpr bool operator==(constant const& o) const noexcept { return value_ == o.value_; }
+	constexpr bool operator!=(constant const& o) const noexcept { return value_ != o.value_; }
+
+	static constant const undefined   ;
+	static constant const process_null;
+	static constant const any_source  ;
 };
+
+inline constant const undefined   {MPI_UNDEFINED };
+inline constant const process_null{MPI_PROC_NULL };
+inline constant const any_source  {MPI_ANY_SOURCE};
 
 enum key { // for attributes
 	tag_ub             = MPI_TAG_UB,
