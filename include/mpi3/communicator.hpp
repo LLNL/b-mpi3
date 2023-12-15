@@ -171,7 +171,7 @@ class constant {
 
  public:
 	constexpr explicit constant(int v) noexcept : value_{v} {}
-	constexpr /*implicit*/ operator int() const noexcept { return value_; }
+	constexpr operator int() const noexcept { return value_; }  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 
 	constexpr bool operator==(constant const& o) const noexcept { return value_ == o.value_; }
 	constexpr bool operator!=(constant const& o) const noexcept { return value_ != o.value_; }
