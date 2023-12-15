@@ -1,4 +1,3 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
 // Copyright 2018-2023 Alfredo A. Correa
 
 #ifndef MPI3_COMMUNICATOR_HPP
@@ -355,7 +354,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	using detail::basic_communicator::matched_probe;
 
 	template<class It, typename Size>
-	auto send_n(
+	auto send_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -383,7 +382,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	void send_n(
+	void send_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
 			detail::forward_iterator_tag /*tag*/,
 			detail::value_unspecified_tag /*tag*/,
@@ -426,7 +425,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T> struct has_dimensionality : decltype(has_dimensionality_aux(T{})) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
 
 	template<class It, typename Size, class = std::enable_if_t<(not has_dimensionality<It>{})> >
-	void send_n(It first, Size count, int dest, int tag = 0) {
+	void send_n(It first, Size count, int dest, int tag = 0) {  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		return send_n(
 			first,
 				detail::iterator_category_t<It>{},
@@ -436,7 +435,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It>
-	auto send(
+	auto send(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, It last,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::value_unspecified_tag /*tag*/,
@@ -445,7 +444,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
-	auto send(
+	auto send(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, It last,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -454,7 +453,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return send_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
-	auto send(
+	auto send(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, It last,
 			detail::input_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -464,7 +463,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return send_n(buffer.begin(), buffer.size(), dest, tag);
 	}
 	template<class It>
-	auto send(
+	auto send(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, It last,
 		/**/ detail::input_iterator_tag    /*tag*/,
 		/**/ detail::value_unspecified_tag /*tag*/,
@@ -497,7 +496,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return isend_n(first, std::distance(first, last), dest, tag);
 	}
 	template<class It>
-	auto send(It first, It last, int dest, int tag = 0) {
+	auto send(It first, It last, int dest, int tag = 0) {  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		return send(
 			first, last,
 				detail::iterator_category_t<It>{},
@@ -773,7 +772,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 #endif
 
 	template<class It, class Size>
-	auto send_receive_replace_n(
+	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, Size size,
 		int dest, int source, // = MPI_ANY_SOURCE, 
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
@@ -788,7 +787,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 	template<class It, typename Size>
-	It send_receive_replace_n(
+	It send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
 			detail::random_access_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -892,7 +891,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
 	template<class It, typename Size, typename... Meta>
-	auto send_receive_replace_n(
+	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
 		/**/ detail::forward_iterator_tag  /*tag*/,
 		/**/ detail::value_unspecified_tag /*tag*/,
@@ -925,7 +924,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
 	template<class It, typename Size>
-	auto send_receive_replace_n(
+	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
 			detail::forward_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -939,7 +938,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
  public:
 	template<class It, class Size>
-	auto send_receive_n(
+	auto send_receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, Size size,
 		int dest, int source, // = MPI_ANY_SOURCE, 
 		int sendtag = 0, int recvtag = MPI_ANY_TAG
@@ -1110,7 +1109,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return static_cast<void*>(std::next(static_cast<char*>(begin), count));
 	}
 	template<class It, typename Size>
-	auto receive_n(
+	auto receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It dest,
 			detail::contiguous_iterator_tag /*tag*/,
 			detail::basic_tag /*tag*/,
@@ -1143,7 +1142,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return r;
 	}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
-	auto receive_n(
+	auto receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It dest,
 			detail::forward_iterator_tag /*tag*/,
 			detail::value_unspecified_tag /*tag*/,
