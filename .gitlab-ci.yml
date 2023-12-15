@@ -37,7 +37,7 @@ exampi:
     - export MPI_INC=$HOME/exa/include
     - export MPI_HOME=$HOME/exa
     - which mpicxx
-    - which mpirun
+    - which mpirun # - mpirun -n 2 --separate_rank --print_to_file --loghead --logfault --logexec --logcontrol tests/integration_tests/pingpong
     - strace mpirun -n 4 tests/integration_tests/allreduce
     - strace mpirun -n 4 tests/integration_tests/alltoall
     - ctest --output-on-failure
