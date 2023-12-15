@@ -107,20 +107,57 @@ namespace mpi3 {
 #endif
 
 // https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
-enum class communicator_type : int {
-	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
-	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
-	core      = OMPI_COMM_TYPE_CORE    ,
-	l1_cache  = OMPI_COMM_TYPE_L1CACHE ,
-	l2_cache  = OMPI_COMM_TYPE_L2CACHE ,
-	l3_cache  = OMPI_COMM_TYPE_L3CACHE ,
-	socket    = OMPI_COMM_TYPE_SOCKET  ,
-	numa      = OMPI_COMM_TYPE_NUMA    ,
-	board     = OMPI_COMM_TYPE_BOARD   ,
-	host      = OMPI_COMM_TYPE_HOST    ,
-	cu        = OMPI_COMM_TYPE_CU      ,/*synomym*/ cpu = OMPI_COMM_TYPE_CU   ,
-	cluster   = OMPI_COMM_TYPE_CLUSTER
+
+// enum class communicator_type : int {
+// 	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
+// 	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
+// 	core      = OMPI_COMM_TYPE_CORE    ,
+// 	l1_cache  = OMPI_COMM_TYPE_L1CACHE ,
+// 	l2_cache  = OMPI_COMM_TYPE_L2CACHE ,
+// 	l3_cache  = OMPI_COMM_TYPE_L3CACHE ,
+// 	socket    = OMPI_COMM_TYPE_SOCKET  ,
+// 	numa      = OMPI_COMM_TYPE_NUMA    ,
+// 	board     = OMPI_COMM_TYPE_BOARD   ,
+// 	host      = OMPI_COMM_TYPE_HOST    ,
+// 	cu        = OMPI_COMM_TYPE_CU      ,/*synomym*/ cpu = OMPI_COMM_TYPE_CU   ,
+// 	cluster   = OMPI_COMM_TYPE_CLUSTER
+// };
+
+class communicator_type {
+	int value_;
+
+ public:
+	constexpr explicit communicator_type(int v) noexcept : value_{v} {}
+	constexpr explicit operator int() const noexcept { return value_; }
+	constexpr bool operator==(communicator_type const& o) const noexcept { return value_ == o.value_; }
+	constexpr bool operator!=(communicator_type const& o) const noexcept { return value_ != o.value_; }
+
+	static communicator_type const shared   ; static communicator_type const /*synomym*/ node;
+	static communicator_type const hw_thread;
+	static communicator_type const core     ;
+	static communicator_type const l1_cache ;
+	static communicator_type const l2_cache ;
+	static communicator_type const l3_cache ;
+	static communicator_type const socket   ;
+	static communicator_type const numa     ;
+	static communicator_type const board    ;
+	static communicator_type const host     ;
+	static communicator_type const cu       ; static communicator_type const /*synomym*/ cpu;
+	static communicator_type const cluster  ;
 };
+
+inline communicator_type const communicator_type::shared   {MPI_COMM_TYPE_SHARED   }; inline communicator_type const /*synomym*/ node{OMPI_COMM_TYPE_NODE};
+inline communicator_type const communicator_type::hw_thread{OMPI_COMM_TYPE_HWTHREAD};
+inline communicator_type const communicator_type::core     {OMPI_COMM_TYPE_CORE    };
+inline communicator_type const communicator_type::l1_cache {OMPI_COMM_TYPE_L1CACHE };
+inline communicator_type const communicator_type::l2_cache {OMPI_COMM_TYPE_L2CACHE };
+inline communicator_type const communicator_type::l3_cache {OMPI_COMM_TYPE_L3CACHE };
+inline communicator_type const communicator_type::socket   {OMPI_COMM_TYPE_SOCKET  };
+inline communicator_type const communicator_type::numa     {OMPI_COMM_TYPE_NUMA    };
+inline communicator_type const communicator_type::board    {OMPI_COMM_TYPE_BOARD   };
+inline communicator_type const communicator_type::host     {OMPI_COMM_TYPE_HOST    };
+inline communicator_type const communicator_type::cu       {OMPI_COMM_TYPE_CU      }; inline communicator_type const& /*synomym*/ cpu = communicator_type::cu;
+inline communicator_type const communicator_type::cluster  {OMPI_COMM_TYPE_CLUSTER };
 
 enum constant {
 	undefined    = MPI_UNDEFINED ,
