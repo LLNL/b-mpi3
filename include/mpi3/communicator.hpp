@@ -778,6 +778,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	mpi3::any& attribute(std::string const& s);
 #endif
 
+#if not defined(EXAMPI)
 	void call_error_handler(int errorcode) noexcept {
 		auto const s = MPI_Comm_call_errhandler(impl_, errorcode); (void)s;
 		assert(s == MPI_SUCCESS);
@@ -786,6 +787,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		auto const s = MPI_Comm_call_errhandler(impl_, static_cast<int>(e)); (void)s;
 		assert(s == MPI_SUCCESS);
 	}
+#endif
+
 	communicator divide_low(int n) {
 		assert(n != 0);
 		return split(
