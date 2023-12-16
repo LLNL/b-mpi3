@@ -2083,6 +2083,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
+ #if not defined(EXAMPI)
 	template<
 		class It1, class Size, class Op = std::plus<>,
 	    class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(std::declval<It1>())),
@@ -2093,6 +2094,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		static mpi3::operation<typename std::iterator_traits<It1>::value_type, typename std::iterator_traits<It1>::pointer> const combine{Op{}};  // will leak?
 		MPI_(Allreduce)(in_place, data_adl(first), static_cast<count_type>(count), datatype<V1>{}(), &combine, impl_);
 	}
+#endif
 
 	template<
 		class It1, class Size, class Op = std::plus<>,
