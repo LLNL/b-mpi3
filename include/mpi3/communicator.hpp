@@ -906,6 +906,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			dest, source, sendtag, recvtag
 		);
 	}
+
+#if not defined(EXAMPI)
 	template<class It, typename Size>
 	It send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
@@ -920,6 +922,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 		return first + s.count<typename std::iterator_traits<It>::value_type>();
 	}
+#endif
+
 	template<class It1, typename Size, class It2>
 	auto send_receive_n(
 		It1 first, Size count, int dest,
