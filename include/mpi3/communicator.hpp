@@ -616,7 +616,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		communicator ret;
 		MPI_(Comm_split)(impl_, color, key, &ret.impl_);
 		if(ret) {ret.set_name(name() + std::to_string(color));}
+	#if not defined(EXAMPI)
 		if(ret) {ret.attribute("color") = color;}
+	#endif
 		return ret;
 	}
 	communicator split(int color = MPI_UNDEFINED) {
