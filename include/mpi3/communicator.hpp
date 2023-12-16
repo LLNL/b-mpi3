@@ -109,18 +109,18 @@ namespace mpi3 {
 // https://www.open-mpi.org/doc/v4.0/man3/MPI_Comm_split_type.3.php#toc8
 
 // enum class communicator_type : int {
-// 	shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
-// 	hw_thread = OMPI_COMM_TYPE_HWTHREAD,
-// 	core      = OMPI_COMM_TYPE_CORE    ,
-// 	l1_cache  = OMPI_COMM_TYPE_L1CACHE ,
-// 	l2_cache  = OMPI_COMM_TYPE_L2CACHE ,
-// 	l3_cache  = OMPI_COMM_TYPE_L3CACHE ,
-// 	socket    = OMPI_COMM_TYPE_SOCKET  ,
-// 	numa      = OMPI_COMM_TYPE_NUMA    ,
-// 	board     = OMPI_COMM_TYPE_BOARD   ,
-// 	host      = OMPI_COMM_TYPE_HOST    ,
-// 	cu        = OMPI_COMM_TYPE_CU      ,/*synomym*/ cpu = OMPI_COMM_TYPE_CU   ,
-// 	cluster   = OMPI_COMM_TYPE_CLUSTER
+//  shared    = MPI_COMM_TYPE_SHARED   ,/*synomym*/ node = OMPI_COMM_TYPE_NODE,
+//  hw_thread = OMPI_COMM_TYPE_HWTHREAD,
+//  core      = OMPI_COMM_TYPE_CORE    ,
+//  l1_cache  = OMPI_COMM_TYPE_L1CACHE ,
+//  l2_cache  = OMPI_COMM_TYPE_L2CACHE ,
+//  l3_cache  = OMPI_COMM_TYPE_L3CACHE ,
+//  socket    = OMPI_COMM_TYPE_SOCKET  ,
+//  numa      = OMPI_COMM_TYPE_NUMA    ,
+//  board     = OMPI_COMM_TYPE_BOARD   ,
+//  host      = OMPI_COMM_TYPE_HOST    ,
+//  cu        = OMPI_COMM_TYPE_CU      ,/*synomym*/ cpu = OMPI_COMM_TYPE_CU   ,
+//  cluster   = OMPI_COMM_TYPE_CLUSTER
 // };
 
 class communicator_type {
@@ -161,9 +161,9 @@ inline communicator_type const communicator_type::cu       {OMPI_COMM_TYPE_CU   
 inline communicator_type const communicator_type::cluster  {OMPI_COMM_TYPE_CLUSTER };
 
 // enum constant {
-// 	undefined    = MPI_UNDEFINED ,
-// 	process_null = MPI_PROC_NULL ,
-// 	any_source   = MPI_ANY_SOURCE
+//  undefined    = MPI_UNDEFINED ,
+//  process_null = MPI_PROC_NULL ,
+//  any_source   = MPI_ANY_SOURCE
 // };
 
 class constant {
@@ -186,13 +186,13 @@ inline constant const process_null{MPI_PROC_NULL };
 inline constant const any_source  {MPI_ANY_SOURCE};
 
 // enum key { // for attributes
-// 	tag_ub             = MPI_TAG_UB,
-// 	host               = MPI_HOST,
-// 	io                 = MPI_IO,
-// 	wtime_is_global    = MPI_WTIME_IS_GLOBAL,
-// 	application_number = MPI_APPNUM,
-// 	universe_size      = MPI_UNIVERSE_SIZE,
-// 	last_used_code     = MPI_LASTUSEDCODE
+//  tag_ub             = MPI_TAG_UB,
+//  host               = MPI_HOST,
+//  io                 = MPI_IO,
+//  wtime_is_global    = MPI_WTIME_IS_GLOBAL,
+//  application_number = MPI_APPNUM,
+//  universe_size      = MPI_UNIVERSE_SIZE,
+//  last_used_code     = MPI_LASTUSEDCODE
 // };
 
 class key { // for attributes
@@ -398,6 +398,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return ret;
 	}
 
+#if not defined(EXAMPI)
 	template<class T>
 	class keyval {
 		static int delete_fn(MPI_Comm /*comm*/, int /*keyval*/, void *attr_val, void */*extra_state*/){
@@ -420,11 +421,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 		using mapped_type = T;
 
-	#if not defined(EXAMPI)
 		keyval() { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 			MPI_(Comm_create_keyval)(copy_fn, delete_fn, &impl_, nullptr);
 		}
-	#endif
 
 		keyval(keyval const&) = delete;
 		keyval(keyval     &&) = delete;
@@ -432,8 +431,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		keyval& operator=(keyval const&) = delete;
 		keyval& operator=(keyval     &&) = delete;
 
-		~keyval() noexcept {MPI_Comm_free_keyval(&impl_);}
+		~keyval() noexcept {
+			MPI_Comm_free_keyval(&impl_);
+		}
 	};
+#endif
 
 	using detail::basic_communicator::send_receive_n;
 #if not defined(EXAMPI)
@@ -663,7 +665,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		int value_;
 
 	 public:
-	 	constexpr explicit topology(int v) noexcept : value_{v} {}
+	    constexpr explicit topology(int v) noexcept : value_{v} {}
 
 		constexpr bool operator<(topology const& o) const noexcept {return value_ < o.value_;}
 
