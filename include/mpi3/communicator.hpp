@@ -1700,6 +1700,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	using in_place_type = int;
 #endif
 
+#if not defined(EXAMPI)
 	template<class It1, typename Size>
 	auto all_to_all_n(
 		It1 first,
@@ -1727,6 +1728,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 		return first + count*size();
 	}
+#endif
 
  public:
 	template<class It1, typename Size>
