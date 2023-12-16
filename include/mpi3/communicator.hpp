@@ -426,7 +426,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	};
 
 	using detail::basic_communicator::send_receive_n;
+#if not defined(EXAMPI)
 	using detail::basic_communicator::matched_probe;
+#endif
 
 	template<class It, typename Size>
 	auto send_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
