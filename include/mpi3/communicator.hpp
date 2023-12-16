@@ -700,11 +700,13 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	void  barrier()       {             MPI_( Barrier)(handle())                        ;}
 	auto ibarrier()       {request ret; MPI_(Ibarrier)(handle(), &ret.impl_); return ret;}
 
+#if not defined(EXAMPI)
 	communicator connect(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_(Comm_connect)(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
+#endif
 
 	bool    root() const {return (not empty()) and (rank() == 0);}
 	bool is_root() const {return root();}
