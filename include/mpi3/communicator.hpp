@@ -1273,6 +1273,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 		return r;
 	}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+
+#if not defined(EXAMPI)
 	template<class It, typename Size>
 	auto receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It dest,
@@ -1286,6 +1288,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		package_iarchive pia(p);
 		return std::copy_n(package_iarchive::iterator<typename std::iterator_traits<It>::value_type>{pia}, count, dest);
 	}
+#endif
 
 	template<class It, typename Size,
 		std::enable_if_t<not has_dimensionality<It>{}, int> =0// or (not detail::is_basic<typename std::iterator_traits<It>::value_type>{}), int> =0 // needed by intel commpiler
