@@ -891,6 +891,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 #endif
 #endif
 
+#if not defined(EXAMPI)
 	template<class It, class Size>
 	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first, Size size,
@@ -906,6 +907,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			dest, source, sendtag, recvtag
 		);
 	}
+#endif
 
 #if not defined(EXAMPI)
 	template<class It, typename Size>
