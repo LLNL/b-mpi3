@@ -203,18 +203,10 @@ class key { // for attributes
 
 	constexpr bool operator==(key const& o) const noexcept { return value_ == o.value_; }
 	constexpr bool operator!=(key const& o) const noexcept { return value_ != o.value_; }
-
-	// static key const tag_ub;
-	// static key const host;
-	// static key const io;
-	// static key const wtime_is_global;
-	// static key const application_number;
-	// static key const universe_size;
-	// static key const last_used_code;
 };
 
 inline key const tag_ub            {MPI_TAG_UB};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
-inline key const host              {MPI_HOST};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
+// inline key const host              {MPI_HOST};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
 inline key const io                {MPI_IO};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
 inline key const wtime_is_global   {MPI_WTIME_IS_GLOBAL};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
 inline key const application_number{MPI_APPNUM};  // NOLINT(fuchsia-statically-constructed-objects)  MPI_TAG_UB, etc are not constants in ExaMPI
