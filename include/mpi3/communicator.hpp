@@ -1543,6 +1543,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	auto bsend(InputIterator It1, InputIterator It2, int dest, int tag = 0){
 		return send(buffered_communication_mode{}, blocking_mode{}, It1, It2, dest, tag);
 	}
+
+#if not defined(EXAMPI)
 	template<class InputIt, class V = typename std::iterator_traits<InputIt>::value_type>
 	auto dynamic_receive(InputIt first, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 	//  auto count = probe(source, tag).count<V>();
@@ -1555,6 +1557,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
         using detail::data;
         MPI_Mrecv(data(first), count, datatype<V>{}(), &msg, MPI_STATUS_IGNORE);  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast) for macro
 	}
+#endif
 
 	template<class Iterator, class /*Category*/ = typename std::iterator_traits<Iterator>::iterator_category>
 	auto breceive(Iterator It1, Iterator It2, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG){
