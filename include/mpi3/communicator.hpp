@@ -686,11 +686,15 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		assert(rank() - n > 0);
 		return rank() - n;
 	}
+
+#if not defined(EXAMPI)
 	communicator accept(port const& p, int root = 0) const {
 		communicator ret;
 		MPI_Comm_accept(p.name_.c_str(), MPI_INFO_NULL, root, impl_, &ret.impl_);
 		return ret;
 	}
+#endif
+
 	[[deprecated("call non const version")]]
 	void  barrier() const {             MPI_( Barrier)(get()   )                        ;}
 	void  barrier()       {             MPI_( Barrier)(handle())                        ;}
