@@ -714,7 +714,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	[[deprecated("call non const version")]]
 	void  barrier() const {             MPI_( Barrier)(get()   )                        ;}
 	void  barrier()       {             MPI_( Barrier)(handle())                        ;}
+#if not defined(EXAMPI)
 	auto ibarrier()       {request ret; MPI_(Ibarrier)(handle(), &ret.impl_); return ret;}
+#endif
 
 #if not defined(EXAMPI)
 	communicator connect(port const& p, int root = 0) const {
