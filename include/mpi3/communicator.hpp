@@ -634,6 +634,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	communicator reversed() {return split(0, size() - rank());}
 
+#if not defined(EXAMPI)
 	int cartesian_map(std::vector<int> const& dims, std::vector<int> const& periods) const {
 		assert(dims.size() == periods.size());
 		return MPI_(Cart_map)(impl_, static_cast<int>(dims.size()), dims.data(), periods.data());  // TODO(correaa) use safe cast
@@ -641,6 +642,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	int cartesian_map(std::vector<int> const& dimensions) const {
 		return cartesian_map(dimensions, std::vector<int>(dimensions.size(), 0));
 	}
+#endif
 
 	pointer<void> malloc(MPI_Aint size) const;
 	template<class T = void> void deallocate_shared(pointer<T> p);
