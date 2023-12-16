@@ -751,6 +751,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
+#if not defined(EXAMPI)
 	template<class T, class TT = T> void
 	set_attribute(keyval<T> const& k, TT const& t = {}) {set_attribute<T>(k.impl_, t);}
 	template<class T>
@@ -767,6 +768,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return get_attribute(kv);
 	}
 	mpi3::any& attribute(std::string const& s);
+#endif
 
 	void call_error_handler(int errorcode) noexcept {
 		auto const s = MPI_Comm_call_errhandler(impl_, errorcode); (void)s;
