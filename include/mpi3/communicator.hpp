@@ -2104,6 +2104,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	->decltype(all_reduce_in_place_n(first, count, op)) {
 		return all_reduce_in_place_n(first, count, op); }
 
+#if not defined(EXAMPI)
 	template<
 		class It1, class Size, class Op,
 		class V1 = typename std::iterator_traits<It1>::value_type, class P1 = decltype(data_adl(It1{})), 
@@ -2115,6 +2116,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		                 MPI_(Reduce)(data_adl(first), nullptr        , count, datatype<V1>{}(), PredefinedOp{}, root, impl_)
 		;
 	}
+#endif
 
 	template<
 		class It1, class Size, class Op = std::plus<>,
