@@ -1311,6 +1311,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			source, tag
 		);
 	}
+
+#if not defined(EXAMPI)
 	template<class It>
 	auto receive(
 		It dest,
@@ -1323,6 +1325,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		m.receive_n(dest, count);
 		return dest + count;
 	}
+#endif
+
 	template<class It>
 	[[deprecated]] auto receive(
 		It dest,
