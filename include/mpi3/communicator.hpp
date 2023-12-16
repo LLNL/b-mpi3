@@ -3076,7 +3076,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 	communicator create(group const& g) const;
 	communicator create_group(group const& g, int tag) const;
+
+#if not defined(EXAMPI)
 	FILE*        fopen(char const* filename, int amode = unsigned{MPI_MODE_RDWR} | unsigned{MPI_MODE_CREATE});
+#endif
 
 	inline static auto name(communicator::topology const& t) -> std::string const& {
 		static std::map<communicator::topology, std::string> const names = {
