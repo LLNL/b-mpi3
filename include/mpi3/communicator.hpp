@@ -1330,6 +1330,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 #endif
 
+#if not defined(EXAMPI)
 	template<class It>
 	[[deprecated]] auto receive(
 		It dest,
@@ -1343,6 +1344,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		while(p) {pia >> *dest++;}  // NOLINT(altera-unroll-loops) deprecating
 		return dest;
 	}
+
 	template<class It>
 	auto receive(
 		It dest,
@@ -1352,6 +1354,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	) {
 		return matched_probe(source, tag).receive_n(dest);
 	}
+#endif
+
 	template<class It>
 	[[deprecated]] auto receive(It dest, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		return receive(
