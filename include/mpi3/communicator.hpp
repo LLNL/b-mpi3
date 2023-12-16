@@ -1225,6 +1225,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_Recv(begin, n, MPI_PACKED, source, tag, impl_, &ret.impl_);
 		return ret;
 	}
+
+#if not defined(EXAMPI)
 	auto receive_packed(void* begin, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
 		MPI_Status status;
 		MPI_Message msg;  // NOLINT(cppcoreguidelines-init-variables) delayed init
@@ -1236,6 +1238,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	//  receive_packed_n(begin, n, source, tag);
 		return static_cast<void*>(std::next(static_cast<char*>(begin), count));
 	}
+#endif
+
 	template<class It, typename Size>
 	auto receive_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It dest,
