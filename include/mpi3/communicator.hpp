@@ -646,7 +646,19 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator subcomm(std::initializer_list<int> l) const {
 		return subcomm(std::vector<int>(l));
 	}
-	enum class topology{undefined = MPI_UNDEFINED, graph = MPI_GRAPH, cartesian = MPI_CART};
+
+	class topology {
+		int value_;
+
+	 public:
+	 	constexpr explicit topology(int v) noexcept : value_{v} {}
+
+		constexpr bool operator<(topology const& o) const noexcept {return value_ < o.value_;}
+
+		static topology const undefined;
+		static topology const graph;
+		static topology const cartesian;
+	};
 
 	int rank() const {
 		assert(not is_empty());  // an empty communicator doesn't have ranks
@@ -3095,6 +3107,10 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return comm;
 	}
 };
+
+inline communicator::topology const communicator::topology::undefined{MPI_UNDEFINED};
+inline communicator::topology const communicator::topology::graph    {MPI_GRAPH    };
+inline communicator::topology const communicator::topology::cartesian{MPI_CART     };
 
 inline void  barrier(communicator& self) {       self. barrier();}
 inline auto ibarrier(communicator& self) {return self.ibarrier();}
