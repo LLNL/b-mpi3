@@ -1016,6 +1016,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return d_first + ret.count<V2>();
 	}
 
+#if not defined(EXAMPI)
 	template<class It, typename Size, typename... Meta>
 	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
 		It first,
@@ -1048,6 +1049,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			count, first
 		);
 	}
+#endif
 
 	template<class It, typename Size>
 	auto send_receive_replace_n(  // cppcheck-suppress duplInheritedMember ; TODO(correaa) remove duplications in the base class
