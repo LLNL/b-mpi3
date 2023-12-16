@@ -420,9 +420,11 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 
 		using mapped_type = T;
 
+	#if not defined(EXAMPI)
 		keyval() { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 			MPI_(Comm_create_keyval)(copy_fn, delete_fn, &impl_, nullptr);
 		}
+	#endif
 
 		keyval(keyval const&) = delete;
 		keyval(keyval     &&) = delete;
