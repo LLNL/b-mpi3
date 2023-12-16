@@ -46,7 +46,7 @@ struct projector2 {
 		n_ = other.n_;
 		return *this;
 	}
-	auto operator=(projector2     &&) -> projector2& = default;
+	auto operator=(projector2     &&) -> projector2& = default;  // NOLINT(clang-diagnostic-deprecated-declarations) TODO(correaa) deprecate move assigment
 //  auto operator=(projector2      &) -> projector2& = default;
 
 	friend auto operator==(projector2 const& a, projector2 const& b) {return a.n_ == b.n_;} //  a.comm_ == b.comm_;}

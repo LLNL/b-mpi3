@@ -736,6 +736,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	auto operator[](int rank) -> reference;
 
  protected:
+#if not defined(EXAMPI)
 	template<class T> void set_attribute(int kv_idx, T const& t) {
 		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
@@ -755,6 +756,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
 		return flag != 0;
 	}
+#endif
 
  public:
 #if not defined(EXAMPI)
