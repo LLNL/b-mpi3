@@ -3099,12 +3099,13 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
-	std::string get_name() const {
+	auto get_name() const {
 		// std::array<char, MPI_MAX_OBJECT_NAME> comm_name{};
 		std::string comm_name(MPI_MAX_OBJECT_NAME, '\0');
 		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 		MPI_(Comm_get_name)(impl_, comm_name.data(), &len);
-		return {comm_name.data(), static_cast<std::size_t>(len)};
+		comm_name.resize(static_cast<std::size_t>(len));
+		return comm_name;
 	}
 	void set_name(std::string const& s) {MPI_(Comm_set_name)(impl_, s.c_str());}
 	std::string name() const {return get_name();}
