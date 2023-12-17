@@ -3099,29 +3099,37 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
  public:
-	std::string get_name() const {
-		std::array<char, MPI_MAX_OBJECT_NAME> comm_name{};
+	auto get_name() const {
+		// std::array<char, MPI_MAX_OBJECT_NAME> comm_name{};
+		std::string comm_name(MPI_MAX_OBJECT_NAME, '\0');
 		int len;  // NOLINT(cppcoreguidelines-init-variables) : delayed initialization
 		MPI_(Comm_get_name)(impl_, comm_name.data(), &len);
-		return {comm_name.data(), static_cast<std::size_t>(len)};
+		comm_name.resize(static_cast<std::size_t>(len));
+		return comm_name;
 	}
 	void set_name(std::string const& s) {MPI_(Comm_set_name)(impl_, s.c_str());}
 	std::string name() const {return get_name();}
 
 	[[deprecated]] void name(std::string const& s) {set_name(s);}
 
+#if not defined(EXAMPI)
 	static mpi3::communicator& parent() {
 		static_assert(sizeof(MPI_Comm) == sizeof(mpi3::communicator), "!");
 		static_assert(std::is_same<decltype(impl_), MPI_Comm>{}, "!");
 		MPI_Comm* p{}; MPI_Comm_get_parent(p); assert(p);
 		return reinterpret_cast<mpi3::communicator&>(*p);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) : TODO(correaa) avoid reinterpret_cast
 	}
+#endif
+
+#if not defined(EXAMPI)
 	static communicator spawn(std::string const& argv0, int np) {
 		communicator intercomm;
 		MPI_Comm_spawn(argv0.data(), MPI_ARGV_NULL, np, MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm.impl_, MPI_ERRCODES_IGNORE );
 		return intercomm;
 	}
+#endif
 
+#if not defined(EXAMPI)
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
 		int const s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
@@ -3132,6 +3140,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		return intercommunicator_create(local_leader, peer, remote_leader, tag);
 	}
+#endif
 
 	communicator create(group const& g) const;
 	communicator create_group(group const& g, int tag) const;
@@ -3187,7 +3196,9 @@ inline communicator::topology const communicator::topology::graph    {MPI_GRAPH 
 inline communicator::topology const communicator::topology::cartesian{MPI_CART     };
 
 inline void  barrier(communicator& self) {       self. barrier();}
+#if not defined(EXAMPI)
 inline auto ibarrier(communicator& self) {return self.ibarrier();}
+#endif
 
 inline communicator::communicator(group const& g, int tag){
 	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
