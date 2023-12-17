@@ -3121,11 +3121,13 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 #endif
 
+#if not defined(EXAMPI)
 	static communicator spawn(std::string const& argv0, int np) {
 		communicator intercomm;
 		MPI_Comm_spawn(argv0.data(), MPI_ARGV_NULL, np, MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm.impl_, MPI_ERRCODES_IGNORE );
 		return intercomm;
 	}
+#endif
 
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
