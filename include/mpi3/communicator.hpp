@@ -3129,6 +3129,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 #endif
 
+#if not defined(EXAMPI)
 	communicator intercommunicator_create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		communicator ret;
 		int const s = MPI_Intercomm_create(impl_, local_leader, peer.impl_, remote_leader, tag, &ret.impl_);
@@ -3139,6 +3140,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	communicator create(int local_leader, communicator const& peer, int remote_leader, int tag = 0) const{
 		return intercommunicator_create(local_leader, peer, remote_leader, tag);
 	}
+#endif
 
 	communicator create(group const& g) const;
 	communicator create_group(group const& g, int tag) const;
