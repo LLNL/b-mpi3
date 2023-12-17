@@ -39,6 +39,7 @@ exampi:
     - which mpicxx
     - which mpirun
     - mpirun -n 2 --separate_rank --print_to_file --loghead --logfault --logexec --logcontrol tests/integration_tests/pingpong tests/integration_tests/allreduce
+    - mpirun -n 4 --separate_rank --print_to_file --loghead --logfault --logexec --logcontrol tests/integration_tests/pingpong tests/integration_tests/allreduce
     # - strace mpirun -n 4 tests/integration_tests/allreduce
     # - strace mpirun -n 4 tests/integration_tests/alltoall
     # - ctest --output-on-failure
