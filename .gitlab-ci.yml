@@ -19,7 +19,7 @@ openmpi:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
 
 exampi:
-  allow_failure: true
+  allow_failure: false
   stage: build
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake g++ git libboost-serialization-dev make python3 ssh strace  #  ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
