@@ -3196,7 +3196,9 @@ inline communicator::topology const communicator::topology::graph    {MPI_GRAPH 
 inline communicator::topology const communicator::topology::cartesian{MPI_CART     };
 
 inline void  barrier(communicator& self) {       self. barrier();}
+#if not defined(EXAMPI)
 inline auto ibarrier(communicator& self) {return self.ibarrier();}
+#endif
 
 inline communicator::communicator(group const& g, int tag){
 	MPI_(Comm_create_group)(MPI_COMM_WORLD, &const_cast<group&>(g), tag, &impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) : TODO(correaa) consider using non-const argument to begin with
