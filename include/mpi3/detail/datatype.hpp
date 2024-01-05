@@ -1,5 +1,4 @@
-// -*-indent-tabs-mode:t;c-basic-offset:4;tab-width:4;autowrap:nil;-*-
-// Copyright 2017-2023 Alfredo A. Correa
+// Copyright 2017-2024 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_DETAIL_DATATYPE_HPP
 #define BOOST_MPI3_DETAIL_DATATYPE_HPP
@@ -7,7 +6,7 @@
 // #define OMPI_SKIP_MPICXX 1  // https://github.com/open-mpi/ompi/issues/5157
 #include<mpi.h>
 
-#if defined(__NVCC__)
+#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
 #include <thrust/complex.h>
 #endif
 
@@ -171,8 +170,8 @@ MPI3_DECLARE_DATATYPE(decltype(std::tuple<double,double>{}), MPI_CXX_DOUBLE_COMP
 MPI3_DECLARE_DATATYPE(long_double_long_double, MPI_CXX_DOUBLE_COMPLEX); static_assert(sizeof(std::pair<long double, long double>) == sizeof(std::complex<long double>), "checking that complex mem layout maps to pair");
 #endif
 
-#if defined(__NVCC__)
-MPI3_DECLARE_DATATYPE(thrust::complex<double>, MPI_DOUBLE_COMPLEX);
+#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
+MPI3_DECLARE_DATATYPE(::thrust::complex<double>, MPI_DOUBLE_COMPLEX);
 #endif
 
 MPI3_DECLARE_DATATYPE(float_int              , MPI_FLOAT_INT);

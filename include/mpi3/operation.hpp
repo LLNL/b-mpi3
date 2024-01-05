@@ -8,7 +8,7 @@
 #include <mpi3/handle.hpp>
 
 
-#if defined(__NVCC__)
+#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
 #include <thrust/transform.h>
 #endif
 
@@ -35,18 +35,18 @@ struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> 
 	constexpr static void combine(void const* in, void* inout, int const* len, MPI_Datatype* /*dtype*/) {  // cppcheck-suppress constParameter ; signature is fixed
 		auto in_t    = reinterpret_cast<typename std::pointer_traits<P>::template rebind<T const>&>(in   );  // NOLINT(llvm-qualified-auto,readability-qualified-auto,cppcoreguidelines-pro-type-reinterpret-cast)
 		auto inout_t = reinterpret_cast<                             P                           &>(inout);  // NOLINT(llvm-qualified-auto,readability-qualified-auto,cppcoreguidelines-pro-type-reinterpret-cast)
-		#if defined(__NVCC__)
+		#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
 		thrust::transform(
 		#else
 		std::transform(
 		#endif
 			in_t, std::next(in_t, *len), inout_t, inout_t,
 			[]
-			#if defined(__NVCC__)
+			#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
 			__host__ __device__
 			#endif
 			(T const& a, T const& b)
-			#if not defined(__NVCC__)
+			#if not (defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__))
 			constexpr
 			#endif
 			{return Op{}(a, b);}
