@@ -19,7 +19,7 @@ openmpi:
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
 
 exampi:
-  allow_failure: true
+  allow_failure: false
   stage: build
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake g++ git libboost-serialization-dev make python3 ssh strace  #  ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
@@ -38,8 +38,8 @@ exampi:
     - export MPI_HOME=$HOME/exa
     - which mpicxx
     - which mpirun
-    - strace mpirun -n 4 tests/integration_tests/allreduce
-    - strace mpirun -n 4 tests/integration_tests/alltoall
+    - mpirun -n 2 --separate_rank --print_to_file --loghead --logfault --logexec --logcontrol tests/integration_tests/pingpong tests/integration_tests/allreduce
+    - mpirun -n 2 --separate_rank --print_to_file --loghead --logfault --logexec --logcontrol tests/integration_tests/pingpong tests/integration_tests/alltoall
     - ctest --output-on-failure
     - cd ../..
     - mkdir build && cd build
@@ -50,27 +50,11 @@ exampi:
     - ls
     - ctest --output-on-failure
 
-icpc-intelmpi:
+oneapi:
   stage: build
-  image: intel/oneapi-hpckit:latest
-  allow_failure: true
+  image: intel/oneapi-hpckit:2023.0.0-devel-ubuntu22.04
   script:
-    - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet bash ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
-    - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
-    - cd test
-    - mkdir build && cd build
-    - icpc --version
-    - CXX=icpc CXXFLAGS="-diag-disable=593,2196,1786,1478" cmake .. -DCMAKE_BUILD_TYPE=Debug  #https://community.intel.com/t5/Intel-C-Compiler/Inline-and-no-inline-warning/td-p/1216764
-    - cmake --build . --parallel 2 || cmake --build . --verbose
-    - ctest --output-on-failure
-  needs: ["openmpi"]
-
-icpx-intelmpi:
-  stage: build
-  image: intel/oneapi-hpckit:latest
-  allow_failure: true
-  script:
-    - apt-get update --allow-insecure-repositories && apt-get install --allow-insecure-repositories --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
+    - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
