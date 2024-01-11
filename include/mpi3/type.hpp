@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Alfredo A. Correa
+// Copyright 2018-2024 Alfredo A. Correa
 
 #ifndef BOOST_MPI3_TYPE_HPP
 #define BOOST_MPI3_TYPE_HPP
@@ -6,7 +6,7 @@
 #include <mpi3/core.hpp>
 #include <mpi3/detail/datatype.hpp>
 
-#if defined(__NVCC__)
+#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
 #include <thrust/complex.h>
 #endif
 
@@ -313,9 +313,9 @@ template<> inline auto make_type<std::complex<double>>() -> type const& { return
 // template<Complex, class = std::enable_if_t<std::is_same<decltype(Complex{}.real())> > > inline auto make_type<Complex>() -> type { return type{MPI_CXX_FLOAT_COMPLEX}; }
 // template<Complex, class = std::enable_if_t<std::is_same<> > inline auto make_type<std::complex<double>>() -> type { return type{MPI_CXX_DOUBLE_COMPLEX}; }
 
-#if defined(__NVCC__)
-template<> inline auto make_type<thrust::complex<float>>() -> type const& { return mpi3::float_complex; }
-template<> inline auto make_type<thrust::complex<double>>() -> type const& { return mpi3::double_complex; }
+#if defined(__NVCC__) || defined(__HIP_PLATFORM_AMD__) || defined(__HIP_PLATFORM_NVIDIA__)
+template<> inline auto make_type<::thrust::complex<float>>() -> type const& { return mpi3::float_complex; }
+template<> inline auto make_type<::thrust::complex<double>>() -> type const& { return mpi3::double_complex; }
 #endif
 
 template<> inline auto make_type<double>() -> type const& { return mpi3::double_; }
