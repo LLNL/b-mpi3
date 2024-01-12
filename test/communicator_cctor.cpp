@@ -16,7 +16,7 @@ int mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) try {
 {
 	mpi3::communicator const& w2 = mpi3::grip_communicator(world.handle());
 	assert(  w2 ==  world );
-	assert( &w2 == &world );
+	assert( &world == &w2 );
 
 	assert(  mpi3::grip_communicator(MPI_COMM_WORLD) ==  world );
 	assert( &mpi3::grip_communicator(MPI_COMM_WORLD) != &world );
