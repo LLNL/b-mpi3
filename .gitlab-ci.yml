@@ -14,7 +14,6 @@ openmpi:
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
-    - export MPI_ALLOW_RUN_AS_ROOT="--alow-run-as-root"
     - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
@@ -33,6 +32,7 @@ openmpi-g++-7:
     - cd test
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - export MPI_ALLOW_RUN_AS_ROOT="--alow-run-as-root"
     - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
