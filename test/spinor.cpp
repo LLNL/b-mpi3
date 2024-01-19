@@ -9,8 +9,8 @@ struct spinor {
 	std::complex<double> up;  // NOLINT(misc-non-private-member-variables-in-classes)
 	std::complex<double> dn;  // NOLINT(misc-non-private-member-variables-in-classes)
 
-	bool operator==(spinor const& other) const { return up == other.up and dn == other.dn; }
-	bool operator!=(spinor const& other) const { return up != other.up or dn != other.dn; }
+	bool operator==(spinor const& other) const { return up == other.up && dn == other.dn; }
+	bool operator!=(spinor const& other) const { return up != other.up || dn != other.dn; }
 };
 
 mpi3::environment mpienv;  // NOLINT(fuchsia-statically-constructed-objects,cert-err58-cpp,cppcoreguidelines-avoid-non-const-global-variables)
