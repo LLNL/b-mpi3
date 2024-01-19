@@ -9,7 +9,7 @@ project(
 	LANGUAGES CXX
 )
 
-find_package(MPI REQUIRED)  # might need to `module load mpi`
+find_package(MPI REQUIRED COMPONENTS CXX)  # C)  # might need to `module load mpi`
 
 add_library(${PROJECT_NAME} INTERFACE)
 
