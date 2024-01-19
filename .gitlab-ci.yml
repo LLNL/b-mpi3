@@ -31,7 +31,7 @@ openmpi-g++-7:
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
     - mkdir build && cd build
-    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - export MPI_OVERSUBSCRIBE="--oversubscribe --allow-run-as-root"
     - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Debug
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
