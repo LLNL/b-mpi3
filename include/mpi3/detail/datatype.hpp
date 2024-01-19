@@ -227,7 +227,7 @@ template<class T, class U, class RealType = decltype(U{}.real()), class = declty
 auto datatype_detect(U const&) -> default_datatype<std::complex<RealType>>;
 
 // support enums
-template<class T, class U, class UL = std::underlying_type_t<U>>
+template<class T, class U, class = std::enable_if_t<std::is_enum_v<U> >, class UL = std::underlying_type_t<U>>
 auto datatype_detect(U const&) -> default_datatype<UL>;
 
 template<class T> class datatype :  public decltype(datatype_detect<T>(std::declval<T>())) {};  // NOLINT(cppcoreguidelines-pro-type-vararg,hicpp-vararg) detection idiom
