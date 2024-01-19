@@ -23,9 +23,9 @@ openmpi-g++-7:
   image: debian:oldoldstable  # default is gcc 8 as of Dec 2023
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++-7 git libboost-serialization-dev
-    # - wget https://github.com/Kitware/CMake/releases/download/v3.27.0-rc3/cmake-3.27.0-rc3-linux-x86_64.sh --no-verbose
-    # - sh ./cmake-3.27.0-rc3-linux-x86_64.sh --skip-license --prefix=/usr
-    # - cmake --version
+    - wget https://github.com/Kitware/CMake/releases/download/v3.27.0-rc3/cmake-3.27.0-rc3-linux-x86_64.sh --no-verbose
+    - sh ./cmake-3.27.0-rc3-linux-x86_64.sh --skip-license --prefix=/usr
+    - cmake --version
     - g++-7 --version
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
     - cd test
