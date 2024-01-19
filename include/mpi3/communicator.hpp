@@ -354,6 +354,9 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	//  explicit operator communicator const*() const{return ptr_;}
 		friend bool operator==(ptr const& a, ptr const& b) {return a.ptr_ == b.ptr_;}
 		friend bool operator!=(ptr const& a, ptr const& b) {return a.ptr_ != b.ptr_;}
+
+		friend bool operator==(ptr const& a, boost::mpi3::communicator const* b) {return a.ptr_ == b;}
+		friend bool operator!=(ptr const& a, boost::mpi3::communicator const* b) {return a.ptr_ != b;}
 	};
 
 	ptr                 operator&()      & {return ptr{this};}  // NOLINT(google-runtime-operator)

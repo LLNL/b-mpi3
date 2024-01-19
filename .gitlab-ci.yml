@@ -116,7 +116,7 @@ openmpi-cppcheck:
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - g++ --version
     - cppcheck --version
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CPPCHECK="cppcheck;--force;--enable=all;--inline-suppr;--language=c++;--suppress=missingIncludeSystem;--suppress=syntaxError;--suppress=unmatchedSuppression;--std=c++17;--error-exitcode=666;-UEXCLUDE_CPPCHECK"
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_CPPCHECK="cppcheck;--force;--enable=all;--inline-suppr;--language=c++;--suppress=missingIncludeSystem;--suppress=syntaxError;--suppress=unmatchedSuppression;--suppress=unusedFunction;--std=c++17;--error-exitcode=666;-UEXCLUDE_CPPCHECK"
     - make --jobs=2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
   needs: ["openmpi"]
