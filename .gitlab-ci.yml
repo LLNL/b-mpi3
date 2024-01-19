@@ -18,6 +18,26 @@ openmpi:
     - cmake --build . --parallel 2 || make VERBOSE=1
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
 
+openmpi-g++-7:
+  stage: build
+  image: debian:oldoldstable  # default is gcc 8 as of Dec 2023
+  script:
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++-7 git libboost-serialization-dev
+    - apt-get -qq -y install wget
+    - wget https://github.com/Kitware/CMake/releases/download/v3.27.0-rc3/cmake-3.27.0-rc3-linux-x86_64.sh --no-verbose
+    - sh ./cmake-3.27.0-rc3-linux-x86_64.sh --skip-license --prefix=/usr
+    - cmake --version
+    - g++-7 --version
+    - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
+    - cd test
+    - mkdir build && cd build
+    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - export MPI_ALLOW_RUN_AS_ROOT="--allow-run-as-root"
+    - cmake .. -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build . --parallel 2 || make VERBOSE=1
+    - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure
+  needs: ["openmpi"]
+
 exampi:
   allow_failure: false
   stage: build
