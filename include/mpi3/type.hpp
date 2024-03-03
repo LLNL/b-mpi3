@@ -222,7 +222,11 @@ struct type {
 	std::string name() const {
 		std::string ret(MPI_MAX_OBJECT_NAME, '\0');
 		int namelen;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Type_get_name(impl_, ret.data(), &namelen);  // TODO(correaa) use MPI_(Type_get_name)
+		MPI_Type_get_name(  // TODO(correaa) use MPI_(Type_get_name)
+			impl_,
+			ret.data(),  // this needs c++ 17
+			&namelen
+		);
 		ret.resize(static_cast<std::string::size_type>(namelen));
 		return ret;
 	}
