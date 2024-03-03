@@ -46,7 +46,7 @@ struct cartesian_communicator<dynamic_extent> : communicator {
 	: cartesian_communicator(comm_old, std::vector<int>(shape), std::vector<int>(period)) {}
 
 
-#if not defined(EXAMPI)
+#if !defined(EXAMPI)
 	[[deprecated("use dimensionality() instead of dimension")]]
 	int dimension() const {
 		int ret;  // NOLINT(cppcoreguidelines-init-variables) delayed init  // TODO(correaa)

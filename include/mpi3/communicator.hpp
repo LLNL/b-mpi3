@@ -295,7 +295,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		return *this;
 	}
 
-	[[deprecated("communicators will stop supporting move assignment")]]
+	// [[deprecated("communicator will stop supporting move assignment")]]
 	auto operator=(communicator     && other) noexcept -> communicator& {  // TODO(correaa) tidy this operator
 		if(impl_ != MPI_COMM_NULL) {
 			try {
@@ -1872,8 +1872,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::data(first), static_cast<count_type>(count), datatype<typename std::iterator_traits<It>::value_type>{}(),
 			root, impl_, &r.impl_
 		);
-		return r;
-	} // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+		return r;  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
+	}  // NOLINT(clang-analyzer-optin.mpi.MPI-Checker) // MPI_Wait called on destructor of ret
 	template<class It, typename Size>
 	auto broadcast_n(
 		It first,
