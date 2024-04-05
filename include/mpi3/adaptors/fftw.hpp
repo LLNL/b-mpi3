@@ -24,6 +24,9 @@ struct environment {
 
 	template<class... Args>
 	static auto local_size_2d(Args... args) { return fftw_mpi_local_size_2d(args...); }
+
+    template<class... Args>
+    static auto local_size_many(Args... args) {return fftw_mpi_local_size_many(args...);}
 };
 
 template<class T>
