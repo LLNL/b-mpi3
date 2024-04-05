@@ -44,4 +44,6 @@ include(CTest)
 
 enable_testing()
 
+add_subdirectory(include/mpi3/adaptors/fftw)
+
 add_subdirectory(test)

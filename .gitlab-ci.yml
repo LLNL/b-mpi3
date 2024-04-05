@@ -131,7 +131,7 @@ openmpi-clang-tidy:
 openmpi-cppcheck:
   stage: build
   script:
-    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
+    - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev pkg-config libfftw3-dev libfftw3-mpi-dev
     - mkdir build && cd build
     - export MPI_OVERSUBSCRIBE="--oversubscribe"
     - g++ --version
@@ -260,7 +260,7 @@ openmpi-cuda-11:
 # - sh cmake-3.21.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake
 # - ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 
-inq-cuda-11-openmpi-compileonly:
+inq-cuda-11-openmpi:
   stage: build
   allow_failure: true
   image: nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04
@@ -276,9 +276,11 @@ inq-cuda-11-openmpi-compileonly:
     - cd ../..
     - mkdir build && cd build
     - /usr/local/cuda-11/bin/nvcc -V
-    - CUDACXX=/usr/local/cuda/bin/nvcc cmake .. --install-prefix=$HOME -DENABLE_CUDA=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=61
-    - make silicon --jobs=2
+    - export MPI_OVERSUBSCRIBE="--oversubscribe"
+    - CUDACXX=/usr/local/cuda/bin/nvcc cmake .. --install-prefix=$HOME -DENABLE_CUDA=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES=80
+    - make --jobs=2  # silicon
     - make install
-    - ctest -R silicon
+    - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure  # --jobs=2  # -R silicon
+
   needs:
     - openmpi-cuda-11
