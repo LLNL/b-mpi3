@@ -59,20 +59,18 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, boost::mpi3::environment& env) ->
 	boost::mpi3::fftw::environment fftwenv;
 
 	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d> G({6, 6}, 0.0, world);
-
 	mpi_fill(G);
-
-	mpi_print(G, world);
 
 	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d> F({6, 6}, 0.0, world);
 	dft_forward(G, F);
 
-	mpi_print(F, world);
+	boost::multi::array<std::complex<double>, 2> const g{G};
+	boost::multi::array<std::complex<double>, 2> f(g.extensions());
 
-	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d_many> F2({6, 6}, 0.0, world);
-	dft_forward(G, F2);
+	boost::multi::fftw::dft_forward({true, true}, g, f);
 
-	// mpi_print(F2, world);
+	boost::multi::array<std::complex<double>, 2> const ff{F};
+	assert( ff == f );
 
 
 	// boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d_many> G_many({6, 6}, 0.0, world);

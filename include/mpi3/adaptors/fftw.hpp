@@ -49,7 +49,7 @@ struct local_2d {
 
 	auto count() const { return count_; }
 	auto extension() const { return multi::extension_t{start0_, start0_ + n0_}; }
-	auto comm() -> communicator& { return *handle_; }
+	auto comm() const -> communicator& { return *handle_; }
 	auto global_extensions() const { return exts_; }
     auto block() const {return FFTW_MPI_DEFAULT_BLOCK;}
 };
