@@ -54,24 +54,40 @@ void mpi_print(Array const& arr, boost::mpi3::communicator& comm, std::string co
 namespace mpi3 = boost::mpi3;
 
 auto mpi3::main(int /*argc*/, char** /*argv*/, boost::mpi3::environment& env) -> int try {
-	// world.barrier();
-
-	// mpi_print(G, world, "G =");
-
-	// // mpi3::fftw::unbalanced_array<std::complex<double>, 2> g({6, 6}, 0.0, world);
-
-	// return 0;
-
 	auto world = env.world();
-	assert(world.size() == 3);
 
 	boost::mpi3::fftw::environment fftwenv;
 
-	boost::mpi3::fftw::array<std::complex<double>, 2> G({6, 6}, 0.0, world);
+	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d> G({6, 6}, 0.0, world);
 
 	mpi_fill(G);
 
 	mpi_print(G, world);
+
+	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d> F({6, 6}, 0.0, world);
+	dft_forward(G, F);
+
+	mpi_print(F, world);
+
+	boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d_many> F2({6, 6}, 0.0, world);
+	dft_forward(G, F2);
+
+	// mpi_print(F2, world);
+
+
+	// boost::mpi3::fftw::array<std::complex<double>, 2, boost::mpi3::fftw::local_2d_many> G_many({6, 6}, 0.0, world);
+
+	// mpi_print(G_many, world);
+
+	// dft(G, G_many);
+
+	// mpi_print(G_many, world);
+
+//	G_many = G;
+
+	if(world.rank() == 0) {
+		// assert( G_many.local_cutout()[2][2] == std::complex<double>(4.0, 6.0) );
+	}
 
 	// multi::array<std::complex<double>, 2> g{G};
 
@@ -87,7 +103,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, boost::mpi3::environment& env) ->
 	// }
 	world.barrier();
 
-	boost::mpi3::fftw::array<std::complex<double>, 2> F({6, 6}, 0.0, world);
+	// boost::mpi3::fftw::array<std::complex<double>, 2> F({6, 6}, 0.0, world);
 	// F.scatter(g);
 
 	// multi::array<std::complex<double>, 2> f{F};

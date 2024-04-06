@@ -36,10 +36,53 @@ using default_allocator =
 	// boost::mpi3::allocator<T>
 	;
 
+struct local_2d {
+	std::ptrdiff_t             n0_     = -1;
+	std::ptrdiff_t             start0_ = -1;
+	std::ptrdiff_t             count_;
+	boost::mpi3::communicator* handle_;
+	multi::extensions_t<2>     exts_;
+
+ public:
+	local_2d(multi::extensions_t<2> const& exts, boost::mpi3::communicator& comm)
+	: count_{environment::local_size_2d(std::get<0>(exts).size(), std::get<1>(exts).size(), &comm, &n0_, &start0_)}, handle_{&comm}, exts_{exts} {}
+
+	auto count() const { return count_; }
+	auto extension() const { return multi::extension_t{start0_, start0_ + n0_}; }
+	auto comm() -> communicator& { return *handle_; }
+	auto global_extensions() const { return exts_; }
+    auto block() const {return FFTW_MPI_DEFAULT_BLOCK;}
+};
+
+struct local_2d_many {
+	std::ptrdiff_t n0_     = -1;
+	std::ptrdiff_t start0_ = -1;
+	std::ptrdiff_t count_;
+
+	boost::mpi3::communicator* handle_;
+	multi::extensions_t<2>     exts_;
+	std::ptrdiff_t             block_;
+
+ public:
+	local_2d_many(multi::extensions_t<2> const& exts, boost::mpi3::communicator& comm) : handle_{&comm}, exts_{exts}, block_{FFTW_MPI_DEFAULT_BLOCK} {
+		count_ = environment::local_size_many(2, std::array<std::ptrdiff_t, 2>{std::get<0>(exts).size(), std::get<1>(exts).size()}.data(), /*howmany*/ 1, FFTW_MPI_DEFAULT_BLOCK /*std::get<0>(ext).size()*/, &comm, &n0_, &start0_);
+	}
+	local_2d_many(multi::extensions_t<2> const& exts, boost::mpi3::communicator& comm, std::ptrdiff_t block) : handle_{&comm}, exts_{exts}, block_{block} {
+		count_ = environment::local_size_many(2, std::array<std::ptrdiff_t, 2>{std::get<0>(exts).size(), std::get<1>(exts).size()}.data(), /*howmany*/ 1, block, &comm, &n0_, &start0_);
+	}
+
+	auto count() const { return count_; }
+	auto extension() const { return multi::extension_t{start0_, start0_ + n0_}; }
+	auto comm() const -> communicator& { return *handle_; }
+	auto global_extensions() const { return exts_; }
+	auto block() const {return block_;}
+};
+
 template<
 	class T,
 	boost::multi::dimensionality_type D,
-	class Alloc = default_allocator<T>>
+	class LocalLayout = local_2d,
+	class Alloc       = default_allocator<T>>
 class array;
 
 template<
@@ -50,101 +93,35 @@ class unbalanced_array;
 
 // namespace bmpi3 = boost::mpi3;
 
-class local_2d_type {
-    std::ptrdiff_t n0_     = -1;
-    std::ptrdiff_t start0_ = -1;
-    std::ptrdiff_t count_;
+template<class T, class LocalLayout, class Alloc>
+class array<T, multi::dimensionality_type{2}, LocalLayout, Alloc> {
+	LocalLayout local_layout_;
 
-    public:
-    local_2d_type(multi::extensions_t<2> const& ext, boost::mpi3::communicator& comm)
-    : count_{environment::local_size_2d(std::get<0>(ext).size(), std::get<1>(ext).size(), &comm, &n0_, &start0_)} {}
+	Alloc alloc_;
 
-    auto count() const { return count_; }
-    auto extension() const { return multi::extension_t{start0_, start0_ + n0_}; }
-};
-
-template<class T, class Alloc>
-class array<T, multi::dimensionality_type{2}, Alloc> {
-	MPI_Comm handle_;
-	Alloc    alloc_;
-
-	typename std::allocator_traits<Alloc>::size_type                              local_count_;
 	boost::multi::array_ptr<T, 2, typename std::allocator_traits<Alloc>::pointer> local_ptr_;
-	// std::ptrdiff_t                                                                n0_;
-
-    local_2d_type local_layout_;
-
-	static auto
-	local_2d(multi::extensions_t<2> ext, MPI_Comm handle) {  // boost::mpi3::communicator const& comm){
-		std::ptrdiff_t local_n0      = 0;
-		std::ptrdiff_t local_0_start = 0;
-
-		auto count = fftw_mpi_local_size_2d(std::get<0>(ext).size(), std::get<1>(ext).size(), handle, &local_n0, &local_0_start);
-		assert(count >= local_n0 * std::get<1>(ext).size());
-		return std::pair<typename std::allocator_traits<Alloc>::size_type, multi::extensions_t<2>>(
-			static_cast<typename std::allocator_traits<Alloc>::size_type>(count),
-			multi::extensions_t<2>({local_0_start, local_0_start + local_n0}, std::get<1>(ext))
-		);
-	}
-
-	static auto local_count_2d(multi::extensions_t<2> ext, MPI_Comm handle) {
-		return local_2d(ext, handle).first;
-	}
-	static auto local_extension_2d(multi::extensions_t<2> ext, MPI_Comm handle) {
-		return local_2d(ext, handle).second;
-	}
 
  public:
-	MPI_Comm handle() const { return handle_; }
-
 	using element_type = T;
 
-	array(multi::extensions_t<2> ext, boost::mpi3::communicator& comm, Alloc alloc = Alloc{})
-	: handle_{&comm},
-	  alloc_{alloc},
-      local_layout_(ext, comm),
-	  local_count_{local_count_2d(ext, &comm)},
-	  local_ptr_{alloc_.allocate(local_count_), local_extension_2d(ext, &comm)}
-    {}
+	array(multi::extensions_t<2> exts, boost::mpi3::communicator& comm, Alloc alloc = Alloc{})
+	: alloc_{alloc},
+	  local_layout_(exts, comm),
+	  local_ptr_{alloc_.allocate(local_layout_.count()), multi::extensions_t<2>(local_layout_.extension(), std::get<1>(exts))} {}
 
-	array(multi::extensions_t<2> ext, element_type const& e, boost::mpi3::communicator& comm, Alloc alloc = Alloc{})
-	: handle_{&comm},
-	  alloc_{alloc},
-      local_layout_(ext, comm),
-	  local_count_{local_count_2d(ext, handle_)},
-	  local_ptr_{alloc_.allocate(local_count_), local_extension_2d(ext, handle_)}
-	{
-		std::uninitialized_fill_n(local_ptr_.base(), local_extension_2d(ext, handle_).num_elements(), e);
+	array(multi::extensions_t<2> exts, element_type const& e, boost::mpi3::communicator& comm, Alloc alloc = Alloc{})
+	: alloc_{alloc},
+	  local_layout_(exts, comm),
+	  local_ptr_{alloc_.allocate(local_layout_.count()), multi::extensions_t<2>(local_layout_.extension(), std::get<1>(exts))} {
+		std::uninitialized_fill_n(local_ptr_.base(), local_ptr_->num_elements(), e);
 	}
-
-	array(array const& other)
-	: handle_{other.handle_},
-	  alloc_{other.alloc_},
-	  local_count_{other.local_count_},
-	  local_ptr_{alloc_.allocate(local_count_), local_extension_2d(other.extensions(), handle_)}
-    {
-		this->local_cutout() = other.local_cutout();
-	}
-
-	// array(array&& other) noexcept
-	// : handle_{other.handle_},
-	//   alloc_{std::move(other.alloc_)},
-    //   local_layout_(other.extensions(), other.communicator()),
-	//   local_count_{std::exchange(other.local_count_, 0)},
-	//   local_ptr_{std::exchange(other.local_ptr_, boost::multi::array_ptr<T, 2, typename std::allocator_traits<Alloc>::pointer>{nullptr})}
-    // {}
-
-	// explicit array(multi::array<T, 2> const& other, MPI_Comm handle, Alloc alloc = {})
-	// : array(other.extensions(), handle, alloc) {
-	// 	local_cutout() = other.stenciled(std::get<0>(local_cutout().extensions()), std::get<1>(local_cutout().extensions()));
-	// }
-
-	//  bool empty() const { return extensions().num_elements(); }
 
 	boost::multi::array_ref<T, 2>  local_cutout() & { return *local_ptr_; }
 	boost::multi::array_cref<T, 2> local_cutout() const& { return *local_ptr_; }
 
-	ptrdiff_t local_count() const& { return local_count_; }
+	auto local_layout() const { return local_layout_; }
+
+	ptrdiff_t local_count() const& { return local_layout_.count(); }
 
 	// auto extensions() const& { return multi::extensions_t<2>{local_layout_.n0_, std::get<1>(local_cutout().extensions())}; }
 
@@ -171,9 +148,9 @@ class array<T, multi::dimensionality_type{2}, Alloc> {
 	// 	);
 	// }
 
-	auto communicator() const -> boost::mpi3::communicator& {
-		return const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
-	}
+	// auto communicator() const -> boost::mpi3::communicator& {
+	// 	return const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
+	// }
 
 	// template<class Array>
 	// void all_gather(Array&& rcv) const& {
@@ -198,6 +175,18 @@ class array<T, multi::dimensionality_type{2}, Alloc> {
 	// 	all_gather(ret);
 	// 	return ret;
 	// }
+
+	auto extensions() const { return local_layout_.global_extensions(); }
+
+	template<class OtherLayout, class OtherAlloc>
+	array& operator=(array<T, 2, OtherLayout, OtherAlloc> const& other) {
+		int P = -1;
+		MPI_Comm_size(&local_layout_.comm(), &P);
+		fftw_plan plan = fftw_mpi_plan_many_transpose(6, 6, /*howmany*/ 2 /*2 for complex*/, 1, 1, const_cast<double*>(reinterpret_cast<double const*>(other.local_cutout().base())), reinterpret_cast<double*>(this->local_cutout().base()), &local_layout_.comm(), FFTW_ESTIMATE);
+		fftw_execute(plan);
+		fftw_destroy_plan(plan);
+		return *this;
+	}
 
 	// array& operator=(multi::array<T, 2> const& other) & {
 	// 	if(other.extensions() == extensions())
@@ -224,12 +213,68 @@ class array<T, multi::dimensionality_type{2}, Alloc> {
 	//  else assert(0);
 	//  return *this;
 	// }
-	~array() { alloc_.deallocate(local_cutout().data_elements(), local_count_); }
+	~array() { alloc_.deallocate(local_cutout().base(), local_layout_.count()); }
+
+	template<class Array>
+	void all_gather(Array&& rcv) const& {
+		assert(rcv.extensions() == extensions());
+
+		auto const recvcounts = local_layout_.comm() |= static_cast<int>(local_cutout().num_elements());
+		auto const displs     = local_layout_.comm() |= static_cast<int>(rcv[local_cutout().extension().front()].base() - rcv.base());
+
+		MPI_Allgatherv(
+			local_cutout().base(), local_cutout().num_elements(), MPI_DOUBLE_COMPLEX,
+			rcv.base(),
+			recvcounts.data(), displs.data(), MPI_DOUBLE_COMPLEX,
+			&local_layout_.comm()
+		);
+	}
+
+	template<class Alloc2 = Alloc>
+	explicit operator multi::array<T, 2, Alloc2>() const& {
+		multi::array<T, 2, Alloc2> ret(extensions());
+		all_gather(ret);
+		return ret;
+	}
 };
 
 template<class Array>
 auto scatter(Array const& arr) {
 	return array<typename Array::element_type, Array::dimensionality>::from_scatter(arr);
+}
+
+template<class MPIArrayIn, class MPIArrayOut>
+auto dft_forward(MPIArrayIn const& A, MPIArrayOut& B) -> MPIArrayOut& {
+	assert( &A.local_layout().comm() == &B.local_layout().comm() );
+
+	// fftw_plan p = fftw_mpi_plan_dft_2d(
+	// 	std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size(),
+	// 	(fftw_complex*)A.local_cutout().base(), (fftw_complex*)B.local_cutout().base(),
+	// 	&A.local_layout().comm(),
+	// 	FFTW_FORWARD, FFTW_ESTIMATE
+	// );
+
+	fftw_plan p = fftw_mpi_plan_many_dft(
+		2, std::array<std::ptrdiff_t, 2>{std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size()}.data(),
+		1,
+        A.local_layout().block(), B.local_layout().block(),  // FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK,
+		(fftw_complex*)A.local_cutout().base(), (fftw_complex*)B.local_cutout().base(),
+		&A.local_layout().comm(),
+		FFTW_FORWARD, FFTW_ESTIMATE
+	);
+	fftw_execute(p);
+	fftw_destroy_plan(p);
+
+	// // B = BT;
+
+	// fftw_plan t = fftw_mpi_plan_transpose(
+	//  std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size(),
+	//  (double*)(fftw_complex*)BT.local_cutout().data_elements(), (double*)(fftw_complex*)B.local_cutout().data_elements(),
+	//  &A.communicator(), FFTW_ESTIMATE);
+	// fftw_execute(t);
+	// fftw_destroy_plan(t);
+
+	return B;
 }
 
 #if 0
