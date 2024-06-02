@@ -28,7 +28,7 @@ template<class T, class P = T*>
 struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> { // user_operation, operator_ . operator is a C++ keyword
 	using base = typename detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free>;
 	// using typename base::nondefault_handle;
-	using nondefault_handle = typename base::nondefault_handle;
+	using nondefault_handle = base::nondefault_handle;
 
 	operation() = delete;
 
