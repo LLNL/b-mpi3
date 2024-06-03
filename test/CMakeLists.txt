@@ -14,6 +14,9 @@ FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi
 # FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
 FetchContent_MakeAvailable(multi)
 
+include(CMakePrintHelpers)
+cmake_print_properties(TARGETS multi PROPERTIES LOCATION INTERFACE_INCLUDE_DIRECTORIES)
+
 find_package(MPI REQUIRED)  # install MPI, e.g. `sudo dnf install mpich-devel` or `module load mpi`
 
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
@@ -228,7 +231,10 @@ foreach(TEST_FILE ${TEST_SRCS})
   endif()
 
   target_link_libraries(${TEST_EXE} PRIVATE pthread)
-  target_link_libraries(${TEST_EXE} PRIVATE multi)
+
+  get_target_property(multi_include_dirs multi INTERFACE_INCLUDE_DIRECTORIES)
+  target_include_directories(${TEST_EXE} SYSTEM PRIVATE ${multi_include_dirs})
+  # target_include_directories(${TEST_EXE} SYSTEM PUBLIC ${multi_INTERFACE_INCLUDE_DIRECTORIES})
 
   set(NPROC 3)
   if (
