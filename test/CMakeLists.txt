@@ -190,7 +190,21 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wno-ignored-qualifiers
         -Wno-range-loop-analysis # (this check is overzealous in clang 9)
       >
-      $<$<CXX_COMPILER_ID:Intel>:  # also IntelLLVM, XL (ibm), XLClang (ibm)
+      $<$<CXX_COMPILER_ID:Intel>:
+        -Werror
+        -Wall
+        -Wextra
+        -diag-disable=remark
+        -wd161
+        -Wabi
+        -Warray-bounds
+        -Wcast-qual
+        -Wchar-subscripts
+        -Wunused -Wunused-but-set-variable -Wunused-function -Wunused-parameter -Wunused-variable
+        -Wwrite-strings
+        -Wno-error=deprecated-declarations
+      >
+      $<$<CXX_COMPILER_ID:IntelLLVM>:
         -Werror
         -Wall
         -Wextra
