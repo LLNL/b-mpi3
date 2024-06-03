@@ -9,12 +9,11 @@ auto mpi3::main(int/*argc*/, char**/*argv*/, mpi3::communicator world) -> int tr
 
 	assert( world.size() > 1);
 
-	std::vector<std::size_t> global(120);
-
 	{
+		std::vector<std::size_t> global(120);
+
 		std::vector<std::size_t> local(global.size());
 		iota(begin(local), end(local), 0);
-
 
 		auto last = world.all_reduce_n(local.begin(), local.size(), global.begin());
 		assert(last == global.end());
