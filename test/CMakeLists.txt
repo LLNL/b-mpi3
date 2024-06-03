@@ -1,5 +1,5 @@
 # Use cmake/ctest for building and testing boost mpi3 tests
-cmake_minimum_required(VERSION 3.25) # 3.10 for FindMPI, 3.12 for MPI_ROOT, 3.25 for fetchcontent SYSTEM
+cmake_minimum_required(VERSION 3.18.4) # 3.10 for FindMPI, 3.12 for MPI_ROOT, 3.25 for fetchcontent SYSTEM
 project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 if(EXISTS "CMakeLists.txt")
