@@ -229,6 +229,7 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wformat=2
         -Wshadow
         -Wunused-parameter
+        --diag_suppress deprecated_entity
       >
       $<$<CXX_COMPILER_ID:MSVC>:
         /WX
