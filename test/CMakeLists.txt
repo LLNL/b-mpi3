@@ -1,5 +1,5 @@
 # Use cmake/ctest for building and testing boost mpi3 tests
-cmake_minimum_required(VERSION 3.18.4) # 3.10 for FindMPI, 3.12 for MPI_ROOT
+cmake_minimum_required(VERSION 3.18.4) # 3.10 for FindMPI, 3.12 for MPI_ROOT, 3.25 for fetchcontent SYSTEM
 project(boostmpi3_tests VERSION 0.1 LANGUAGES CXX)
 
 if(EXISTS "CMakeLists.txt")
@@ -10,12 +10,12 @@ enable_testing()
 include(CTest)
 include(FetchContent)
 
-FetchContent_Declare(multi GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git)  # needs git installed
-# FetchContent_Declare(multi URL https://gitlab.com/correaa/boost-multi/-/archive/master/boost-multi-master.zip DOWNLOAD_EXTRACT_TIMESTAMP ON)
+FetchContent_Declare(
+  multi
+  GIT_REPOSITORY https://gitlab.com/correaa/boost-multi.git  # needs git installed
+  GIT_SHALLOW 1
+)
 FetchContent_MakeAvailable(multi)
-
-include(CMakePrintHelpers)
-cmake_print_properties(TARGETS multi PROPERTIES LOCATION INTERFACE_INCLUDE_DIRECTORIES)
 
 find_package(MPI REQUIRED)  # install MPI, e.g. `sudo dnf install mpich-devel` or `module load mpi`
 
@@ -251,7 +251,6 @@ foreach(TEST_FILE ${TEST_SRCS})
 
   get_target_property(multi_include_dirs multi INTERFACE_INCLUDE_DIRECTORIES)
   target_include_directories(${TEST_EXE} SYSTEM PRIVATE ${multi_include_dirs})
-  # target_include_directories(${TEST_EXE} SYSTEM PUBLIC ${multi_INTERFACE_INCLUDE_DIRECTORIES})
 
   set(NPROC 3)
   if (
