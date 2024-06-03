@@ -152,7 +152,7 @@ foreach(TEST_FILE ${TEST_SRCS})
     set_source_files_properties(${TEST_FILE} PROPERTIES LANGUAGE CUDA)
   endif()
 
-  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror -Wno-error=deprecated-declarations>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
+  target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Werror>) # -Wpedantic -Wunused -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-qual -Wformat=2>) #-Wsign-conversion -Wshadow -Wconversion
   target_compile_options(${TEST_EXE} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Wall -Wextra>)
 
   target_compile_options(
@@ -164,6 +164,7 @@ foreach(TEST_FILE ${TEST_SRCS})
       >
       $<$<AND:$<CXX_COMPILER_ID:GNU>,$<NOT:$<CUDA_COMPILER_ID:NVIDIA>>,$<NOT:$<CUDA_COMPILER_ID:Clang>>>:
         -fmax-errors=2
+        -Wno-error=deprecated-declarations
         -Wno-unknown-pragmas
         # -Wextra-semi (gcc 8, not in gcc 7)
         -Wpedantic
@@ -182,6 +183,7 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wconstexpr-not-const
         -Wconsumed
         -Wconversion -Wconversion-null
+        -Wno-error=deprecated-declarations
         -Wmove
         -Wzero-as-null-pointer-constant -Wzero-length-array
         -Wno-c++98-compat-unnamed-type-template-args
@@ -200,6 +202,7 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wchar-subscripts
         -Wunused -Wunused-but-set-variable -Wunused-function -Wunused-parameter -Wunused-variable
         -Wwrite-strings
+        -Wno-error=deprecated-declarations
       >
       $<$<OR:$<CXX_COMPILER_ID:PGI>,$<CXX_COMPILER_ID:NVHPC>>:
         -Werror
