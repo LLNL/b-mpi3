@@ -37,6 +37,7 @@ using default_allocator =
 	;
 
 struct local_2d {
+ private:
 	std::ptrdiff_t             n0_     = -1;
 	std::ptrdiff_t             start0_ = -1;
 	std::ptrdiff_t             count_;
@@ -51,10 +52,11 @@ struct local_2d {
 	auto extension() const { return multi::extension_t{start0_, start0_ + n0_}; }
 	auto comm() const -> communicator& { return *handle_; }
 	auto global_extensions() const { return exts_; }
-    auto block() const {return FFTW_MPI_DEFAULT_BLOCK;}
+    auto static block() {return FFTW_MPI_DEFAULT_BLOCK;}
 };
 
 struct local_2d_many {
+ private:
 	std::ptrdiff_t n0_     = -1;
 	std::ptrdiff_t start0_ = -1;
 	std::ptrdiff_t count_;
@@ -104,6 +106,7 @@ class array<T, multi::dimensionality_type{2}, LocalLayout, Alloc> {
  public:
 	using element_type = T;
 
+
 	array(multi::extensions_t<2> exts, boost::mpi3::communicator& comm, Alloc alloc = Alloc{})
 	: alloc_{alloc},
 	  local_layout_(exts, comm),
@@ -115,6 +118,12 @@ class array<T, multi::dimensionality_type{2}, LocalLayout, Alloc> {
 	  local_ptr_{alloc_.allocate(local_layout_.count()), multi::extensions_t<2>(local_layout_.extension(), std::get<1>(exts))} {
 		std::uninitialized_fill_n(local_ptr_.base(), local_ptr_->num_elements(), e);
 	}
+
+	array(array const&) = delete;
+	array(array&&) = delete;
+
+	auto operator=(array const&) -> array& = delete;
+	auto operator=(array&&) -> array& = delete;
 
 	boost::multi::array_ref<T, 2>  local_cutout() & { return *local_ptr_; }
 	boost::multi::array_cref<T, 2> local_cutout() const& { return *local_ptr_; }
@@ -136,44 +145,44 @@ class array<T, multi::dimensionality_type{2}, LocalLayout, Alloc> {
 
 	// template<class Array>
 	// void scatter(Array const& snd) & {
-	// 	auto& comm = reinterpret_cast<boost::mpi3::communicator&>(handle_);
+	//  auto& comm = reinterpret_cast<boost::mpi3::communicator&>(handle_);
 
-	// 	auto const sendcounts = comm |= static_cast<int>(local_cutout().num_elements());
-	// 	auto const displs     = comm |= static_cast<int>(snd[local_cutout().extension().front()].base() - snd.base());
+	//  auto const sendcounts = comm |= static_cast<int>(local_cutout().num_elements());
+	//  auto const displs     = comm |= static_cast<int>(snd[local_cutout().extension().front()].base() - snd.base());
 
-	// 	MPI_Scatterv(
-	// 		snd.base(), sendcounts.data(), displs.data(), MPI_DOUBLE_COMPLEX,
-	// 		local_cutout().base(), local_cutout().num_elements(), MPI_DOUBLE_COMPLEX,
-	// 		0, &comm
-	// 	);
+	//  MPI_Scatterv(
+	//    snd.base(), sendcounts.data(), displs.data(), MPI_DOUBLE_COMPLEX,
+	//    local_cutout().base(), local_cutout().num_elements(), MPI_DOUBLE_COMPLEX,
+	//    0, &comm
+	//  );
 	// }
 
 	// auto communicator() const -> boost::mpi3::communicator& {
-	// 	return const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
+	//  return const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
 	// }
 
 	// template<class Array>
 	// void all_gather(Array&& rcv) const& {
-	// 	assert(rcv.extensions() == extensions());
+	//  assert(rcv.extensions() == extensions());
 
-	// 	auto& comm = const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
+	//  auto& comm = const_cast<boost::mpi3::communicator&>(reinterpret_cast<boost::mpi3::communicator const&>(handle_));
 
-	// 	auto const recvcounts = comm |= static_cast<int>(local_cutout().num_elements());
-	// 	auto const displs     = comm |= static_cast<int>(rcv[local_cutout().extension().front()].base() - rcv.base());
+	//  auto const recvcounts = comm |= static_cast<int>(local_cutout().num_elements());
+	//  auto const displs     = comm |= static_cast<int>(rcv[local_cutout().extension().front()].base() - rcv.base());
 
-	// 	MPI_Allgatherv(
-	// 		local_cutout().base(), local_cutout().num_elements(), MPI_DOUBLE_COMPLEX,
-	// 		rcv.base(),
-	// 		recvcounts.data(), displs.data(), MPI_DOUBLE_COMPLEX,
-	// 		handle_
-	// 	);
+	//  MPI_Allgatherv(
+	//    local_cutout().base(), local_cutout().num_elements(), MPI_DOUBLE_COMPLEX,
+	//    rcv.base(),
+	//    recvcounts.data(), displs.data(), MPI_DOUBLE_COMPLEX,
+	//    handle_
+	//  );
 	// }
 
 	// template<class Alloc2 = Alloc>
 	// explicit operator multi::array<T, 2, Alloc2>() const& {
-	// 	multi::array<T, 2, Alloc2> ret(extensions());
-	// 	all_gather(ret);
-	// 	return ret;
+	//  multi::array<T, 2, Alloc2> ret(extensions());
+	//  all_gather(ret);
+	//  return ret;
 	// }
 
 	auto extensions() const { return local_layout_.global_extensions(); }
@@ -182,20 +191,26 @@ class array<T, multi::dimensionality_type{2}, LocalLayout, Alloc> {
 	array& operator=(array<T, 2, OtherLayout, OtherAlloc> const& other) {
 		int P = -1;
 		MPI_Comm_size(&local_layout_.comm(), &P);
-		fftw_plan plan = fftw_mpi_plan_many_transpose(6, 6, /*howmany*/ 2 /*2 for complex*/, 1, 1, const_cast<double*>(reinterpret_cast<double const*>(other.local_cutout().base())), reinterpret_cast<double*>(this->local_cutout().base()), &local_layout_.comm(), FFTW_ESTIMATE);
+		fftw_plan plan = fftw_mpi_plan_many_transpose(
+			6, 6, /*howmany*/ 2 /*2 for complex*/, 1, 1,
+			const_cast<double*>(reinterpret_cast<double const*>(other.local_cutout().base())),  // NOLINT(cppcoreguidelines-pro-type-const-cast,cppcoreguidelines-pro-type-reinterpret-cast)
+			reinterpret_cast<double*>(this->local_cutout().base()),  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+			&local_layout_.comm(),
+			FFTW_ESTIMATE
+		);
 		fftw_execute(plan);
 		fftw_destroy_plan(plan);
 		return *this;
 	}
 
 	// array& operator=(multi::array<T, 2> const& other) & {
-	// 	if(other.extensions() == extensions())
-	// 		local_cutout() = other.stenciled(std::get<0>(local_cutout().extensions()), std::get<1>(local_cutout().extensions()));
-	// 	else {
-	// 		array tmp{other};
-	// 		std::swap(*this, tmp);
-	// 	}
-	// 	return *this;
+	//  if(other.extensions() == extensions())
+	//    local_cutout() = other.stenciled(std::get<0>(local_cutout().extensions()), std::get<1>(local_cutout().extensions()));
+	//  else {
+	//    array tmp{other};
+	//    std::swap(*this, tmp);
+	//  }
+	//  return *this;
 	// }
 	// bool operator==(multi::array<T, 2> const& other) const&{
 	//  if(other.extensions() != extensions()) return false;
@@ -248,17 +263,18 @@ auto dft_forward(MPIArrayIn const& A, MPIArrayOut& B) -> MPIArrayOut& {
 	assert( &A.local_layout().comm() == &B.local_layout().comm() );
 
 	// fftw_plan p = fftw_mpi_plan_dft_2d(
-	// 	std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size(),
-	// 	(fftw_complex*)A.local_cutout().base(), (fftw_complex*)B.local_cutout().base(),
-	// 	&A.local_layout().comm(),
-	// 	FFTW_FORWARD, FFTW_ESTIMATE
+	//  std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size(),
+	//  (fftw_complex*)A.local_cutout().base(), (fftw_complex*)B.local_cutout().base(),
+	//  &A.local_layout().comm(),
+	//  FFTW_FORWARD, FFTW_ESTIMATE
 	// );
 
 	fftw_plan p = fftw_mpi_plan_many_dft(
 		2, std::array<std::ptrdiff_t, 2>{std::get<0>(A.extensions()).size(), std::get<1>(A.extensions()).size()}.data(),
 		1,
         A.local_layout().block(), B.local_layout().block(),  // FFTW_MPI_DEFAULT_BLOCK, FFTW_MPI_DEFAULT_BLOCK,
-		(fftw_complex*)A.local_cutout().base(), (fftw_complex*)B.local_cutout().base(),
+		const_cast<fftw_complex*>(reinterpret_cast<fftw_complex const*>(A.local_cutout().base())),  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-type-const-cast)
+		                          reinterpret_cast<fftw_complex      *>(B.local_cutout().base()) ,  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
 		&A.local_layout().comm(),
 		FFTW_FORWARD, FFTW_ESTIMATE
 	);
