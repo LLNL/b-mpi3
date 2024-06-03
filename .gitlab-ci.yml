@@ -3,6 +3,10 @@
 
 image: debian:testing
 
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
