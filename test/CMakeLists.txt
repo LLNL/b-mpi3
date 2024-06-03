@@ -230,6 +230,7 @@ foreach(TEST_FILE ${TEST_SRCS})
         -Wshadow
         -Wunused-parameter
         --diag_suppress deprecated_entity
+        --diag_suppress code_is_unreachable
       >
       $<$<CXX_COMPILER_ID:MSVC>:
         /WX
