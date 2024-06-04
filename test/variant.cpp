@@ -24,19 +24,19 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	break; case 1: {
         variant<int, double> v;
         world[0] >> v;
-    	assert(( v == variant<int, double>{3.14} ));
+      assert(( v == variant<int, double>{3.14} ));
 	};
 	}
 
 	switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<color, double> const v{blue};
         world[1] << v;
 	};
 	break; case 1: {
         variant<color, double> v;
         world[0] >> v;
-    	assert(( v == variant<color, double>{blue} ));
+      assert(( v == variant<color, double>{blue} ));
 	};
 	}
 
@@ -48,7 +48,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	break; case 1: {
         variant<int, double> v;
         world[0] >> v;
-    	assert(( v == variant<int, double>{3.14} ));
+      assert(( v == variant<int, double>{3.14} ));
 	};
 	}
 
@@ -61,7 +61,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
         variant<int, double> v;
 		world.receive_n(&v, 1, 0);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
         assert( v.index() == 0 );
-    	assert(( v == variant<int, double>{42} ));
+      assert(( v == variant<int, double>{42} ));
 	};
 	}
 
@@ -103,73 +103,73 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_ns::code const ec = error_ns::SUCCESS;
-	// 	world.send_n(&ec, 1, 1);
+	//  error_ns::code const ec = error_ns::SUCCESS;
+	//  world.send_n(&ec, 1, 1);
 	// };
 	// break; case 1: {
-	// 	error_ns::code ec = error_ns::SUCCESS;
-	// 	world.receive_n(&ec, 1, 0);
-	// 	assert(ec == error_ns::SUCCESS);
+	//  error_ns::code ec = error_ns::SUCCESS;
+	//  world.receive_n(&ec, 1, 0);
+	//  assert(ec == error_ns::SUCCESS);
 	// };
 	// }
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_ns::code const ec = error_ns::SUCCESS;
-	// 	world.send_n(&ec, 1, 1);
+	//  error_ns::code const ec = error_ns::SUCCESS;
+	//  world.send_n(&ec, 1, 1);
 	// };
 	// break; case 1: {
-	// 	error_ns::code ec = error_ns::SUCCESS;
-	// 	world.receive_n(&ec, 1);
-	// 	assert(ec == error_ns::SUCCESS);
+	//  error_ns::code ec = error_ns::SUCCESS;
+	//  world.receive_n(&ec, 1);
+	//  assert(ec == error_ns::SUCCESS);
 	// };
 	// }
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_ns::code const ec = error_ns::SUCCESS;
-	// 	world[1] << ec;
+	//  error_ns::code const ec = error_ns::SUCCESS;
+	//  world[1] << ec;
 	// };
 	// break; case 1: {
-	// 	error_ns::code ec = error_ns::SUCCESS;
-	// 	world[0] >> ec;
-	// 	assert(ec == error_ns::SUCCESS);
+	//  error_ns::code ec = error_ns::SUCCESS;
+	//  world[0] >> ec;
+	//  assert(ec == error_ns::SUCCESS);
 	// };
 	// }
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_ns::code const ec = error_ns::SUCCESS;
-	// 	world[1] << ec;
+	//  error_ns::code const ec = error_ns::SUCCESS;
+	//  world[1] << ec;
 	// };
 	// break; case 1: {
-	// 	error_ns::code ec = error_ns::SUCCESS;
-	// 	world >> ec;
-	// 	assert(ec == error_ns::SUCCESS);
+	//  error_ns::code ec = error_ns::SUCCESS;
+	//  world >> ec;
+	//  assert(ec == error_ns::SUCCESS);
 	// };
 	// }
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_long_ns::code const ec = error_long_ns::SUCCESS;
-	// 	world[1] << ec;
+	//  error_long_ns::code const ec = error_long_ns::SUCCESS;
+	//  world[1] << ec;
 	// };
 	// break; case 1: {
-	// 	error_long_ns::code ec  = error_long_ns::SUCCESS;
-	// 	world >> ec;
-	// 	assert(ec == error_long_ns::SUCCESS);
+	//  error_long_ns::code ec  = error_long_ns::SUCCESS;
+	//  world >> ec;
+	//  assert(ec == error_long_ns::SUCCESS);
 	// };
 	// }
 
 	// switch(world.rank()) {
 	// break; case 0: {
-	// 	error_class_ns::code const ec = error_class_ns::code::SUCCESS;
-	// 	world[1] << ec;
+	//  error_class_ns::code const ec = error_class_ns::code::SUCCESS;
+	//  world[1] << ec;
 	// };
 	// break; case 1: {
-	// 	error_class_ns::code ec = error_class_ns::code::SUCCESS;
-	// 	world >> ec;
-	// 	assert(ec == error_class_ns::code::SUCCESS);
+	//  error_class_ns::code ec = error_class_ns::code::SUCCESS;
+	//  world >> ec;
+	//  assert(ec == error_class_ns::code::SUCCESS);
 	// };
 	// }
 
