@@ -41,7 +41,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
     switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<int, double> const v{3.14};
         world[1] << v;
 	};
@@ -53,7 +53,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
 	switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<int, double> const v{42};
 		world.send_n(&v, 1, 1);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
 	};
@@ -66,7 +66,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
 	switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<int, std::tuple<int, int>> const v{std::make_tuple(5, 42)};
 		world.send_n(reinterpret_cast<char const*>(&v), sizeof(v), 1);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
 	};
@@ -78,7 +78,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
 	switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<int, std::tuple<int, int>> const v{std::make_tuple(5, 42)};
 		world.send_n(reinterpret_cast<char const*>(&v), sizeof(v), 1);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
 	};
@@ -90,7 +90,7 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	}
 
 	switch(world.rank()) {
-	break; case 0: {
+	case 0: {
         variant<int, std::tuple<int, int>> v{std::make_tuple(5, 42)};
 		world.send_n(reinterpret_cast<std::byte*>(&v), sizeof(v), 1);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast) testing not recommended brute force method
 	};
