@@ -17,7 +17,6 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 	using std::variant;
 
 	switch(world.rank()) {
-		break;
 	case 0: {
 		variant<int, double> const v{3.14};
 		world[1] << v;
