@@ -67,15 +67,31 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 			world.send_receive_n(b.begin(), b.size(), left, right);
 			//  assert( *b.begin() == std::to_string(1.*right) );
 		}
+		{
+			mpi3::circular_communicator circle{world};
+			std::vector<int>            buffer(10);
+			buffer[5] = circle.coordinate();
+			circle.send_receive(buffer.begin(), buffer.end(), circle.rank(circle.coordinate() - 1), circle.rank(circle.coordinate() + 1));
+			assert( buffer[5] == right );
+		}
+		try {
+			mpi3::ring       circle{world};
+			std::vector<int> buffer(10);
+			buffer[5] = circle.coordinate();
+			circle.rotate(buffer.begin(), buffer.end());
+			//  assert( buffer[5] == circle.rank(circle.coordinate() - 1) );
+		} catch(std::exception& e) {
+			std::cout << e.what() << std::endl;
+		}
 	}
 	{
 		std::vector<int> buffer(10);
 		buffer[5]        = world.rank();
-		auto const right = world.rank() + 1;
+		auto right = world.rank() + 1;
 		if(right >= world.size()) {
 			right = 0;
 		}
-		auto const left = world.rank() - 1;
+		auto left = world.rank() - 1;
 		if(left < 0) {
 			left = world.size() - 1;
 		}
@@ -102,22 +118,6 @@ auto mpi3::main(int /*argc*/, char** /*argv*/, mpi3::communicator world) -> int 
 		}
 		world.send_receive(buffer.begin(), buffer.end(), left, right);
 		assert( buffer[5] == right );
-	}
-	{
-		mpi3::circular_communicator circle{world};
-		std::vector<int>            buffer(10);
-		buffer[5] = circle.coordinate();
-		circle.send_receive(buffer.begin(), buffer.end(), circle.rank(circle.coordinate() - 1), circle.rank(circle.coordinate() + 1));
-		assert( buffer[5] == right );
-	}
-	try {
-		mpi3::ring       circle{world};
-		std::vector<int> buffer(10);
-		buffer[5] = circle.coordinate();
-		circle.rotate(buffer.begin(), buffer.end());
-		//  assert( buffer[5] == circle.rank(circle.coordinate() - 1) );
-	} catch(std::exception& e) {
-		std::cout << e.what() << std::endl;
 	}
 	return 0;
 } catch(...) {
