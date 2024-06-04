@@ -348,7 +348,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		communicator* ptr_;
 
 	 public:
-		explicit ptr(communicator* ptr) : ptr_{ptr} {}
+		explicit ptr(communicator* ptr) : ptr_{ptr} {}  // cppcheck-suppress constParameterPointer ; TODO(correaa)
 		operator MPI_Comm() const {return ptr_->get_mutable();}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
 		explicit operator communicator      *() const {return ptr_;}
 	//  explicit operator communicator const*() const{return ptr_;}
