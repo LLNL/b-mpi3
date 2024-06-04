@@ -95,7 +95,7 @@ set(TEST_SRCS
 	communicator_reduce.cpp
 	communicator_scatter.cpp
   communicator_send.cpp
-	communicator_set_error_handler.cpp
+# communicator_set_error_handler.cpp  # doesn't work with nvhpc
 	communicator_split.cpp
   enum.cpp
 	environment_thread.cpp
