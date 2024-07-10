@@ -1,6 +1,6 @@
 // Copyright 2019-2024 Alfredo A. Correa
 
-#include <fftw3-mpi.h>
+#include <fftw3-mpi.h>  // TODO(correaa) declare need for sudo apt install libfftw3-mpi-dev
 
 #include <multi/adaptors/fftw.hpp>
 
