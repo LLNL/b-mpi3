@@ -32,7 +32,7 @@ openmpi-g++-7:
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++-7 git libboost-serialization-dev
     - apt-get -qq -y install wget
-    - wget https://github.com/Kitware/CMake/releases/download/v3.27.0-rc3/cmake-3.27.0-rc3-linux-x86_64.sh --no-verbose
+    - wget https://github.com/Kitware/CMake/releases/download/v3.27.0-rc3/cmake-3.27.0-rc3-linux-`uname -m`.sh --no-verbose
     - sh ./cmake-3.27.0-rc3-linux-x86_64.sh --skip-license --prefix=/usr
     - cmake --version
     - g++-7 --version
@@ -84,6 +84,7 @@ oneapi:
   stage: build
   image: intel/oneapi-hpckit:2023.0.0-devel-ubuntu22.04
   tags:
+    - x86_64
     - non-shared
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
@@ -99,10 +100,9 @@ oneapi:
 nvhpc-24.5 c++20:
   stage: build
   image: nvcr.io/nvidia/nvhpc:24.5-devel-cuda12.4-ubuntu22.04  # https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nvhpc/tags
-  # tags:
-  #   - non-shared
-  #   - large-disk-space
   tags:
+    - x86_64
+    - large-disk-space
     - non-shared
   interruptible: true
   script:
