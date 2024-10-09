@@ -12,6 +12,8 @@ variables:
 
 openmpi:
   stage: build
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -25,6 +27,8 @@ openmpi:
 openmpi-g++-7:
   stage: build
   image: debian:oldoldstable  # default is gcc 8 as of Dec 2023
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make g++-7 git libboost-serialization-dev
     - apt-get -qq -y install wget
@@ -45,6 +49,8 @@ openmpi-g++-7:
 exampi:
   allow_failure: false
   stage: build
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake g++ git libboost-serialization-dev make python3 ssh strace  #  ca-certificates libopenmpi-dev openmpi-bin cmake make g++ git libboost-serialization-dev
     - git clone https://correaa:${EXATOKEN}@github.com/tonyskjellum/ExaMPI.git
@@ -77,6 +83,8 @@ exampi:
 oneapi:
   stage: build
   image: intel/oneapi-hpckit:2023.0.0-devel-ubuntu22.04
+  tags:
+    - non-shared
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -94,6 +102,8 @@ nvhpc-24.5 c++20:
   # tags:
   #   - non-shared
   #   - large-disk-space
+  tags:
+    - non-shared
   interruptible: true
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet ca-certificates cmake curl g++ git make libboost-test-dev libboost-serialization-dev
@@ -107,6 +117,8 @@ nvhpc-24.5 c++20:
 openmpi-clang:
   stage: build
   image: debian:testing
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang g++ git libstdc++-12-dev libboost-serialization-dev
     - cd .. && ln -s boost-mpi3 mpi3 && cd mpi3
@@ -123,6 +135,8 @@ openmpi-clang:
 openmpi-clang20:
   stage: build
   image: debian:stable
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin cmake make clang git libstdc++-12-dev libboost-serialization-dev
     - cd test
@@ -137,6 +151,8 @@ openmpi-clang20:
 
 openmpi-clang-tidy:
   stage: build
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates libopenmpi-dev openmpi-bin clang libstdc++-12-dev clang-tidy cmake git make libboost-serialization-dev
     - mkdir build && cd build
@@ -150,6 +166,8 @@ openmpi-clang-tidy:
 
 openmpi-cppcheck:
   stage: build
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev pkg-config libfftw3-dev libfftw3-mpi-dev
     - mkdir build && cd build
@@ -163,6 +181,8 @@ openmpi-cppcheck:
 
 mpich-debug:
   stage: build
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends libopenmpi-dev openmpi-bin g++ libstdc++-12-dev ca-certificates cmake cppcheck git make libboost-serialization-dev
     - cd test
@@ -177,6 +197,8 @@ mpich-debug:
 mpich-valgrind:
   stage: build
   allow_failure: true
+  tags:
+    - non-shared
   script:
     - apt-get update -qq && apt-get install -qq -y --no-install-recommends ca-certificates cmake git libboost-test-dev libboost-serialization-dev libmpich-dev make mpich valgrind
     - mpirun --version
@@ -194,6 +216,8 @@ qmcpack-openmpi:
   stage: test
   allow_failure: true
   image: debian:testing
+  tags:
+    - non-shared
   script:
     - apt-get -qq update && apt-get -qq install --no-install-recommends -y libblas-dev liblapack-dev libfftw3-dev libboost-serialization-dev libopenmpi-dev gfortran g++ cmake make git ca-certificates numdiff python3 python3-numpy python3-h5py python3-mpi4py python3-scipy libxml2-dev libhdf5-dev valgrind
     - git clone https://github.com/QMCPACK/qmcpack.git
@@ -213,6 +237,7 @@ qmcpack-cuda-runner:
   allow_failure: false
   image: nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04
   tags:
+    - non-shared
     - nvidia-docker
   stage: test
   script:
@@ -234,6 +259,7 @@ inq-openmpi:
   stage: test
   image: debian:testing
   tags:
+    - non-shared
     - cpu
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-serialization-dev libboost-iostreams-dev libopenmpi-dev libhdf5-dev gfortran g++ cmake pkg-config python3-dev make git ca-certificates wget
@@ -263,6 +289,8 @@ openmpi-cuda-11:
   stage: build
   allow_failure: false
   image: nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04
+  tags:
+    - non-shared
   script:
     - apt-get update && apt-get install --no-install-recommends -y cmake libboost-test-dev libboost-serialization-dev libopenmpi-dev make git
     - /usr/local/cuda-11/bin/nvcc --version
@@ -285,6 +313,7 @@ inq-cuda-11-openmpi:
   allow_failure: true
   image: nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04
   tags:
+    - non-shared
     - nvidia-docker
   script:
     - apt-get update && apt-get install --no-install-recommends -y --quiet cmake git libblas-dev liblapack-dev libfftw3-dev libboost-filesystem-dev libboost-iostreams-dev libboost-serialization-dev libopenmpi-dev libhdf5-dev ca-certificates gfortran g++ make pkg-config python3-dev wget
@@ -301,6 +330,6 @@ inq-cuda-11-openmpi:
     - make --jobs=2  # silicon
     - make install
     - OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 ctest --output-on-failure  # --jobs=2  # -R silicon
-
   needs:
     - openmpi-cuda-11
+
