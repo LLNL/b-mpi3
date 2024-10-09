@@ -57,7 +57,7 @@ class wall_timer {
 		auto const avg      = total / comm_.size();
 		auto const speed_up = max / total;
 		if(comm_.root()) {
-			std::cerr << "# " << title_ << " timing " << min << "[" << avg << "]" << max << " sec, speed up = x" << speed_up << std::endl;
+			std::cerr << "# " << title_ << " timing " << min << "[" << avg << "]" << max << " sec, speed up = x" << speed_up << '\n';
 		}
 	}
 };

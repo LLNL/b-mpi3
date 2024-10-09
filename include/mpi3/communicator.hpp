@@ -304,7 +304,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			#else
 				MPI_Comm_free(&impl_);
 			#endif
-			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
+			} catch(std::exception& e) { std::cerr<< e.what() <<'\n'; MPI_Abort(impl_, 666); }
 		}
 		impl_ = std::exchange(other.impl_, MPI_COMM_NULL);
 		// communicator tmp{std::move(other)};
@@ -1220,7 +1220,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	}
 
 	void send_packed_n(void const* begin, int n, int dest, int tag = 0) {
-		std::cout<<"sending packet of size "<< n <<std::endl;
+		std::cout<<"sending packet of size "<< n << '\n';
 		MPI_(Send)(begin, n, MPI_PACKED, dest, tag, impl_);
 	}
 	auto receive_packed_n(void* begin, int n, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) {
@@ -1993,7 +1993,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T, class Op = std::plus<> >
 	void all_reduce_value(T const& t, T& ret, Op op = {}){
 		auto* e = all_reduce_n(std::addressof(t), 1, std::addressof(ret), op); (void)e;
-		assert( e == std::next(std::addressof(ret)) );
+		auto* e_check = std::next(std::addressof(ret)); (void)e_check;
+		assert( e == e_check );
 	}
 	template<class T, class Op = std::plus<>, typename = decltype(T{T(0)})>
 	auto all_reduce_value(T const& t, Op op = {}){
@@ -2398,7 +2399,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			displs[i] = static_cast<int>(d);
 		}
 		if(rank() == root) {
-			std::cerr<<"in scatterv 2 "<< displs[0] <<" "<< displs[1] <<" "<< displs[2] <<std::endl;
+			std::cerr<<"in scatterv 2 "<< displs[0] <<" "<< displs[1] <<" "<< displs[2] << '\n';
 		}
 		std::vector<int> counts(c.size());
 		std::transform(
@@ -3152,7 +3153,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	FILE*        fopen(char const* filename, int amode = unsigned{MPI_MODE_RDWR} | unsigned{MPI_MODE_CREATE});
 #endif
 
-	inline static auto name(communicator::topology const& t) -> std::string const& {
+	static auto name(communicator::topology const& t) -> std::string const& {
 		static std::map<communicator::topology, std::string> const names = {
 			{communicator::topology::undefined, "undefined"}, 
 			{communicator::topology::graph, "graph"},

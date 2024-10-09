@@ -98,7 +98,7 @@ struct ostream : public std::ostream {  // NOLINT(fuchsia-multiple-inheritance) 
 		void collapse_lines(boost::icl::interval_map<int, std::string> const& messages) const {
 			for(auto const& m : messages) {  // NOLINT(altera-unroll-loops) use algorithm
 				std::string range = comm_.name();
-				if(static_cast<int>(size(m.first)) < static_cast<int>(comm_.size())) {
+				if(static_cast<int>(size(m.first)) < comm_.size()) {
 					if(size(m.first) == 1) {
 						range += ("[" + std::to_string(lower(m.first)) + "]");
 					} else {
