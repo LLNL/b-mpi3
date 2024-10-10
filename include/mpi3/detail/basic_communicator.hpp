@@ -268,7 +268,7 @@ class basic_communicator{
 
 	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
-		auto const count = static_cast<std::size_t>(m.count<detail::packed>());
+		auto const count = static_cast<uvector<detail::packed>::size_type>(m.count<detail::packed>());
 		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);
