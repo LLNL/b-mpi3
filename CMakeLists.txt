@@ -13,6 +13,9 @@ find_package(MPI REQUIRED COMPONENTS CXX) # C)  # might need to `module load
 
 add_library(${PROJECT_NAME} INTERFACE)
 
+find_package(Boost COMPONENTS serialization)
+target_link_libraries(${PROJECT_NAME} INTERFACE Boost::serialization)
+
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 target_include_directories(
   ${PROJECT_NAME}
