@@ -4,6 +4,7 @@
 #include <mpi3/main_environment.hpp>
 #include <mpi3/ostream.hpp>
 
+#include <cassert>
 #include <complex>  // for std::norm
 
 template<class M> auto power(M const& elem) -> decltype(std::norm(elem)) { return std::norm(elem); }

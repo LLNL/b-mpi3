@@ -121,7 +121,7 @@ struct type {
 		return *this;
 	}
 
-	void     swap(type& other) { std::swap(impl_, other.impl_); }
+	void     swap(type& other) noexcept { std::swap(impl_, other.impl_); }
 	explicit operator MPI_Datatype() const& {
 		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
@@ -140,7 +140,7 @@ struct type {
 	}
 
 	committed_type commit() && {
-		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		MPI_Type_commit(&impl_);  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return committed_type{std::exchange(impl_, MPI_DATATYPE_NULL)};
 	}
 	template<class T> void commit_as(T const& /*unused*/) { return commit_as<T>(); }
