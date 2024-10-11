@@ -51,8 +51,8 @@ auto operator<<(process&& p, const T& value) -> decltype(std::move(p << value)) 
 }
 
 template<class T>
-auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> value) {
-	return p >> value;
+auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> std::forward<T>(value)) {
+	return p >> std::forward<T>(value);
 }
 
 template<class T> 
@@ -102,7 +102,7 @@ std::vector<T> operator|=(communicator& comm, T const& t) {
 
 template<class T>
 std::vector<T> operator|=(process&& self, T const& t) {
-	return std::move(self).comm().gather_value(t, self.rank());
+	return self.comm().gather_value(t, self.rank());
 }
 
 template<class T>

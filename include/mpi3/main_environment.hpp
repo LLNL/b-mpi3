@@ -13,7 +13,7 @@
 #include <mpi.h>
 
 #include "../mpi3/communicator.hpp"
-#include "../mpi3/environment.hpp"
+#include "../mpi3/environment.hpp"  // IWYU pragma: export
 #include "../mpi3/exception.hpp"
 
 namespace boost {

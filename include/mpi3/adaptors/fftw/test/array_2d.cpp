@@ -6,10 +6,12 @@
 #include <mpi3/adaptors/fftw.hpp>
 
 #include <mpi3/main_environment.hpp>
+#include <mpi3/communicator.hpp>
 #include <mpi3/ostream.hpp>
 
 #include <cassert>
 #include <complex>  // for std::norm
+#include <iostream>
 
 template<class M> auto power(M const& elem) -> decltype(std::norm(elem)) { return std::norm(elem); }
 
