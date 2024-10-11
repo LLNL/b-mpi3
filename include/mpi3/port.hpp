@@ -25,7 +25,7 @@ struct port {
 
 	explicit port(std::string name) : name_{std::move(name)} {};
 
-	~port() noexcept{ try{if(is_open()) {close();}}catch(...){} }
+	~port() noexcept{ try{if(is_open()) {close();}}catch(...){} }  // NOLINT(bugprone-empty-catch)
 
 	void open() {
 		name_.resize(MPI_MAX_PORT_NAME, '\0');

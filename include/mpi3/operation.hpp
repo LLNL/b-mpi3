@@ -83,17 +83,16 @@ struct operation : detail::nondefault_handle<operation<T>, MPI_Op, MPI_Op_free> 
 
 	MPI_Op operator&() const {return this->impl_;}  // NOLINT(google-runtime-operator)
 
-#if 0
-	enum struct code : MPI_Op{
-		maximum = MPI_MAX, minimum = MPI_MIN,
-		sum = MPI_SUM, product = MPI_PROD,
-		logical_and = MPI_LAND, bitwise_and = MPI_BAND,
-		logical_or  = MPI_LOR,   bitwise_or = MPI_BOR,
-		logical_xor = MPI_LXOR, bitwise_xor = MPI_BXOR,
-		max_value_location = MPI_MAXLOC,
-		min_value_location = MPI_MINLOC
-	};
-#endif
+	// enum struct code : MPI_Op{
+	//  maximum = MPI_MAX, minimum = MPI_MIN,
+	//  sum = MPI_SUM, product = MPI_PROD,
+	//  logical_and = MPI_LAND, bitwise_and = MPI_BAND,
+	//  logical_or  = MPI_LOR,   bitwise_or = MPI_BOR,
+	//  logical_xor = MPI_LXOR, bitwise_xor = MPI_BXOR,
+	//  max_value_location = MPI_MAXLOC,
+	//  min_value_location = MPI_MINLOC
+	// };
+
 //  operation(operation::code c) : base((MPI_Op)c){}
 
 //  static operation const sum;//(operation::code::sum);

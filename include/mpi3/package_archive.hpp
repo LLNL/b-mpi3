@@ -69,13 +69,11 @@ class basic_package_oprimitive {
 #endif
 		p_.pack_n(t.address(), t.count());
 	}
-#if 0
-	void save(const boost::archive::object_id_type&){}
-	void save(const boost::archive::object_reference_type&){}
-	void save(const boost::archive::class_id_type&){}
-	void save(const boost::archive::class_id_optional_type&){}
-	basic_memory_oprimitive(size_t& os) : os_(os){}
-#endif
+	// void save(const boost::archive::object_id_type&){}
+	// void save(const boost::archive::object_reference_type&){}
+	// void save(const boost::archive::class_id_type&){}
+	// void save(const boost::archive::class_id_optional_type&){}
+	// basic_memory_oprimitive(size_t& os) : os_(os){}
 	explicit basic_package_oprimitive(mpi3::detail::package& p) : p_{p} {}
 };
 
@@ -116,11 +114,9 @@ class basic_package_oarchive : public boost::archive::detail::common_oarchive<Ar
 	}
 	template<class T>
 	void save_override(T& t) { save_override(t, 0); }
-#if 0
-	void save_override(const object_id_type&, int){/* this->This()->newline(); this->detail_common_oarchive::save_override(t, 0);*/}
-	void save_override(const class_id_optional_type&, int){}
-	void save_override(const class_name_type&, int){/*  const std::string s(t); * this->This() << s;*/}
-#endif
+	// void save_override(const object_id_type&, int){/* this->This()->newline(); this->detail_common_oarchive::save_override(t, 0);*/}
+	// void save_override(const class_id_optional_type&, int){}
+	// void save_override(const class_name_type&, int){/*  const std::string s(t); * this->This() << s;*/}
 
 	explicit basic_package_oarchive(unsigned int flags)
 	: boost::archive::detail::common_oarchive<Archive>(flags) {}

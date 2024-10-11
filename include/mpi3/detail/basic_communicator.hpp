@@ -87,7 +87,7 @@ class basic_communicator{
 	auto pack_n(It first, Size count, uvector<detail::packed>& p) {
 		assert(p.size() < std::numeric_limits<int>::max());
 		int const pos = static_cast<int>(p.size());
-		p.resize(p.size() + static_cast<std::size_t>(pack_size<typename std::iterator_traits<It>::value_type>(static_cast<int>(count))));
+		p.resize(p.size() + static_cast<uvector<detail::packed>::size_type>(pack_size<typename std::iterator_traits<It>::value_type>(static_cast<int>(count))));
 		return pack_n(first, count, p, pos);
 	}
 	template<class It>
@@ -268,7 +268,7 @@ class basic_communicator{
 
 	auto receive(uvector<detail::packed>& b, int source = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG) const {
 		match m = matched_probe(source, tag);
-		auto const count = static_cast<std::size_t>(m.count<detail::packed>());
+		auto const count = static_cast<buffer::size_type>(m.count<detail::packed>());
 		auto const size = static_cast<std::ptrdiff_t>(b.size());
 		b.resize(b.size() + count);
 		return m.receive_n(std::next(b.data(), size), count);

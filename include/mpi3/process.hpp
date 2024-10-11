@@ -51,8 +51,8 @@ auto operator<<(process&& p, const T& value) -> decltype(std::move(p << value)) 
 }
 
 template<class T>
-auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> value) {
-	return p >> value;
+auto operator>>(process&& p, T&& value) -> decltype(std::declval<process&>() >> std::forward<T>(value)) {
+	return p >> std::forward<T>(value);
 }
 
 template<class T> 

@@ -371,7 +371,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			#else
 				MPI_Comm_free(&impl_);
 			#endif
-			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
+			} catch(std::exception& e) { std::cerr<< e.what() <<'\n'; MPI_Abort(impl_, 666); }
 		}
 	}
 
@@ -743,7 +743,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T> void set_attribute(int kv_idx, T const& t) {
 		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
-	inline void delete_attribute(int kv_idx){
+	void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
 	}
 	void* get_attribute(int kvidx) const {
@@ -756,7 +756,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	bool has_attribute(int kvidx) const {
 		void* v = nullptr;
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
+		MPI_Comm_get_attr(impl_, kvidx, static_cast<void**>(&v), &flag);
 		return flag != 0;
 	}
 #endif
@@ -766,7 +766,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T, class TT = T> void
 	set_attribute(keyval<T> const& k, TT const& t = {}) {set_attribute<T>(k.impl_, t);}
 	template<class T>
-	inline void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
+	void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
 	template<class T>
 	T const& get_attribute(keyval<T> const& kv) const {return *static_cast<T*>(get_attribute(kv.impl_));}
 	template<class T>
@@ -875,24 +875,24 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
-#if 0
-#ifdef MPICH_NUMVERSION
-#if MPICH_NUMVERSION >= 30400000
- private:
-	template<class It, class Size, class It2>
-	[[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
-	-> decltype(detail::data(first), std::declval<mpi3::request>()){
-		auto const sz = size();
-		assert(sz != 0);
-		mpi3::request r;
-		MPI_I(sendrecv_replace)(detail::data(first), count/sz, datatype<typename std::iterator_traits<It>::value_type>{}(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
-		return r;
-	}
+// #if 0
+// #ifdef MPICH_NUMVERSION
+// #if MPICH_NUMVERSION >= 30400000
+//  private:
+//  template<class It, class Size, class It2>
+//  [[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
+//  -> decltype(detail::data(first), std::declval<mpi3::request>()){
+//      auto const sz = size();
+//      assert(sz != 0);
+//      mpi3::request r;
+//      MPI_I(sendrecv_replace)(detail::data(first), count/sz, datatype<typename std::iterator_traits<It>::value_type>{}(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
+//      return r;
+//  }
 
- public:
-#endif
-#endif
-#endif
+//  public:
+// #endif
+// #endif
+// #endif
 
 #if not defined(EXAMPI)
 	template<class It, class Size>
@@ -1061,7 +1061,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<std::size_t>(count));
+		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<typename uvector<typename std::iterator_traits<It>::value_type>::size_type>(count));
 		std::copy_n(first, count, v.begin());
 		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
 		return std::copy_n(v.begin(), v.size(), first);
@@ -2273,7 +2273,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		}
 		assert(n % s == 0);
 		vector<typename std::iterator_traits<In1>::value_type> buff;
-		buff.reserve(static_cast<std::size_t>(n));
+		buff.reserve(static_cast<typename vector<typename std::iterator_traits<In1>::value_type>::size_type>(n));
 		using std::copy_n;
 		copy_n(first, n, std::back_inserter(buff));
 		scatter_n(buff.begin(), n, d_first, root);
@@ -2724,8 +2724,8 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		all_gather_n(&posize, 1, sizes.begin(), 1);
 		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
-		auto total = static_cast<std::size_t>(std::accumulate(sizes.begin(), sizes.end(), 0));
-		pi.resize(total);
+		auto total = static_cast<size_type>(std::accumulate(sizes.begin(), sizes.end(), 0));
+		pi.resize(static_cast<detail::package::size_type>(total));
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
 		d_count *= size();
@@ -3250,17 +3250,15 @@ inline void communicator::deallocate(pointer<T>& /*p*/, MPI_Aint /*size*/) {  //
 //  p.pimpl_ == nullptr;
 }
 
-#if 0
-template<class T>
-inline window<T> communicator::make_window(mpi3::size_t size){
-	mpi3::info inf;
-	void* ptr;
-	window<T> ret;
-	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
-	return ret;
-}
-#endif
+// template<class T>
+// inline window<T> communicator::make_window(mpi3::size_t size){
+//  mpi3::info inf;
+//  void* ptr;
+//  window<T> ret;
+//  int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
+//  if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
+//  return ret;
+// }
 
 class strided_range {
 	int first_;

@@ -131,11 +131,11 @@ struct type {
 
 	auto operator&() const& -> type const* { return this; }  // NOLINT(google-runtime-operator)
 	auto operator&() && -> MPI_Datatype {  // NOLINT(google-runtime-operator)
-		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		MPI_Type_commit(/*const_cast<MPI_Datatype*>(*/&impl_/*)*/);  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
 	}
 	auto operator&() & -> MPI_Datatype {  // NOLINT(google-runtime-operator)
-		MPI_Type_commit(const_cast<MPI_Datatype*>(&impl_));  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
+		MPI_Type_commit(/*const_cast<MPI_Datatype*>(*/&impl_/*)*/);  // NOLINT(cppcoreguidelines-pro-type-const-cast) TODO(correaa)
 		return impl_;
 	}
 
@@ -152,7 +152,7 @@ struct type {
 					MPI_Type_free(&impl_);
 				}
 			}
-		} catch(...) {
+		} catch(...) {  // NOLINT(bugprone-empty-catch)
 		}
 	}
 
