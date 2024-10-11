@@ -52,7 +52,7 @@ struct /*__attribute__((aligned(0)))*/ allocator{
 		throw bad_alloc();
 	}
 	void             deallocate(pointer p, std::size_t /*size*/) { mpi3::free(p); }
-	static inline size_type max_size() { return std::numeric_limits<size_type>::max(); }
+	static size_type max_size() { return std::numeric_limits<size_type>::max(); }
 };
 
 template<typename T>

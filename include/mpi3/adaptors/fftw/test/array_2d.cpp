@@ -1,6 +1,7 @@
 // Copyright 2019-2024 Alfredo A. Correa
 
 #include <mpi3/adaptors/fftw.hpp>
+
 #include <mpi3/main_environment.hpp>
 #include <mpi3/ostream.hpp>
 

@@ -371,7 +371,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			#else
 				MPI_Comm_free(&impl_);
 			#endif
-			} catch(std::exception& e) { std::cerr<< e.what() <<std::endl; MPI_Abort(impl_, 666); }
+			} catch(std::exception& e) { std::cerr<< e.what() <<'\n'; MPI_Abort(impl_, 666); }
 		}
 	}
 
@@ -743,7 +743,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T> void set_attribute(int kv_idx, T const& t) {
 		MPI_(Comm_set_attr)(impl_, kv_idx, new T{t});  // NOLINT(readability-implicit-bool-conversion, cppcoreguidelines-owning-memory) TODO(correaa)
 	}
-	inline void delete_attribute(int kv_idx){
+	void delete_attribute(int kv_idx){
 		MPI_Comm_delete_attr(impl_, kv_idx);
 	}
 	void* get_attribute(int kvidx) const {
@@ -756,7 +756,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	bool has_attribute(int kvidx) const {
 		void* v = nullptr;
 		int flag;  // NOLINT(cppcoreguidelines-init-variables) delayed init
-		MPI_Comm_get_attr(impl_, kvidx, &v, &flag);
+		MPI_Comm_get_attr(impl_, kvidx, static_cast<void**>(&v), &flag);
 		return flag != 0;
 	}
 #endif
@@ -766,7 +766,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 	template<class T, class TT = T> void
 	set_attribute(keyval<T> const& k, TT const& t = {}) {set_attribute<T>(k.impl_, t);}
 	template<class T>
-	inline void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
+	void delete_attribute(keyval<T> const& k) {delete_attribute(k.impl_);}
 	template<class T>
 	T const& get_attribute(keyval<T> const& kv) const {return *static_cast<T*>(get_attribute(kv.impl_));}
 	template<class T>
@@ -1061,7 +1061,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<size_type>(count));
+		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<typename uvector<typename std::iterator_traits<It>::value_type>::size_type>(count));
 		std::copy_n(first, count, v.begin());
 		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
 		return std::copy_n(v.begin(), v.size(), first);
