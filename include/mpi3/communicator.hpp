@@ -875,24 +875,24 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		);
 	}
 
-#if 0
-#ifdef MPICH_NUMVERSION
-#if MPICH_NUMVERSION >= 30400000
- private:
-	template<class It, class Size, class It2>
-	[[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
-	-> decltype(detail::data(first), std::declval<mpi3::request>()){
-		auto const sz = size();
-		assert(sz != 0);
-		mpi3::request r;
-		MPI_I(sendrecv_replace)(detail::data(first), count/sz, datatype<typename std::iterator_traits<It>::value_type>{}(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
-		return r;
-	}
+// #if 0
+// #ifdef MPICH_NUMVERSION
+// #if MPICH_NUMVERSION >= 30400000
+//  private:
+//  template<class It, class Size, class It2>
+//  [[nodiscard]] auto isend_receive_replace_n(It first, Size count, It2 d_first, int dest, int source = MPI_ANY_SOURCE) 
+//  -> decltype(detail::data(first), std::declval<mpi3::request>()){
+//      auto const sz = size();
+//      assert(sz != 0);
+//      mpi3::request r;
+//      MPI_I(sendrecv_replace)(detail::data(first), count/sz, datatype<typename std::iterator_traits<It>::value_type>{}(), dest, 0, source, MPI_ANY_TAG, &*this, &r.impl_);
+//      return r;
+//  }
 
- public:
-#endif
-#endif
-#endif
+//  public:
+// #endif
+// #endif
+// #endif
 
 #if not defined(EXAMPI)
 	template<class It, class Size>
@@ -2273,7 +2273,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		}
 		assert(n % s == 0);
 		vector<typename std::iterator_traits<In1>::value_type> buff;
-		buff.reserve(static_cast<size_type>(n));
+		buff.reserve(static_cast<typename vector<typename std::iterator_traits<In1>::value_type>::size_type>(n));
 		using std::copy_n;
 		copy_n(first, n, std::back_inserter(buff));
 		scatter_n(buff.begin(), n, d_first, root);
@@ -3250,17 +3250,15 @@ inline void communicator::deallocate(pointer<T>& /*p*/, MPI_Aint /*size*/) {  //
 //  p.pimpl_ == nullptr;
 }
 
-#if 0
-template<class T>
-inline window<T> communicator::make_window(mpi3::size_t size){
-	mpi3::info inf;
-	void* ptr;
-	window<T> ret;
-	int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
-	if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
-	return ret;
-}
-#endif
+// template<class T>
+// inline window<T> communicator::make_window(mpi3::size_t size){
+//  mpi3::info inf;
+//  void* ptr;
+//  window<T> ret;
+//  int s = MPI_Win_allocate(size*sizeof(T), sizeof(T), inf.impl_, this->impl_, &ptr, &ret.impl_);
+//  if(s != MPI_SUCCESS) throw std::runtime_error("cannot window_allocate");
+//  return ret;
+// }
 
 class strided_range {
 	int first_;
