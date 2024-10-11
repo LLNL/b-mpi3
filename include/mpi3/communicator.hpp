@@ -2725,7 +2725,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
 		auto total = static_cast<size_type>(std::accumulate(sizes.begin(), sizes.end(), 0));
-		pi.resize(static_cast<size_type>(total));
+		pi.resize(static_cast<detail::package::size_type>(total));
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
 		d_count *= size();

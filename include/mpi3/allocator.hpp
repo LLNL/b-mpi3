@@ -45,7 +45,7 @@ struct /*__attribute__((aligned(0)))*/ allocator{
 	// cppcheck-suppress noExplicitConstructor
 	template<class U> allocator(allocator<U> const&/*other*/) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions) : allocator convention
 
-	inline auto allocate(size_type n) {
+	auto allocate(size_type n) {
 		if(void* ptr = mpi3::malloc(n * static_cast<size_type>(sizeof(T)))) {
 			return static_cast<pointer>(ptr);
 		}

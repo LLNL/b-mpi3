@@ -152,7 +152,7 @@ struct type {
 					MPI_Type_free(&impl_);
 				}
 			}
-		} catch(...) {
+		} catch(...) {  // NOLINT(bugprone-empty-catch)
 		}
 	}
 
