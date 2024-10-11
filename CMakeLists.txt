@@ -10,16 +10,19 @@ project(
 
 find_package(MPI REQUIRED COMPONENTS CXX) # C)  # might need to `module load
                                           # mpi`
+find_package(Boost COMPONENTS serialization)
 
 add_library(${PROJECT_NAME} INTERFACE)
+
 
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 target_include_directories(
   ${PROJECT_NAME}
   INTERFACE $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-            $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/mpi3/dummy>)
-target_link_libraries(${PROJECT_NAME} INTERFACE MPI::MPI_CXX)
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/mpi3/dummy>)
+  target_link_libraries(${PROJECT_NAME} INTERFACE MPI::MPI_CXX)
+  target_link_libraries(${PROJECT_NAME} INTERFACE Boost::serialization)
 
 # ~~~
 # to use this project directly from CMake
