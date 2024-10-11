@@ -102,7 +102,7 @@ std::vector<T> operator|=(communicator& comm, T const& t) {
 
 template<class T>
 std::vector<T> operator|=(process&& self, T const& t) {
-	return self.comm().gather_value(t, self.rank());
+	return std::move(self).comm().gather_value(t, self.rank());
 }
 
 template<class T>

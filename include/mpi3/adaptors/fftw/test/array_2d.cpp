@@ -1,5 +1,8 @@
 // Copyright 2019-2024 Alfredo A. Correa
 
+#include <multi/array.hpp>
+#include <multi/adaptors/fftw.hpp>
+
 #include <mpi3/adaptors/fftw.hpp>
 
 #include <mpi3/main_environment.hpp>

@@ -6,5 +6,5 @@ namespace mpi3 = boost::mpi3;
 //mpi3::environment env;
 
 auto main() -> int try {
-	mpi3::environment env;
+	// mpi3::environment env;
 } catch(...) {}
