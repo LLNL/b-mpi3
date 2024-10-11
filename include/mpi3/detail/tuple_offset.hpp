@@ -36,7 +36,7 @@ std::size_t element_offset() {
 			char  a[sizeof(Tuple)];  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 			Tuple t;
 		} x;
-		return reinterpret_cast<char*>(std::addressof(std::get<I>(x.t))) - x.a;  // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-type-reinterpret-cast)
+		return static_cast<std::size_t>(reinterpret_cast<char*>(std::addressof(std::get<I>(x.t))) - x.a);  // NOLINT(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-pro-type-reinterpret-cast)
 	}();
 	return ret;
 }

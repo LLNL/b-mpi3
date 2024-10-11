@@ -1061,7 +1061,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 			detail::basic_tag /*tag*/,
 		Size count, int dest, int source, int sendtag, int recvtag
 	) {
-		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<std::size_t>(count));
+		uvector<typename std::iterator_traits<It>::value_type> v(static_cast<size_type>(count));
 		std::copy_n(first, count, v.begin());
 		send_receive_replace_n(v.begin(), v.size(), dest, source, sendtag, recvtag);
 		return std::copy_n(v.begin(), v.size(), first);
@@ -2273,7 +2273,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		}
 		assert(n % s == 0);
 		vector<typename std::iterator_traits<In1>::value_type> buff;
-		buff.reserve(static_cast<std::size_t>(n));
+		buff.reserve(static_cast<size_type>(n));
 		using std::copy_n;
 		copy_n(first, n, std::back_inserter(buff));
 		scatter_n(buff.begin(), n, d_first, root);
@@ -2724,7 +2724,7 @@ class communicator : protected detail::basic_communicator {  // in mpich MPI_Com
 		all_gather_n(&posize, 1, sizes.begin(), 1);
 		partial_sum(sizes.begin(), sizes.end(), displs.begin()+1);
 		detail::package pi(*this);
-		auto total = static_cast<std::size_t>(std::accumulate(sizes.begin(), sizes.end(), 0));
+		auto total = static_cast<size_type>(std::accumulate(sizes.begin(), sizes.end(), 0));
 		pi.resize(total);
 		all_gatherv_n(po.data(), po.size(), pi.data(), sizes.data(), displs.data());
 		package_iarchive pia(pi);
